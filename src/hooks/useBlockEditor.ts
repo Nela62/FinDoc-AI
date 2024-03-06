@@ -6,6 +6,8 @@ import { useAiStateStore } from '@/store';
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { useEffect } from 'react';
 
+import { initialContent } from '@/lib/data/initialContent';
+
 declare global {
   interface Window {
     editor: Editor | null;
@@ -19,10 +21,15 @@ export const useBlockEditor = () => {
   const editor = useEditor({
     autofocus: true,
     extensions: ExtensionKit(),
-    content: `
-        <p>Try to drag around the image. While you drag, the editor should show a decoration under your cursor. The so called dropcursor.</p>
-        <img src="https://source.unsplash.com/8xznAGy4HcY/800x400" />
-      `,
+    content: initialContent,
+    editorProps: {
+      attributes: {
+        autocomplete: 'off',
+        autocorrect: 'off',
+        autocapitalize: 'off',
+        class: 'min-h-full',
+      },
+    },
   });
 
   const characterCount = editor?.storage.characterCount || {
