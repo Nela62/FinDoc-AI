@@ -9,6 +9,8 @@ import { useBlockEditor } from '@/hooks/useBlockEditor';
 import { EditorContent } from '@tiptap/react';
 import { useRef } from 'react';
 
+import '@/styles/index.css';
+
 export type AiState = {
   isAiLoading: boolean;
   aiError?: string | null;
@@ -33,7 +35,7 @@ export default function Document({ params }: { params: { document: string } }) {
         {/* TODO: Top bar (title, upgrade, document settings, ai chat, citations/library) */}
         {/* <div className="relative flex flex-1 h-full"> */}
         {/* TODO: Table of contents */}
-        <EditorContent editor={editor} />
+        <EditorContent editor={editor} className="flex-1 overflow-y-auto" />
         <ContentItemMenu editor={editor} />
         <LinkMenu editor={editor} appendTo={menuContainerRef} />
         <TextMenu editor={editor} />

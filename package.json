@@ -41,6 +41,7 @@
     "@tiptap/react": "^2.2.4",
     "@tiptap/starter-kit": "^2.2.4",
     "@tiptap/suggestion": "^2.2.4",
+    "cal-sans": "^1.0.1",
     "clsx": "^2.1.0",
     "lucide-react": "^0.344.0",
     "nanoid": "^5.0.6",
