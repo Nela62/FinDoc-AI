@@ -106,6 +106,10 @@ export const ExtensionKit = () => [
     showOnlyCurrent: false,
     placeholder: () => '',
   }),
+  // Placeholder.configure({
+  //   emptyEditorClass: 'is-editor-empty',
+  //   placeholder: 'Untitled',
+  // }),
   SlashCommand,
   Focus,
   Figcaption,
