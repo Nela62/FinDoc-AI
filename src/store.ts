@@ -29,19 +29,19 @@ export type Document = {
 
 export interface DocumentState {
   documents: Document[];
-  id: string;
-  title: string;
-  setId: (id: string) => void;
-  setTitle: (title: string) => void;
+  selectedDocument: Document;
+  addNewDocument: (document: Document) => void;
+  setSelectedDocument: (document: Document) => void;
 }
 
 export const useDocumentStateStore = create<DocumentState>((set) => ({
   documents: [
-    { id: '1', title: 'Apple' },
-    { id: '2', title: 'Amazon' },
+    { id: 'Dzd7LhprkD', title: 'Apple' },
+    { id: 'c6TWdN9N9k', title: 'Amazon' },
   ],
-  id: '1',
-  title: 'Apple',
-  setId: (id: string) => set({ id }),
-  setTitle: (title: string) => set({ title }),
+  selectedDocument: { id: 'Dzd7LhprkD', title: 'Apple' },
+  addNewDocument: (document: Document) =>
+    set((state) => ({ documents: [...state.documents, document] })),
+  setSelectedDocument: (document: Document) =>
+    set({ selectedDocument: document }),
 }));

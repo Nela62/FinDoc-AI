@@ -43,11 +43,11 @@ export const useBlockEditor = () => {
         class: 'min-h-full',
       },
     },
-    onCreate: ({ editor }) => {
-      if (editor.isEmpty) {
-        editor.commands.setContent('<p>Start writing...</p>');
-      }
-    },
+    // onCreate: ({ editor }) => {
+    //   if (editor.isEmpty) {
+    //     editor.commands.setContent('<p>Start writing...</p>');
+    //   }
+    // },
     onUpdate({ editor }) {
       if (editor.isEmpty) {
         setIsEmpty(true);

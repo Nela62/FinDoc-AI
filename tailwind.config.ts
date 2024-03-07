@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import { mauve, violet, green, blackA } from '@radix-ui/colors';
 
 const config: Config = {
   content: [
@@ -10,6 +11,13 @@ const config: Config = {
   safelist: ['ProseMirror'],
   theme: {
     extend: {
+      colors: {
+        ...mauve,
+        ...violet,
+        ...green,
+        ...blackA,
+      },
+
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':
