@@ -39,28 +39,21 @@ Use clear, concise language and avoid technical jargon. The executive summary sh
 Each paragraph should be wrapped in <p></p> XML tags.
 `;
 
-  const investmentThesis = `Generate a compelling investment thesis for ${company} based on the following information:
+  const investmentThesis = `
+    Generate a compelling 200-300 word investment thesis for ${company} based on {context}. The investment thesis should be written in a persuasive tone, highlighting the key reasons to justify your reasoning whether the company is well-positioned for future growth and why its stock represents a compelling investment opportunity.
 
-1. Company overview: [Brief description of the company, its products/services, and target market]
-
-2. Financial performance: [Key financial metrics, such as revenue growth, profitability, and cash flow]
-
-3. Industry analysis: [Overview of the industry, including market size, growth prospects, competitive landscape, and regulatory environment]
-
-4. Competitive advantages: [Company's unique selling proposition, market position, and competitive strengths]
-
-5. Growth opportunities: [Potential catalysts for future growth, such as new product launches, market expansion, or strategic partnerships]
-
-6. Risks and challenges: [Identify potential risks and challenges that could impact the company's performance]
-
-7. Valuation: [Current valuation metrics and comparison to industry peers]
-
-Your investment thesis should be a 150-200 word paragraph that summarizes the key reasons why ${company} presents a compelling investment opportunity. Consider the company's financial performance, competitive advantages, growth prospects, and valuation. Highlight the most important factors that support your bullish or bearish outlook on the stock.
-
-The thesis should be clear, concise, and persuasive, providing a high-level rationale for your investment recommendation. Use a mix of quantitative and qualitative insights to support your argument. End with a clear statement indicating whether you believe the stock is a buy, hold, or sell based on your analysis.
-
-Each paragraph should be wrapped in <p></p> XML tags.
-`;
+    The investment thesis must include the following information:
+    1. Discuss the company's revenue growth, profitability, cash flow, and debt levels over the past 3-5 years. Highlight any notable trends or improvements.
+    2. Identify and explain the company's key competitive advantages, such as brand strength, market share, intellectual property, or economies of scale. Discuss how these advantages contribute to the company's success and future growth potential.
+    3. Evaluate the company's management team, their track record, and their ability to execute on strategic initiatives. Explain why the management team is well-suited to lead the company to future success.
+    4. Provide an overview of the industry in which the company operates, including market size, growth prospects, competitive landscape, and regulatory environment. Discuss how the company is positioned within the industry and how it can benefit from industry trends.
+    5. Consider macroeconomic factors that may impact the company's performance, such as interest rates, inflation, currency fluctuations, and geopolitical risks. Explain how the company is well-positioned to navigate these factors.
+    6. Evaluate the company's valuation relative to its peers and historical multiples, using metrics such as P/E ratio, EV/EBITDA, and price-to-book value. Explain why the company's current valuation represents an attractive entry point for investors.
+    7. Identify potential catalysts that could drive the company's stock price higher, such as new product launches, expansions into new markets, or strategic acquisitions. Discuss how these catalysts could contribute to the company's growth and profitability.
+    8. Acknowledge potential risks to the investment thesis, such as increased competition, regulatory changes, or shifts in consumer preferences. Explain how the company is well-equipped to mitigate these risks.
+    
+    Support your investment thesis with data, examples, and insights from your research. Ensure that the thesis is clear, concise, and compelling, effectively communicating whether ${company} represents an attractive investment opportunity. 
+    `;
 
   const companyOverview = `Generate a concise two-paragraph company overview for an equity research report based on the following information:
 
