@@ -1,7 +1,12 @@
 import os
 
 from pinecone import Pinecone
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageContext
+from llama_index.core import (
+    VectorStoreIndex,
+    SimpleDirectoryReader,
+    StorageContext,
+    Settings,
+)
 from llama_index.vector_stores.pinecone import PineconeVectorStore
 from llama_index.embeddings.voyageai import VoyageEmbedding
 
@@ -13,10 +18,11 @@ embed_model = VoyageEmbedding(
     voyage_api_key=voyage_api_key,
 )
 
-embeddings = embed_model.get_query_embedding("instruct")
+Settings.embed_model = embed_model
+
+# embeddings = embed_model.get_query_embedding("instruct")
 
 documents = SimpleDirectoryReader("data/sec-edgar-filings").load_data()
-
 
 pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 pinecone_index = pc.Index("sec")
