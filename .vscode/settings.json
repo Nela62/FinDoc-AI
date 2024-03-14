@@ -1,4 +1,14 @@
 {
-  "css.customData": [".vscode/tailwind.json"],
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "css.customData": [
+    ".vscode/tailwind.json"
+  ],
+  "deno.enablePaths": [
+    "supabase/functions"
+  ],
+  "deno.lint": true,
+  "deno.unstable": true,
   "scss.lint.unknownAtRules": "ignore"
 }
