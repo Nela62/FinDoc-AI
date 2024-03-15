@@ -1,12 +1,11 @@
 import os
 from enum import Enum
 from typing import List, Union, Optional
-from pydantic import AnyHttpUrl, EmailStr, validator
-from pydantic_settings import BaseSettings
+from pydantic import BaseSettings, AnyHttpUrl, EmailStr, validator
 from multiprocessing import cpu_count
 
 
-class AppConfig(BaseSettings):
+class AppConfig(BaseSettings.Config):
     """
     Config for settings classes that allows for
     combining Setings classes with different env_prefix settings.
@@ -15,7 +14,7 @@ class AppConfig(BaseSettings):
     https://github.com/pydantic/pydantic/issues/1727#issuecomment-658881926
     """
 
-    case_sensitive: bool = True
+    case_sensitive = True
 
     @classmethod
     def prepare_field(cls, field) -> None:
@@ -31,9 +30,11 @@ class AppEnvironment(str, Enum):
 
     LOCAL = "local"
     PREVIEW = "preview"
+    DEMO = "demo"
     PRODUCTION = "production"
 
 
+is_demo: bool = os.environ.get("IS_DEMO") == "true"
 is_pull_request: bool = os.environ.get("IS_PULL_REQUEST") == "true"
 is_preview_env: bool = os.environ.get("IS_PREVIEW_ENV") == "true"
 
@@ -52,33 +53,33 @@ class PreviewPrefixedSettings(BaseSettings):
     """
 
     OPENAI_API_KEY: str
-    # AWS_KEY: str
-    # AWS_SECRET: str
-    # POLYGON_IO_API_KEY: str
+    ANTHROPIC_API_KEY: str
+    AlPHA_VANTAGE_API_KEY: str
+    VOYAGE_API_KEY: str
 
     class Config(AppConfig):
-        env_prefix: str = "PREVIEW_" if is_pull_request or is_preview_env else ""
+        env_prefix = "PREVIEW_" if is_pull_request or is_preview_env else ""
 
 
+# TODO: edit preview settings
 class Settings(PreviewPrefixedSettings):
     """
     Application settings.
     """
 
-    PROJECT_NAME: str = "llama_app"
+    PROJECT_NAME: str = "finpanel_web_app"
     API_PREFIX: str = "/api"
-    # DATABASE_URL: str
+    DATABASE_URL: str
     LOG_LEVEL: str = "DEBUG"
+    IS_DEMO: bool = False
     IS_PULL_REQUEST: bool = False
     RENDER: bool = False
-    # CODESPACES: bool = False
-    # # CODESPACE_NAME: Optional[str]
-    # S3_BUCKET_NAME: str
-    # S3_ASSET_BUCKET_NAME: str
-    # CDN_BASE_URL: str
-    VECTOR_STORE_TABLE_NAME: str = "pg_vector_store"
-    # SENTRY_DSN: Optional[str]
-    # RENDER_GIT_COMMIT: Optional[str]
+    SUPABASE_STORAGE_URL: str
+    PUBLIC_DOCS_STORAGE_URL: str = "sec-filings"
+    PRIVATE_DOCS_STORAGE_URL: str = "library"
+    VECTOR_STORE_TABLE_NAME: str = "vector_store"
+    SENTRY_DSN: Optional[str]
+    RENDER_GIT_COMMIT: Optional[str]
     LOADER_IO_VERIFICATION_STR: str = "loaderio-e51043c635e0f4656473d3570ae5d9ec"
     SEC_EDGAR_COMPANY_NAME: str = "Finpanel"
     SEC_EDGAR_EMAIL: EmailStr = "helen@finpanel.com"
@@ -96,12 +97,24 @@ class Settings(PreviewPrefixedSettings):
         return self.LOG_LEVEL == "DEBUG" or self.IS_PULL_REQUEST or not self.RENDER
 
     @property
-    def S3_ENDPOINT_URL(self) -> str:
+    def SUPABASE_STORAGE_URL(self) -> str:
         """
-        Used for setting S3 endpoint URL in the s3fs module.
+        Used for setting the Supabase storage URL.
         When running locally, this should be set to the localstack endpoint.
         """
-        return None if self.RENDER else "http://localhost:4566"
+        return None if self.RENDER else "http://127.0.0.1:54324"
+
+    @property
+    def DATABASE_URL(self) -> str:
+        """
+        Used for setting the database URL.
+        When running locally, this should be set to the local pg database URL.
+        """
+        return (
+            None
+            if self.RENDER
+            else "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+        )
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
@@ -109,18 +122,8 @@ class Settings(PreviewPrefixedSettings):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, (list, str)):
             return v
-        raise ValueError(v)
-
-    # @validator("DATABASE_URL", pre=True)
-    # def assemble_db_url(cls, v: str) -> str:
-    #     """Preprocesses the database URL to make it compatible with asyncpg."""
-    #     if not v or not v.startswith("postgres"):
-    #         raise ValueError("Invalid database URL: " + str(v))
-    #     return (
-    #         v.replace("postgres://", "postgresql://")
-    #         .replace("postgresql://", "postgresql+asyncpg://")
-    #         .strip()
-    #     )
+        else:
+            raise ValueError(v)
 
     @validator("LOG_LEVEL", pre=True)
     def assemble_log_level(cls, v: str) -> str:
@@ -141,6 +144,7 @@ class Settings(PreviewPrefixedSettings):
             return v
         return v.lower() == "true"
 
+    # TODO: add demo check
     @property
     def ENVIRONMENT(self) -> AppEnvironment:
         """Returns the app environment."""
@@ -149,6 +153,8 @@ class Settings(PreviewPrefixedSettings):
                 return AppEnvironment.PREVIEW
             else:
                 return AppEnvironment.PRODUCTION
+        elif self.IS_DEMO:
+            return AppEnvironment.DEMO
         else:
             return AppEnvironment.LOCAL
 
@@ -164,12 +170,14 @@ class Settings(PreviewPrefixedSettings):
 
     @property
     def SENTRY_SAMPLE_RATE(self) -> float:
-        # TODO: before full release, set this to 0.1 for production
-        return 0.07 if self.ENVIRONMENT == AppEnvironment.PRODUCTION else 1.0
+        # TODO: after full release, set this to 1.0 for production
+        return 0.07 if self.ENVIRONMENT == AppEnvironment.PRODUCTION else 0.1
 
     class Config(AppConfig):
-        env_prefix: str = ""
+        env_prefix = ""
 
 
 settings = Settings()
 os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
+os.environ["ANTHROPIC_API_KEY"] = settings.ANTHROPIC_API_KEY
+os.environ["VOYAGE_API_KEY"] = settings.VOYAGE_API_KEY

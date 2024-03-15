@@ -2,7 +2,6 @@ from typing import Dict, List, Optional
 import logging
 from pathlib import Path
 from datetime import datetime
-import s3fs
 from fsspec.asyn import AsyncFileSystem
 from llama_index import (
     ServiceContext,
@@ -10,31 +9,26 @@ from llama_index import (
     StorageContext,
     load_indices_from_storage,
 )
-from llama_index.vector_stores.types import VectorStore
+from llama_index.core.vector_stores.types import VectorStore
+from llama_index.vector_stores.supabase import SupabaseVectorStore
 from tempfile import TemporaryDirectory
 import requests
-import nest_asyncio
 from datetime import timedelta
 from cachetools import cached, TTLCache
-from llama_index.readers.file.docs_reader import PDFReader
-from llama_index.schema import Document as LlamaIndexDocument
-from llama_index.agent import OpenAIAgent
-from llama_index.llms import ChatMessage, OpenAI
-from llama_index.embeddings.openai import (
-    OpenAIEmbedding,
-    OpenAIEmbeddingMode,
-    OpenAIEmbeddingModelType,
-)
-from llama_index.llms.base import MessageRole
-from llama_index.callbacks.base import BaseCallbackHandler, CallbackManager
-from llama_index.tools import QueryEngineTool, ToolMetadata
-from llama_index.query_engine import SubQuestionQueryEngine
-from llama_index.indices.query.base import BaseQueryEngine
-from llama_index.vector_stores.types import (
+from llama_index.readers.file import PDFReader
+from llama_index.core.schema import Document as LlamaIndexDocument
+from llama_index.llms.anthropic import Anthropic
+from llama_index.core.llms import MessageRole, ChatMessage
+from llama_index.core.callbacks.base import BaseCallbackHandler, CallbackManager
+from llama_index.core.tools import QueryEngineTool, ToolMetadata
+from llama_index.core.query_engine import SubQuestionQueryEngine
+from llama_index.core.indices.query.base import BaseQueryEngine
+from llama_index.core.vector_stores.types import (
     MetadataFilters,
     ExactMatchFilter,
 )
-from llama_index.node_parser import SentenceSplitter
+from llama_index.embeddings.voyageai import VoyageEmbedding
+from llama_index.core.node_parser import SentenceSplitter
 from app.core.config import settings
 from app.schema import (
     Message as MessageSchema,
@@ -52,29 +46,17 @@ from app.chat.constants import (
 )
 from app.chat.tools import get_api_query_engine_tool
 from app.chat.utils import build_title_for_document
-from app.chat.pg_vector import get_vector_store_singleton
 from app.chat.qa_response_synth import get_custom_response_synth
+from llama_index.core import Settings
+
+tokenizer = Anthropic().tokenizer
+Settings.tokenizer = tokenizer
 
 
 logger = logging.getLogger(__name__)
 
-
-logger.info("Applying nested asyncio patch")
-nest_asyncio.apply()
-
-OPENAI_TOOL_LLM_NAME = "gpt-3.5-turbo-0613"
-OPENAI_CHAT_LLM_NAME = "gpt-3.5-turbo-0613"
-
-
-def get_s3_fs() -> AsyncFileSystem:
-    s3 = s3fs.S3FileSystem(
-        key=settings.AWS_KEY,
-        secret=settings.AWS_SECRET,
-        endpoint_url=settings.S3_ENDPOINT_URL,
-    )
-    if not (settings.RENDER or s3.exists(settings.S3_BUCKET_NAME)):
-        s3.mkdir(settings.S3_BUCKET_NAME)
-    return s3
+TOOL_LLM_NAME = "claude-3-opus-20240229"
+CHAT_LLM_NAME = "claude-3-opus-20240229"
 
 
 def fetch_and_read_document(
@@ -98,7 +80,7 @@ def fetch_and_read_document(
 
 def build_description_for_document(document: DocumentSchema) -> str:
     if DocumentMetadataKeysEnum.SEC_DOCUMENT in document.metadata_map:
-        sec_metadata = SecDocumentMetadata.parse_obj(
+        sec_metadata = SecDocumentMetadata.model_validate(
             document.metadata_map[DocumentMetadataKeysEnum.SEC_DOCUMENT]
         )
         time_period = (
@@ -134,22 +116,20 @@ def get_storage_context(
 async def build_doc_id_to_index_map(
     service_context: ServiceContext,
     documents: List[DocumentSchema],
-    fs: Optional[AsyncFileSystem] = None,
 ) -> Dict[str, VectorStoreIndex]:
-    persist_dir = f"{settings.S3_BUCKET_NAME}"
 
-    vector_store = await get_vector_store_singleton()
+    vector_store = SupabaseVectorStore(
+        postgres_connection_string=settings.DATABASE_URL,
+        collection_name=settings.VECTOR_STORE_TABLE_NAME,
+    )
     try:
         try:
-            storage_context = get_storage_context(persist_dir, vector_store, fs=fs)
+            storage_context = get_storage_context(vector_store)
         except FileNotFoundError:
             logger.info(
-                "Could not find storage context in S3. Creating new storage context."
+                "Could not find storage context in Supabase. Creating new storage context."
             )
-            storage_context = StorageContext.from_defaults(
-                vector_store=vector_store, fs=fs
-            )
-            storage_context.persist(persist_dir=persist_dir, fs=fs)
+            storage_context = StorageContext.from_defaults(vector_store=vector_store)
         index_ids = [str(doc.id) for doc in documents]
         indices = load_indices_from_storage(
             storage_context,
@@ -163,9 +143,7 @@ async def build_doc_id_to_index_map(
             "Failed to load indices from storage. Creating new indices. "
             "If you're running the seed_db script, this is normal and expected."
         )
-        storage_context = StorageContext.from_defaults(
-            persist_dir=persist_dir, vector_store=vector_store, fs=fs
-        )
+        storage_context = StorageContext.from_defaults(vector_store=vector_store)
         doc_id_to_index = {}
         for doc in documents:
             llama_index_docs = fetch_and_read_document(doc)
@@ -176,7 +154,6 @@ async def build_doc_id_to_index_map(
                 service_context=service_context,
             )
             index.set_index_id(str(doc.id))
-            index.storage_context.persist(persist_dir=persist_dir, fs=fs)
             doc_id_to_index[str(doc.id)] = index
     return doc_id_to_index
 
@@ -214,17 +191,16 @@ def get_chat_history(
 def get_tool_service_context(
     callback_handlers: List[BaseCallbackHandler],
 ) -> ServiceContext:
-    llm = OpenAI(
+    llm = Anthropic(
         temperature=0,
-        model=OPENAI_TOOL_LLM_NAME,
+        model=TOOL_LLM_NAME,
         streaming=False,
-        api_key=settings.OPENAI_API_KEY,
+        api_key=settings.ANTHROPIC_API_KEY,
     )
     callback_manager = CallbackManager(callback_handlers)
-    embedding_model = OpenAIEmbedding(
-        mode=OpenAIEmbeddingMode.SIMILARITY_MODE,
-        model_type=OpenAIEmbeddingModelType.TEXT_EMBED_ADA_002,
-        api_key=settings.OPENAI_API_KEY,
+    embedding_model = VoyageEmbedding(
+        model_name="voyage-lite-02-instruct",
+        voyage_api_key=settings.VOYAGE_API_KEY,
     )
     # Use a smaller chunk size to retrieve more granular results
     node_parser = SentenceSplitter.from_defaults(
@@ -246,9 +222,9 @@ async def get_chat_engine(
     conversation: ConversationSchema,
 ) -> OpenAIAgent:
     service_context = get_tool_service_context([callback_handler])
-    s3_fs = get_s3_fs()
     doc_id_to_index = await build_doc_id_to_index_map(
-        service_context, conversation.documents, fs=s3_fs
+        service_context,
+        conversation.documents,
     )
     id_to_doc: Dict[str, DocumentSchema] = {
         str(doc.id): doc for doc in conversation.documents
