@@ -1,11 +1,12 @@
 import os
 from enum import Enum
 from typing import List, Union, Optional
-from pydantic import BaseSettings, AnyHttpUrl, EmailStr, validator
+from pydantic import AnyHttpUrl, EmailStr, validator, computed_field
+from pydantic_settings import BaseSettings
 from multiprocessing import cpu_count
 
 
-class AppConfig(BaseSettings.Config):
+class AppConfig(BaseSettings):
     """
     Config for settings classes that allows for
     combining Setings classes with different env_prefix settings.
@@ -14,7 +15,7 @@ class AppConfig(BaseSettings.Config):
     https://github.com/pydantic/pydantic/issues/1727#issuecomment-658881926
     """
 
-    case_sensitive = True
+    case_sensitive: bool = True
 
     @classmethod
     def prepare_field(cls, field) -> None:
@@ -58,7 +59,7 @@ class PreviewPrefixedSettings(BaseSettings):
     VOYAGE_API_KEY: str
 
     class Config(AppConfig):
-        env_prefix = "PREVIEW_" if is_pull_request or is_preview_env else ""
+        env_prefix: str = "PREVIEW_" if is_pull_request or is_preview_env else ""
 
 
 # TODO: edit preview settings
@@ -69,17 +70,19 @@ class Settings(PreviewPrefixedSettings):
 
     PROJECT_NAME: str = "finpanel_web_app"
     API_PREFIX: str = "/api"
-    DATABASE_URL: str
+    # DATABASE_URL: str
     LOG_LEVEL: str = "DEBUG"
     IS_DEMO: bool = False
     IS_PULL_REQUEST: bool = False
     RENDER: bool = False
-    SUPABASE_STORAGE_URL: str
+    SUPABASE_URL: str
+    SUPABASE_KEY: str
+    # SUPABASE_STORAGE_URL: str
     PUBLIC_DOCS_STORAGE_URL: str = "sec-filings"
     PRIVATE_DOCS_STORAGE_URL: str = "library"
-    VECTOR_STORE_TABLE_NAME: str = "vector_store"
-    SENTRY_DSN: Optional[str]
-    RENDER_GIT_COMMIT: Optional[str]
+    VECTOR_STORE_TABLE_NAME: str = "documents"
+    # SENTRY_DSN: Optional[str]
+    # RENDER_GIT_COMMIT: Optional[str]
     LOADER_IO_VERIFICATION_STR: str = "loaderio-e51043c635e0f4656473d3570ae5d9ec"
     SEC_EDGAR_COMPANY_NAME: str = "Finpanel"
     SEC_EDGAR_EMAIL: EmailStr = "helen@finpanel.com"
@@ -89,6 +92,7 @@ class Settings(PreviewPrefixedSettings):
     # "http://localhost:8080", "http://local.dockertoolbox.tiangolo.com"]'
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
+    @computed_field
     @property
     def VERBOSE(self) -> bool:
         """
@@ -96,6 +100,7 @@ class Settings(PreviewPrefixedSettings):
         """
         return self.LOG_LEVEL == "DEBUG" or self.IS_PULL_REQUEST or not self.RENDER
 
+    @computed_field
     @property
     def SUPABASE_STORAGE_URL(self) -> str:
         """
@@ -104,6 +109,7 @@ class Settings(PreviewPrefixedSettings):
         """
         return None if self.RENDER else "http://127.0.0.1:54324"
 
+    @computed_field
     @property
     def DATABASE_URL(self) -> str:
         """
@@ -145,6 +151,7 @@ class Settings(PreviewPrefixedSettings):
         return v.lower() == "true"
 
     # TODO: add demo check
+    @computed_field
     @property
     def ENVIRONMENT(self) -> AppEnvironment:
         """Returns the app environment."""
@@ -158,6 +165,7 @@ class Settings(PreviewPrefixedSettings):
         else:
             return AppEnvironment.LOCAL
 
+    @computed_field
     @property
     def UVICORN_WORKER_COUNT(self) -> int:
         if self.ENVIRONMENT == AppEnvironment.LOCAL:
@@ -168,13 +176,14 @@ class Settings(PreviewPrefixedSettings):
         # so we instead go by the number of server instances that can be run given the memory
         return 3
 
+    @computed_field
     @property
     def SENTRY_SAMPLE_RATE(self) -> float:
         # TODO: after full release, set this to 1.0 for production
         return 0.07 if self.ENVIRONMENT == AppEnvironment.PRODUCTION else 0.1
 
     class Config(AppConfig):
-        env_prefix = ""
+        env_prefix: str = ""
 
 
 settings = Settings()

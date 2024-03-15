@@ -3,7 +3,7 @@ from fire import Fire
 from tqdm import tqdm
 import asyncio
 from pytickersymbols import PyTickerSymbols
-from file_utils import get_available_filings, Filing
+from backend.app.documents.file_utils import get_available_filings, Filing
 from stock_utils import get_stocks_by_symbol, Stock
 from fastapi.encoders import jsonable_encoder
 
