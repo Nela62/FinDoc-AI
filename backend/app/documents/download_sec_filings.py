@@ -139,7 +139,7 @@ def _convert_to_pdf(output_dir: str):
 
 
 # Note: after and before strings must be in the form "YYYY-MM-DD"
-def main(
+async def main(
     output_dir: str = DEFAULT_OUTPUT_DIR,
     ciks: List[str] = DEFAULT_CIKS,
     file_types: List[str] = DEFAULT_FILING_TYPES,
@@ -172,7 +172,7 @@ def main(
     _convert_to_pdf(output_dir)
 
     print("Uploading to Supabase storage")
-    async_upsert_documents_from_filings(output_dir)
+    await async_upsert_documents_from_filings(output_dir)
 
 
 if __name__ == "__main__":
