@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import List, Optional
+import os
 
 import pdfkit
 from file_utils import filing_exists
@@ -7,19 +8,10 @@ from fire import Fire
 from sec_edgar_downloader import Downloader
 from distutils.spawn import find_executable
 from tqdm.contrib.itertools import product
-from app.supabase.client import supabase
-from llama_index.embeddings.voyageai import VoyageEmbedding
-from llama_index.core.indices.service_context import ServiceContext
-from llama_index.core.node_parser import SentenceSplitter
-from llama_index.readers.file import PDFReader
-from llama_index.vector_stores.supabase import SupabaseVectorStore
-from app.chat.constants import (
-    NODE_PARSER_CHUNK_OVERLAP,
-    NODE_PARSER_CHUNK_SIZE,
-)
+from app.supabase.client import service_client
+from upsert_db_sec_documents import async_upsert_documents_from_filings
+from app.schema import SecDocumentMetadata as Filing
 
-from llama_index.llms.anthropic import Anthropic
-from llama_index.core import Settings, VectorStoreIndex, ServiceContext, StorageContext
 from app.core.config import settings
 
 DEFAULT_OUTPUT_DIR = "data/"
@@ -71,35 +63,41 @@ def _download_filing(
     )
 
 
-def _upload_to_supabase_storage(filing_dir: str):
+def _upload_to_supabase_storage(
+    filing_dir: str, relative_dir: str, filing_metadata: Filing
+):
     filing_doc = filing_dir / "primary-document.html"
     filing_pdf = filing_dir / "primary-document.pdf"
     filing_txt = filing_dir / "full-submission.txt"
 
     # Upload pdf to Supabase storage
     with open(filing_pdf, "rb") as f:
-        res = supabase.storage.from_("public-documents").upload(
+        res = service_client.storage.from_("public-documents").upload(
             file=f,
-            path=str(filing_pdf),
+            path=str(relative_dir) + "/primary-document.pdf",
             file_options={"content-type": "application/pdf"},
         )
         print(res)
 
     # Upload html to Supabase storage
     with open(filing_doc, "rb") as f:
-        supabase.storage.from_("public-documents").upload(
+        service_client.storage.from_("public-documents").upload(
             file=f,
-            path=str(filing_doc),
+            path=str(relative_dir) + "/primary-document.html",
             file_options={"content-type": "text/html"},
         )
 
     # Upload txt to Supabase storage
     with open(filing_txt, "rb") as f:
-        supabase.storage.from_("public-documents").upload(
+        service_client.storage.from_("public-documents").upload(
             file=f,
-            path=str(filing_txt),
+            path=str(relative_dir) + "/full-submission.txt",
             file_options={"content-type": "text/html"},
         )
+
+    filing_metadata.url = (str(relative_dir) + "/primary-document.pdf",)
+
+    service_client.table("documents").insert(filing_metadata.model_dump()).execute()
 
     return res
 
@@ -123,6 +121,7 @@ def _convert_to_pdf(output_dir: str):
             for filing_dir in filing_type_dir.iterdir():
                 filing_doc = filing_dir / "primary-document.html"
                 filing_pdf = filing_dir / "primary-document.pdf"
+                full_submission_txt = filing_dir / "full-submission.txt"
                 if filing_doc.exists() and not filing_pdf.exists():
                     # Convert html to pdf
                     print("- Converting {}".format(filing_doc))
@@ -138,78 +137,25 @@ def _convert_to_pdf(output_dir: str):
                     except Exception as e:
                         print(f"Error converting {input_path} to {output_path}: {e}")
 
-                url = _upload_to_supabase_storage(filing_dir)
 
-                # Upload an embedding to vector db
-                embedding_model = VoyageEmbedding(
-                    model_name="voyage-lite-02-instruct",
-                    voyage_api_key=settings.VOYAGE_API_KEY,
-                )
-                node_parser = SentenceSplitter.from_defaults(
-                    chunk_size=NODE_PARSER_CHUNK_SIZE,
-                    chunk_overlap=NODE_PARSER_CHUNK_OVERLAP,
-                    # callback_manager=callback_manager,
-                )
-
-                tokenizer = Anthropic().tokenizer
-                Settings.tokenizer = tokenizer
-                llm = Anthropic(
-                    temperature=0,
-                    model="claude-3-opus-20240229",
-                    # streaming=False,
-                    api_key=settings.ANTHROPIC_API_KEY,
-                )
-                service_context = ServiceContext.from_defaults(
-                    # callback_manager=callback_manager,
-                    llm=llm,
-                    embed_model=embedding_model,
-                    node_parser=node_parser,
-                )
-                reader = PDFReader()
-                documents = reader.load_data(
-                    filing_pdf, extra_info={"db_document_id": "123"}
-                )
-
-                vector_store = SupabaseVectorStore(
-                    postgres_connection_string=settings.DATABASE_URL,
-                    collection_name=settings.VECTOR_STORE_TABLE_NAME,
-                )
-                storage_context = StorageContext.from_defaults(
-                    vector_store=vector_store
-                )
-
-                service_context = ServiceContext.from_defaults(
-                    llm=llm, embed_model=embedding_model, node_parser=node_parser
-                )
-
-                index = VectorStoreIndex.from_documents(
-                    documents,
-                    storage_context=storage_context,
-                    service_context=service_context,
-                )
-                index.set_index_id(str("123"))
-
-                # Upload document metadata to db
-
-
+# Note: after and before strings must be in the form "YYYY-MM-DD"
 def main(
     output_dir: str = DEFAULT_OUTPUT_DIR,
     ciks: List[str] = DEFAULT_CIKS,
     file_types: List[str] = DEFAULT_FILING_TYPES,
     before: Optional[str] = None,
     after: Optional[str] = None,
-    limit: Optional[int] = 3,
-    convert_to_pdf: bool = True,
+    # TODO: change to 3
+    limit: Optional[int] = 1,
 ):
+    print("Creating a bucket for public documents if it doesn't exist")
+    try:
+        service_client.storage.get_bucket("public-documents")
+    except:
+        service_client.storage.create_bucket("public-documents")
+
     print('Downloading filings to "{}"'.format(Path(output_dir).absolute()))
     print("File Types: {}".format(file_types))
-    if convert_to_pdf:
-        if find_executable("wkhtmltopdf") is None:
-            raise Exception(
-                "ERROR: wkhtmltopdf (https://wkhtmltopdf.org/) not found, "
-                "please install it to convert html to pdf "
-                "`sudo apt-get install wkhtmltopdf`"
-            )
     for symbol, file_type in product(ciks, file_types):
         try:
             if filing_exists(symbol, file_type, output_dir):
@@ -222,9 +168,11 @@ def main(
                 f"Error downloading filing for symbol={symbol} & file_type={file_type}: {e}"
             )
 
-    if convert_to_pdf:
-        print("Converting html files to pdf files")
-        _convert_to_pdf(output_dir)
+    print("Converting html files to pdf files")
+    _convert_to_pdf(output_dir)
+
+    print("Uploading to Supabase storage")
+    async_upsert_documents_from_filings(output_dir)
 
 
 if __name__ == "__main__":
