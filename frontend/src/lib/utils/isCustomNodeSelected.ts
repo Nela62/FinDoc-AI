@@ -3,6 +3,7 @@ import { Editor } from '@tiptap/react';
 import {
   AiWriter,
   AiImage,
+  AiGenerator,
   Figcaption,
   HorizontalRule,
   ImageBlock,
@@ -43,6 +44,7 @@ export const isCustomNodeSelected = (editor: Editor, node: HTMLElement) => {
     Link.name,
     AiWriter.name,
     AiImage.name,
+    AiGenerator.name,
     Figcaption.name,
     TableOfContentsNode.name,
   ];

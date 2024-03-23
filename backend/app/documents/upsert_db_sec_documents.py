@@ -1,15 +1,16 @@
-from pathlib import Path
+import os
 from fire import Fire
 from tqdm import tqdm
 import asyncio
 from pytickersymbols import PyTickerSymbols
 from app.documents.file_utils import get_available_filings, Filing
 from stock_utils import get_stocks_by_symbol, Stock
-from app.supabase.client import service_client
+from app.supabase.client import service_client, vector_client
 from llama_index.readers.file import PDFReader
 from llama_index.vector_stores.supabase import SupabaseVectorStore
 from fastapi.encoders import jsonable_encoder
-from llama_index.core import Settings
+from llama_index.llms.anthropic import Anthropic
+from llama_index.core import Settings, VectorStoreIndex, ServiceContext, StorageContext
 from llama_index.embeddings.voyageai import VoyageEmbedding
 from app.core.config import settings
 
@@ -22,20 +23,14 @@ from app.schema import (
     Document,
 )
 
-DEFAULT_URL_BASE = "https://dl94gqvzlh4k8.cloudfront.net"
+# DEFAULT_URL_BASE = "https://dl94gqvzlh4k8.cloudfront.net"
 DEFAULT_DOC_DIR = "data/"
 
 
 async def upsert_document(doc_dir: str, stock: Stock, filing: Filing):
     # construct a string for just the document's sub-path after the doc_dir
     # e.g. "sec-edgar-filings/AAPL/10-K/0000320193-20-000096/primary-document.pdf"
-    doc_path = Path(filing.file_path).relative_to(doc_dir)
-
-    script_dir = Path(__file__).parent
-    doc_dir = script_dir / "data"
-
-    doc_path = Path(filing.file_path).relative_to(doc_dir)
-    url_path = str(doc_path).lstrip("/")
+    doc_path = os.path.relpath(filing.file_path, doc_dir)
     doc_type = (
         SecDocumentTypeEnum.TEN_K
         if filing.filing_type == "10-K"
@@ -54,24 +49,37 @@ async def upsert_document(doc_dir: str, stock: Stock, filing: Filing):
         date_as_of_change=filing.date_as_of_change,
     )
     metadata_map: DocumentMetadataMap = {
-        "url": url_path,
-        DocumentMetadataKeysEnum.SEC_DOCUMENT: jsonable_encoder(
-            sec_doc_metadata.model_dump(exclude_none=True)
-        ),
+        "url": doc_path,
+        **jsonable_encoder(sec_doc_metadata.model_dump(exclude_none=True)),
     }
+    print(metadata_map)
 
-    res = service_client.table("documents").upsert(**metadata_map).execute()
-    id = res.data.id
+    res = service_client.table("documents").upsert(metadata_map).execute()
+    doc_id = res.data[0]["id"]
+    print(doc_id)
     with open(filing.file_path, "rb") as f:
         service_client.storage.from_("public-documents").upload(
             file=f,
-            path=url_path,
+            path=doc_path,
             file_options={"content-type": "application/pdf"},
         )
-    # TODO: upload file to vector store
-    Settings.embed_model = VoyageEmbedding(
+
+    embedding_model = VoyageEmbedding(
         model_name="voyage-lite-02-instruct",
         voyage_api_key=settings.VOYAGE_API_KEY,
+    )
+    # tokenizer = Anthropic().tokenizer
+    # Settings.tokenizer = tokenizer
+    llm = Anthropic(
+        temperature=0,
+        model="claude-3-opus-20240229",
+        # streaming=False,
+        api_key=settings.ANTHROPIC_API_KEY,
+    )
+    service_context = ServiceContext.from_defaults(
+        # callback_manager=callback_manager,
+        llm=llm,
+        embed_model=embedding_model,
     )
     vector_store = SupabaseVectorStore(
         postgres_connection_string=settings.DATABASE_URL,
@@ -81,9 +89,16 @@ async def upsert_document(doc_dir: str, stock: Stock, filing: Filing):
     reader = PDFReader()
     docs = reader.load_data(
         filing.file_path,
-        extra_info={"db_document_id": id, **metadata_map},
+        extra_info={"db_document_id": doc_id},
     )
-    vector_store.add(docs)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    VectorStoreIndex.from_documents(
+        docs,
+        storage_context=storage_context,
+        service_context=service_context,
+    )
+    vx = vector_client.get_or_create_collection(name="documents", dimension=1024)
+    vx.create_index()
 
 
 async def async_upsert_documents_from_filings(doc_dir: str):

@@ -11,7 +11,7 @@
 
   .selection,
   *::selection {
-    @apply bg-black/10 dark:bg-white/20;
+    @apply bg-blue-200 dark:bg-white/20;
   }
 
   & > .react-renderer {

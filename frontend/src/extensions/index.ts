@@ -17,6 +17,7 @@ export { FileHandler } from '@tiptap-pro/extension-file-handler';
 export { Selection } from './Selection';
 export { AiWriter } from './AiWriter';
 export { AiImage } from './AiImage';
+export {AiGenerator} from './AiGenerator';
 // TODO: Add AiChart, AiImage, and AiTable
 // TODO: Add text color picker
 export { Table, TableCell, TableHeader, TableRow } from './Table';

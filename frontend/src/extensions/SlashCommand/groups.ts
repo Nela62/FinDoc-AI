@@ -15,12 +15,13 @@ export const GROUPS: Group[] = [
       },
       {
         name: 'aiImage',
-        label: 'AI Image',
+        label: 'AI Chart',
         iconName: 'Sparkles',
         description: 'Generate an image from text',
         shouldBeHidden: (editor) => editor.isActive('columns'),
         action: (editor) => editor.chain().focus().setAiImage().run(),
       },
+      
     ],
   },
   {
@@ -126,6 +127,15 @@ export const GROUPS: Group[] = [
       },
     ],
   },
+  {name: 'blocks', title: 'Blocks', commands: [{
+        name: 'aiCompetitiveAdvantages',
+        label: 'Competitive Advantages',
+        iconName: 'Shield',
+        description: 'Generate competitive advantages for the selected company',
+        shouldBeHidden: (editor) => editor.isActive('columns'),
+        // action: (editor) => editor.chain().focus().setAiCompetitiveAdvantages().run(),
+        action: (editor) => editor.chain().focus().setAiGenerator().run(),
+      }]}
 ];
 
 export default GROUPS;

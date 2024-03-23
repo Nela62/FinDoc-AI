@@ -161,6 +161,7 @@ DocumentMetadataMap = Dict[Union[DocumentMetadataKeysEnum, str], Any]
 
 
 class Document(Base):
+    id: str
     url: str
     metadata_map: Optional[DocumentMetadataMap] = None
 

@@ -56,6 +56,7 @@ class PreviewPrefixedSettings(BaseSettings):
     OPENAI_API_KEY: str
     ANTHROPIC_API_KEY: str
     AlPHA_VANTAGE_API_KEY: str
+    COHERE_API_KEY: str
     VOYAGE_API_KEY: str
 
     class Config(AppConfig):
@@ -77,6 +78,7 @@ class Settings(PreviewPrefixedSettings):
     RENDER: bool = False
     SUPABASE_URL: str
     SUPABASE_KEY: str
+    SERVICE_SUPABASE_KEY: str
     # SUPABASE_STORAGE_URL: str
     PUBLIC_DOCS_STORAGE_URL: str = "sec-filings"
     PRIVATE_DOCS_STORAGE_URL: str = "library"
@@ -190,3 +192,4 @@ settings = Settings()
 os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
 os.environ["ANTHROPIC_API_KEY"] = settings.ANTHROPIC_API_KEY
 os.environ["VOYAGE_API_KEY"] = settings.VOYAGE_API_KEY
+os.environ["COHERE_API_KEY"] = settings.COHERE_API_KEY

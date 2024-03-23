@@ -2,6 +2,9 @@ from pathlib import Path
 from typing import List, Optional
 import os
 
+from tempfile import TemporaryDirectory
+
+import asyncio
 import pdfkit
 from file_utils import filing_exists
 from fire import Fire
@@ -9,7 +12,9 @@ from sec_edgar_downloader import Downloader
 from distutils.spawn import find_executable
 from tqdm.contrib.itertools import product
 from app.supabase.client import service_client
-from upsert_db_sec_documents import async_upsert_documents_from_filings
+from upsert_db_sec_documents import (
+    async_upsert_documents_from_filings,
+)
 from app.schema import SecDocumentMetadata as Filing
 
 from app.core.config import settings
@@ -18,11 +23,11 @@ DEFAULT_OUTPUT_DIR = "data/"
 # You can lookup the CIK for a company here: https://www.sec.gov/edgar/searchedgar/companysearch
 DEFAULT_CIKS = [
     # AAPL
-    "320193",
+    # "320193",
     # MSFT
     # "789019",
     # # AMZN
-    # "0001018724",
+    "0001018724",
     # # GOOGL
     # "1652044",
     # # META
@@ -63,45 +68,6 @@ def _download_filing(
     )
 
 
-def _upload_to_supabase_storage(
-    filing_dir: str, relative_dir: str, filing_metadata: Filing
-):
-    filing_doc = filing_dir / "primary-document.html"
-    filing_pdf = filing_dir / "primary-document.pdf"
-    filing_txt = filing_dir / "full-submission.txt"
-
-    # Upload pdf to Supabase storage
-    with open(filing_pdf, "rb") as f:
-        res = service_client.storage.from_("public-documents").upload(
-            file=f,
-            path=str(relative_dir) + "/primary-document.pdf",
-            file_options={"content-type": "application/pdf"},
-        )
-        print(res)
-
-    # Upload html to Supabase storage
-    with open(filing_doc, "rb") as f:
-        service_client.storage.from_("public-documents").upload(
-            file=f,
-            path=str(relative_dir) + "/primary-document.html",
-            file_options={"content-type": "text/html"},
-        )
-
-    # Upload txt to Supabase storage
-    with open(filing_txt, "rb") as f:
-        service_client.storage.from_("public-documents").upload(
-            file=f,
-            path=str(relative_dir) + "/full-submission.txt",
-            file_options={"content-type": "text/html"},
-        )
-
-    filing_metadata.url = (str(relative_dir) + "/primary-document.pdf",)
-
-    service_client.table("documents").insert(filing_metadata.model_dump()).execute()
-
-    return res
-
-
 def _convert_to_pdf(output_dir: str):
     """Converts all html files in a directory to pdf files."""
 
@@ -139,7 +105,7 @@ def _convert_to_pdf(output_dir: str):
 
 
 # Note: after and before strings must be in the form "YYYY-MM-DD"
-async def main(
+def main(
     output_dir: str = DEFAULT_OUTPUT_DIR,
     ciks: List[str] = DEFAULT_CIKS,
     file_types: List[str] = DEFAULT_FILING_TYPES,
@@ -172,8 +138,9 @@ async def main(
     _convert_to_pdf(output_dir)
 
     print("Uploading to Supabase storage")
-    await async_upsert_documents_from_filings(output_dir)
+    asyncio.run(async_upsert_documents_from_filings(output_dir))
 
 
 if __name__ == "__main__":
-    Fire(main)
+    with TemporaryDirectory() as temp_dir:
+        Fire(main(temp_dir))

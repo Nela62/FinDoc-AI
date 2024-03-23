@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import pdfkit
-from backend.app.documents.file_utils import filing_exists
+from file_utils import filing_exists
 from fire import Fire
 from sec_edgar_downloader import Downloader
 from distutils.spawn import find_executable
@@ -14,11 +14,11 @@ DEFAULT_OUTPUT_DIR = "data/"
 # You can lookup the CIK for a company here: https://www.sec.gov/edgar/searchedgar/companysearch
 DEFAULT_CIKS = [
     # AAPL
-    "320193",
+    # "320193",
     # MSFT
     # "789019",
     # # AMZN
-    # "0001018724",
+    "0001018724",
     # # GOOGL
     # "1652044",
     # # META
@@ -97,7 +97,7 @@ def main(
     file_types: List[str] = DEFAULT_FILING_TYPES,
     before: Optional[str] = None,
     after: Optional[str] = None,
-    limit: Optional[int] = 3,
+    limit: Optional[int] = 1,
     convert_to_pdf: bool = True,
 ):
     print('Downloading filings to "{}"'.format(Path(output_dir).absolute()))

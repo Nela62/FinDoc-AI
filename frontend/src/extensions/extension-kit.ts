@@ -3,6 +3,7 @@
 import {
   AiWriter,
   AiImage,
+  AiGenerator,
   CharacterCount,
   Color,
   Document,
@@ -42,6 +43,7 @@ export const ExtensionKit = () => [
   Columns,
   AiWriter,
   AiImage,
+  AiGenerator,
   Column,
   Selection,
   Heading.configure({ levels: [1, 2, 3] }),
