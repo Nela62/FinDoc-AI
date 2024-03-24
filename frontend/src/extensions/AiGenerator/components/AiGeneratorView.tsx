@@ -36,6 +36,47 @@ export const AiGeneratorView = ({
     "Based on the provided context, Apple has a minority market share in the global smartphone, personal computer and tablet markets compared to its competitors. This smaller market share can make third-party software developers less inclined to prioritize developing applications for Apple's platforms.\nThe context does not provide specific details on Apple's market share or position in the wearables industry compared to rivals. It also does not comment on the strength of Apple's management team or their ability to execute on future growth initiatives.\nThe information focuses more on the challenges Apple faces due to its smaller market share in certain product categories, and the potential impacts on the availability of third-party software for its devices. Additional context would be needed to comprehensively address Apple's competitive position across its major product lines and the capabilities of its management.";
 
   const [previewText, setPreviewText] = useState<string>(text);
+  const [isFetching, setIsFetching] = useState(false);
+  const textareaId = useMemo(() => uuid(), []);
+
+  const generateText = useCallback(async () => {
+    setIsFetching(true);
+
+    try {
+      const response = await fetch(`${baseUrl}/text/prompt`, {
+        method: 'POST',
+        headers: {
+          accept: 'application.json',
+          'Content-Type': 'application/json',
+          'X-App-Id': appId.trim(),
+          Authorization: `Bearer ${token.trim()}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await response.json();
+      const text = json.response;
+
+      if (!text.length) {
+        setIsFetching(false);
+
+        return;
+      }
+
+      setPreviewText(text);
+
+      setIsFetching(false);
+    } catch (errPayload: any) {
+      const errorMessage = errPayload?.response?.data?.error;
+      const message =
+        errorMessage !== 'An error occurred'
+          ? `An error has occured: ${errorMessage}`
+          : errorMessage;
+
+      setIsFetching(false);
+      toast.error(message);
+    }
+  }, [data, aiOptions]);
 
   const formattedPreviewText = previewText
     .split('\n')
@@ -59,11 +100,12 @@ export const AiGeneratorView = ({
 
   return (
     <NodeViewWrapper data-drag-handle>
-      <div
-        className="bg-blue-200 px-2 py-2 rounded-[5px]"
-        dangerouslySetInnerHTML={{ __html: formattedPreviewText }}
-      ></div>
-
+      {previewText && (
+        <div
+          className="bg-blue-200 px-2 py-2 rounded-[5px]"
+          dangerouslySetInnerHTML={{ __html: formattedPreviewText }}
+        ></div>
+      )}
       <div className="flex justify-end w-auto gap-3 mt-4">
         {previewText && (
           <Button
