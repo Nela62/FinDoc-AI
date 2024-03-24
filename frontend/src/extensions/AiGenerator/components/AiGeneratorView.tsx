@@ -32,9 +32,10 @@ export const AiGeneratorView = ({
   getPos,
   deleteNode,
 }: NodeViewWrapperProps) => {
-  console.log(node);
-  const previewText =
+  const text =
     "Based on the provided context, Apple has a minority market share in the global smartphone, personal computer and tablet markets compared to its competitors. This smaller market share can make third-party software developers less inclined to prioritize developing applications for Apple's platforms.\nThe context does not provide specific details on Apple's market share or position in the wearables industry compared to rivals. It also does not comment on the strength of Apple's management team or their ability to execute on future growth initiatives.\nThe information focuses more on the challenges Apple faces due to its smaller market share in certain product categories, and the potential impacts on the availability of third-party software for its devices. Additional context would be needed to comprehensively address Apple's competitive position across its major product lines and the capabilities of its management.";
+
+  const [previewText, setPreviewText] = useState<string>(text);
 
   const formattedPreviewText = previewText
     .split('\n')
@@ -43,21 +44,13 @@ export const AiGeneratorView = ({
   const from = getPos();
   const to = from + node.nodeSize;
 
-  // useEffect(() => {
-  //   editor.chain().focus().insertContentAt(from, previewText).run();
-  //   editor.chain().focus().setTextSelection(from, to).run();
-  // }, [previewText]);
-
   const insert = useCallback(() => {
     editor
       .chain()
       .focus()
       .insertContentAt({ from, to }, formattedPreviewText)
       .run();
-  }, []);
-
-  useEffect(() => {
-    insert();
+    setPreviewText('');
   }, []);
 
   const discard = useCallback(() => {
@@ -66,11 +59,12 @@ export const AiGeneratorView = ({
 
   return (
     <NodeViewWrapper data-drag-handle>
-      {/* <div
-        className=""
+      <div
+        className="bg-blue-200 px-2 py-2 rounded-[5px]"
         dangerouslySetInnerHTML={{ __html: formattedPreviewText }}
       ></div>
-      <div className="flex justify-between w-auto gap-1">
+
+      <div className="flex justify-end w-auto gap-3 mt-4">
         {previewText && (
           <Button
             variant="ghost"
@@ -95,7 +89,7 @@ export const AiGeneratorView = ({
           {previewText ? <Icon name="Repeat" /> : <Icon name="Sparkles" />}
           {previewText ? 'Regenerate' : 'Generate text'}
         </Button>
-      </div> */}
+      </div>
     </NodeViewWrapper>
   );
   // const aiOptions = editor.extensionManager.extensions.find(
