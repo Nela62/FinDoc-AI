@@ -134,7 +134,7 @@ export const GROUPS: Group[] = [
         description: 'Generate competitive advantages for the selected company',
         shouldBeHidden: (editor) => editor.isActive('columns'),
         // action: (editor) => editor.chain().focus().setAiCompetitiveAdvantages().run(),
-        action: (editor) => editor.chain().focus().setAiGenerator().run(),
+        action: (editor) => editor.chain().focus().setAiGenerator('competitive_advantages').run(),
       }]}
 ];
 
