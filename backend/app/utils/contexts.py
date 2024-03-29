@@ -1,4 +1,4 @@
-# from llama_index.llms import Anthropic
+from llama_index.llms.anthropic import Anthropic
 from typing import List
 from llama_index.llms.openai import OpenAI
 from llama_index.core import StorageContext, ServiceContext, Settings
@@ -31,8 +31,9 @@ def get_storage_context():
     return storage_context
 
 
-def get_rag_service_context(callback_handlers: List[BaseCallbackHandler]):
-    callback_manager = CallbackManager(callback_handlers)
+# def get_rag_service_context(callback_handlers: List[BaseCallbackHandler]):
+def get_rag_service_context():
+    # callback_manager = CallbackManager(callback_handlers)
     embedding_model = VoyageEmbedding(
         model_name="voyage-lite-02-instruct",
         voyage_api_key=settings.VOYAGE_API_KEY,
@@ -42,9 +43,14 @@ def get_rag_service_context(callback_handlers: List[BaseCallbackHandler]):
         chunk_overlap=10,
         # callback_manager=callback_manager,
     )
-    llm = Cohere(api_key=settings.COHERE_API_KEY, model="command-r")
+    llm = Anthropic(
+        temperature=0,
+        model="claude-3-haiku-20240307",
+        api_key=settings.ANTHROPIC_API_KEY,
+    )
+    # llm = Cohere(api_key=settings.COHERE_API_KEY, model="command-r")
     service_context = ServiceContext.from_defaults(
-        callback_manager=callback_manager,
+        # callback_manager=callback_manager,
         llm=llm,
         embed_model=embedding_model,
         node_parser=node_parser,

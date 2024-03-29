@@ -45,3 +45,22 @@ export const useDocumentStateStore = create<DocumentState>((set) => ({
   setSelectedDocument: (document: Document) =>
     set({ selectedDocument: document }),
 }));
+
+export type Citation = {
+  node_id: string;
+  text: string;
+  source_num: number
+}
+
+
+export interface CitationsState {
+  citations: Citation[];
+  addCitations: (citations: Citation[]) => void;
+}
+
+export const useCitationsStateStore = create<CitationsState>((set) => ({
+  citations: [],
+  addCitations: (citations: Citation[]) => {
+    set((state) => ({ citations: [...state.citations, ...citations] }));
+  },
+}));

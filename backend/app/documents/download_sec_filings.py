@@ -22,12 +22,13 @@ from app.core.config import settings
 DEFAULT_OUTPUT_DIR = "data/"
 # You can lookup the CIK for a company here: https://www.sec.gov/edgar/searchedgar/companysearch
 DEFAULT_CIKS = [
+    "895728"
     # AAPL
     # "320193",
     # MSFT
     # "789019",
     # # AMZN
-    "0001018724",
+    # "0001018724",
     # # GOOGL
     # "1652044",
     # # META

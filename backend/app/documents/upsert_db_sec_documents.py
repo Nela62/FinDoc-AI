@@ -2,7 +2,7 @@ import os
 from fire import Fire
 from tqdm import tqdm
 import asyncio
-from pytickersymbols import PyTickerSymbols
+import financedatabase as fd
 from app.documents.file_utils import get_available_filings, Filing
 from stock_utils import get_stocks_by_symbol, Stock
 from app.supabase.client import service_client, vector_client
@@ -13,6 +13,7 @@ from llama_index.llms.anthropic import Anthropic
 from llama_index.core import Settings, VectorStoreIndex, ServiceContext, StorageContext
 from llama_index.embeddings.voyageai import VoyageEmbedding
 from app.core.config import settings
+
 
 # from app.models.db import Document
 from app.schema import (
@@ -27,7 +28,7 @@ from app.schema import (
 DEFAULT_DOC_DIR = "data/"
 
 
-async def upsert_document(doc_dir: str, stock: Stock, filing: Filing):
+async def upsert_document(doc_dir: str, name: str, filing: Filing):
     # construct a string for just the document's sub-path after the doc_dir
     # e.g. "sec-edgar-filings/AAPL/10-K/0000320193-20-000096/primary-document.pdf"
     doc_path = os.path.relpath(filing.file_path, doc_dir)
@@ -37,8 +38,8 @@ async def upsert_document(doc_dir: str, stock: Stock, filing: Filing):
         else SecDocumentTypeEnum.TEN_Q
     )
     sec_doc_metadata = SecDocumentMetadata(
-        company_name=stock.name,
-        company_ticker=stock.symbol,
+        company_name=name,
+        company_ticker=filing.symbol,
         doc_type=doc_type,
         year=filing.year,
         quarter=filing.quarter,
@@ -106,14 +107,16 @@ async def async_upsert_documents_from_filings(doc_dir: str):
     Upserts SEC documents into the database based on what has been downloaded to the filesystem.
     """
     filings = get_available_filings(doc_dir)
-    stocks_data = PyTickerSymbols()
-    stocks_dict = get_stocks_by_symbol(stocks_data.get_all_indices())
+    equities = fd.Equities()
+
     for filing in tqdm(filings, desc="Upserting docs from filings"):
-        if filing.symbol not in stocks_dict:
+        try:
+            stock = equities.select().loc[filing.symbol]
+        except:
             print(f"Symbol {filing.symbol} not found in stocks_dict. Skipping.")
             continue
-        stock = stocks_dict[filing.symbol]
-        await upsert_document(doc_dir, stock, filing)
+        name = stock["name"]
+        await upsert_document(doc_dir, name, filing)
 
 
 def main_upsert_documents_from_filings(doc_dir: str = DEFAULT_DOC_DIR):

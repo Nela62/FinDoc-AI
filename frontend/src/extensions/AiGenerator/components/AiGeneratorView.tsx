@@ -17,6 +17,7 @@ import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { Surface } from '@/components/ui/Surface';
 import { DropdownButton } from '@/components/ui/Dropdown';
+import { useCitationsStateStore } from '@/store';
 
 export interface DataProps {
   text: string;
@@ -41,6 +42,9 @@ export const AiGeneratorView = ({
   const textareaId = useMemo(() => uuid(), []);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
+  const citations = useCitationsStateStore((state) => state.citations);
+  const addCitations = useCitationsStateStore((state) => state.addCitations);
+
   const generateText = useCallback(async () => {
     setIsFetching(true);
 
@@ -51,9 +55,11 @@ export const AiGeneratorView = ({
           method: 'GET',
         },
       );
+      console.log(response);
 
       const json = await response.json();
       const text = json.response;
+      addCitations(json.nodes);
 
       if (!text.length) {
         setIsFetching(false);

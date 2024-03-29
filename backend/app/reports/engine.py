@@ -27,14 +27,15 @@ from app.utils.contexts import (
 )
 from llama_index.core.query_engine import SubQuestionQueryEngine
 
-# from llama_index.llms.anthropic import Anthropic
+from llama_index.llms.anthropic import Anthropic
 from llama_index.core.vector_stores import ExactMatchFilter, MetadataFilters
 from app.core.config import settings
 from app.schema import SecDocumentMetadata
 from app.reports.constants import investment_thesis_prompt
-
+from llama_index.postprocessor.cohere_rerank import CohereRerank
 from anyio.streams.memory import MemoryObjectSendStream
 
+from llama_index.core.schema import NodeWithScore
 
 # import logging
 # import sys
@@ -83,11 +84,18 @@ def qualitative_question_engine(input: str, service_context: ServiceContext) -> 
 
 
 def get_available_docs(cik: str):
-    docs = service_client.table("documents").select("*").eq("cik", cik).execute()
+    docs = (
+        service_client.table("documents")
+        .select("*")
+        .eq("cik", cik)
+        .eq("year", 2023)
+        .eq("doc_type", "10-K")
+        .execute()
+    )
     return docs.data
 
 
-def doc_to_query_engine(doc_id: str, service_context: ServiceContext):
+def get_nodes(doc_id: str, service_context: ServiceContext):
     index = VectorStoreIndex.from_vector_store(
         vector_store=get_vector_store(),
         service_context=service_context,
@@ -95,166 +103,97 @@ def doc_to_query_engine(doc_id: str, service_context: ServiceContext):
     filters = MetadataFilters(
         filters=[ExactMatchFilter(key="db_document_id", value=doc_id)]
     )
-    # return index.as_query_engine(filters=filters)
-    return CitationQueryEngine.from_args(
-        index,
-        similarity_top_k=3,
-        # here we can control how granular citation sources are, the default is 512
-        citation_chunk_size=512,
-    )
+
+    return index.as_retriever(filters=filters, similarity_top_k=10)
 
 
-def build_description_for_document(doc):
-    time_period = (
-        f"{doc['year']} Q{doc['quarter']}" if doc["quarter"] else str(doc["year"])
-    )
-    return f"A SEC {doc['doc_type']} filing describing the financials of {doc['company_name']} for the {time_period} time period."
+def process_nodes(nodes: List[NodeWithScore], query: str):
+    cohere_rerank = CohereRerank(api_key=settings.COHERE_API_KEY, top_n=2)
+
+    return cohere_rerank.postprocess_nodes(nodes=nodes, query_str=query)
 
 
-class ReportCallbackHandler(BaseCallbackHandler):
-    def __init__(
-        self,
-    ):
-        """Initialize the base callback handler."""
-        # ignored_events = [CBEventType.CHUNKING, CBEventType.NODE_PARSING]
-        ignored_events = []
-        self.event_starts_to_ignore = ignored_events
-        self.event_ends_to_ignore = ignored_events
-        # super().__init__(
-        #     event_starts_to_ignore=ignored_events, event_ends_to_ignore=ignored_events
-        # )
-
-    def on_event_start(
-        self,
-        event_type: CBEventType,
-        payload: Optional[Dict[str, Any]] = None,
-        event_id: str = "",
-        **kwargs: Any,
-    ) -> str:
-        ...
-        print(f"Event started: {event_type}")
-        # print("on event start")
-        # print(event_type)
-        # print(payload)
-
-    def on_event_end(
-        self,
-        event_type: CBEventType,
-        payload: Dict[str, Any],
-        event_id: str = "",
-        **kwargs: Any,
-    ) -> str:
-        print(f"Event ended: {event_type}")
-        if event_type == CBEventType.RETRIEVE:
-            print(payload[EventPayload.NODES])
-
-    async def async_on_event(
-        self,
-        event_type: CBEventType,
-        payload: Dict[str, Any],
-        event_id: str = "",
-        is_start_event: bool = False,
-        **kwargs: Any,
-    ):
-        print(f"Async on event: {event_type}")
-
-    def start_trace(self, trace_id: Optional[str] = None) -> None:
-        """No-op."""
-
-    def end_trace(
-        self,
-        trace_id: Optional[str] = None,
-        trace_map: Optional[Dict[str, List[str]]] = None,
-    ) -> None:
-        """No-op."""
-
-
-def get_reports_engine(prompt: str, cik: str):
-
-    callback_handler = ReportCallbackHandler()
-    rag_service_context = get_rag_service_context([callback_handler])
-    subquestion_service_context = get_service_context([callback_handler])
-    agent_service_context = get_service_context([callback_handler])
-
+def get_reports_engine(cik: str):
     docs = get_available_docs(cik)
+    retriever = get_nodes(docs[0]["id"], get_rag_service_context())
 
-    vector_query_engine_tools = [
-        QueryEngineTool(
-            query_engine=doc_to_query_engine(doc["id"], rag_service_context),
-            metadata=ToolMetadata(
-                name=doc["id"], description=build_description_for_document(doc)
-            ),
-        )
-        for doc in docs
+    # nodes = retriever.retrieve("key products")
+    # processed_nodes = process_nodes(nodes, "key products")
+
+    prompts = [
+        "primary business, industry, and key products/services",
+        "Breakdown of revenue by business segment",
+        "Key brands, subsidiaries or business units",
+        "High-level financial metrics like total revenue",
+        "Geographic markets served",
+        "key facts like founding date, pioneering a new industry/technology, or major acquisitions",
     ]
 
-    qualitative_question_engine = SubQuestionQueryEngine.from_defaults(
-        query_engine_tools=vector_query_engine_tools,
-        service_context=subquestion_service_context,
-        verbose=settings.VERBOSE,
-        use_async=False,
-    )
+    starting_citation_num = 1
+    citation_num = starting_citation_num
+    context = ""
+    nodes = []
 
-    quantitative_question_engine = SubQuestionQueryEngine.from_defaults(
-        query_engine_tools=vector_query_engine_tools,
-        service_context=subquestion_service_context,
-        verbose=settings.VERBOSE,
-        use_async=False,
-    )
+    for prompt in prompts:
+        for node in process_nodes(retriever.retrieve(prompt), prompt):
+            # print(node.node)
+            nodes.append(
+                {
+                    "node_id": node.id_,
+                    "text": node.get_text(),
+                    "source_num": citation_num,
+                }
+            )
+            context += f"""<source><source_number>{citation_num}</source_number><source_content>{node.get_text()}</source_content></source>\n"""
+            citation_num += 1
 
-    # quantitative_question_engine_tool = FunctionTool.from_defaults(
-    #     fn=quantitative_question_engine
-    # )
-    # qualitative_question_engine_tool = FunctionTool.from_defaults(
-    #     fn=qualitative_question_engine
-    # )
+    prompt = """Please provide an answer based solely on the provided sources. \
+    When referencing information from a source, cite the appropriate source(s) using their corresponding numbers. \
+    Every answer should include at least one source citation. \
+    Only cite a source when you are explicitly referencing it. \
+    If none of the sources are helpful, you should indicate that. \
+    <example><sources><source><source_number>1</source_number><source_content><The sky is red in the evening and blue in the morning./source_content></source> \
+    <source><source_number>2</source_number><source_content>Water is wet when the sky is red.</source_content></source></sources> \
+    <query>When is water wet?</query>
+    <answer>Water will be wet when the sky is red [2], \n
+    which occurs in the evening [1].</answer>
+    </example>
+    Now it's your turn. Below are several numbered sources of information:
+    <context>{context}</context>\n
+    <query>{query}</query>
+    Answer: """
 
-    top_level_sub_tools = [
-        QueryEngineTool(
-            query_engine=qualitative_question_engine,
-            metadata=ToolMetadata(
-                name="qualitative_question_engine",
-                description="""
-        A query engine that can answer qualitative questions about a set of SEC financial documents that the user pre-selected for the conversation.
-        Any questions about company-related headwinds, tailwinds, risks, sentiments, or administrative information should be asked here.
-        """.strip(),
-            ),
-        ),
-        QueryEngineTool(
-            query_engine=quantitative_question_engine,
-            metadata=ToolMetadata(
-                name="quantitative_question_engine",
-                description="""
-        A query engine that can answer quantitative questions about a set of SEC financial documents that the user pre-selected for the conversation.
-        Any questions about company-related financials or other metrics should be asked here.
-        """.strip(),
-            ),
-        ),
-    ]
+    business_description_query = """You are an exceptional financial analyst who is writing an equity research report. \
+Write a concise 3-4 sentence business description of the given company, including the following information: \
+- The company's primary business, industry, and key products/services \
+- Breakdown of revenue by business segment in percentages \
+- Key brands, subsidiaries or business units \
+- High-level financial metrics like total revenue \
+- Geographic markets served \
+- Any other key facts like founding date, pioneering a new industry/technology, or major acquisitions \
+Write the description in an objective, matter-of-fact tone. Use the most recent available data. \
 
-    # llm = Anthropic(
-    #     temperature=0,
-    #     # model="claude-3-opus-20240229",
-    #     model="claude-3-haiku-20240307",
-    #     api_key=settings.ANTHROPIC_API_KEY,
-    # )
-    # agent = ReActAgent.from_tools(
-    #     top_level_sub_tools,
-    #     llm=llm,
-    #     verbose=True,
-    # )
-    chat_llm = OpenAI(
-        api_key=settings.OPENAI_API_KEY,
-        model="gpt-3.5-turbo",
+Here is an example of a good business description: 
+<example>Amazon, founded in 1994, is a multinational technology company primarily operating in the e-commerce, cloud computing, and artificial intelligence industries. The company's key products and services include online retail, Amazon Web Services (AWS), and digital streaming, with revenue breakdown of 50% from online stores, 33% from third-party seller services, 13% from AWS, and 4% from other sources, as of 2021. Amazon's major subsidiaries include Whole Foods Market, Ring, and Twitch, serving customers worldwide. In 2021, Amazon reported total net sales of $469.8 billion, a 22% increase from the previous year, solidifying its position as a global leader in the e-commerce industry.</example>
+
+Keep the writing style and length as similar as possible to the example provided.
+
+Company name: {company} \
+"""
+
+    llm = Anthropic(
         temperature=0,
+        model="claude-3-opus-20240229",
+        # model="claude-3-haiku-20240307",
+        api_key=settings.ANTHROPIC_API_KEY,
     )
-    agent = OpenAIAgent.from_tools(
-        tools=top_level_sub_tools,
-        llm=chat_llm,
-        verbose=True,
+    res = llm.complete(
+        prompt.format(
+            context=context,
+            query=business_description_query.format(company=docs[0]["company_name"]),
+        )
     )
-    response = agent.chat(prompt)
-    print(response)
+    return {"text": res.text, "nodes": nodes}
 
 
-get_reports_engine(investment_thesis_prompt.format(company="Apple"), "0000320193")
+# get_reports_engine("0000320193")

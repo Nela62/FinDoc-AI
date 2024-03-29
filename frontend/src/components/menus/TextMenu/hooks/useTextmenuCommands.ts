@@ -12,16 +12,16 @@ export const useTextmenuCommands = (editor: Editor) => {
 
   const onSubscript = useCallback(() => editor.chain().focus().toggleSubscript().run(), [editor])
   const onSuperscript = useCallback(() => editor.chain().focus().toggleSuperscript().run(), [editor])
-  const onAlignLeft = useCallback(() => editor.chain().focus().setTextAlign('left').run(), [editor])
-  const onAlignCenter = useCallback(() => editor.chain().focus().setTextAlign('center').run(), [editor])
-  const onAlignRight = useCallback(() => editor.chain().focus().setTextAlign('right').run(), [editor])
-  const onAlignJustify = useCallback(() => editor.chain().focus().setTextAlign('justify').run(), [editor])
+  // const onAlignLeft = useCallback(() => editor.chain().focus().setTextAlign('left').run(), [editor])
+  // const onAlignCenter = useCallback(() => editor.chain().focus().setTextAlign('center').run(), [editor])
+  // const onAlignRight = useCallback(() => editor.chain().focus().setTextAlign('right').run(), [editor])
+  // const onAlignJustify = useCallback(() => editor.chain().focus().setTextAlign('justify').run(), [editor])
 
   const onChangeColor = useCallback((color: string) => editor.chain().setColor(color).run(), [editor])
   const onClearColor = useCallback(() => editor.chain().focus().unsetColor().run(), [editor])
 
-  const onChangeHighlight = useCallback((color: string) => editor.chain().setHighlight({ color }).run(), [editor])
-  const onClearHighlight = useCallback(() => editor.chain().focus().unsetHighlight().run(), [editor])
+  // const onChangeHighlight = useCallback((color: string) => editor.chain().setHighlight({ color }).run(), [editor])
+  // const onClearHighlight = useCallback(() => editor.chain().focus().unsetHighlight().run(), [editor])
 
   // const onSimplify = useCallback(() => editor.chain().focus().aiSimplify().run(), [editor])
   // const onEmojify = useCallback(() => editor.chain().focus().aiEmojify().run(), [editor])
@@ -71,14 +71,14 @@ export const useTextmenuCommands = (editor: Editor) => {
     onCodeBlock,
     onSubscript,
     onSuperscript,
-    onAlignLeft,
-    onAlignCenter,
-    onAlignRight,
-    onAlignJustify,
+    // onAlignLeft,
+    // onAlignCenter,
+    // onAlignRight,
+    // onAlignJustify,
     onChangeColor,
     onClearColor,
-    onChangeHighlight,
-    onClearHighlight,
+    // onChangeHighlight,
+    // onClearHighlight,
     onSetFont,
     onSetFontSize,
     // onSimplify,
