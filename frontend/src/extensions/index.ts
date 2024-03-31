@@ -14,6 +14,8 @@ export { Superscript } from '@tiptap/extension-superscript';
 export { Paragraph } from '@tiptap/extension-paragraph';
 export { FileHandler } from '@tiptap-pro/extension-file-handler';
 
+export { TaskItem } from '@tiptap/extension-task-item'
+export { TaskList } from '@tiptap/extension-task-list'
 export { Selection } from './Selection';
 export { AiWriter } from './AiWriter';
 export { AiImage } from './AiImage';

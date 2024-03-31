@@ -34,6 +34,8 @@ import {
   Underline,
   Columns,
   Column,
+  TaskItem,
+  TaskList
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
@@ -41,12 +43,14 @@ import { TableOfContentsNode } from './TableOfContentsNode';
 export const ExtensionKit = () => [
   Document,
   Columns,
+  TaskList,
+  TaskItem.configure({nested: true}),
   AiWriter,
   AiImage,
   AiGenerator,
   Column,
   Selection,
-  Heading.configure({ levels: [1, 2, 3] }),
+  Heading.configure({ levels: [1, 2, 3, 4,5,6] }),
   HorizontalRule,
   StarterKit.configure({
     document: false,
@@ -65,6 +69,8 @@ export const ExtensionKit = () => [
   Link.configure({
     openOnClick: false,
   }),
+  // Highlight.configure({ multicolor: true }),
+  Underline,
   CharacterCount.configure({ limit: 50000 }),
   TableOfContents,
   TableOfContentsNode,

@@ -58,8 +58,30 @@ export const GROUPS: Group[] = [
           editor.chain().focus().setHeading({ level: 3 }).run();
         },
       },
+
+      {
+        name: 'bulletList',
+        label: 'Bullet List',
+        iconName: 'List',
+        description: 'Unordered list of items',
+        aliases: ['ul'],
+        action: editor => {
+          editor.chain().focus().toggleBulletList().run()
+        },
+      },
+      {
+        name: 'numberedList',
+        label: 'Numbered List',
+        iconName: 'ListOrdered',
+        description: 'Ordered list of items',
+        aliases: ['ol'],
+        action: editor => {
+          editor.chain().focus().toggleOrderedList().run()
+        },
+      },
     ],
   },
+  
   {
     name: 'insert',
     title: 'Insert',
