@@ -1,6 +1,6 @@
 // TODO: add type
 
-import { Editor, EditorContent } from '@tiptap/react';
+import { Editor, EditorContent, JSONContent } from '@tiptap/react';
 import { generateDocxFile } from './components/docxExport';
 
 export const ExportButton = ({ editor }: { editor: Editor }) => {
@@ -25,7 +25,7 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
       </button>
       <button
         onClick={async () => {
-          const json = editor.getJSON();
+          const json: JSONContent = editor.getJSON();
           const blob = await generateDocxFile('ARGUS', json);
           const url = URL.createObjectURL(blob);
 
