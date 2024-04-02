@@ -85,7 +85,15 @@ export const generateDocxFile = async (
     sections: [
       {
         properties: {
-          page: { margin: { top: 400, left: 900, right: 900, bottom: 300 } },
+          page: {
+            margin: {
+              top: 100,
+              left: 900,
+              right: 900,
+              bottom: 300,
+              header: 100,
+            },
+          },
           column: { count: 2, space: 300 },
         },
         headers: {
@@ -96,7 +104,7 @@ export const generateDocxFile = async (
                   new ImageRun({
                     data: headerImage,
                     // TODO: get more precise values
-                    transformation: { width: 680, height: 70 },
+                    transformation: { width: 680, height: 80 },
                     floating: {
                       behindDocument: true,
                       horizontalPosition: {
@@ -115,7 +123,7 @@ export const generateDocxFile = async (
                 children: [
                   new TextRun({
                     text: 'NASDAQ: AMZN',
-                    size: 22,
+                    size: 20,
                     color: 'ffffff',
                   }),
                 ],
@@ -135,13 +143,18 @@ export const generateDocxFile = async (
                 children: [
                   new TextRun({
                     text: 'Report created Apr 1, 2024',
-                    size: 22,
+                    size: 18,
                     color: 'ffffff',
                   }),
                   new TextRun({
-                    text: ` Page ${PageNumber.CURRENT} of ${PageNumber.TOTAL_PAGES}`,
+                    children: [
+                      '\tPage ',
+                      PageNumber.CURRENT,
+                      ' of ',
+                      PageNumber.TOTAL_PAGES,
+                    ],
                     bold: true,
-                    size: 22,
+                    size: 18,
                     color: 'ffffff',
                   }),
                 ],
