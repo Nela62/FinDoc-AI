@@ -1,5 +1,6 @@
 'use client';
 
+import { API } from '@/lib/api';
 import {
   AiWriter,
   AiImage,
@@ -35,7 +36,7 @@ import {
   Columns,
   Column,
   TaskItem,
-  TaskList
+  TaskList,
 } from '.';
 import { ImageUpload } from './ImageUpload';
 import { TableOfContentsNode } from './TableOfContentsNode';
@@ -44,13 +45,13 @@ export const ExtensionKit = () => [
   Document,
   Columns,
   TaskList,
-  TaskItem.configure({nested: true}),
+  TaskItem.configure({ nested: true }),
   AiWriter,
   AiImage,
   AiGenerator,
   Column,
   Selection,
-  Heading.configure({ levels: [1, 2, 3, 4,5,6] }),
+  Heading.configure({ levels: [1, 2, 3, 4, 5, 6] }),
   HorizontalRule,
   StarterKit.configure({
     document: false,
@@ -74,34 +75,36 @@ export const ExtensionKit = () => [
   CharacterCount.configure({ limit: 50000 }),
   TableOfContents,
   TableOfContentsNode,
-  // ImageUpload.configure({
-  //   clientId: provider?.document?.clientID,
-  // }),
-  ImageBlock,
-  // FileHandler.configure({
-  //   allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
-  //   onDrop: (currentEditor, files, pos) => {
-  //     files.forEach(async () => {
-  //       const url = await API.uploadImage();
+  ImageUpload.configure({
+    // clientId: provider?.document?.clientID,
+  }),
+  ImageBlock.configure({
+    allowBase64: true,
+  }),
+  FileHandler.configure({
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+    onDrop: (currentEditor, files, pos) => {
+      files.forEach(async (file) => {
+        const url = await API.uploadImage(file);
 
-  //       currentEditor.chain().setImageBlockAt({ pos, src: url }).focus().run();
-  //     });
-  //   },
-  //   onPaste: (currentEditor, files) => {
-  //     files.forEach(async () => {
-  //       const url = await API.uploadImage();
+        currentEditor.chain().setImageBlockAt({ pos, src: url }).focus().run();
+      });
+    },
+    onPaste: (currentEditor, files) => {
+      files.forEach(async (file) => {
+        const url = await API.uploadImage(file);
 
-  //       return currentEditor
-  //         .chain()
-  //         .setImageBlockAt({
-  //           pos: currentEditor.state.selection.anchor,
-  //           src: url,
-  //         })
-  //         .focus()
-  //         .run();
-  //     });
-  //   },
-  // }),
+        return currentEditor
+          .chain()
+          .setImageBlockAt({
+            pos: currentEditor.state.selection.anchor,
+            src: url,
+          })
+          .focus()
+          .run();
+      });
+    },
+  }),
   Subscript,
   Superscript,
   Table,

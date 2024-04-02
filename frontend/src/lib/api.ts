@@ -1,9 +1,16 @@
 import OpenAI from 'openai';
 
+// TODO: Move api to api folder
 export class API {
-  public static uploadImage = async () => {
-    await new Promise((r) => setTimeout(r, 500));
-    return '/placeholder-image.jpg';
+  public static uploadImage = async (img: File) => {
+    const formData = new FormData();
+    formData.append('img', img);
+    const response = await fetch('/api/image', {
+      method: 'POST',
+      body: formData,
+    });
+    const body = await response.json();
+    return body.url;
   };
 }
 
