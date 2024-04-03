@@ -37,7 +37,6 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
     const { data, error } = await supabase.storage
       .from('images')
       .createSignedUrl(src, 3600);
-    console.log(error);
 
     if (data) return data.signedUrl;
   }, [src, supabase.storage]);
@@ -58,16 +57,6 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
       </div>
     </NodeViewWrapper>
   );
-
-  // return (
-  //   <NodeViewWrapper>
-  //     <div className={wrapperClassName} style={{ width: node.attrs.width }}>
-  //       <div contentEditable={false} ref={imageWrapperRef}>
-  //         <img className="block" src={srcLink} alt="" onClick={onClick} />
-  //       </div>
-  //     </div>
-  //   </NodeViewWrapper>
-  // );
 };
 
 export default ImageBlockView;
