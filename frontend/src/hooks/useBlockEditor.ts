@@ -1,6 +1,6 @@
 'use client';
 
-import { Editor, Extension, useEditor } from '@tiptap/react';
+import { Content, Editor, Extension, useEditor } from '@tiptap/react';
 
 import { useEditorStateStore } from '@/store';
 import { ExtensionKit } from '@/extensions/extension-kit';
@@ -44,11 +44,11 @@ export const useBlockEditor = () => {
       },
     },
     // TODO: remove this once dev is done
-    onCreate: ({ editor }) => {
-      if (editor.isEmpty) {
-        editor.commands.setContent(initialContent);
-      }
-    },
+    // onCreate: ({ editor }) => {
+    //   if (editor.isEmpty) {
+    //     editor.commands.setContent(initialContent);
+    //   }
+    // },
     onUpdate({ editor }) {
       if (editor.isEmpty) {
         setIsEmpty(true);

@@ -1,8 +1,8 @@
 .ProseMirror {
-  @apply caret-black dark:caret-white outline-0 pr-8 pl-20 py-16 z-0 lg:pl-8 lg:pr-8;
+  @apply caret-black dark:caret-white outline-0 pr-8 pl-20 py-16 z-0 lg:pl-8 lg:pr-8 bg-white rounded-t-[12px];
 
   & > * {
-    @apply mx-auto max-w-2xl;
+    @apply mx-auto max-w-2xl px-2 py-1;
   }
 
   .selection {
@@ -22,6 +22,7 @@
     @apply cursor-col-resize;
   }
 
+
   .ProseMirror-gapcursor {
     @apply relative w-full max-w-2xl mx-auto;
 
@@ -29,6 +30,11 @@
       @apply border-t-black/40 dark:border-t-white/40 w-full -top-[1.5em] max-w-2xl mx-auto left-0 right-0;
     }
   }
+
+}
+
+.ProseMirror.ProseMirror-focused {
+  @apply outline-none;
 }
 
 [data-theme='slash-command'] {

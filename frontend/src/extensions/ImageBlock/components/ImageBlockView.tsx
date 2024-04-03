@@ -52,6 +52,7 @@ export const ImageBlockView = (props: ImageBlockViewProps) => {
     <NodeViewWrapper>
       <div className={wrapperClassName} style={{ width: node.attrs.width }}>
         <div contentEditable={false} ref={imageWrapperRef}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="block" src={url} alt="" onClick={onClick} />
         </div>
       </div>

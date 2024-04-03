@@ -1,12 +1,12 @@
 'use client';
 
-import { Sidebar } from '@/components/SideBar';
+import { NavBar } from '@/components/NavBar';
 import { ContentItemMenu, LinkMenu, TextMenu } from '@/components/menus';
 import ImageBlockMenu from '@/extensions/ImageBlock/components/ImageBlockMenu';
 import { ColumnsMenu } from '@/extensions/MultiColumn/menus';
 import { TableColumnMenu, TableRowMenu } from '@/extensions/Table/menus';
 import { useBlockEditor } from '@/hooks/useBlockEditor';
-import { Editor, EditorContent } from '@tiptap/react';
+import { Content, Editor, EditorContent } from '@tiptap/react';
 import { useRef, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 
@@ -17,7 +17,9 @@ import { X } from 'lucide-react';
 import { Combobox } from '@/components/ui/Combobox';
 import { tickers } from '@/lib/data/tickers';
 import { getPrompts } from './prompts';
-import { ExportButton } from '@/components/export';
+import { TopBar } from '@/components/TopBar/TopBar';
+import { ReportType, useReportsStateStore } from '@/store';
+import { initialContent } from '@/lib/data/initialContent';
 export type AiState = {
   isAiLoading: boolean;
   aiError?: string | null;
@@ -50,11 +52,41 @@ const generateReport = async (ticker: string, editor: Editor) => {
   }
 };
 
-export default function Document({ params }: { params: { document: string } }) {
-  const { document: documentId } = params;
-  const isNew = useSearchParams().get('isNew') === 'true';
+export default function Report({ params }: { params: { report: string } }) {
+  const { report: reportId } = params;
+  const setSelectedReport = useReportsStateStore((s) => s.setSelectedReport);
+  const [content, setContent] = useState<string | Content | null>(null);
+  const [isNew, setIsNew] = useState(false);
+  // const isNew = useSearchParams().get('isNew') === 'true';
 
   // TODO: Fetch document
+
+  const fetchReport = () => {
+    // TODO: fetch from supabase
+    if (reportId === 'Dzd7LhprkD') {
+      setSelectedReport({
+        id: 'Dzd7LhprkD',
+        title: 'Oct 23, 2023 - Equity Research Report',
+        companyTicker: 'AAPL',
+        type: ReportType.EquityResearch,
+      });
+    } else if (reportId === 'r6BJzHbnCG') {
+      setSelectedReport({
+        id: 'r6BJzHbnCG',
+        title: 'Q4 2023 - Earnings Call Note',
+        companyTicker: 'AAPL',
+        type: ReportType.EarningsCallNote,
+      });
+    } else if (reportId === 'c6TWdN9N9k') {
+      setSelectedReport({
+        id: 'c6TWdN9N9k',
+        title: 'Dec 14, 2023 - Equity Research Report',
+        companyTicker: 'AMZN',
+        type: ReportType.EquityResearch,
+      });
+      setContent(initialContent);
+    }
+  };
 
   const { editor, characterCount } = useBlockEditor();
   const menuContainerRef = useRef(null);
@@ -67,7 +99,7 @@ export default function Document({ params }: { params: { document: string } }) {
 
   return (
     <div className="flex h-full" ref={menuContainerRef}>
-      <Sidebar />
+      <NavBar />
       <Dialog.Root defaultOpen={isNew}>
         <Dialog.Portal>
           <Dialog.Overlay className="bg-gray-900 bg-opacity-30 data-[state=open]:animate-overlayShow fixed inset-0" />
@@ -115,9 +147,7 @@ export default function Document({ params }: { params: { document: string } }) {
       </Dialog.Root>
       {/* TODO: Top bar (title, upgrade, document settings, ai chat, citations/library) */}
       <div className="flex w-full h-full flex-col">
-        <div className="bg-red-500">
-          <ExportButton editor={editor} />
-        </div>
+        <TopBar editor={editor} />
         <div className="relative flex flex-col flex-1 h-full overflow-hidden">
           {/* TODO: Table of contents */}
           <EditorContent editor={editor} className="flex-1 overflow-y-auto" />

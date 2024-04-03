@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full font-sans">
-      <body className={`${inter.className} h-full flex flex-col`}>
+      <body className={`${inter.className} h-full flex flex-col bg-zinc-50`}>
         <main className="h-full">{children}</main>
       </body>
     </html>

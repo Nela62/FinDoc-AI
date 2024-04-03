@@ -22,36 +22,65 @@ export const useEditorStateStore = create<EditorState>((set) => ({
   setAiError: (aiError: string | null) => set({ aiError }),
 }));
 
-export type Document = {
-  id: string;
-  title: string;
-};
-
-export interface DocumentState {
-  documents: Document[];
-  selectedDocument: Document;
-  addNewDocument: (document: Document) => void;
-  setSelectedDocument: (document: Document) => void;
+export enum ReportType {
+  EquityResearch = 'Equity Research',
+  EarningsCallNote = 'Earnings Call Note',
+  Other = 'Other',
 }
 
-export const useDocumentStateStore = create<DocumentState>((set) => ({
-  documents: [
-    { id: 'Dzd7LhprkD', title: 'Apple' },
-    { id: 'c6TWdN9N9k', title: 'Amazon' },
+export type Report = {
+  id: string;
+  title: string;
+  companyTicker: string;
+  type: ReportType;
+  // dateCreated: Date;
+  // lastUpdated: Date;
+};
+
+export interface ReportsState {
+  reports: Report[];
+  selectedReports: Report;
+  addNewReport: (report: Report) => void;
+  setSelectedReport: (report: Report) => void;
+}
+
+export const useReportsStateStore = create<ReportsState>((set) => ({
+  reports: [
+    {
+      id: 'Dzd7LhprkD',
+      title: 'Oct 23, 2023 - Equity Research Report',
+      companyTicker: 'AAPL',
+      type: ReportType.EquityResearch,
+    },
+    {
+      id: 'r6BJzHbnCG',
+      title: 'Q4 2023 - Earnings Call Note',
+      companyTicker: 'AAPL',
+      type: ReportType.EarningsCallNote,
+    },
+    {
+      id: 'c6TWdN9N9k',
+      title: 'Dec 14, 2023 - Equity Research Report',
+      companyTicker: 'AMZN',
+      type: ReportType.EquityResearch,
+    },
   ],
-  selectedDocument: { id: 'Dzd7LhprkD', title: 'Apple' },
-  addNewDocument: (document: Document) =>
-    set((state) => ({ documents: [...state.documents, document] })),
-  setSelectedDocument: (document: Document) =>
-    set({ selectedDocument: document }),
+  selectedReports: {
+    id: 'Dzd7LhprkD',
+    title: 'Oct 23, 2023 - Equity Research Report',
+    companyTicker: 'AAPL',
+    type: ReportType.EquityResearch,
+  },
+  addNewReport: (report: Report) =>
+    set((state) => ({ reports: [...state.reports, report] })),
+  setSelectedReport: (report: Report) => set({ selectedReports: report }),
 }));
 
 export type Citation = {
   node_id: string;
   text: string;
-  source_num: number
-}
-
+  source_num: number;
+};
 
 export interface CitationsState {
   citations: Citation[];
