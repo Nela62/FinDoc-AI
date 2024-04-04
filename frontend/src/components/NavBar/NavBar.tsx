@@ -20,7 +20,6 @@ export const NavBar = () => {
       companyTicker: '',
       type: ReportType.Other,
     };
-    addNewReport(newReport);
     push('/reports/' + newReport.id);
   };
 
