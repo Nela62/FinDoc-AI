@@ -28,7 +28,7 @@ import { Combobox } from '@/components/ui/Combobox';
 import { tickers } from '@/lib/data/tickers';
 import { getPrompts } from './prompts';
 import { TopBar } from '@/components/TopBar/TopBar';
-import { ReportType, useReportsStateStore } from '@/store';
+import { Recommendation, ReportType, useReportsStateStore } from '@/store';
 import { initialContent } from '@/lib/data/initialContent';
 import { DropdownButton } from '@/components/ui/Dropdown';
 export type AiState = {
@@ -63,11 +63,19 @@ const generateReport = async (ticker: string, editor: Editor) => {
   }
 };
 
+interface OptionsState {
+  type: string;
+  companyTicker: string;
+  recommendation: Recommendation;
+  targetPrice?: string;
+}
+
 // TODO: turn this into a form hook
 export default function Report({ params }: { params: { report: string } }) {
   const { report: reportId } = params;
   const reports = useReportsStateStore((state) => state.reports);
   const setSelectedReport = useReportsStateStore((s) => s.setSelectedReport);
+  const updateReport = useReportsStateStore((s) => s.updateReport);
   const [content, setContent] = useState<string | Content | null>(null);
   const [isNew, setIsNew] = useState(false);
   // const isNew = useSearchParams().get('isNew') === 'true';
@@ -75,18 +83,9 @@ export default function Report({ params }: { params: { report: string } }) {
   const { editor, characterCount, isEmpty } = useBlockEditor(reportId);
   const menuContainerRef = useRef(null);
 
-  enum Recommendation {
-    Auto = 'Auto',
-    Buy = 'Buy',
-    Hold = 'Hold',
-    Sell = 'Sell',
-    Overweight = 'Overweight',
-    Underweight = 'Underweight',
-  }
-
-  const [options, setOptions] = useState({
-    reportType: '',
-    company: '',
+  const [options, setOptions] = useState<OptionsState>({
+    type: '',
+    companyTicker: '',
     recommendation: Recommendation.Auto,
     targetPrice: undefined,
   });
@@ -122,6 +121,21 @@ export default function Report({ params }: { params: { report: string } }) {
   if (!editor) {
     return null;
   }
+
+  const getDateName = () => {
+    const currentDate = new Date();
+
+    // Extract the month, day, and year from the current date
+    const month = currentDate.toLocaleString('default', { month: 'short' });
+    const day = currentDate.getDate();
+    const year = currentDate.getFullYear();
+
+    // Format the date as "MMM DD, YYYY"
+    const formattedDate = `${month} ${day}, ${year}`;
+    return formattedDate;
+  };
+
+  // TODO: IMPORTANT - add all tickers
 
   type Option = { label: string; value: string };
 
@@ -161,7 +175,7 @@ export default function Report({ params }: { params: { report: string } }) {
   return (
     <div className="flex h-full" ref={menuContainerRef}>
       <NavBar />
-      {isEmpty ? (
+      {isEmpty && !report.companyTicker ? (
         <div className="bg-white rounded-t-[12px] border-[0.5px] border-stone-300 w-full mt-10 py-8">
           <div className="flex flex-col w-fit mx-auto">
             <p className="w-fit text-xl text-zinc-600 font-semibold font-sans mb-6">
@@ -175,24 +189,31 @@ export default function Report({ params }: { params: { report: string } }) {
                 topLabel="Report Type"
                 label="Select a report type"
                 options={[
-                  { label: 'Equity Analyst Report', value: 'equity_analyst' },
-                  { label: 'Earnings Call Note', value: 'earnings_call' },
+                  {
+                    label: 'Equity Analyst Report',
+                    value: 'EquityAnalyst',
+                  },
+                  {
+                    label: 'Earnings Call Note',
+                    value: 'EarningsCallNote',
+                  },
+                  { label: 'Other', value: 'Other' },
                 ]}
-                value={options.reportType}
-                setValue={(val) => updateOption('reportType', val)}
+                value={options.type}
+                setValue={(val) => updateOption('type', val)}
                 search={false}
               />
-              {options.reportType && (
+              {options.type && (
                 <SelectorComponent
                   topLabel="Company"
                   label="Select a company"
-                  value={options.company}
+                  value={options.companyTicker}
                   options={companies}
-                  setValue={(val) => updateOption('company', val)}
+                  setValue={(val) => updateOption('companyTicker', val)}
                   search={true}
                 />
               )}
-              {options.reportType === 'equity_analyst' && (
+              {options.type === ReportType.EquityAnalyst && (
                 <div className="flex gap-2">
                   <SelectorComponent
                     topLabel="Recommendation"
@@ -213,7 +234,7 @@ export default function Report({ params }: { params: { report: string } }) {
                     search={false}
                     halfWidth
                   />
-                  <div className={`w-[156px] flex flex-col gap-1`}>
+                  <div className={`w-[156px] flex flex-col gap-1 relative`}>
                     <p className="text-sm text-zinc-600 font-semibold">
                       Target Price
                     </p>
@@ -223,39 +244,64 @@ export default function Report({ params }: { params: { report: string } }) {
                       className={`${
                         options.recommendation === Recommendation.Auto &&
                         'bg-zinc-100 cursor-not-allowed'
-                      } inline-flex h-10 items-center justify-between gap-1 rounded-md bg-white border-zinc-300 border-[0.5px] px-4 text-zinc-600 focus:border-zinc-400 focus:outline-none appearance-none`}
-                      value={options.targetPrice}
+                      } inline-flex h-10 items-center justify-between gap-1 rounded-md bg-white border-zinc-300 border-[0.5px] px-4 text-zinc-600 focus:border-zinc-400 pl-5 focus:outline-none appearance-none`}
+                      value={
+                        options.recommendation === Recommendation.Auto
+                          ? ''
+                          : options.targetPrice
+                      }
                       onInput={(e) =>
                         updateOption('targetPrice', e.currentTarget.value)
                       }
                     />
+                    <p className="absolute left-2 bottom-2.5 text-sm text-zinc-600">
+                      $
+                    </p>
                   </div>
                 </div>
               )}
-              {options.reportType && options.company && (
+              {/* TODO: add tooltip when disabled */}
+              {options.type && options.companyTicker && (
                 <div className="flex flex-col gap-1">
-                  <div className="mt-2 flex gap-1 items-center">
+                  <button className="mt-2 flex gap-1 items-center w-fit">
                     <p className="text-xs text-zinc-600 font-semibold">
                       Choose a template
                     </p>
                     <ChevronDown className="h-4 w-4 text-zinc-600" />
-                  </div>
+                  </button>
 
-                  <div className="mt-2 flex gap-1 items-center">
+                  <button className="mt-2 flex gap-1 items-center w-fit">
                     <p className="text-xs text-zinc-600 font-semibold">
                       Edit sources
                     </p>
                     <ChevronDown className="h-4 w-4 text-zinc-600" />
-                  </div>
+                  </button>
                 </div>
               )}
               <div className="flex gap-4 w-full mt-2 mb-2">
                 <button
-                  disabled={!options.company || !options.reportType}
+                  disabled={!options.companyTicker || !options.type}
                   style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
-                  className="flex gap-2 w-1/2 border-zinc-300 border text-zinc-600 bg-white py-2 items-center justify-center rounded-md px-[15px] font-medium leading-none focus:outline-none text-sm"
+                  className={`${
+                    !options.companyTicker || !options.type
+                      ? 'cursor-not-allowed text-zinc-400 bg-zinc-100'
+                      : 'hover:border-zinc-400'
+                  } flex gap-2 w-1/2 border-zinc-300  border text-zinc-600 bg-white py-2 items-center justify-center rounded-md px-[15px] font-medium leading-none focus:outline-none text-sm`}
                   onClick={() => {
-                    // console.log('generation report');
+                    console.log('updating report');
+                    if (!options.companyTicker || !options.type) return;
+                    updateReport({
+                      id: reportId,
+                      title: `${getDateName()} - ${
+                        ReportType[
+                          (options.type as keyof typeof ReportType) ?? 'Other'
+                        ]
+                      }`,
+                      ...options,
+                      type: ReportType[
+                        (options.type as keyof typeof ReportType) ?? 'Other'
+                      ],
+                    });
                     // generateReport(options.company, editor);
                   }}
                 >
@@ -263,12 +309,16 @@ export default function Report({ params }: { params: { report: string } }) {
                   Start writing
                 </button>
                 <button
-                  disabled={!options.company || !options.reportType}
+                  disabled={!options.companyTicker || !options.type}
                   style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
-                  className="flex gap-2 items-center justify-center text-left w-1/2 bg-indigo11 text-white  rounded-md px-[15px] font-medium focus:shadow-[0_0_0_2px] focus:outline-none text-sm py-1"
+                  className={`${
+                    !options.companyTicker || !options.type
+                      ? 'bg-indigo8 text-zinc-50 cursor-not-allowed'
+                      : 'bg-indigo11 text-white'
+                  } flex gap-2 items-center justify-center text-left w-1/2  rounded-md px-[15px] font-medium focus:shadow-[0_0_0_2px] focus:outline-none text-sm py-1`}
                   onClick={() => {
                     console.log('generation report');
-                    generateReport(options.company, editor);
+                    generateReport(options.companyTicker, editor);
                   }}
                 >
                   <Wand2Icon className="h-5 w-5" />

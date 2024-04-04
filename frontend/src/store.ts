@@ -25,9 +25,18 @@ export const useEditorStateStore = create<EditorState>((set) => ({
 }));
 
 export enum ReportType {
-  EquityAnalyst = 'Equity Analyst',
+  EquityAnalyst = 'Equity Analyst Report',
   EarningsCallNote = 'Earnings Call Note',
   Other = 'Other',
+}
+
+export enum Recommendation {
+  Auto = 'Auto',
+  Buy = 'Buy',
+  Hold = 'Hold',
+  Sell = 'Sell',
+  Overweight = 'Overweight',
+  Underweight = 'Underweight',
 }
 
 export type Report = {
@@ -35,6 +44,8 @@ export type Report = {
   title: string;
   companyTicker: string;
   type: ReportType;
+  recommendation?: Recommendation;
+  targetPrice?: string;
   // dateCreated: Date;
   // lastUpdated: Date;
 };
@@ -44,6 +55,7 @@ export interface ReportsState {
   selectedReport: Report;
   addNewReport: (report: Report) => void;
   setSelectedReport: (report: Report) => void;
+  updateReport: (report: Report) => void;
 }
 
 export const useReportsStateStore = create<ReportsState>((set) => ({
@@ -76,6 +88,20 @@ export const useReportsStateStore = create<ReportsState>((set) => ({
   addNewReport: (report: Report) =>
     set((state) => ({ reports: [...state.reports, report] })),
   setSelectedReport: (report: Report) => set({ selectedReport: report }),
+  // TODO: not sure if this will fully work
+  updateReport: (report: Report) =>
+    set((state) => ({
+      reports: [
+        ...state.reports.slice(
+          0,
+          state.reports.findIndex((r) => r.id === report.id),
+        ),
+        { ...report },
+        ...(state.reports.slice(
+          state.reports.findIndex((r) => r.id === report.id) + 1,
+        ) ?? null),
+      ],
+    })),
 }));
 
 export type Citation = {
