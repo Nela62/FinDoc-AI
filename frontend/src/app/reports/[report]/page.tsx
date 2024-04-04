@@ -13,6 +13,8 @@ import * as Select from '@radix-ui/react-select';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 
+import * as ScrollArea from '@radix-ui/react-scroll-area';
+
 import '@/styles/index.css';
 import { AiChat } from '@/components/chat';
 import { useSearchParams } from 'next/navigation';
@@ -31,6 +33,7 @@ import { TopBar } from '@/components/TopBar/TopBar';
 import { Recommendation, ReportType, useReportsStateStore } from '@/store';
 import { initialContent } from '@/lib/data/initialContent';
 import { DropdownButton } from '@/components/ui/Dropdown';
+import { RightSideBar } from '@/components/RightSideBar';
 export type AiState = {
   isAiLoading: boolean;
   aiError?: string | null;
@@ -171,169 +174,174 @@ export default function Report({ params }: { params: { report: string } }) {
       </div>
     );
   }
-
+  // TODO: navbar and sidebar have to be in layout
   return (
-    <div className="flex h-full" ref={menuContainerRef}>
-      <NavBar />
-      {isEmpty && !report.companyTicker ? (
-        <div className="bg-white rounded-t-[12px] border-[0.5px] border-stone-300 w-full mt-10 py-8">
-          <div className="flex flex-col w-fit mx-auto">
-            <p className="w-fit text-xl text-zinc-600 font-semibold font-sans mb-6">
-              Create New Report
-            </p>
-            <div
-              className="flex flex-col gap-4 bg-zinc-50 rounded-lg px-10 py-6"
-              style={{ boxShadow: '0px 0px 4px 0px rgba(0,0,0,0.1) inset' }}
-            >
-              <SelectorComponent
-                topLabel="Report Type"
-                label="Select a report type"
-                options={[
-                  {
-                    label: 'Equity Analyst Report',
-                    value: 'EquityAnalyst',
-                  },
-                  {
-                    label: 'Earnings Call Note',
-                    value: 'EarningsCallNote',
-                  },
-                  { label: 'Other', value: 'Other' },
-                ]}
-                value={options.type}
-                setValue={(val) => updateOption('type', val)}
-                search={false}
-              />
-              {options.type && (
+    <div className="w-full h-screen flex flex-col gap-4">
+      <TopBar editor={editor} />
+      <div className="flex h-[calc(100vh-64px)]" ref={menuContainerRef}>
+        <NavBar />
+        {isEmpty && !report.companyTicker ? (
+          <div className="bg-white rounded-t-[12px] border-[0.5px] border-stone-300 w-full mt-10 py-8">
+            <div className="flex flex-col w-fit mx-auto">
+              <p className="w-fit text-xl text-zinc-600 font-semibold font-sans mb-6">
+                Create New Report
+              </p>
+              <div
+                className="flex flex-col gap-4 bg-zinc-50 rounded-lg px-10 py-6"
+                style={{ boxShadow: '0px 0px 4px 0px rgba(0,0,0,0.1) inset' }}
+              >
                 <SelectorComponent
-                  topLabel="Company"
-                  label="Select a company"
-                  value={options.companyTicker}
-                  options={companies}
-                  setValue={(val) => updateOption('companyTicker', val)}
-                  search={true}
+                  topLabel="Report Type"
+                  label="Select a report type"
+                  options={[
+                    {
+                      label: 'Equity Analyst Report',
+                      value: 'EquityAnalyst',
+                    },
+                    {
+                      label: 'Earnings Call Note',
+                      value: 'EarningsCallNote',
+                    },
+                    { label: 'Other', value: 'Other' },
+                  ]}
+                  value={options.type}
+                  setValue={(val) => updateOption('type', val)}
+                  search={false}
                 />
-              )}
-              {options.type === ReportType.EquityAnalyst && (
-                <div className="flex gap-2">
+                {options.type && (
                   <SelectorComponent
-                    topLabel="Recommendation"
-                    label=""
-                    options={[
-                      { label: 'Auto', value: Recommendation.Auto },
-                      { label: 'Buy', value: Recommendation.Buy },
-                      { label: 'Overweight', value: Recommendation.Overweight },
-                      { label: 'Hold', value: Recommendation.Hold },
-                      {
-                        label: 'Underweight',
-                        value: Recommendation.Underweight,
-                      },
-                      { label: 'Sell', value: Recommendation.Sell },
-                    ]}
-                    value={options.recommendation}
-                    setValue={(val) => updateOption('recommendation', val)}
-                    search={false}
-                    halfWidth
+                    topLabel="Company"
+                    label="Select a company"
+                    value={options.companyTicker}
+                    options={companies}
+                    setValue={(val) => updateOption('companyTicker', val)}
+                    search={true}
                   />
-                  <div className={`w-[156px] flex flex-col gap-1 relative`}>
-                    <p className="text-sm text-zinc-600 font-semibold">
-                      Target Price
-                    </p>
-                    <input
-                      disabled={options.recommendation === Recommendation.Auto}
-                      style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
-                      className={`${
-                        options.recommendation === Recommendation.Auto &&
-                        'bg-zinc-100 cursor-not-allowed'
-                      } inline-flex h-10 items-center justify-between gap-1 rounded-md bg-white border-zinc-300 border-[0.5px] px-4 text-zinc-600 focus:border-zinc-400 pl-5 focus:outline-none appearance-none`}
-                      value={
-                        options.recommendation === Recommendation.Auto
-                          ? ''
-                          : options.targetPrice
-                      }
-                      onInput={(e) =>
-                        updateOption('targetPrice', e.currentTarget.value)
-                      }
+                )}
+                {options.type === 'EquityAnalyst' && (
+                  <div className="flex gap-2">
+                    <SelectorComponent
+                      topLabel="Recommendation"
+                      label=""
+                      options={[
+                        { label: 'Auto', value: Recommendation.Auto },
+                        { label: 'Buy', value: Recommendation.Buy },
+                        {
+                          label: 'Overweight',
+                          value: Recommendation.Overweight,
+                        },
+                        { label: 'Hold', value: Recommendation.Hold },
+                        {
+                          label: 'Underweight',
+                          value: Recommendation.Underweight,
+                        },
+                        { label: 'Sell', value: Recommendation.Sell },
+                      ]}
+                      value={options.recommendation}
+                      setValue={(val) => updateOption('recommendation', val)}
+                      search={false}
+                      halfWidth
                     />
-                    <p className="absolute left-2 bottom-2.5 text-sm text-zinc-600">
-                      $
-                    </p>
+                    <div className={`w-[156px] flex flex-col gap-1 relative`}>
+                      <p className="text-sm text-zinc-600 font-semibold">
+                        Target Price
+                      </p>
+                      <input
+                        disabled={
+                          options.recommendation === Recommendation.Auto
+                        }
+                        style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
+                        className={`${
+                          options.recommendation === Recommendation.Auto &&
+                          'bg-zinc-100 cursor-not-allowed'
+                        } inline-flex h-10 items-center justify-between gap-1 rounded-md bg-white border-zinc-300 border-[0.5px] px-4 text-zinc-600 focus:border-zinc-400 pl-5 focus:outline-none appearance-none`}
+                        value={
+                          options.recommendation === Recommendation.Auto
+                            ? ''
+                            : options.targetPrice
+                        }
+                        onInput={(e) =>
+                          updateOption('targetPrice', e.currentTarget.value)
+                        }
+                      />
+                      <p className="absolute left-2 bottom-2.5 text-sm text-zinc-600">
+                        $
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
-              {/* TODO: add tooltip when disabled */}
-              {options.type && options.companyTicker && (
-                <div className="flex flex-col gap-1">
-                  <button className="mt-2 flex gap-1 items-center w-fit">
-                    <p className="text-xs text-zinc-600 font-semibold">
-                      Choose a template
-                    </p>
-                    <ChevronDown className="h-4 w-4 text-zinc-600" />
-                  </button>
+                )}
+                {/* TODO: add tooltip when disabled */}
+                {options.type && options.companyTicker && (
+                  <div className="flex flex-col gap-1">
+                    <button className="mt-2 flex gap-1 items-center w-fit">
+                      <p className="text-xs text-zinc-600 font-semibold">
+                        Choose a template
+                      </p>
+                      <ChevronDown className="h-4 w-4 text-zinc-600" />
+                    </button>
 
-                  <button className="mt-2 flex gap-1 items-center w-fit">
-                    <p className="text-xs text-zinc-600 font-semibold">
-                      Edit sources
-                    </p>
-                    <ChevronDown className="h-4 w-4 text-zinc-600" />
+                    <button className="mt-2 flex gap-1 items-center w-fit">
+                      <p className="text-xs text-zinc-600 font-semibold">
+                        Edit sources
+                      </p>
+                      <ChevronDown className="h-4 w-4 text-zinc-600" />
+                    </button>
+                  </div>
+                )}
+                <div className="flex gap-4 w-full mt-2 mb-2">
+                  <button
+                    disabled={!options.companyTicker || !options.type}
+                    style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
+                    className={`${
+                      !options.companyTicker || !options.type
+                        ? 'cursor-not-allowed text-zinc-400 bg-zinc-100'
+                        : 'hover:border-zinc-400'
+                    } flex gap-2 w-1/2 border-zinc-300  border text-zinc-600 bg-white py-2 items-center justify-center rounded-md px-[15px] font-medium leading-none focus:outline-none text-sm`}
+                    onClick={() => {
+                      console.log('updating report');
+                      if (!options.companyTicker || !options.type) return;
+                      updateReport({
+                        id: reportId,
+                        title: `${getDateName()} - ${
+                          ReportType[
+                            (options.type as keyof typeof ReportType) ?? 'Other'
+                          ]
+                        }`,
+                        ...options,
+                        type: ReportType[
+                          (options.type as keyof typeof ReportType) ?? 'Other'
+                        ],
+                      });
+                      // generateReport(options.company, editor);
+                    }}
+                  >
+                    <SquarePen className="h-5 w-5" />
+                    Start writing
+                  </button>
+                  <button
+                    disabled={!options.companyTicker || !options.type}
+                    style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
+                    className={`${
+                      !options.companyTicker || !options.type
+                        ? 'bg-indigo8 text-zinc-50 cursor-not-allowed'
+                        : 'bg-indigo11 text-white'
+                    } flex gap-2 items-center justify-center text-left w-1/2  rounded-md px-[15px] font-medium focus:shadow-[0_0_0_2px] focus:outline-none text-sm py-1`}
+                    onClick={() => {
+                      console.log('generation report');
+                      generateReport(options.companyTicker, editor);
+                    }}
+                  >
+                    <Wand2Icon className="h-5 w-5" />
+                    <div className="flex flex-col w-fit justify-start">
+                      <p>Generate Full</p>
+                      <p>Report</p>
+                    </div>
                   </button>
                 </div>
-              )}
-              <div className="flex gap-4 w-full mt-2 mb-2">
-                <button
-                  disabled={!options.companyTicker || !options.type}
-                  style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
-                  className={`${
-                    !options.companyTicker || !options.type
-                      ? 'cursor-not-allowed text-zinc-400 bg-zinc-100'
-                      : 'hover:border-zinc-400'
-                  } flex gap-2 w-1/2 border-zinc-300  border text-zinc-600 bg-white py-2 items-center justify-center rounded-md px-[15px] font-medium leading-none focus:outline-none text-sm`}
-                  onClick={() => {
-                    console.log('updating report');
-                    if (!options.companyTicker || !options.type) return;
-                    updateReport({
-                      id: reportId,
-                      title: `${getDateName()} - ${
-                        ReportType[
-                          (options.type as keyof typeof ReportType) ?? 'Other'
-                        ]
-                      }`,
-                      ...options,
-                      type: ReportType[
-                        (options.type as keyof typeof ReportType) ?? 'Other'
-                      ],
-                    });
-                    // generateReport(options.company, editor);
-                  }}
-                >
-                  <SquarePen className="h-5 w-5" />
-                  Start writing
-                </button>
-                <button
-                  disabled={!options.companyTicker || !options.type}
-                  style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
-                  className={`${
-                    !options.companyTicker || !options.type
-                      ? 'bg-indigo8 text-zinc-50 cursor-not-allowed'
-                      : 'bg-indigo11 text-white'
-                  } flex gap-2 items-center justify-center text-left w-1/2  rounded-md px-[15px] font-medium focus:shadow-[0_0_0_2px] focus:outline-none text-sm py-1`}
-                  onClick={() => {
-                    console.log('generation report');
-                    generateReport(options.companyTicker, editor);
-                  }}
-                >
-                  <Wand2Icon className="h-5 w-5" />
-                  <div className="flex flex-col w-fit justify-start">
-                    <p>Generate Full</p>
-                    <p>Report</p>
-                  </div>
-                </button>
               </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="flex w-full h-full flex-col">
-          <TopBar editor={editor} />
+        ) : (
           <div className="relative flex flex-col flex-1 h-full overflow-hidden">
             {/* TODO: Table of contents */}
             <EditorContent editor={editor} className="flex-1 overflow-y-auto" />
@@ -345,8 +353,9 @@ export default function Report({ params }: { params: { report: string } }) {
             <TableColumnMenu editor={editor} appendTo={menuContainerRef} />
             <ImageBlockMenu editor={editor} appendTo={menuContainerRef} />
           </div>
-        </div>
-      )}
+        )}
+        <RightSideBar />
+      </div>
     </div>
   );
 }
