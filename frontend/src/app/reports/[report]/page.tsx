@@ -105,6 +105,37 @@ export default function Report({ params }: { params: { report: string } }) {
     return null;
   }
 
+  type Option = { label: string; value: string };
+
+  function SelectorComponent({
+    topLabel,
+    label,
+    options,
+    value,
+    setValue,
+    search,
+  }: {
+    topLabel: string;
+    label: string;
+    options: Option[];
+    value: string;
+    setValue: (value: string) => void;
+    search: boolean;
+  }) {
+    return (
+      <div className="flex flex-col gap-1 w-80">
+        <p className="text-sm text-zinc-600 font-semibold">{topLabel}</p>
+        <Combobox
+          label={label}
+          options={options}
+          value={value}
+          setValue={setValue}
+          search={search}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full" ref={menuContainerRef}>
       <NavBar />
@@ -118,6 +149,7 @@ export default function Report({ params }: { params: { report: string } }) {
               className="flex flex-col gap-2 bg-zinc-50 rounded-lg px-10 py-6"
               style={{ boxShadow: '0px 0px 4px 0px rgba(0,0,0,0.1) inset' }}
             >
+              <SelectorComponent topLabel="Company" label="Select a company" />
               <div className="flex flex-col gap-1 w-80">
                 <p className="text-sm text-zinc-600 font-semibold">Company</p>
                 <Combobox
@@ -125,6 +157,7 @@ export default function Report({ params }: { params: { report: string } }) {
                   options={companies}
                   value={selectedCompany}
                   setValue={setSelectedCompany}
+                  search={true}
                 />
               </div>
               <div className="flex flex-col gap-1 w-80 mt-2">
@@ -140,6 +173,7 @@ export default function Report({ params }: { params: { report: string } }) {
                   ]}
                   value={selectedReportType}
                   setValue={setSelectedReportType}
+                  search={false}
                 />
               </div>
               <div className="mt-2 flex gap-1 items-center">
