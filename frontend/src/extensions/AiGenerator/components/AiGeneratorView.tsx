@@ -99,13 +99,14 @@ export const AiGeneratorView = ({
   const to = from + node.nodeSize;
 
   const insert = useCallback(() => {
+    console.log(formattedPreviewText);
     editor
       .chain()
       .focus()
       .insertContentAt({ from, to }, formattedPreviewText)
       .run();
     setPreviewText('');
-  }, []);
+  }, [formattedPreviewText, editor, from, to]);
 
   const discard = useCallback(() => {
     deleteNode();
