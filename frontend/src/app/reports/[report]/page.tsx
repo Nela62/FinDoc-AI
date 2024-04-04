@@ -7,19 +7,30 @@ import { ColumnsMenu } from '@/extensions/MultiColumn/menus';
 import { TableColumnMenu, TableRowMenu } from '@/extensions/Table/menus';
 import { useBlockEditor } from '@/hooks/useBlockEditor';
 import { Content, Editor, EditorContent } from '@tiptap/react';
-import { useRef, useState } from 'react';
+
+import * as Select from '@radix-ui/react-select';
+
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 
 import '@/styles/index.css';
 import { AiChat } from '@/components/chat';
 import { useSearchParams } from 'next/navigation';
-import { X } from 'lucide-react';
+import {
+  ChevronsUpDown,
+  SquarePen,
+  X,
+  Wand2Icon,
+  ChevronDown,
+  ChevronDownIcon,
+} from 'lucide-react';
 import { Combobox } from '@/components/ui/Combobox';
 import { tickers } from '@/lib/data/tickers';
 import { getPrompts } from './prompts';
 import { TopBar } from '@/components/TopBar/TopBar';
 import { ReportType, useReportsStateStore } from '@/store';
 import { initialContent } from '@/lib/data/initialContent';
+import { DropdownButton } from '@/components/ui/Dropdown';
 export type AiState = {
   isAiLoading: boolean;
   aiError?: string | null;
@@ -54,44 +65,41 @@ const generateReport = async (ticker: string, editor: Editor) => {
 
 export default function Report({ params }: { params: { report: string } }) {
   const { report: reportId } = params;
+  const reports = useReportsStateStore((state) => state.reports);
   const setSelectedReport = useReportsStateStore((s) => s.setSelectedReport);
   const [content, setContent] = useState<string | Content | null>(null);
   const [isNew, setIsNew] = useState(false);
   // const isNew = useSearchParams().get('isNew') === 'true';
 
-  // TODO: Fetch document
-
-  const fetchReport = () => {
-    // TODO: fetch from supabase
-    if (reportId === 'Dzd7LhprkD') {
-      setSelectedReport({
-        id: 'Dzd7LhprkD',
-        title: 'Oct 23, 2023 - Equity Research Report',
-        companyTicker: 'AAPL',
-        type: ReportType.EquityResearch,
-      });
-    } else if (reportId === 'r6BJzHbnCG') {
-      setSelectedReport({
-        id: 'r6BJzHbnCG',
-        title: 'Q4 2023 - Earnings Call Note',
-        companyTicker: 'AAPL',
-        type: ReportType.EarningsCallNote,
-      });
-    } else if (reportId === 'c6TWdN9N9k') {
-      setSelectedReport({
-        id: 'c6TWdN9N9k',
-        title: 'Dec 14, 2023 - Equity Research Report',
-        companyTicker: 'AMZN',
-        type: ReportType.EquityResearch,
-      });
-      setContent(initialContent);
-    }
-  };
-
-  const { editor, characterCount } = useBlockEditor();
+  const { editor, characterCount, isEmpty } = useBlockEditor(reportId);
   const menuContainerRef = useRef(null);
 
-  const [value, setValue] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState('');
+  const [selectedReportType, setSelectedReportType] = useState('');
+
+  const report = reports.find((r) => r.id === reportId);
+
+  useEffect(() => {
+    if (!report) return;
+    setSelectedReport(report);
+  }, []);
+
+  const companies = useMemo(
+    () =>
+      tickers.map((t) => ({
+        label: `${t.value} - ${t.label}`,
+        value: t.value,
+      })),
+    [],
+  );
+
+  if (!report) {
+    return (
+      <div>
+        <p>Could not find a report</p>
+      </div>
+    );
+  }
 
   if (!editor) {
     return null;
@@ -100,69 +108,99 @@ export default function Report({ params }: { params: { report: string } }) {
   return (
     <div className="flex h-full" ref={menuContainerRef}>
       <NavBar />
-      <Dialog.Root defaultOpen={isNew}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="bg-gray-900 bg-opacity-30 data-[state=open]:animate-overlayShow fixed inset-0" />
-          <Dialog.Content className="data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] max-h-[85vh] w-[90vw] max-w-[450px] translate-x-[-50%] translate-y-[-50%] rounded-md bg-white p-[25px] shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none">
-            <Dialog.Title className="w-fit mx-auto mb-4 text-xl font-medium font-sans">
-              Generate Equity Research Report
-            </Dialog.Title>
-            <Dialog.Description className="text-xs text-neutral-500 mb-6">
-              An equity research report is a comprehensive analysis of a
-              company&lsquo;s financial health, competitive position, and growth
-              prospects, providing investors with an informed opinion on whether
-              to buy, hold, or sell a particular stock.
-            </Dialog.Description>
-            <div className="flex justify-center">
-              <Combobox
-                label="Select a company"
-                options={tickers}
-                value={value}
-                setValue={setValue}
-              />
-            </div>
-            <div className="mt-[25px] flex justify-center">
-              <Dialog.Close asChild>
+      {isEmpty ? (
+        <div className="bg-white rounded-t-[12px] border-[0.5px] border-stone-300 w-full mt-10 py-8">
+          <div className="flex flex-col w-fit mx-auto">
+            <p className="w-fit text-xl text-zinc-600 font-semibold font-sans mb-6">
+              Create New Report
+            </p>
+            <div
+              className="flex flex-col gap-2 bg-zinc-50 rounded-lg px-10 py-6"
+              style={{ boxShadow: '0px 0px 4px 0px rgba(0,0,0,0.1) inset' }}
+            >
+              <div className="flex flex-col gap-1 w-80">
+                <p className="text-sm text-zinc-600 font-semibold">Company</p>
+                <Combobox
+                  label="Select a company"
+                  options={companies}
+                  value={selectedCompany}
+                  setValue={setSelectedCompany}
+                />
+              </div>
+              <div className="flex flex-col gap-1 w-80 mt-2">
+                <p className="text-sm text-zinc-600 font-semibold">
+                  Report Type
+                </p>
+                {/* TODO: create a dropdown button in ui */}
+                <Combobox
+                  label="Select a report type"
+                  options={[
+                    { label: 'Equity Analyst Report', value: 'equity_analyst' },
+                    { label: 'Earnings Call Note', value: 'earnings_call' },
+                  ]}
+                  value={selectedReportType}
+                  setValue={setSelectedReportType}
+                />
+              </div>
+              <div className="mt-2 flex gap-1 items-center">
+                <p className="text-xs text-zinc-600 font-semibold">
+                  Choose a template
+                </p>
+                <ChevronDown className="h-4 w-4 text-zinc-600" />
+              </div>
+
+              <div className="mt-2 flex gap-1 items-center">
+                <p className="text-xs text-zinc-600 font-semibold">
+                  Edit sources
+                </p>
+                <ChevronDown className="h-4 w-4 text-zinc-600" />
+              </div>
+              <div className="flex gap-4 w-full mt-4 mb-2">
                 <button
-                  className="bg-neutral-700 text-white hover:bg-neutral-600 focus:shadow-green7 inline-flex h-[35px] items-center justify-center rounded-[4px] px-[15px] font-medium leading-none focus:shadow-[0_0_0_2px] focus:outline-none"
+                  style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
+                  className="flex gap-2 w-1/2 border-zinc-300 border text-zinc-600 bg-white py-2 items-center justify-center rounded-md px-[15px] font-medium leading-none focus:outline-none text-sm"
                   onClick={() => {
                     console.log('generation report');
-                    generateReport(value, editor);
+                    generateReport(selectedCompany, editor);
                   }}
                 >
-                  Generate Report
+                  <SquarePen className="h-5 w-5" />
+                  Start writing
                 </button>
-              </Dialog.Close>
+                <button
+                  style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
+                  className="flex gap-2 items-center justify-center text-left w-1/2 bg-indigo11 text-white  rounded-md px-[15px] font-medium focus:shadow-[0_0_0_2px] focus:outline-none text-sm py-1"
+                  onClick={() => {
+                    console.log('generation report');
+                    generateReport(selectedCompany, editor);
+                  }}
+                >
+                  <Wand2Icon className="h-5 w-5" />
+                  <div className="flex flex-col w-fit justify-start">
+                    <p>Generate Full</p>
+                    <p>Report</p>
+                  </div>
+                </button>
+              </div>
             </div>
-            <Dialog.Close asChild>
-              <button
-                className="text-gray-600 hover:bg-gray-200 focus:shadow-gray-400 absolute top-[10px] right-[10px] inline-flex h-[20px] w-[20px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
-                aria-label="Close"
-              >
-                <X />
-              </button>
-            </Dialog.Close>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-      {/* TODO: Top bar (title, upgrade, document settings, ai chat, citations/library) */}
-      <div className="flex w-full h-full flex-col">
-        <TopBar editor={editor} />
-        <div className="relative flex flex-col flex-1 h-full overflow-hidden">
-          {/* TODO: Table of contents */}
-          <EditorContent editor={editor} className="flex-1 overflow-y-auto" />
-          <ContentItemMenu editor={editor} />
-          <LinkMenu editor={editor} appendTo={menuContainerRef} />
-          <TextMenu editor={editor} />
-          <ColumnsMenu editor={editor} appendTo={menuContainerRef} />
-          <TableRowMenu editor={editor} appendTo={menuContainerRef} />
-          <TableColumnMenu editor={editor} appendTo={menuContainerRef} />
-          <ImageBlockMenu editor={editor} appendTo={menuContainerRef} />
-
-          {/* TODO: Right column: ai chat and citations/library */}
+          </div>
         </div>
-        {/* <AiChat /> */}
-      </div>
+      ) : (
+        <div className="flex w-full h-full flex-col">
+          <TopBar editor={editor} />
+          <div className="relative flex flex-col flex-1 h-full overflow-hidden">
+            {/* TODO: Table of contents */}
+            <EditorContent editor={editor} className="flex-1 overflow-y-auto" />
+            <ContentItemMenu editor={editor} />
+            <LinkMenu editor={editor} appendTo={menuContainerRef} />
+            <TextMenu editor={editor} />
+            <ColumnsMenu editor={editor} appendTo={menuContainerRef} />
+            <TableRowMenu editor={editor} appendTo={menuContainerRef} />
+            <TableColumnMenu editor={editor} appendTo={menuContainerRef} />
+            <ImageBlockMenu editor={editor} appendTo={menuContainerRef} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

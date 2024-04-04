@@ -1,12 +1,12 @@
 'use client';
 
-import { Content, Editor, Extension, useEditor } from '@tiptap/react';
+import { Editor, useEditor } from '@tiptap/react';
 
-import { useEditorStateStore } from '@/store';
+import { useDemoStateStore, useEditorStateStore } from '@/store';
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { useEffect } from 'react';
 
-import { initialContent } from '@/lib/data/initialContent';
+const debounce = require('lodash.debounce');
 
 declare global {
   interface Window {
@@ -22,7 +22,7 @@ const getAiCompletion = async () => {
   return response.json();
 };
 
-export const useBlockEditor = () => {
+export const useBlockEditor = (reportId: string) => {
   const isEmpty = useEditorStateStore((state) => state.isEmpty);
   const setIsEmpty = useEditorStateStore((state) => state.setIsEmpty);
   const setIsAiLoading = useEditorStateStore((state) => state.setIsAiLoading);
@@ -30,6 +30,10 @@ export const useBlockEditor = () => {
   const setAiError = useEditorStateStore((state) => state.setAiError);
   const setIsAiInserting = useEditorStateStore(
     (state) => state.setIsAiInserting,
+  );
+  const reportContent = useDemoStateStore((state) => state.reportContent);
+  const editReportContent = useDemoStateStore(
+    (state) => state.editReportContent,
   );
 
   const editor = useEditor({
@@ -44,15 +48,28 @@ export const useBlockEditor = () => {
       },
     },
     // TODO: remove this once dev is done
-    // onCreate: ({ editor }) => {
-    //   if (editor.isEmpty) {
-    //     editor.commands.setContent(initialContent);
-    //   }
-    // },
+    onCreate: ({ editor }) => {
+      if (editor.isEmpty) {
+        // editor.commands.setContent(initialContent);
+      }
+      editor.commands.setContent(
+        reportContent.find((r) => r.reportId === reportId)?.jsonContent || '',
+      );
+    },
     onUpdate({ editor }) {
       if (editor.isEmpty) {
         setIsEmpty(true);
       }
+
+      const saveContent = debounce(() => {
+        editReportContent({
+          reportId: reportId,
+          jsonContent: editor.getJSON(),
+          // htmlContent: editor.getHTML(),
+        });
+      }, 1000);
+
+      saveContent();
     },
     // onTransaction({ editor }) {
     //   if (isAiInserting) {
@@ -75,5 +92,5 @@ export const useBlockEditor = () => {
     window.editor = editor;
   }, [editor]);
 
-  return { editor, characterCount };
+  return { editor, characterCount, isEmpty };
 };

@@ -1,4 +1,6 @@
+import { Content } from '@tiptap/core';
 import { create } from 'zustand';
+import { initialContent } from './lib/data/initialContent';
 
 export interface EditorState {
   isEmpty: boolean;
@@ -23,7 +25,7 @@ export const useEditorStateStore = create<EditorState>((set) => ({
 }));
 
 export enum ReportType {
-  EquityResearch = 'Equity Research',
+  EquityAnalyst = 'Equity Analyst',
   EarningsCallNote = 'Earnings Call Note',
   Other = 'Other',
 }
@@ -39,7 +41,7 @@ export type Report = {
 
 export interface ReportsState {
   reports: Report[];
-  selectedReports: Report;
+  selectedReport: Report;
   addNewReport: (report: Report) => void;
   setSelectedReport: (report: Report) => void;
 }
@@ -48,9 +50,9 @@ export const useReportsStateStore = create<ReportsState>((set) => ({
   reports: [
     {
       id: 'Dzd7LhprkD',
-      title: 'Oct 23, 2023 - Equity Research Report',
+      title: 'Oct 23, 2023 - Equity Analyst Report',
       companyTicker: 'AAPL',
-      type: ReportType.EquityResearch,
+      type: ReportType.EquityAnalyst,
     },
     {
       id: 'r6BJzHbnCG',
@@ -60,20 +62,20 @@ export const useReportsStateStore = create<ReportsState>((set) => ({
     },
     {
       id: 'c6TWdN9N9k',
-      title: 'Dec 14, 2023 - Equity Research Report',
+      title: 'Dec 14, 2023 - Equity Analyst Report',
       companyTicker: 'AMZN',
-      type: ReportType.EquityResearch,
+      type: ReportType.EquityAnalyst,
     },
   ],
-  selectedReports: {
+  selectedReport: {
     id: 'Dzd7LhprkD',
     title: 'Oct 23, 2023 - Equity Research Report',
     companyTicker: 'AAPL',
-    type: ReportType.EquityResearch,
+    type: ReportType.EquityAnalyst,
   },
   addNewReport: (report: Report) =>
     set((state) => ({ reports: [...state.reports, report] })),
-  setSelectedReport: (report: Report) => set({ selectedReports: report }),
+  setSelectedReport: (report: Report) => set({ selectedReport: report }),
 }));
 
 export type Citation = {
@@ -91,5 +93,49 @@ export const useCitationsStateStore = create<CitationsState>((set) => ({
   citations: [],
   addCitations: (citations: Citation[]) => {
     set((state) => ({ citations: [...state.citations, ...citations] }));
+  },
+}));
+
+export type ReportContent = {
+  reportId: string;
+  // htmlContent: Content;
+  jsonContent: Content;
+};
+
+export interface DemoState {
+  reportContent: ReportContent[];
+  addReportContent: (reportContent: ReportContent) => void;
+  editReportContent: (reportContent: ReportContent) => void;
+}
+
+export const useDemoStateStore = create<DemoState>((set) => ({
+  reportContent: [
+    {
+      reportId: 'Dzd7LhprkD',
+      // htmlContent: '',
+      jsonContent: '',
+    },
+    {
+      reportId: 'r6BJzHbnCG',
+      // htmlContent: '',
+      jsonContent: '',
+    },
+    {
+      reportId: 'c6TWdN9N9k',
+      // htmlContent: '',
+      jsonContent: initialContent,
+    },
+  ],
+  addReportContent: (reportContent: ReportContent) => {
+    set((state) => ({
+      reportContent: [...state.reportContent, reportContent],
+    }));
+  },
+  editReportContent: (reportContent: ReportContent) => {
+    set((state) => ({
+      reportContent: state.reportContent.map((rc) =>
+        rc.reportId === reportContent.reportId ? reportContent : rc,
+      ),
+    }));
   },
 }));
