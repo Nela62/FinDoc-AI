@@ -63,6 +63,7 @@ const generateReport = async (ticker: string, editor: Editor) => {
   }
 };
 
+// TODO: turn this into a form hook
 export default function Report({ params }: { params: { report: string } }) {
   const { report: reportId } = params;
   const reports = useReportsStateStore((state) => state.reports);
@@ -74,8 +75,25 @@ export default function Report({ params }: { params: { report: string } }) {
   const { editor, characterCount, isEmpty } = useBlockEditor(reportId);
   const menuContainerRef = useRef(null);
 
-  const [selectedCompany, setSelectedCompany] = useState('');
-  const [selectedReportType, setSelectedReportType] = useState('');
+  enum Recommendation {
+    Auto = 'Auto',
+    Buy = 'Buy',
+    Hold = 'Hold',
+    Sell = 'Sell',
+    Overweight = 'Overweight',
+    Underweight = 'Underweight',
+  }
+
+  const [options, setOptions] = useState({
+    reportType: '',
+    company: '',
+    recommendation: Recommendation.Auto,
+    targetPrice: undefined,
+  });
+
+  const updateOption = (key: string, value: string) => {
+    setOptions((prev) => ({ ...prev, [key]: value }));
+  };
 
   const report = reports.find((r) => r.id === reportId);
 
@@ -114,6 +132,7 @@ export default function Report({ params }: { params: { report: string } }) {
     value,
     setValue,
     search,
+    halfWidth,
   }: {
     topLabel: string;
     label: string;
@@ -121,9 +140,12 @@ export default function Report({ params }: { params: { report: string } }) {
     value: string;
     setValue: (value: string) => void;
     search: boolean;
+    halfWidth?: boolean;
   }) {
     return (
-      <div className="flex flex-col gap-1 w-80">
+      <div
+        className={`${halfWidth ? 'w-[156px]' : 'w-80'} flex flex-col gap-1`}
+      >
         <p className="text-sm text-zinc-600 font-semibold">{topLabel}</p>
         <Combobox
           label={label}
@@ -146,67 +168,107 @@ export default function Report({ params }: { params: { report: string } }) {
               Create New Report
             </p>
             <div
-              className="flex flex-col gap-2 bg-zinc-50 rounded-lg px-10 py-6"
+              className="flex flex-col gap-4 bg-zinc-50 rounded-lg px-10 py-6"
               style={{ boxShadow: '0px 0px 4px 0px rgba(0,0,0,0.1) inset' }}
             >
-              <SelectorComponent topLabel="Company" label="Select a company" />
-              <div className="flex flex-col gap-1 w-80">
-                <p className="text-sm text-zinc-600 font-semibold">Company</p>
-                <Combobox
+              <SelectorComponent
+                topLabel="Report Type"
+                label="Select a report type"
+                options={[
+                  { label: 'Equity Analyst Report', value: 'equity_analyst' },
+                  { label: 'Earnings Call Note', value: 'earnings_call' },
+                ]}
+                value={options.reportType}
+                setValue={(val) => updateOption('reportType', val)}
+                search={false}
+              />
+              {options.reportType && (
+                <SelectorComponent
+                  topLabel="Company"
                   label="Select a company"
+                  value={options.company}
                   options={companies}
-                  value={selectedCompany}
-                  setValue={setSelectedCompany}
+                  setValue={(val) => updateOption('company', val)}
                   search={true}
                 />
-              </div>
-              <div className="flex flex-col gap-1 w-80 mt-2">
-                <p className="text-sm text-zinc-600 font-semibold">
-                  Report Type
-                </p>
-                {/* TODO: create a dropdown button in ui */}
-                <Combobox
-                  label="Select a report type"
-                  options={[
-                    { label: 'Equity Analyst Report', value: 'equity_analyst' },
-                    { label: 'Earnings Call Note', value: 'earnings_call' },
-                  ]}
-                  value={selectedReportType}
-                  setValue={setSelectedReportType}
-                  search={false}
-                />
-              </div>
-              <div className="mt-2 flex gap-1 items-center">
-                <p className="text-xs text-zinc-600 font-semibold">
-                  Choose a template
-                </p>
-                <ChevronDown className="h-4 w-4 text-zinc-600" />
-              </div>
+              )}
+              {options.reportType === 'equity_analyst' && (
+                <div className="flex gap-2">
+                  <SelectorComponent
+                    topLabel="Recommendation"
+                    label=""
+                    options={[
+                      { label: 'Auto', value: Recommendation.Auto },
+                      { label: 'Buy', value: Recommendation.Buy },
+                      { label: 'Overweight', value: Recommendation.Overweight },
+                      { label: 'Hold', value: Recommendation.Hold },
+                      {
+                        label: 'Underweight',
+                        value: Recommendation.Underweight,
+                      },
+                      { label: 'Sell', value: Recommendation.Sell },
+                    ]}
+                    value={options.recommendation}
+                    setValue={(val) => updateOption('recommendation', val)}
+                    search={false}
+                    halfWidth
+                  />
+                  <div className={`w-[156px] flex flex-col gap-1`}>
+                    <p className="text-sm text-zinc-600 font-semibold">
+                      Target Price
+                    </p>
+                    <input
+                      disabled={options.recommendation === Recommendation.Auto}
+                      style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
+                      className={`${
+                        options.recommendation === Recommendation.Auto &&
+                        'bg-zinc-100 cursor-not-allowed'
+                      } inline-flex h-10 items-center justify-between gap-1 rounded-md bg-white border-zinc-300 border-[0.5px] px-4 text-zinc-600 focus:border-zinc-400 focus:outline-none appearance-none`}
+                      value={options.targetPrice}
+                      onInput={(e) =>
+                        updateOption('targetPrice', e.currentTarget.value)
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+              {options.reportType && options.company && (
+                <div className="flex flex-col gap-1">
+                  <div className="mt-2 flex gap-1 items-center">
+                    <p className="text-xs text-zinc-600 font-semibold">
+                      Choose a template
+                    </p>
+                    <ChevronDown className="h-4 w-4 text-zinc-600" />
+                  </div>
 
-              <div className="mt-2 flex gap-1 items-center">
-                <p className="text-xs text-zinc-600 font-semibold">
-                  Edit sources
-                </p>
-                <ChevronDown className="h-4 w-4 text-zinc-600" />
-              </div>
-              <div className="flex gap-4 w-full mt-4 mb-2">
+                  <div className="mt-2 flex gap-1 items-center">
+                    <p className="text-xs text-zinc-600 font-semibold">
+                      Edit sources
+                    </p>
+                    <ChevronDown className="h-4 w-4 text-zinc-600" />
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-4 w-full mt-2 mb-2">
                 <button
+                  disabled={!options.company || !options.reportType}
                   style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
                   className="flex gap-2 w-1/2 border-zinc-300 border text-zinc-600 bg-white py-2 items-center justify-center rounded-md px-[15px] font-medium leading-none focus:outline-none text-sm"
                   onClick={() => {
-                    console.log('generation report');
-                    generateReport(selectedCompany, editor);
+                    // console.log('generation report');
+                    // generateReport(options.company, editor);
                   }}
                 >
                   <SquarePen className="h-5 w-5" />
                   Start writing
                 </button>
                 <button
+                  disabled={!options.company || !options.reportType}
                   style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
                   className="flex gap-2 items-center justify-center text-left w-1/2 bg-indigo11 text-white  rounded-md px-[15px] font-medium focus:shadow-[0_0_0_2px] focus:outline-none text-sm py-1"
                   onClick={() => {
                     console.log('generation report');
-                    generateReport(selectedCompany, editor);
+                    generateReport(options.company, editor);
                   }}
                 >
                   <Wand2Icon className="h-5 w-5" />
