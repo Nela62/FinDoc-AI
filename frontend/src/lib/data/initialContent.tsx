@@ -2,6 +2,20 @@ export const initialContent = {
   type: 'doc',
   content: [
     {
+      type: 'heading',
+      attrs: {
+        id: 'df0e2ac9-7748-4c04-8ddc-d12bd2834cd3',
+        'data-toc-id': 'df0e2ac9-7748-4c04-8ddc-d12bd2834cd3',
+        level: 2,
+      },
+      content: [
+        {
+          type: 'text',
+          text: 'Business Description',
+        },
+      ],
+    },
+    {
       type: 'paragraph',
       attrs: {
         class: null,
@@ -13,37 +27,7 @@ export const initialContent = {
         },
       ],
     },
-    {
-      type: 'heading',
-      attrs: {
-        id: '833b032d-d964-41c2-9e34-39982a33cdf0',
-        'data-toc-id': '833b032d-d964-41c2-9e34-39982a33cdf0',
-        level: 1,
-      },
-      content: [
-        {
-          type: 'text',
-          text: 'Analyst’s Notes',
-        },
-      ],
-    },
-    {
-      type: 'paragraph',
-      attrs: {
-        class: null,
-      },
-      content: [
-        {
-          type: 'text',
-          marks: [
-            {
-              type: 'italic',
-            },
-          ],
-          text: 'Analysis by Helton Suzuki, CFA, March 31, 2024',
-        },
-      ],
-    },
+
     {
       type: 'heading',
       attrs: {
@@ -54,7 +38,7 @@ export const initialContent = {
       content: [
         {
           type: 'text',
-          text: 'Argus Rating: Buy',
+          text: 'Recommendation: Buy',
         },
       ],
     },

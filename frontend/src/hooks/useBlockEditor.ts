@@ -52,6 +52,9 @@ export const useBlockEditor = (reportId: string) => {
       if (editor.isEmpty) {
         // editor.commands.setContent(initialContent);
       }
+      console.log(
+        reportContent.find((r) => r.reportId === reportId)?.jsonContent,
+      );
       editor.commands.setContent(
         reportContent.find((r) => r.reportId === reportId)?.jsonContent || '',
       );

@@ -24,6 +24,22 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
         Export to JSON
       </button>
       <button
+        onClick={() => {
+          const html = editor.getHTML();
+          const blob = new Blob([html], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'data.html';
+          link.click();
+
+          URL.revokeObjectURL(url);
+        }}
+      >
+        Export to HTML
+      </button>
+      <button
         onClick={async () => {
           const json: JSONContent = editor.getJSON();
           const blob = await generateDocxFile('ARGUS', json);
