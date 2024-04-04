@@ -1,12 +1,20 @@
 from fastapi import Depends, APIRouter, HTTPException, status
+from pydantic import BaseModel
 import logging
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/competitive-advantage")
-async def get_competitive_advantage():
+class MetricInfo(BaseModel):
+    template: str
+    company_ticker: str
+    recommendation: str | None = None
+    target_price: float | None = None
+
+
+@router.post("/metrics/")
+async def get_metrics():
     """
     Get the competitive advantage of the company
     """
