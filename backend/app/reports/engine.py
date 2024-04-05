@@ -183,8 +183,9 @@ Company name: {company} \
 
     llm = Anthropic(
         temperature=0,
-        model="claude-3-opus-20240229",
-        # model="claude-3-haiku-20240307",
+        # model="claude-3-opus-20240229",
+        # model="claude-3-sonnet-20240229",
+        model="claude-3-haiku-20240307",
         api_key=settings.ANTHROPIC_API_KEY,
     )
     res = llm.complete(

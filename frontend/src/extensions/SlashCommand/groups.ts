@@ -21,7 +21,6 @@ export const GROUPS: Group[] = [
         shouldBeHidden: (editor) => editor.isActive('columns'),
         action: (editor) => editor.chain().focus().setAiImage().run(),
       },
-      
     ],
   },
   {
@@ -65,8 +64,8 @@ export const GROUPS: Group[] = [
         iconName: 'List',
         description: 'Unordered list of items',
         aliases: ['ul'],
-        action: editor => {
-          editor.chain().focus().toggleBulletList().run()
+        action: (editor) => {
+          editor.chain().focus().toggleBulletList().run();
         },
       },
       {
@@ -75,13 +74,13 @@ export const GROUPS: Group[] = [
         iconName: 'ListOrdered',
         description: 'Ordered list of items',
         aliases: ['ol'],
-        action: editor => {
-          editor.chain().focus().toggleOrderedList().run()
+        action: (editor) => {
+          editor.chain().focus().toggleOrderedList().run();
         },
       },
     ],
   },
-  
+
   {
     name: 'insert',
     title: 'Insert',
@@ -149,15 +148,32 @@ export const GROUPS: Group[] = [
       },
     ],
   },
-  {name: 'blocks', title: 'Blocks', commands: [{
+  {
+    name: 'blocks',
+    title: 'Blocks',
+    commands: [
+      {
+        name: 'aiBusinessDescription',
+        label: 'Business Description',
+        iconName: 'Briefcase',
+        description: 'Generate business description for the selected company',
+        shouldBeHidden: (editor) => editor.isActive('columns'),
+        // action: (editor) => editor.chain().focus().setAiCompetitiveAdvantages().run(),
+        action: (editor) =>
+          editor.chain().focus().setAiGenerator('business_description').run(),
+      },
+      {
         name: 'aiCompetitiveAdvantages',
         label: 'Competitive Advantages',
         iconName: 'Shield',
         description: 'Generate competitive advantages for the selected company',
         shouldBeHidden: (editor) => editor.isActive('columns'),
         // action: (editor) => editor.chain().focus().setAiCompetitiveAdvantages().run(),
-        action: (editor) => editor.chain().focus().setAiGenerator('competitive_advantages').run(),
-      }]}
+        action: (editor) =>
+          editor.chain().focus().setAiGenerator('competitive_advantages').run(),
+      },
+    ],
+  },
 ];
 
 export default GROUPS;

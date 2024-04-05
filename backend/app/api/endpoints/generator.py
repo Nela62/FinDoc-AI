@@ -7,12 +7,18 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
+# TODO: move them to utils folder
+def separate_numbers(match):
+    numbers = match.group(1)
+    return "".join([f"[{num}]" for num in numbers.split(",")])
+
+
 @router.get("/")
-async def get_building_block(promptType: str):
+async def get_building_block(promptType: str, offset: int):
     """
     Get the competitive advantage of the company
     """
-    # res = get_reports_engine("0000320193")
+    # res = get_reports_engine("0001018724")
     res = {
         "text": "Apple Inc., founded in 1976, is a multinational technology company primarily operating in the consumer electronics, software, and online services industries. The company's key products include iPhone (52% of 2023 net sales), Mac (8%), iPad (7%), Wearables, Home and Accessories (10%), and Services (22%), which includes advertising, AppleCare, cloud services, payment services, and digital content through the App Store and Apple TV+, among others [1,2]. Apple's major markets include the Americas, Europe, Greater China, Japan, and Rest of Asia Pacific [3,4]. In fiscal year 2023, Apple reported total net sales of $383.3 billion, a 3% decrease from the previous year, while maintaining its position as a global leader in the technology industry [2].",
         "nodes": [
@@ -79,10 +85,6 @@ async def get_building_block(promptType: str):
         ],
     }
 
-    def separate_numbers(match):
-        numbers = match.group(1)
-        return "".join([f"[{num}]" for num in numbers.split(",")])
-
     separated_text = re.sub(r"\[(\d+(?:,\d+)*)\]", separate_numbers, res["text"])
 
     # # Extract citations using the regular expression
@@ -98,11 +100,25 @@ async def get_building_block(promptType: str):
         node for node in res["nodes"] if str(node["source_num"]) in unique_numbers
     ]
 
+    def increase_citation(match):
+        number = int(match.group(1))
+        new_number = number + offset
+        return f"[{new_number}]"
+
     for new_num, old_num in enumerate(unique_numbers, start=1):
         separated_text = separated_text.replace(f"[{old_num}]", f"[{new_num}]")
         for node in new_nodes:
             if node["source_num"] == old_num:
                 node["source_num"] = new_num
 
-        # print(response)
+    separated_text = re.sub(r"\[(\d+)\]", increase_citation, separated_text)
+
+    for node in new_nodes:
+        node["source_num"] = node["source_num"] + offset
+
+    # for node in res["nodes"]:
+    #     node["text"] = re.sub(r"\[(\d+)\]", increase_citation, node["text"])
+    #     new_nodes.append(node)
+
+    # print(response)
     return {"response": separated_text, "nodes": new_nodes}

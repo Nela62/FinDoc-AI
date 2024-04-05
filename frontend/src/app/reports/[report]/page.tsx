@@ -42,6 +42,7 @@ import { RightSideBar } from '@/components/RightSideBar';
 import {
   newAmazonReport,
   newAmazonReportHtml,
+  newAmazonReportMarkdown,
 } from '@/lib/data/newAmazonReport';
 export type AiState = {
   isAiLoading: boolean;
@@ -354,27 +355,25 @@ export default function Report({ params }: { params: { report: string } }) {
                           (options.type as keyof typeof ReportType) ?? 'Other'
                         ],
                       });
-                      // function typeContent(
-                      //   editor: Editor,
-                      //   content: string,
-                      //   delay: number,
-                      // ) {
-                      //   let index = 0;
+                      function typeContent(
+                        editor: Editor,
+                        content: any[],
+                        delay: number,
+                      ) {
+                        let index = 0;
 
-                      //   function type() {
-                      //     if (index < content.length) {
-                      //       editor.commands.insertContent(
-                      //         content.charAt(index),
-                      //       );
-                      //       index++;
-                      //       setTimeout(type, delay);
-                      //     }
-                      //   }
+                        function type() {
+                          if (index < content.length) {
+                            editor.commands.insertContent(content[index]);
+                            index++;
+                            setTimeout(type, delay);
+                          }
+                        }
 
-                      //   type();
-                      // }
+                        type();
+                      }
 
-                      // typeContent(editor, newAmazonReportHtml, 10);
+                      typeContent(editor, newAmazonReport.content, 600);
 
                       addReportContent({
                         reportId: reportId,

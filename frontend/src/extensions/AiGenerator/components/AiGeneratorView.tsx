@@ -6,7 +6,6 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuid } from 'uuid';
-
 import { Button } from '@/components/ui/Button';
 import { Loader } from '@/components/ui/Loader';
 import { Panel, PanelHeadline } from '@/components/ui/Panel';
@@ -45,6 +44,20 @@ export const AiGeneratorView = ({
   const citations = useCitationsStateStore((state) => state.citations);
   const addCitations = useCitationsStateStore((state) => state.addCitations);
 
+  function streamContent(content: string, delay: number) {
+    let index = 0;
+
+    function type() {
+      if (index < content.length) {
+        setPreviewText(content.slice(0, index + 1));
+        index++;
+        setTimeout(type, delay);
+      }
+    }
+
+    type();
+  }
+
   const generateText = useCallback(async () => {
     setIsFetching(true);
 
@@ -67,7 +80,9 @@ export const AiGeneratorView = ({
         return;
       }
 
-      setPreviewText(text);
+      streamContent(text, 10);
+
+      // setPreviewText(text);
 
       setIsFetching(false);
     } catch (errPayload: any) {
@@ -116,36 +131,43 @@ export const AiGeneratorView = ({
     <NodeViewWrapper data-drag-handle>
       {previewText && (
         <div
-          className="bg-blue-200 px-2 py-2 rounded-[5px]"
+          className="bg-indigo-100 px-2 py-2 rounded-[5px]"
           dangerouslySetInnerHTML={{ __html: formattedPreviewText }}
         ></div>
       )}
-      <div className="flex justify-end w-auto gap-3 mt-4">
-        {previewText && (
+      {!isFetching && (
+        <div className={` flex justify-end w-auto gap-3 mt-4`}>
+          {previewText && (
+            <Button
+              variant="ghost"
+              className="text-red-500 hover:bg-red-500/10 hover:text-red-500"
+              onClick={discard}
+            >
+              <Icon name="Trash" />
+              Discard
+            </Button>
+          )}
+          {previewText && (
+            <Button variant="ghost" onClick={insert} disabled={!previewText}>
+              <Icon name="Check" />
+              Insert
+            </Button>
+          )}
           <Button
-            variant="ghost"
-            className="text-red-500 hover:bg-red-500/10 hover:text-red-500"
-            onClick={discard}
+            variant="primary"
+            // onClick={generateText}
+            style={{ whiteSpace: 'nowrap' }}
           >
-            <Icon name="Trash" />
-            Discard
+            {previewText ? <Icon name="Repeat" /> : <Icon name="Sparkles" />}
+            {previewText ? 'Regenerate' : 'Generate text'}
           </Button>
-        )}
-        {previewText && (
-          <Button variant="ghost" onClick={insert} disabled={!previewText}>
-            <Icon name="Check" />
-            Insert
-          </Button>
-        )}
-        <Button
-          variant="primary"
-          // onClick={generateText}
-          style={{ whiteSpace: 'nowrap' }}
-        >
-          {previewText ? <Icon name="Repeat" /> : <Icon name="Sparkles" />}
-          {previewText ? 'Regenerate' : 'Generate text'}
-        </Button>
-      </div>
+        </div>
+      )}
+      {isFetching && (
+        <div className="flex justify-center w-fit mt-4">
+          <p>Generating...</p>
+        </div>
+      )}
     </NodeViewWrapper>
   );
 };
