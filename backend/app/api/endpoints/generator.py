@@ -9,8 +9,9 @@ from pydantic import BaseModel
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+# TODO: this code really needs to be tested
 
-# TODO: move them to utils folder
+
 def separate_numbers(match):
     numbers = match.group(1)
     return "".join([f"[{num}]" for num in numbers.split(",")])
@@ -28,6 +29,8 @@ class PromptConfig(BaseModel):
 
 
 # I used orig_num to distinguish between the citation numbers that were already previously referenced in the main report before and those that were not. The name is random so don't read too much into it, future person who reads this code.
+
+# TODO: learn python destructuring and refactor all the citations processing code into a separate function in a different folder
 
 
 @router.post("/")
@@ -117,6 +120,7 @@ async def get_building_block(promptConfig: PromptConfig):
     # # Sort the list in ascending order
     unique_numbers.sort()
 
+    # TODO: combine them and add destructuring
     existing_citations_nums = [
         node["source_num"]
         for node in res["nodes"]
@@ -154,15 +158,12 @@ async def get_building_block(promptConfig: PromptConfig):
         num for num in unique_numbers if int(num) not in existing_citations_nums
     ]
 
-    new_nodes = []
-
     for new_num, old_num in enumerate(no_dupl_unique_nums, start=1):
         separated_text = separated_text.replace(f"[{old_num}]", f"[{new_num}]")
         for node in referenced_nodes:
             if node["source_num"] == int(old_num):
                 node["source_num"] = new_num
 
-    print([node["source_num"] for node in referenced_nodes])
     separated_text = re.sub(r"\[(\d+)\]", increase_citation, separated_text)
 
     for node in referenced_nodes:
@@ -177,4 +178,36 @@ async def get_building_block(promptConfig: PromptConfig):
     for num in existing_citations_nums:
         separated_text = re.sub(rf"\[(orig_{num})\]", unorig_citation, separated_text)
 
-    return {"response": separated_text, "nodes": referenced_nodes}
+    final_text = ""
+    sentences = separated_text.split(".")
+
+    # Ensure all citations are in the ascending order
+    for index, sentence in enumerate(sentences):
+        # Find all the numbers inside brackets using regex
+        brackets = re.findall(r"\[(\d+)\]", sentence)
+        if not brackets:
+            if index == len(sentences) - 1:
+                final_text += sentence
+            else:
+                final_text += sentence + "."
+            continue
+
+        # Convert the numbers to integers and sort them in ascending order
+        sorted_brackets = sorted(map(int, brackets))
+
+        i = -1
+
+        def substitute(match):
+            nonlocal i
+            i += 1
+            return f"[{str(sorted_brackets[i])}]"
+
+        # Replace each number inside brackets with its sorted position
+        sentence = re.sub(rf"\[(\d+)\]", substitute, sentence)
+
+        if index == len(sentences) - 1:
+            final_text += sentence
+        else:
+            final_text += sentence + "."
+
+    return {"response": final_text, "nodes": referenced_nodes}
