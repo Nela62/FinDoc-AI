@@ -2,6 +2,7 @@ from fastapi import Depends, APIRouter, HTTPException, status
 from app.reports.engine import get_reports_engine
 import logging
 import re
+from typing import List
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -14,7 +15,7 @@ def separate_numbers(match):
 
 
 @router.get("/")
-async def get_building_block(promptType: str, offset: int):
+async def get_building_block(promptType: str, offset: int, citations_ids: List[str]):
     """
     Get the competitive advantage of the company
     """
