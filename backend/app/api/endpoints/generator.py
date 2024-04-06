@@ -4,6 +4,8 @@ import logging
 import re
 from typing import List
 
+from pydantic import BaseModel
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
@@ -14,14 +16,32 @@ def separate_numbers(match):
     return "".join([f"[{num}]" for num in numbers.split(",")])
 
 
-@router.get("/")
-async def get_building_block(promptType: str, offset: int, citations_ids: List[str]):
+class Citation(BaseModel):
+    source_id: int
+    node_id: str
+
+
+class PromptConfig(BaseModel):
+    prompt_type: str
+    offset: int
+    citations: List[Citation]
+
+
+# I used orig_num to distinguish between the citation numbers that were already previously referenced in the main report before and those that were not. The name is random so don't read too much into it, future person who reads this code.
+
+
+@router.post("/")
+async def get_building_block(promptConfig: PromptConfig):
     """
     Get the competitive advantage of the company
     """
+    offset = promptConfig.offset
+    citations = promptConfig.citations
+    citations_nums = [citation.source_id for citation in citations]
+    citations_ids = [citation.node_id for citation in citations]
     # res = get_reports_engine("0001018724")
     res = {
-        "text": "Apple Inc., founded in 1976, is a multinational technology company primarily operating in the consumer electronics, software, and online services industries. The company's key products include iPhone (52% of 2023 net sales), Mac (8%), iPad (7%), Wearables, Home and Accessories (10%), and Services (22%), which includes advertising, AppleCare, cloud services, payment services, and digital content through the App Store and Apple TV+, among others [1,2]. Apple's major markets include the Americas, Europe, Greater China, Japan, and Rest of Asia Pacific [3,4]. In fiscal year 2023, Apple reported total net sales of $383.3 billion, a 3% decrease from the previous year, while maintaining its position as a global leader in the technology industry [2].",
+        "text": "Apple Inc., founded in 1976, is a multinational technology company primarily operating in the consumer electronics, software, and online services industries. The company's key products include iPhone (52% of 2023 net sales), Mac (8%), iPad (7%), Wearables, Home and Accessories (10%), and Services (22%), which includes advertising, AppleCare, cloud services, payment services, and digital content through the App Store and Apple TV+, among others [1,2]. Apple's major markets include the Americas, Europe, Greater China, Japan, and Rest of Asia Pacific [4,6]. In fiscal year 2023, Apple reported total net sales of $383.3 billion, a 3% decrease from the previous year, while maintaining its position as a global leader in the technology industry [2].",
         "nodes": [
             {
                 "node_id": "ac80cd9b-0dea-4736-9693-08abbcabf6dc",
@@ -97,29 +117,64 @@ async def get_building_block(promptType: str, offset: int, citations_ids: List[s
     # # Sort the list in ascending order
     unique_numbers.sort()
 
-    new_nodes = [
-        node for node in res["nodes"] if str(node["source_num"]) in unique_numbers
+    existing_citations_nums = [
+        node["source_num"]
+        for node in res["nodes"]
+        if node["node_id"] in citations_ids
+        and str(node["source_num"]) in unique_numbers
     ]
+
+    existing_citations_ids = [
+        node["node_id"]
+        for node in res["nodes"]
+        if node["node_id"] in citations_ids
+        and str(node["source_num"]) in unique_numbers
+    ]
+
+    referenced_nodes = [
+        node
+        for node in res["nodes"]
+        if str(node["source_num"]) in unique_numbers
+        and node["node_id"] not in existing_citations_ids
+    ]
+
+    def orig_citation(match):
+        number = int(match.group(1))
+        return f"[orig_{number}]"
+
+    for num in existing_citations_nums:
+        separated_text = re.sub(rf"\[({num})\]", orig_citation, separated_text)
 
     def increase_citation(match):
         number = int(match.group(1))
         new_number = number + offset
         return f"[{new_number}]"
 
-    for new_num, old_num in enumerate(unique_numbers, start=1):
+    no_dupl_unique_nums = [
+        num for num in unique_numbers if int(num) not in existing_citations_nums
+    ]
+
+    new_nodes = []
+
+    for new_num, old_num in enumerate(no_dupl_unique_nums, start=1):
         separated_text = separated_text.replace(f"[{old_num}]", f"[{new_num}]")
-        for node in new_nodes:
-            if node["source_num"] == old_num:
+        for node in referenced_nodes:
+            if node["source_num"] == int(old_num):
                 node["source_num"] = new_num
 
+    print([node["source_num"] for node in referenced_nodes])
     separated_text = re.sub(r"\[(\d+)\]", increase_citation, separated_text)
 
-    for node in new_nodes:
+    for node in referenced_nodes:
         node["source_num"] = node["source_num"] + offset
 
-    # for node in res["nodes"]:
-    #     node["text"] = re.sub(r"\[(\d+)\]", increase_citation, node["text"])
-    #     new_nodes.append(node)
+    def unorig_citation(match):
+        number = int(match.group(1).split("_")[1])
+        id_index = existing_citations_ids[existing_citations_nums.index(number)]
+        orig_num = citations_nums[citations_ids.index(id_index)]
+        return f"[{orig_num}]"
 
-    # print(response)
-    return {"response": separated_text, "nodes": new_nodes}
+    for num in existing_citations_nums:
+        separated_text = re.sub(rf"\[(orig_{num})\]", unorig_citation, separated_text)
+
+    return {"response": separated_text, "nodes": referenced_nodes}
