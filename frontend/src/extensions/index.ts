@@ -14,12 +14,12 @@ export { Superscript } from '@tiptap/extension-superscript';
 export { Paragraph } from '@tiptap/extension-paragraph';
 export { FileHandler } from '@tiptap-pro/extension-file-handler';
 
-export { TaskItem } from '@tiptap/extension-task-item'
-export { TaskList } from '@tiptap/extension-task-list'
+export { TaskItem } from '@tiptap/extension-task-item';
+export { TaskList } from '@tiptap/extension-task-list';
 export { Selection } from './Selection';
 export { AiWriter } from './AiWriter';
 export { AiImage } from './AiImage';
-export {AiGenerator} from './AiGenerator';
+export { AiGenerator } from './AiGenerator';
 // TODO: Add AiChart, AiImage, and AiTable
 // TODO: Add text color picker
 export { Table, TableCell, TableHeader, TableRow } from './Table';
@@ -35,3 +35,4 @@ export { Link } from './Link';
 export { ImageUpload } from './ImageUpload';
 export { ImageBlock } from './ImageBlock';
 export { Columns, Column } from './MultiColumn';
+export { Citation } from './Citation';

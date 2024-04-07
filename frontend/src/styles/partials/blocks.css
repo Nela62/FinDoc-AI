@@ -5,6 +5,9 @@
   & > .has-focus {
     @apply border border-zinc-300 rounded-md shadow-sm;
   }
+
+
+  
   /* Image Block */
   figure[data-type='imageBlock'] {
     @apply m-0;
@@ -30,6 +33,8 @@
     }
   }
 
+
+
   /* Columns */
   [data-type='columns'] {
     @apply grid gap-4 mt-14 mb-12;
@@ -50,4 +55,8 @@
   [data-type='column'] {
     @apply overflow-auto;
   }
+}
+
+.node-citation {
+  @apply text-indigo11 font-semibold focus:outline-none pl-1 cursor-pointer;
 }
