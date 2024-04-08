@@ -9,10 +9,10 @@ import {
   Settings,
   Stamp,
 } from 'lucide-react';
-import { useReportsStateStore } from '@/store';
+import { useBoundStore } from '@/stores/store';
 
 export const TopBar = ({ editor }: { editor: Editor }) => {
-  const selectedReport = useReportsStateStore((s) => s.selectedReport);
+  const selectedReport = useBoundStore((s) => s.selectedReport);
 
   return (
     <div

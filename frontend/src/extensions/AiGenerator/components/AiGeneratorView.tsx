@@ -3,7 +3,7 @@ import {
   NodeViewWrapper,
   NodeViewWrapperProps,
 } from '@tiptap/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuid } from 'uuid';
 import { Button } from '@/components/ui/Button';
@@ -16,7 +16,8 @@ import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { Surface } from '@/components/ui/Surface';
 import { DropdownButton } from '@/components/ui/Dropdown';
-import { useCitationsStateStore } from '@/store';
+import { Citation } from '@/stores/citations-store';
+import { useBoundStore } from '@/stores/store';
 
 export interface DataProps {
   text: string;
@@ -32,7 +33,7 @@ export const AiGeneratorView = ({
   getPos,
   deleteNode,
 }: NodeViewWrapperProps) => {
-  const promptType = node.attrs.promptType;
+  const promptType: string = node.attrs.promptType;
   // const text =
   //   "Based on the provided context, Apple has a minority market share in the global smartphone, personal computer and tablet markets compared to its competitors. This smaller market share can make third-party software developers less inclined to prioritize developing applications for Apple's platforms.\nThe context does not provide specific details on Apple's market share or position in the wearables industry compared to rivals. It also does not comment on the strength of Apple's management team or their ability to execute on future growth initiatives.\nThe information focuses more on the challenges Apple faces due to its smaller market share in certain product categories, and the potential impacts on the availability of third-party software for its devices. Additional context would be needed to comprehensively address Apple's competitive position across its major product lines and the capabilities of its management.";
 
@@ -40,9 +41,9 @@ export const AiGeneratorView = ({
   const [isFetching, setIsFetching] = useState(false);
   const textareaId = useMemo(() => uuid(), []);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const tempCitations = useRef<Citation[]>([]);
 
-  const citations = useCitationsStateStore((state) => state.citations);
-  const addCitations = useCitationsStateStore((state) => state.addCitations);
+  const { citations, addCitations } = useBoundStore((state) => state);
 
   function streamContent(content: string, delay: number) {
     let index = 0;
@@ -62,17 +63,19 @@ export const AiGeneratorView = ({
     setIsFetching(true);
 
     try {
-      const response = await fetch(
-        `${baseUrl}/aigenerator?promptType=${promptType}`,
-        {
-          method: 'GET',
-        },
-      );
-      console.log(response);
+      const response = await fetch(`${baseUrl}/aigenerator`, {
+        method: 'POST',
+        body: JSON.stringify({
+          prompt_type: promptType,
+          offset: 1,
+          citations: [],
+        }),
+        headers: { 'content-type': 'application/json' },
+      });
 
       const json = await response.json();
       const text = json.response;
-      addCitations(json.nodes);
+      tempCitations.current = json.nodes;
 
       if (!text.length) {
         setIsFetching(false);
@@ -80,9 +83,9 @@ export const AiGeneratorView = ({
         return;
       }
 
-      streamContent(text, 10);
+      // streamContent(text, 10);
 
-      // setPreviewText(text);
+      setPreviewText(text);
 
       setIsFetching(false);
     } catch (errPayload: any) {
@@ -95,11 +98,11 @@ export const AiGeneratorView = ({
       setIsFetching(false);
       toast.error(message);
     }
-  }, []);
+  }, [baseUrl, promptType]);
 
   useEffect(() => {
     generateText();
-  }, []);
+  }, [generateText]);
 
   const formattedPreviewText = useMemo(
     () =>
@@ -114,14 +117,17 @@ export const AiGeneratorView = ({
   const to = from + node.nodeSize;
 
   const insert = useCallback(() => {
-    console.log(formattedPreviewText);
+    // TODO: instead of just inserting text, properly parse the citations and other markdown
     editor
       .chain()
       .focus()
       .insertContentAt({ from, to }, formattedPreviewText)
       .run();
     setPreviewText('');
-  }, [formattedPreviewText, editor, from, to]);
+    console.log(tempCitations.current);
+    // addCitations(tempCitations.current);
+    addCitations([{ node_id: '1', text: 'test', source_num: 1 }]);
+  }, [formattedPreviewText, editor, from, to, addCitations]);
 
   const discard = useCallback(() => {
     deleteNode();

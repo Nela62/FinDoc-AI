@@ -1,6 +1,9 @@
+import { useBoundStore } from '@/stores/store';
 import { Send, SendHorizonal } from 'lucide-react';
 
 export const RightSideBar = () => {
+  const citations = useBoundStore((state) => state.citations);
+
   return (
     <div className="min-w-80 max-w-80 h-full flex flex-col justify-end px-4 py-4">
       <div className="bg-white h-24 w-full rounded-[5px] border-[0.5px] border-zinc-300 p-2 relative">

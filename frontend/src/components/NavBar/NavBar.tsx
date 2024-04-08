@@ -1,15 +1,22 @@
 import { cn, getNanoId } from '@/lib/utils';
-import { ReportType, useReportsStateStore } from '@/store';
+import { ReportType } from '@/stores/reports-store';
+import { useBoundStore } from '@/stores/store';
+
 import Link from 'next/link';
 
 import { useRouter } from 'next/navigation';
 
 export const NavBar = () => {
-  const reports = useReportsStateStore((state) => state.reports);
-  const addNewReport = useReportsStateStore((state) => state.addNewReport);
-
-  const selectedReport = useReportsStateStore((s) => s.selectedReport);
-  const setSelectedReport = useReportsStateStore((s) => s.setSelectedReport);
+  const {
+    reports,
+    addNewReport,
+    selectedReport,
+    setSelectedReport,
+    addCitations,
+    isUpdated,
+    citations,
+    setUpdated,
+  } = useBoundStore((state) => state);
 
   const { push } = useRouter();
 
@@ -19,6 +26,7 @@ export const NavBar = () => {
       title: 'Untitled',
       companyTicker: '',
       type: ReportType.Other,
+      content: '',
     };
     addNewReport(newReport);
     push('/reports/' + newReport.id);
@@ -58,6 +66,20 @@ export const NavBar = () => {
               ))}
           </div>
         ))}
+        <button
+          onClick={() => {
+            const testCitations = [
+              { node_id: '2', text: 'test ', source_num: 2 },
+            ];
+            setUpdated(true);
+            console.log(isUpdated);
+            console.log('inserting test citations');
+            addCitations(testCitations);
+            console.log(citations);
+          }}
+        >
+          Add citations
+        </button>
       </div>
     </div>
   );

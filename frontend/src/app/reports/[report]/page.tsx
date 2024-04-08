@@ -30,12 +30,6 @@ import { Combobox } from '@/components/ui/Combobox';
 import { tickers } from '@/lib/data/tickers';
 import { getPrompts } from './prompts';
 import { TopBar } from '@/components/TopBar/TopBar';
-import {
-  Recommendation,
-  ReportType,
-  useDemoStateStore,
-  useReportsStateStore,
-} from '@/store';
 import { initialContent } from '@/lib/data/initialContent';
 import { DropdownButton } from '@/components/ui/Dropdown';
 import { RightSideBar } from '@/components/RightSideBar';
@@ -44,6 +38,8 @@ import {
   newAmazonReportHtml,
   newAmazonReportMarkdown,
 } from '@/lib/data/newAmazonReport';
+import { Recommendation, ReportType } from '@/stores/reports-store';
+import { useBoundStore } from '@/stores/store';
 export type AiState = {
   isAiLoading: boolean;
   aiError?: string | null;
@@ -86,10 +82,9 @@ interface OptionsState {
 // TODO: turn this into a form hook
 export default function Report({ params }: { params: { report: string } }) {
   const { report: reportId } = params;
-  const reports = useReportsStateStore((state) => state.reports);
-  const setSelectedReport = useReportsStateStore((s) => s.setSelectedReport);
-  const updateReport = useReportsStateStore((s) => s.updateReport);
-  const addReportContent = useDemoStateStore((state) => state.addReportContent);
+  const { reports, setSelectedReport, updateReport } = useBoundStore(
+    (state) => state,
+  );
   // const isNew = useSearchParams().get('isNew') === 'true';
   const [isLoading, setIsLoading] = useState(false);
 
@@ -323,7 +318,9 @@ export default function Report({ params }: { params: { report: string } }) {
                         type: ReportType[
                           (options.type as keyof typeof ReportType) ?? 'Other'
                         ],
+                        content: '',
                       });
+                      console.log(reports)
                       // generateReport(options.company, editor);
                     }}
                   >
@@ -343,18 +340,7 @@ export default function Report({ params }: { params: { report: string } }) {
                       // generateReport(options.companyTicker, editor);
 
                       if (!options.companyTicker || !options.type) return;
-                      updateReport({
-                        id: reportId,
-                        title: `${getDateName()} - ${
-                          ReportType[
-                            (options.type as keyof typeof ReportType) ?? 'Other'
-                          ]
-                        }`,
-                        ...options,
-                        type: ReportType[
-                          (options.type as keyof typeof ReportType) ?? 'Other'
-                        ],
-                      });
+
                       function typeContent(
                         editor: Editor,
                         content: any[],
@@ -373,12 +359,21 @@ export default function Report({ params }: { params: { report: string } }) {
                         type();
                       }
 
-                      typeContent(editor, newAmazonReport.content, 600);
-
-                      addReportContent({
-                        reportId: reportId,
-                        jsonContent: newAmazonReport,
+                      updateReport({
+                        id: reportId,
+                        title: `${getDateName()} - ${
+                          ReportType[
+                            (options.type as keyof typeof ReportType) ?? 'Other'
+                          ]
+                        }`,
+                        ...options,
+                        type: ReportType[
+                          (options.type as keyof typeof ReportType) ?? 'Other'
+                        ],
+                        content: '',
                       });
+
+                      typeContent(editor, newAmazonReport.content, 600);
                     }}
                   >
                     <Wand2Icon className="h-5 w-5" />
@@ -395,7 +390,7 @@ export default function Report({ params }: { params: { report: string } }) {
           <div className="relative flex flex-col flex-1 h-full overflow-hidden">
             {/* TODO: Table of contents */}
             <ScrollArea.Root className="overflow-hidden h-full w-full">
-              <ScrollArea.Viewport className="h-full min-h-screen bg-white w-full rounded-t-[12px] border-zinc-300 border-[0.5px]">
+              <ScrollArea.Viewport className="h-full bg-white w-full rounded-t-[12px] border-zinc-300 border-[0.5px]">
                 <EditorContent editor={editor} className="flex-1" />
               </ScrollArea.Viewport>
               <ScrollArea.Scrollbar

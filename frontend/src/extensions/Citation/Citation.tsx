@@ -11,6 +11,8 @@ export const Citation = Node.create({
 
   inline: true,
 
+  // TODO: Add onclick
+
   addOptions() {
     return {
       authorId: undefined,
@@ -18,7 +20,6 @@ export const Citation = Node.create({
       sourceNum: undefined,
       HTMLAttributes: {
         class: `node-${this.name}`,
-        onclick: 'alert("clicked")',
       },
     };
   },

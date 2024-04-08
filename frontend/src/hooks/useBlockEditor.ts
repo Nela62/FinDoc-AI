@@ -2,9 +2,11 @@
 
 import { Editor, useEditor } from '@tiptap/react';
 
-import { useDemoStateStore, useEditorStateStore } from '@/store';
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { useEffect } from 'react';
+import { useBoundStore } from '@/stores/store';
+import { Citation } from '@/stores/citations-store';
+import { Report } from '@/stores/reports-store';
 
 const debounce = require('lodash.debounce');
 
@@ -23,23 +25,34 @@ const getAiCompletion = async () => {
 };
 
 export const useBlockEditor = (reportId: string) => {
-  const isEmpty = useEditorStateStore((state) => state.isEmpty);
-  const setIsEmpty = useEditorStateStore((state) => state.setIsEmpty);
-  const setIsAiLoading = useEditorStateStore((state) => state.setIsAiLoading);
-  const isAiInserting = useEditorStateStore((state) => state.isAiInserting);
-  const setAiError = useEditorStateStore((state) => state.setAiError);
-  const setIsAiInserting = useEditorStateStore(
-    (state) => state.setIsAiInserting,
-  );
-  const reportContent = useDemoStateStore((state) => state.reportContent);
-  const editReportContent = useDemoStateStore(
-    (state) => state.editReportContent,
-  );
+  const {
+    isEmpty,
+    setIsEmpty,
+    isAiLoading,
+    setIsAiLoading,
+    isAiInserting,
+    setIsAiInserting,
+    setAiError,
+    citations,
+    reports,
+    updateReport,
+  } = useBoundStore((state) => state);
 
   const editor = useEditor({
-    autofocus: true,
+    autofocus: false,
     extensions: ExtensionKit(),
     editorProps: {
+      handleClickOn: (view, pos, node) => {
+        if (node.type.name === 'citation') {
+          console.log(citations);
+          alert(`clicked on citation ${node.attrs.sourceNum}`);
+          console.log(
+            citations.find(
+              (c: Citation) => c.source_num === node.attrs.sourceNum,
+            ),
+          );
+        }
+      },
       attributes: {
         autocomplete: 'off',
         autocorrect: 'off',
@@ -52,11 +65,8 @@ export const useBlockEditor = (reportId: string) => {
       if (editor.isEmpty) {
         // editor.commands.setContent(initialContent);
       }
-      console.log(
-        reportContent.find((r) => r.reportId === reportId)?.jsonContent,
-      );
       editor.commands.setContent(
-        reportContent.find((r) => r.reportId === reportId)?.jsonContent || '',
+        reports.find((r: Report) => r.id === reportId)?.content || '',
       );
     },
     onUpdate({ editor }) {
@@ -65,10 +75,15 @@ export const useBlockEditor = (reportId: string) => {
       }
 
       const saveContent = debounce(() => {
-        editReportContent({
-          reportId: reportId,
-          jsonContent: editor.getJSON(),
-          // htmlContent: editor.getHTML(),
+        const report = reports.find((r: Report) => r.id === reportId);
+
+        if (!report) {
+          return;
+        }
+
+        updateReport({
+          ...report,
+          content: editor.getJSON(),
         });
       }, 1000);
 
