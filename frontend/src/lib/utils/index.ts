@@ -14,3 +14,4 @@ export * from './getRenderContainer';
 export * from './isCustomNodeSelected';
 export * from './isTextSelected';
 export * from './nanoId';
+export * from './formatText';

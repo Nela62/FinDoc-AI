@@ -26,17 +26,3 @@ export const createEditorSlice = (set: any) => ({
   setIsAiInserting: (isAiInserting: boolean) => set({ isAiInserting }),
   setAiError: (aiError: string | null) => set({ aiError }),
 });
-
-// import { createStore } from 'zustand/vanilla';
-
-// export const useEditorStateSlice = (
-//   initState: EditorState = defaultEditorState,
-// ) => {
-//   return createStore<EditorState>((set) => ({
-//     ...initState,
-//     setIsEmpty: (isEmpty: boolean) => set({ isEmpty }),
-//     setIsAiLoading: (isAiLoading: boolean) => set({ isAiLoading }),
-//     setIsAiInserting: (isAiInserting: boolean) => set({ isAiInserting }),
-//     setAiError: (aiError: string | null) => set({ aiError }),
-//   }));
-// };

@@ -10,6 +10,7 @@ import {
   createCitationsSlice,
 } from './citations-store';
 import { EditorActions, EditorState, createEditorSlice } from './editor-store';
+import { createSidebarSlice } from './sidedbar-tabs-store';
 
 export type Store = EditorState &
   EditorActions &
@@ -17,16 +18,6 @@ export type Store = EditorState &
   ReportsActions &
   CitationsState &
   CitationsActions;
-
-// export const useBoundStore =
-// create<Store>((...a) => ({
-//   // @ts-ignore
-//   ...createCitationsSlice(...a),
-//   // @ts-ignore
-//   ...createReportsSlice(...a),
-//   // @ts-ignore
-//   ...createEditorSlice(...a),
-// }));
 
 export const createBoundStore = () => {
   return create<Store>((...a) => ({
@@ -36,5 +27,7 @@ export const createBoundStore = () => {
     ...createReportsSlice(...a),
     // @ts-ignore
     ...createEditorSlice(...a),
+    // @ts-ignore
+    ...createSidebarSlice(...a),
   }));
 };

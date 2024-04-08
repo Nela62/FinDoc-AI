@@ -18,6 +18,7 @@ import { Surface } from '@/components/ui/Surface';
 import { DropdownButton } from '@/components/ui/Dropdown';
 import { Citation } from '@/stores/citations-store';
 import { useBoundStore } from '@/providers/store-provider';
+import { markdownToHtml, markdownToJson } from '@/lib/utils';
 
 export interface DataProps {
   text: string;
@@ -67,8 +68,11 @@ export const AiGeneratorView = ({
         method: 'POST',
         body: JSON.stringify({
           prompt_type: promptType,
-          offset: 1,
-          citations: [],
+          offset: citations.length,
+          citations: citations.map((c: Citation) => ({
+            source_num: c.source_num,
+            node_id: c.node_id,
+          })),
         }),
         headers: { 'content-type': 'application/json' },
       });
@@ -105,11 +109,7 @@ export const AiGeneratorView = ({
   }, [generateText]);
 
   const formattedPreviewText = useMemo(
-    () =>
-      previewText
-        .split('\n')
-        .map((p) => `<p>${p}</p>`)
-        .join(''),
+    () => markdownToHtml(previewText),
     [previewText],
   );
 
@@ -117,15 +117,16 @@ export const AiGeneratorView = ({
   const to = from + node.nodeSize;
 
   const insert = useCallback(() => {
+    console.log(markdownToJson(previewText));
     // TODO: instead of just inserting text, properly parse the citations and other markdown
     editor
       .chain()
       .focus()
-      .insertContentAt({ from, to }, formattedPreviewText)
+      .insertContentAt({ from, to }, markdownToJson(previewText))
       .run();
     setPreviewText('');
     addCitations(tempCitations.current);
-  }, [formattedPreviewText, editor, from, to, addCitations]);
+  }, [editor, from, to, addCitations, previewText]);
 
   const discard = useCallback(() => {
     deleteNode();

@@ -51,6 +51,7 @@
     "@tiptap/extension-text-style": "^2.2.4",
     "@tiptap/extension-typography": "^2.2.4",
     "@tiptap/extension-underline": "^2.2.4",
+    "@tiptap/html": "^2.2.6",
     "@tiptap/pm": "^2.2.4",
     "@tiptap/react": "^2.2.4",
     "@tiptap/starter-kit": "^2.2.4",
@@ -63,6 +64,7 @@
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.344.0",
+    "markdown-it": "^14.1.0",
     "match-sorter": "^6.3.4",
     "nanoid": "^5.0.6",
     "next": "14.1.2",
@@ -80,6 +82,7 @@
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.12",
     "@types/lodash.debounce": "^4.0.9",
+    "@types/markdown-it": "^14.0.0",
     "@types/node": "^20.12.3",
     "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.23",

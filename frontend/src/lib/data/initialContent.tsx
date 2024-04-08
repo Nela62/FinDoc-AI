@@ -25,7 +25,6 @@ export const initialContent = {
           type: 'text',
           text: "Amazon.com is the leading U.S. e-commerce retailer and among the top e-commerce sites globally. Amazon.com also provides Amazon Web Services (AWS), which is the global leader in cloud-based Infrastructure-as-a-Service (IaaS) platforms. The company's Prime membership platform is a key online retail differentiator, providing customers with free shipping (after an annual fee) along with exclusive media content (music, video, audible books, etc.). The company's Kindle reader and Alexa-based Echo and Dot digital voice assistants are category leaders.",
         },
-        { type: 'citation', attrs: { sourceNum: 1 } },
       ],
     },
 

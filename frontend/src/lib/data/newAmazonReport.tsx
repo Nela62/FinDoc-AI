@@ -27,7 +27,6 @@ export const newAmazonReport = {
         },
       ],
     },
-
     {
       type: 'heading',
       attrs: {
