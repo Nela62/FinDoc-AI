@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 
 import 'cal-sans';
+import { StoreProvider } from '@/providers/store-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,7 +20,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full font-sans">
       <body className={`${inter.className} h-full flex flex-col bg-zinc-50`}>
-        <main className="h-full">{children}</main>
+        <main className="h-full">
+          <StoreProvider>{children}</StoreProvider>
+        </main>
       </body>
     </html>
   );

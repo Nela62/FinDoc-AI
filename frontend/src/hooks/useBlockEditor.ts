@@ -1,12 +1,12 @@
 'use client';
 
-import { Editor, useEditor } from '@tiptap/react';
+import { Editor, useEditor, Node as Node } from '@tiptap/react';
 
 import { ExtensionKit } from '@/extensions/extension-kit';
-import { useEffect } from 'react';
-import { useBoundStore } from '@/stores/store';
+import { useCallback, useEffect } from 'react';
 import { Citation } from '@/stores/citations-store';
 import { Report } from '@/stores/reports-store';
+import { useBoundStore } from '@/providers/store-provider';
 
 const debounce = require('lodash.debounce');
 
@@ -33,24 +33,18 @@ export const useBlockEditor = (reportId: string) => {
     isAiInserting,
     setIsAiInserting,
     setAiError,
-    citations,
+    setSelectedCitation,
     reports,
     updateReport,
   } = useBoundStore((state) => state);
-
+  // FIX: the reports don't update
   const editor = useEditor({
     autofocus: false,
     extensions: ExtensionKit(),
     editorProps: {
       handleClickOn: (view, pos, node) => {
         if (node.type.name === 'citation') {
-          console.log(citations);
-          alert(`clicked on citation ${node.attrs.sourceNum}`);
-          console.log(
-            citations.find(
-              (c: Citation) => c.source_num === node.attrs.sourceNum,
-            ),
-          );
+          setSelectedCitation(node.attrs.sourceNum);
         }
       },
       attributes: {

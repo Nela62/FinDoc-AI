@@ -17,7 +17,7 @@ import { Toolbar } from '@/components/ui/Toolbar';
 import { Surface } from '@/components/ui/Surface';
 import { DropdownButton } from '@/components/ui/Dropdown';
 import { Citation } from '@/stores/citations-store';
-import { useBoundStore } from '@/stores/store';
+import { useBoundStore } from '@/providers/store-provider';
 
 export interface DataProps {
   text: string;
@@ -124,9 +124,7 @@ export const AiGeneratorView = ({
       .insertContentAt({ from, to }, formattedPreviewText)
       .run();
     setPreviewText('');
-    console.log(tempCitations.current);
-    // addCitations(tempCitations.current);
-    addCitations([{ node_id: '1', text: 'test', source_num: 1 }]);
+    addCitations(tempCitations.current);
   }, [formattedPreviewText, editor, from, to, addCitations]);
 
   const discard = useCallback(() => {

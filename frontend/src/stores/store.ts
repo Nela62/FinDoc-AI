@@ -18,11 +18,23 @@ export type Store = EditorState &
   CitationsState &
   CitationsActions;
 
-export const useBoundStore = create<Store>((...a) => ({
-  // @ts-ignore
-  ...createCitationsSlice(...a),
-  // @ts-ignore
-  ...createReportsSlice(...a),
-  // @ts-ignore
-  ...createEditorSlice(...a),
-}));
+// export const useBoundStore =
+// create<Store>((...a) => ({
+//   // @ts-ignore
+//   ...createCitationsSlice(...a),
+//   // @ts-ignore
+//   ...createReportsSlice(...a),
+//   // @ts-ignore
+//   ...createEditorSlice(...a),
+// }));
+
+export const createBoundStore = () => {
+  return create<Store>((...a) => ({
+    // @ts-ignore
+    ...createCitationsSlice(...a),
+    // @ts-ignore
+    ...createReportsSlice(...a),
+    // @ts-ignore
+    ...createEditorSlice(...a),
+  }));
+};

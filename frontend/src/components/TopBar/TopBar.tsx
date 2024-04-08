@@ -9,7 +9,7 @@ import {
   Settings,
   Stamp,
 } from 'lucide-react';
-import { useBoundStore } from '@/stores/store';
+import { useBoundStore } from '@/providers/store-provider';
 
 export const TopBar = ({ editor }: { editor: Editor }) => {
   const selectedReport = useBoundStore((s) => s.selectedReport);

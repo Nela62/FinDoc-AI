@@ -5,21 +5,26 @@ export type Citation = {
 };
 
 export type CitationsState = {
-  isUpdated: boolean;
   citations: Citation[];
+  selectedCitation: Citation | null;
 };
 
 export type CitationsActions = {
   addCitations: (citations: Citation[]) => void;
-  setUpdated: (updated: boolean) => void;
+  setSelectedCitation: (citationSourceNum: number) => void;
 };
 
 // TODO: accept and pass initial state
 
 export const createCitationsSlice = (set: any) => ({
-  isUpdated: false,
+  selectedCitation: null,
   citations: [],
-  setUpdated: (updated: boolean) => set({ isUpdated: updated }),
   addCitations: (newCitations: Citation[]) =>
     set((state: any) => ({ citations: [...state.citations, ...newCitations] })),
+  setSelectedCitation: (citationSourceNum: number) =>
+    set((state: any) => ({
+      selectedCitation: state.citations.find(
+        (c: Citation) => c.source_num === citationSourceNum,
+      ),
+    })),
 });

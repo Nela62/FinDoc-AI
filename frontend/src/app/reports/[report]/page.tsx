@@ -39,7 +39,7 @@ import {
   newAmazonReportMarkdown,
 } from '@/lib/data/newAmazonReport';
 import { Recommendation, ReportType } from '@/stores/reports-store';
-import { useBoundStore } from '@/stores/store';
+import { useBoundStore } from '@/providers/store-provider';
 export type AiState = {
   isAiLoading: boolean;
   aiError?: string | null;
@@ -320,7 +320,7 @@ export default function Report({ params }: { params: { report: string } }) {
                         ],
                         content: '',
                       });
-                      console.log(reports)
+                      console.log(reports);
                       // generateReport(options.company, editor);
                     }}
                   >

@@ -1,11 +1,19 @@
-import { useBoundStore } from '@/stores/store';
+import { useBoundStore } from '@/providers/store-provider';
 import { Send, SendHorizonal } from 'lucide-react';
 
 export const RightSideBar = () => {
-  const citations = useBoundStore((state) => state.citations);
+  const { citations, selectedCitation } = useBoundStore((state) => state);
 
   return (
     <div className="min-w-80 max-w-80 h-full flex flex-col justify-end px-4 py-4">
+      <button
+        onClick={() => {
+          console.log(citations);
+        }}
+      >
+        List citations
+      </button>
+      <p>{selectedCitation?.source_num}</p>
       <div className="bg-white h-24 w-full rounded-[5px] border-[0.5px] border-zinc-300 p-2 relative">
         <p className="text-sm text-zinc-500">Ask me anything</p>
         <SendHorizonal className="h-5 w-5 text-zinc-500 absolute bottom-1 right-1" />
