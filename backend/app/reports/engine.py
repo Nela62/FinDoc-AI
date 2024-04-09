@@ -19,6 +19,7 @@ from llama_index.core.llms import ChatMessage
 from llama_index.core.tools import BaseTool, FunctionTool, QueryEngineTool, ToolMetadata
 from llama_index.core.query_engine import CitationQueryEngine
 import re
+
 from app.supabase.client import service_client
 from app.utils.contexts import (
     get_service_context,
@@ -134,6 +135,13 @@ def get_reports_engine(cik: str):
 
     for prompt in prompts:
         for node in process_nodes(retriever.retrieve(prompt), prompt):
+            print(node.id_)
+            exists = [n for n in nodes if n["node_id"] == node.id_]
+            print(exists)
+            if len(exists) > 0:
+                continue
+            # TODO: fetch data only for the used nodes
+            # TODO: when appending nodes, make sure there are no duplicates
             data = (
                 service_client.table("documents")
                 .select("*")
@@ -152,8 +160,11 @@ def get_reports_engine(cik: str):
                     "company_name": parent_doc["company_name"],
                     "company_ticker": parent_doc["company_ticker"],
                     "year": parent_doc["year"],
+                    # TODO: when null is returned from db, convert it to None
                     "quarter": (
-                        None if parent_doc["quarter"] == null else parent_doc["quarter"]
+                        None
+                        if parent_doc["quarter"] == "null"
+                        else parent_doc["quarter"]
                     ),
                 }
             )
@@ -207,7 +218,6 @@ Company name: {company} \
             query=business_description_query.format(company=docs[0]["company_name"]),
         )
     )
-    print(len(nodes))
     return {"text": res.text, "nodes": nodes}
 
 

@@ -8,7 +8,7 @@ export const RightSideBar = () => {
   const { selectedTab } = useBoundStore((state) => state);
 
   return (
-    <div className="w-1/4 relative overflow-hidden h-full flex flex-col px-4">
+    <div className="w-[360px] relative overflow-hidden h-full flex flex-col px-4">
       <ScrollArea.Root className="overflow-hidden h-full w-full">
         <ScrollArea.Viewport className="h-full bg-white w-full rounded-t-[12px] border-zinc-300 border-[0.5px]">
           {selectedTab === SidebarTabs.Audit && <Audit />}
