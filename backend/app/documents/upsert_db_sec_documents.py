@@ -92,6 +92,9 @@ async def upsert_document(doc_dir: str, name: str, filing: Filing):
         filing.file_path,
         extra_info={"db_document_id": doc_id},
     )
+    for doc in docs:
+        doc.doc_id = doc_id
+
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     VectorStoreIndex.from_documents(
         docs,

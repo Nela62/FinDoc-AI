@@ -7,6 +7,7 @@ from llama_index.core import (
     load_index_from_storage,
     VectorStoreIndex,
 )
+import json
 from llama_index.core.callbacks.base import BaseCallbackHandler, CallbackManager
 from llama_index.core.agent import ReActAgent
 from llama_index.agent.openai import OpenAIAgent
@@ -35,7 +36,7 @@ from app.reports.constants import investment_thesis_prompt
 from llama_index.postprocessor.cohere_rerank import CohereRerank
 from anyio.streams.memory import MemoryObjectSendStream
 
-from llama_index.core.schema import NodeWithScore
+from llama_index.core.schema import NodeWithScore, MetadataMode
 
 # import logging
 # import sys
@@ -117,9 +118,6 @@ def get_reports_engine(cik: str):
     docs = get_available_docs(cik)
     retriever = get_nodes(docs[0]["id"], get_rag_service_context())
 
-    # nodes = retriever.retrieve("key products")
-    # processed_nodes = process_nodes(nodes, "key products")
-
     prompts = [
         "primary business, industry, and key products/services",
         "Breakdown of revenue by business segment",
@@ -136,12 +134,27 @@ def get_reports_engine(cik: str):
 
     for prompt in prompts:
         for node in process_nodes(retriever.retrieve(prompt), prompt):
-            # print(node.node)
+            data = (
+                service_client.table("documents")
+                .select("*")
+                .eq("id", node.node.extra_info["db_document_id"])
+                .execute()
+            )
+            parent_doc = data.data[0]
             nodes.append(
                 {
                     "node_id": node.id_,
                     "text": node.get_text(),
                     "source_num": citation_num,
+                    "page": node.node.extra_info["page_label"],
+                    "url": parent_doc["url"],
+                    "doc_type": parent_doc["doc_type"],
+                    "company_name": parent_doc["company_name"],
+                    "company_ticker": parent_doc["company_ticker"],
+                    "year": parent_doc["year"],
+                    "quarter": (
+                        None if parent_doc["quarter"] == null else parent_doc["quarter"]
+                    ),
                 }
             )
             context += f"""<source><source_number>{citation_num}</source_number><source_content>{node.get_text()}</source_content></source>\n"""
@@ -183,9 +196,9 @@ Company name: {company} \
 
     llm = Anthropic(
         temperature=0,
-        # model="claude-3-opus-20240229",
+        model="claude-3-opus-20240229",
         # model="claude-3-sonnet-20240229",
-        model="claude-3-haiku-20240307",
+        # model="claude-3-haiku-20240307",
         api_key=settings.ANTHROPIC_API_KEY,
     )
     res = llm.complete(
@@ -194,6 +207,7 @@ Company name: {company} \
             query=business_description_query.format(company=docs[0]["company_name"]),
         )
     )
+    print(len(nodes))
     return {"text": res.text, "nodes": nodes}
 
 
