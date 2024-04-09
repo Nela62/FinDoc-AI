@@ -70,7 +70,7 @@ export const AiGeneratorView = ({
           prompt_type: promptType,
           offset: citations.length,
           citations: citations.map((c: Citation) => ({
-            source_num: c.source_num,
+            source_id: c.source_num,
             node_id: c.node_id,
           })),
         }),
@@ -102,7 +102,7 @@ export const AiGeneratorView = ({
       setIsFetching(false);
       toast.error(message);
     }
-  }, [baseUrl, promptType]);
+  }, [baseUrl, promptType, citations]);
 
   useEffect(() => {
     generateText();
@@ -117,8 +117,6 @@ export const AiGeneratorView = ({
   const to = from + node.nodeSize;
 
   const insert = useCallback(() => {
-    console.log(markdownToJson(previewText));
-    // TODO: instead of just inserting text, properly parse the citations and other markdown
     editor
       .chain()
       .focus()

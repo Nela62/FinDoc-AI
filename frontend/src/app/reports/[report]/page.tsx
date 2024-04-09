@@ -6,32 +6,19 @@ import ImageBlockMenu from '@/extensions/ImageBlock/components/ImageBlockMenu';
 import { ColumnsMenu } from '@/extensions/MultiColumn/menus';
 import { TableColumnMenu, TableRowMenu } from '@/extensions/Table/menus';
 import { useBlockEditor } from '@/hooks/useBlockEditor';
-import { Content, Editor, EditorContent } from '@tiptap/react';
+import { Editor, EditorContent } from '@tiptap/react';
 import 'ldrs/ring';
-import * as Select from '@radix-ui/react-select';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
 
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 
 import '@/styles/index.css';
-import { AiChat } from '@/components/chat';
-import { useSearchParams } from 'next/navigation';
-import {
-  ChevronsUpDown,
-  SquarePen,
-  X,
-  Wand2Icon,
-  ChevronDown,
-  ChevronDownIcon,
-} from 'lucide-react';
+import { SquarePen, X, Wand2Icon, ChevronDown } from 'lucide-react';
 import { Combobox } from '@/components/ui/Combobox';
 import { tickers } from '@/lib/data/tickers';
 import { getPrompts } from './prompts';
 import { TopBar } from '@/components/TopBar/TopBar';
-import { initialContent } from '@/lib/data/initialContent';
-import { DropdownButton } from '@/components/ui/Dropdown';
 import { RightSideBar } from '@/components/RightSideBar';
 import {
   newAmazonReport,

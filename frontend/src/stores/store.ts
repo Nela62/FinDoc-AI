@@ -10,14 +10,20 @@ import {
   createCitationsSlice,
 } from './citations-store';
 import { EditorActions, EditorState, createEditorSlice } from './editor-store';
-import { createSidebarSlice } from './sidedbar-tabs-store';
+import {
+  SidebarActions,
+  SidebarState,
+  createSidebarSlice,
+} from './sidedbar-tabs-store';
 
 export type Store = EditorState &
   EditorActions &
   ReportsState &
   ReportsActions &
   CitationsState &
-  CitationsActions;
+  CitationsActions &
+  SidebarState &
+  SidebarActions;
 
 export const createBoundStore = () => {
   return create<Store>((...a) => ({

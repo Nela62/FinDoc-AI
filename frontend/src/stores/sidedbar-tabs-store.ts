@@ -3,6 +3,7 @@ export enum SidebarTabs {
   Chat,
   Library,
   Settings,
+  Citation,
 }
 
 export type SidebarState = {
