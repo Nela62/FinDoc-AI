@@ -28,7 +28,7 @@ export const NavBar = () => {
   const companies = new Set(reports.map((report) => report.companyTicker));
 
   return (
-    <div className="h-full w-48 min-w-48 py-1 mx-4">
+    <div className="h-full w-48 min-w-48 py-1 ml-3 mr-2 pt-3">
       <div className="flex flex-col gap-2 text-sm text-gray-600">
         <div className="flex justify-between items-center">
           <p className="font-semibold text-gray-500 text-xs">REPORTS</p>

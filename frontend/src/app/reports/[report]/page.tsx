@@ -168,9 +168,9 @@ export default function Report({ params }: { params: { report: string } }) {
   }
   // TODO: navbar and sidebar have to be in layout
   return (
-    <div className="w-full h-screen flex flex-col gap-4">
+    <div className="w-full h-screen flex flex-col">
       <TopBar editor={editor} />
-      <div className="flex h-[calc(100vh-64px)]" ref={menuContainerRef}>
+      <div className="flex h-[calc(100vh-48px)]" ref={menuContainerRef}>
         <NavBar />
         {isEmpty && !report.companyTicker ? (
           <div className="bg-white rounded-t-[10px] border-[0.5px] border-stone-300 w-full py-8">
@@ -374,14 +374,17 @@ export default function Report({ params }: { params: { report: string } }) {
             </div>
           </div>
         ) : (
-          <div className="relative flex flex-col flex-1 h-full overflow-hidden">
+          <div className="relative flex flex-col flex-1 h-full overflow-hidden ">
             {/* TODO: Table of contents */}
-            <ScrollArea.Root className="overflow-hidden h-full w-full">
-              <ScrollArea.Viewport className="h-full bg-white w-full rounded-t-[12px] border-zinc-300 border-[0.5px]">
+            <ScrollArea.Root className="overflow-hidden h-full w-full pt-3 px-1">
+              <ScrollArea.Viewport
+                style={{ boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.2)' }}
+                className="h-full bg-white w-full rounded-t-[12px] border-zinc-300 border-[0.5px]"
+              >
                 <EditorContent editor={editor} className="flex-1" />
               </ScrollArea.Viewport>
               <ScrollArea.Scrollbar
-                className="flex select-none touch-none p-0.5 transition-colors duration-[160ms] ease-out data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5"
+                className="flex select-none touch-none p-0.5 mt-3.5 mr-0.5 transition-colors duration-[160ms] ease-out data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5"
                 orientation="vertical"
               >
                 <ScrollArea.Thumb className="flex-1 bg-gray-400 hover:bg-gray-500 rounded-[10px] relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]" />

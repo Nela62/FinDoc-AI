@@ -9,6 +9,7 @@ export type Citation = {
   company_ticker: string;
   year: number;
   quarter: string | null;
+  // status: 'Approved' | 'Rejected' | 'Pending'
 };
 
 export type CitationsState = {

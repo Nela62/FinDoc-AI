@@ -1,17 +1,22 @@
 import { useBoundStore } from '@/providers/store-provider';
 import { Citation } from '@/stores/citations-store';
+import { SidebarTabs } from '@/stores/sidedbar-tabs-store';
 import { IconFileTypePdf } from '@tabler/icons-react';
 import { Expand } from 'lucide-react';
 
 export const Audit = () => {
-  const { citations, setSelectedCitation } = useBoundStore((state) => state);
+  const { citations, setSelectedCitation, setSelectedTab } = useBoundStore(
+    (state) => state,
+  );
 
+  // TODO: handle long text wrapping
   const CitationComponent = ({ citation }: { citation: Citation }) => {
     return (
       <button
         className="flex gap-2 border-b-[0.5px] border-zinc-300 px-3 text-sm py-3 text-left"
         onClick={() => {
           setSelectedCitation(citation.source_num);
+          setSelectedTab(SidebarTabs.Citation);
         }}
       >
         <p className="text-zinc-600">{`[${citation.source_num}]`}</p>
@@ -19,7 +24,7 @@ export const Audit = () => {
           <div className="flex justify-between">
             <div className="flex flex-col">
               <p className="text-zinc-600 font-medium text-xs">
-                {citation.company_name}
+                {`${citation.company_name} (${citation.company_ticker})`}
               </p>
               <p className="text-zinc-600 font-medium text-xs">{`${
                 citation.doc_type
@@ -45,6 +50,12 @@ export const Audit = () => {
   };
   return (
     <>
+      <p className="italic mt-3 font-semibold text-xs text-center text-zinc-500">
+        {/* TODO: add filters and change to displaying num out of num citations when filtered */}
+        {citations.length === 0
+          ? 'No citations to display'
+          : `Displaying all ${citations.length} citations`}
+      </p>
       {citations.map((citation) => (
         <CitationComponent key={citation.node_id} citation={citation} />
       ))}
