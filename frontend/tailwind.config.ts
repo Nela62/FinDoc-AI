@@ -17,6 +17,8 @@ const config: Config = {
         ...green,
         ...blackA,
         ...indigo,
+        'finpanel-yellow': '#F8EC78',
+        'finpanel-yellow-light': '#FDF6DD',
       },
 
       backgroundImage: {

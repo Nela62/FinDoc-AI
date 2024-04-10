@@ -15,6 +15,12 @@ import {
   SidebarState,
   createSidebarSlice,
 } from './sidedbar-tabs-store';
+import { PdfActions, PdfState, createPdfSlice } from './pdf-store';
+import {
+  DocumentsActions,
+  DocumentsState,
+  createDocumentsSlice,
+} from './documents-store';
 
 export type Store = EditorState &
   EditorActions &
@@ -23,7 +29,11 @@ export type Store = EditorState &
   CitationsState &
   CitationsActions &
   SidebarState &
-  SidebarActions;
+  SidebarActions &
+  PdfState &
+  PdfActions &
+  DocumentsState &
+  DocumentsActions;
 
 export const createBoundStore = () => {
   return create<Store>((...a) => ({
@@ -35,5 +45,9 @@ export const createBoundStore = () => {
     ...createEditorSlice(...a),
     // @ts-ignore
     ...createSidebarSlice(...a),
+    // @ts-ignore
+    ...createPdfSlice(...a),
+    // @ts-ignore
+    ...createDocumentsSlice(...a),
   }));
 };

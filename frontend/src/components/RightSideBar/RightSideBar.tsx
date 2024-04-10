@@ -9,7 +9,11 @@ export const RightSideBar = () => {
   const { selectedTab, selectedCitation } = useBoundStore((state) => state);
 
   return (
-    <div className="w-[360px] relative overflow-hidden h-full flex flex-col">
+    <div
+      className={`${
+        selectedTab === SidebarTabs.Citation ? 'w-1/2' : 'w-[360px]'
+      } relative overflow-hidden h-full flex flex-col`}
+    >
       <ScrollArea.Root className="overflow-hidden h-full w-full pl-2 pr-3 pt-3">
         <ScrollArea.Viewport
           className="h-full bg-white w-full rounded-t-[12px] border-zinc-300 border-[0.5px]"

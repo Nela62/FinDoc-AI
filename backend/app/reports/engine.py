@@ -142,30 +142,25 @@ def get_reports_engine(cik: str):
                 continue
             # TODO: fetch data only for the used nodes
             # TODO: when appending nodes, make sure there are no duplicates
-            data = (
-                service_client.table("documents")
-                .select("*")
-                .eq("id", node.node.extra_info["db_document_id"])
-                .execute()
-            )
-            parent_doc = data.data[0]
+            
             nodes.append(
                 {
                     "node_id": node.id_,
                     "text": node.get_text(),
                     "source_num": citation_num,
                     "page": node.node.extra_info["page_label"],
-                    "url": parent_doc["url"],
-                    "doc_type": parent_doc["doc_type"],
-                    "company_name": parent_doc["company_name"],
-                    "company_ticker": parent_doc["company_ticker"],
-                    "year": parent_doc["year"],
-                    # TODO: when null is returned from db, convert it to None
-                    "quarter": (
-                        None
-                        if parent_doc["quarter"] == "null"
-                        else parent_doc["quarter"]
-                    ),
+                    "doc_id": node.node.extra_info["db_document_id"],
+                    # "url": parent_doc["url"],
+                    # "doc_type": parent_doc["doc_type"],
+                    # "company_name": parent_doc["company_name"],
+                    # "company_ticker": parent_doc["company_ticker"],
+                    # "year": parent_doc["year"],
+                    # # TODO: when null is returned from db, convert it to None
+                    # "quarter": (
+                    #     None
+                    #     if parent_doc["quarter"] == "null"
+                    #     else parent_doc["quarter"]
+                    # ),
                 }
             )
             context += f"""<source><source_number>{citation_num}</source_number><source_content>{node.get_text()}</source_content></source>\n"""

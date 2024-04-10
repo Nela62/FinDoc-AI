@@ -9,7 +9,7 @@ import { useBlockEditor } from '@/hooks/useBlockEditor';
 import { Editor, EditorContent } from '@tiptap/react';
 import 'ldrs/ring';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 
@@ -27,10 +27,13 @@ import {
 } from '@/lib/data/newAmazonReport';
 import { Recommendation, ReportType } from '@/stores/reports-store';
 import { useBoundStore } from '@/providers/store-provider';
+import { createServiceClient } from '@/lib/utils/supabase/client';
 export type AiState = {
   isAiLoading: boolean;
   aiError?: string | null;
 };
+
+import { DocumentType } from '@/stores/documents-store';
 
 const generateReport = async (ticker: string, editor: Editor) => {
   const company = tickers.find((t) => t.value === ticker)?.label;
@@ -69,10 +72,9 @@ interface OptionsState {
 // TODO: turn this into a form hook
 export default function Report({ params }: { params: { report: string } }) {
   const { report: reportId } = params;
-  const { reports, setSelectedReport, updateReport } = useBoundStore(
-    (state) => state,
-  );
-  // const isNew = useSearchParams().get('isNew') === 'true';
+  const { reports, setSelectedReport, updateReport, addDocuments } =
+    useBoundStore((state) => state);
+  const supabase = createServiceClient();
   const [isLoading, setIsLoading] = useState(false);
 
   const { editor, characterCount, isEmpty } = useBlockEditor(reportId);
@@ -91,9 +93,39 @@ export default function Report({ params }: { params: { report: string } }) {
 
   const report = reports.find((r) => r.id === reportId);
 
+  function getDocType(docType: string) {
+    switch (docType) {
+      case '10-K':
+        return DocumentType.TenK;
+      case '10-Q':
+        return DocumentType.TenQ;
+      case 'Earnings Calls':
+        return DocumentType.EarningsCalls;
+      default:
+        return DocumentType.News;
+    }
+  }
+
+  const fetchDocuments = useCallback(async () => {
+    const documents = await supabase
+      .from('documents')
+      .select('*')
+      .eq('company_ticker', report?.companyTicker);
+
+    if (!documents.data) return;
+
+    addDocuments(
+      documents.data.map((doc) => ({
+        ...doc,
+        doc_type: getDocType(doc.doc_type),
+      })),
+    );
+  }, [report, supabase, addDocuments]);
+
   useEffect(() => {
     if (!report) return;
     setSelectedReport(report);
+    fetchDocuments();
   }, []);
 
   const companies = useMemo(

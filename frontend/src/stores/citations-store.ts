@@ -3,12 +3,13 @@ export type Citation = {
   text: string;
   source_num: number;
   page: number;
-  url: string;
-  doc_type: string;
-  company_name: string;
-  company_ticker: string;
-  year: number;
-  quarter: string | null;
+  doc_id: string;
+  // url: string;
+  // doc_type: string;
+  // company_name: string;
+  // company_ticker: string;
+  // year: number;
+  // quarter: string | null;
   // status: 'Approved' | 'Rejected' | 'Pending'
 };
 

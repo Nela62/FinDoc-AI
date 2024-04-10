@@ -3,20 +3,31 @@ import { Citation } from '@/stores/citations-store';
 import { SidebarTabs } from '@/stores/sidedbar-tabs-store';
 import { IconFileTypePdf } from '@tabler/icons-react';
 import { Expand } from 'lucide-react';
+import { DocumentType } from '@/stores/documents-store';
 
 export const Audit = () => {
-  const { citations, setSelectedCitation, setSelectedTab } = useBoundStore(
-    (state) => state,
-  );
+  const {
+    citations,
+    setSelectedCitation,
+    setSelectedTab,
+    documents,
+    setDocumentId,
+  } = useBoundStore((state) => state);
 
   // TODO: handle long text wrapping
   const CitationComponent = ({ citation }: { citation: Citation }) => {
+    const doc = documents.find((doc) => citation.doc_id === doc.id);
+    if (!doc) {
+      return null;
+    }
+
     return (
       <button
         className="flex gap-2 border-b-[0.5px] border-zinc-300 px-3 text-sm py-3 text-left"
         onClick={() => {
           setSelectedCitation(citation.source_num);
           setSelectedTab(SidebarTabs.Citation);
+          setDocumentId(doc.id);
         }}
       >
         <p className="text-zinc-600">{`[${citation.source_num}]`}</p>
@@ -24,14 +35,14 @@ export const Audit = () => {
           <div className="flex justify-between">
             <div className="flex flex-col">
               <p className="text-zinc-600 font-medium text-xs">
-                {`${citation.company_name} (${citation.company_ticker})`}
+                {`${doc.company_name} (${doc.company_ticker})`}
               </p>
               <p className="text-zinc-600 font-medium text-xs">{`${
-                citation.doc_type
+                doc.doc_type
               } ${
-                citation.doc_type === '10-K'
-                  ? citation.year
-                  : `${citation.quarter} ${citation.year}`
+                doc.doc_type === DocumentType.TenK
+                  ? doc.year
+                  : `${doc.quarter} ${doc.year}`
               } - Page ${citation.page}`}</p>
             </div>
 
