@@ -65,7 +65,7 @@ export const PDFOptionsBar: React.FC<PDFOptionsBarProps> = ({
 
   return (
     <div
-      className={`flex h-[44px] absolute top-0 left-0 right-0 w-full items-center justify-between border-b-2 text-xs z-10 bg-white`}
+      className={`flex h-[44px] w-full items-center justify-between border-b-2 text-xs z-10 bg-white`}
     >
       <div className="ml-3 flex w-1/2 items-center justify-start ">
         <div

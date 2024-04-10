@@ -10,6 +10,8 @@ import { useWindowWidth, useWindowHeight } from '@wojtekmaj/react-hooks';
 import { useInView } from 'react-intersection-observer';
 import debounce from 'lodash.debounce';
 
+import * as ScrollArea from '@radix-ui/react-scroll-area';
+
 import {
   HORIZONTAL_GUTTER_SIZE_PX,
   OBSERVER_THRESHOLD_PERCENTAGE,
@@ -215,8 +217,10 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
     const windowWidth = useWindowWidth();
     const windowHeight = useWindowHeight();
     // const height = (windowHeight || 0) - PDF_HEADER_SIZE_PX;
-    const height = 800;
-    const newWidthPx = 500;
+    const TOP_BAR_SIZE_PX = 60;
+    const height = (windowHeight || 0) - TOP_BAR_SIZE_PX - PDF_HEADER_SIZE_PX;
+    // const newWidthPx = 0.42 * (windowWidth || 0) - 46;
+    const newWidthPx = 0.42 * (windowWidth || 0) - 54;
     // const newWidthPx =
     //   PDF_WIDTH_PERCENTAGE * 0.01 * (windowWidth || 0) -
     //   PDF_SIDEBAR_SIZE_PX -
@@ -305,7 +309,7 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
       return (
         <div className={`h-full w-full flex items-center justify-center`}>
           <l-line-spinner
-            size="36"
+            size="32"
             stroke="3"
             speed="1"
             color="black"
@@ -335,28 +339,43 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
           loading={loadingDiv}
         >
           {pdf ? (
-            <List
-              ref={listRef}
-              width={newWidthPx + HORIZONTAL_GUTTER_SIZE_PX}
-              height={height}
-              itemCount={pdf.numPages}
-              itemSize={getPageHeight}
-              estimatedItemSize={
-                (PAGE_HEIGHT + VERTICAL_GUTTER_SIZE_PX) * scale
-              }
-            >
-              {({ index, style }) => (
-                <PageRenderer
-                  file={file}
-                  key={`page-${index}`}
-                  pageNumber={index}
-                  style={style}
-                  scale={scale}
-                  listWidth={newWidthPx}
-                  setPageInView={setIndex}
-                />
-              )}
-            </List>
+            <ScrollArea.Root className="w-full overflow-hidden">
+              <List
+                ref={listRef}
+                width={newWidthPx + HORIZONTAL_GUTTER_SIZE_PX}
+                height={height}
+                itemCount={pdf.numPages}
+                itemSize={getPageHeight}
+                estimatedItemSize={
+                  (PAGE_HEIGHT + VERTICAL_GUTTER_SIZE_PX) * scale
+                }
+                outerElementType={ScrollArea.Viewport}
+              >
+                {({ index, style }) => (
+                  <PageRenderer
+                    file={file}
+                    key={`page-${index}`}
+                    pageNumber={index}
+                    style={style}
+                    scale={scale}
+                    listWidth={newWidthPx}
+                    setPageInView={setIndex}
+                  />
+                )}
+              </List>
+              <ScrollArea.Scrollbar
+                className="flex select-none touch-none p-[1px] bg-zinc-100 transition-colors duration-[160ms] ease-out hover:bg-zinc-200 data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5"
+                orientation="vertical"
+              >
+                <ScrollArea.Thumb className="flex-1 bg-gray-400 hover:bg-gray-500 rounded-[10px] relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]" />
+              </ScrollArea.Scrollbar>
+              <ScrollArea.Scrollbar
+                className="flex select-none touch-none p-[1px] bg-zinc-100 transition-colors duration-[160ms] ease-out hover:bg-blackA5 data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5"
+                orientation="horizontal"
+              >
+                <ScrollArea.Thumb className="flex-1 bg-gray-400 hover:bg-gray-500 rounded-[10px] relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]" />
+              </ScrollArea.Scrollbar>
+            </ScrollArea.Root>
           ) : null}
         </Document>
       ) : null

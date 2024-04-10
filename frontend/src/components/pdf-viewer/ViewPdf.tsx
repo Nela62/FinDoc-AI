@@ -30,8 +30,11 @@ export const ViewPdf: React.FC<ViewPdfProps> = ({ file }) => {
   } = usePDFViewer(file);
 
   return (
-    <div className="relative">
-      {/* {scaleText && (
+    <div
+      className="relative border-[0.5px] border-zinc-300 rounded-t-[12px] overflow-hidden"
+      style={{ boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.2)' }}
+    >
+      {scaleText && (
         <PDFOptionsBar
           file={file}
           scrolledIndex={scrolledIndex}
@@ -46,7 +49,7 @@ export const ViewPdf: React.FC<ViewPdfProps> = ({ file }) => {
           zoomInEnabled={zoomInEnabled}
           zoomOutEnabled={zoomOutEnabled}
         />
-      )} */}
+      )}
 
       <MemoizedVirtualizedPDF
         key={`${file.id}`}
