@@ -65,15 +65,14 @@ export const PDFOptionsBar: React.FC<PDFOptionsBarProps> = ({
 
   return (
     <div
-      className={`flex h-[44px] w-full items-center justify-between border-b-2 `}
+      className={`flex h-[44px] absolute top-0 left-0 right-0 w-full items-center justify-between border-b-2 text-xs z-10 bg-white`}
     >
       <div className="ml-3 flex w-1/2 items-center justify-start ">
         <div
           className={`flex items-center justify-center border-l-4 pl-2 border-finpanel-yellow`}
         >
-          <div className="text font-bold">{file.ticker}</div>
+          <div className="text font-bold">{file.company_ticker}</div>
           <div className="ml-2">
-            {' '}
             {file.year} {file.quarter && `Q${file.quarter}`}
           </div>
         </div>

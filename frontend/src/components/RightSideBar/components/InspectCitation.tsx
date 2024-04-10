@@ -8,10 +8,5 @@ export const InspectCitation = () => {
   const doc = documents.find((doc) => doc.id === documentId);
 
   if (!doc) return <div>Document not found</div>;
-  return (
-    <div>
-      <p>{selectedCitation?.source_num}</p>
-      <ViewPdf file={doc} />
-    </div>
-  );
+  return <ViewPdf file={doc} />;
 };

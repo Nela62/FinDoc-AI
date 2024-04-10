@@ -29,6 +29,8 @@ import { useBoundStore } from '@/providers/store-provider';
 import { Document as PdfDocument } from '@/stores/documents-store';
 import { createServiceClient } from '@/lib/utils/supabase/client';
 
+// Default values shown
+
 // import PDFJSWorker from 'pdfjs-dist/build/pdf.worker.entry';
 
 // pdfjs.GlobalWorkerOptions.workerSrc = PDFJSWorker;
@@ -74,27 +76,11 @@ const PageRenderer: React.FC<PageRenderer> = ({
   const { selectedCitation, selectedDocument } = useBoundStore((s) => s);
   const [shouldCenter, setShouldCenter] = useState(false);
   const [isHighlighted, setIsHighlighted] = useState(false);
-  const [pdfFile, setPdfFile] = useState();
 
   // Get which page is in view from an intersection observer
   const { ref: inViewRef, inView } = useInView({
     threshold: OBSERVER_THRESHOLD_PERCENTAGE * Math.min(1 / scale, 1),
   });
-
-  const supabase = createServiceClient();
-
-  const fetchPdf = useCallback(async () => {
-    const { data, error } = await supabase.storage
-      .from('public-documents')
-      .download(file.url);
-    if (error) console.log(error);
-    console.log(data);
-    console.log(typeof data);
-  }, [file.url]);
-
-  useEffect(() => {
-    fetchPdf();
-  }, [fetchPdf]);
 
   // Prevents black flickering, which is fixed in 7.1.2, but we must
   // use 6.2.2 because highlights are broken in 7.1.2 :/
@@ -212,6 +198,7 @@ const PageRenderer: React.FC<PageRenderer> = ({
     </div>
   );
 };
+
 interface VirtualizedPDFProps {
   file: PdfDocument;
   scale: number;
@@ -223,19 +210,36 @@ export interface PdfFocusHandler {
   scrollToPage: (page: number) => void;
 }
 
-// eslint-disable-next-line react/display-name
 const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
   ({ file, scale, setIndex, setScaleFit, setNumPages }, ref) => {
     const windowWidth = useWindowWidth();
     const windowHeight = useWindowHeight();
-    const height = (windowHeight || 0) - PDF_HEADER_SIZE_PX;
-    const newWidthPx =
-      PDF_WIDTH_PERCENTAGE * 0.01 * (windowWidth || 0) -
-      PDF_SIDEBAR_SIZE_PX -
-      HORIZONTAL_GUTTER_SIZE_PX;
+    // const height = (windowHeight || 0) - PDF_HEADER_SIZE_PX;
+    const height = 800;
+    const newWidthPx = 500;
+    // const newWidthPx =
+    //   PDF_WIDTH_PERCENTAGE * 0.01 * (windowWidth || 0) -
+    //   PDF_SIDEBAR_SIZE_PX -
+    //   HORIZONTAL_GUTTER_SIZE_PX;
 
     const [pdf, setPdf] = useState<PdfType | null>(null);
+    const [pdfFile, setPdfFile] = useState<string | null>(null);
     const listRef = useRef<List>(null);
+
+    const supabase = createServiceClient();
+
+    const fetchPdf = useCallback(async () => {
+      const { data, error } = await supabase.storage
+        .from('public-documents')
+        .download(file.url);
+      if (error) console.log(error);
+      if (!data) return;
+      setPdfFile(URL.createObjectURL(data));
+    }, [file.url]);
+
+    useEffect(() => {
+      fetchPdf();
+    }, [fetchPdf]);
 
     useEffect(() => {
       // Changing scale changes the measurement of the item, so we need to bust the cache, see:
@@ -299,24 +303,34 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
 
     const loadingDiv = () => {
       return (
-        <div
-          className={`flex h-[calc(100vh-44px)] w-[56vw] items-center justify-center`}
-        >
-          {' '}
-          Loading
+        <div className={`h-full w-full flex items-center justify-center`}>
+          <l-line-spinner
+            size="36"
+            stroke="3"
+            speed="1"
+            color="black"
+          ></l-line-spinner>
         </div>
       );
     };
 
+    useEffect(() => {
+      async function getLoader() {
+        const { lineSpinner } = await import('ldrs');
+        lineSpinner.register();
+      }
+      getLoader();
+    }, []);
+
     return (
-      <div
-        className={`relative h-[calc(100vh-44px)] w-full border-gray-pdf bg-gray-pdf`}
-      >
+      // <div
+      //   className={`relative h-[calc(100vh-60px)] w-full border-gray-pdf bg-gray-pdf items-center justify-center`}
+      // >
+      pdfFile ? (
         <Document
           key={file.url}
           onItemClick={onItemClick}
-          // file={file.url}
-          file="/AMZN.pdf"
+          file={pdfFile}
           onLoadSuccess={onDocumentLoadSuccess}
           loading={loadingDiv}
         >
@@ -345,7 +359,8 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
             </List>
           ) : null}
         </Document>
-      </div>
+      ) : null
+      // </div>
     );
   },
 );
