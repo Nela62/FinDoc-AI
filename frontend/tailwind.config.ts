@@ -20,6 +20,9 @@ const config: Config = {
         'finpanel-yellow': '#F8EC78',
         'finpanel-yellow-light': '#FDF6DD',
       },
+      boxShadow: {
+        finpanel: '0px 1px 2px 0px rgba(0,0,0,0.2)',
+      },
 
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
