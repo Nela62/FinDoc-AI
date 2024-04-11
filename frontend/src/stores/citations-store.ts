@@ -4,36 +4,28 @@ export type Citation = {
   source_num: number;
   page: number;
   doc_id: string;
-  // url: string;
-  // doc_type: string;
-  // company_name: string;
-  // company_ticker: string;
-  // year: number;
-  // quarter: string | null;
   // status: 'Approved' | 'Rejected' | 'Pending'
 };
 
 export type CitationsState = {
   citations: Citation[];
-  selectedCitation: Citation | null;
+  selectedCitationSourceNum: number | null;
 };
 
 export type CitationsActions = {
   addCitations: (citations: Citation[]) => void;
-  setSelectedCitation: (citationSourceNum: number) => void;
+  setSelectedCitationSourceNum: (citationSourceNum: number | null) => void;
 };
 
 // TODO: accept and pass initial state
 
 export const createCitationsSlice = (set: any) => ({
-  selectedCitation: null,
+  selectedCitationSourceNum: null,
   citations: [],
   addCitations: (newCitations: Citation[]) =>
     set((state: any) => ({ citations: [...state.citations, ...newCitations] })),
-  setSelectedCitation: (citationSourceNum: number) =>
+  setSelectedCitationSourceNum: (citationSourceNum: number | null) =>
     set((state: any) => ({
-      selectedCitation: state.citations.find(
-        (c: Citation) => c.source_num === citationSourceNum,
-      ),
+      selectedCitationSourceNum: citationSourceNum,
     })),
 });

@@ -8,7 +8,7 @@ import { DocumentType } from '@/stores/documents-store';
 export const Audit = () => {
   const {
     citations,
-    setSelectedCitation,
+    setSelectedCitationSourceNum,
     setSelectedTab,
     documents,
     setDocumentId,
@@ -25,7 +25,7 @@ export const Audit = () => {
       <button
         className="flex gap-2 border-b-[0.5px] border-zinc-300 px-3 text-sm py-3 text-left"
         onClick={() => {
-          setSelectedCitation(citation.source_num);
+          setSelectedCitationSourceNum(citation.source_num);
           setSelectedTab(SidebarTabs.Citation);
           setDocumentId(doc.id);
         }}

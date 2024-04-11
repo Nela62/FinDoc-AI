@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { ZoomOut, ZoomIn, ChevronDown, ChevronUp } from 'lucide-react';
 import { Document } from '@/stores/documents-store';
 import { zoomLevels } from '@/hooks/usePdfViewer';
+import { useBoundStore } from '@/providers/store-provider';
+import { SidebarTabs } from '@/stores/sidedbar-tabs-store';
 
 interface PDFOptionsBarProps {
   file: Document;
@@ -34,10 +36,18 @@ export const PDFOptionsBar: React.FC<PDFOptionsBarProps> = ({
   zoomOutEnabled,
 }) => {
   const [zoomPopoverOpen, setZoomPopoverOpen] = useState(false);
+  const { setSelectedTab, setSelectedCitationSourceNum, setDocumentId } =
+    useBoundStore((state) => state);
 
   const handleZoomSelection = (zoom: string) => {
     setZoomLevel(zoom);
     setZoomPopoverOpen(false);
+  };
+
+  const handleGoBack = () => {
+    setSelectedTab(SidebarTabs.Audit);
+    setSelectedCitationSourceNum(null);
+    setDocumentId('');
   };
 
   const [inputValue, setInputValue] = useState(`${scrolledIndex + 1}`);

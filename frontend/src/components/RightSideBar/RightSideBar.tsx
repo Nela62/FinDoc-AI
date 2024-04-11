@@ -6,7 +6,7 @@ import { Audit } from './components/Audit';
 import { InspectCitation } from './components/InspectCitation';
 
 export const RightSideBar = () => {
-  const { selectedTab, selectedCitation } = useBoundStore((state) => state);
+  const { selectedTab } = useBoundStore((state) => state);
 
   return selectedTab === SidebarTabs.Citation ? (
     <div className="pt-3 pr-3 pl-2 h-full w-5/12">

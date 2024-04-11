@@ -22,7 +22,7 @@ import {
   VERTICAL_GUTTER_SIZE_PX,
 } from './pdfDisplayConstants';
 
-// import { Document, Page, pdfjs } from 'react-pdf';
+// @ts-ignore
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
@@ -31,24 +31,17 @@ import { useBoundStore } from '@/providers/store-provider';
 import { Document as PdfDocument } from '@/stores/documents-store';
 import { createServiceClient } from '@/lib/utils/supabase/client';
 
-// Default values shown
+// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+//   'pdfjs-dist/build/pdf.worker.min.js',
+//   import.meta.url,
+// ).toString();
 
-// import PDFJSWorker from 'pdfjs-dist/build/pdf.worker.entry';
-
-// pdfjs.GlobalWorkerOptions.workerSrc = PDFJSWorker;
-
-// const pdfjsOptions = pdfjs.GlobalWorkerOptions;
-// const pdfjsVersion = pdfjs.version;
-
-// pdfjsOptions.workerSrc =
-//   '//unpkg.com/pdfjs-dist@' +
-//   String(pdfjsVersion) +
-//   '/legacy/build/pdf.worker.min.js';
-
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url,
-).toString();
+const pdfjsOptions = pdfjs.GlobalWorkerOptions;
+const pdfjsVersion = pdfjs.version;
+pdfjsOptions.workerSrc =
+  '//unpkg.com/pdfjs-dist@' +
+  String(pdfjsVersion) +
+  '/legacy/build/pdf.worker.min.js';
 
 interface PageType {
   getViewport: (arg0: { scale: number }) => { width: number };
@@ -74,8 +67,9 @@ const PageRenderer: React.FC<PageRenderer> = ({
   listWidth,
   setPageInView,
 }) => {
-  // const { pdfFocusState } = usePdfFocus();
-  const { selectedCitation, selectedDocument } = useBoundStore((s) => s);
+  const { selectedCitationSourceNum, documentId, citations } = useBoundStore(
+    (s) => s,
+  );
   const [shouldCenter, setShouldCenter] = useState(false);
   const [isHighlighted, setIsHighlighted] = useState(false);
 
@@ -83,6 +77,10 @@ const PageRenderer: React.FC<PageRenderer> = ({
   const { ref: inViewRef, inView } = useInView({
     threshold: OBSERVER_THRESHOLD_PERCENTAGE * Math.min(1 / scale, 1),
   });
+  const selectedCitation = citations.find(
+    (c) => c.source_num === selectedCitationSourceNum,
+  );
+  // BUG: In-pdf link navigation doesn't work
 
   // Prevents black flickering, which is fixed in 7.1.2, but we must
   // use 6.2.2 because highlights are broken in 7.1.2 :/
@@ -131,31 +129,30 @@ const PageRenderer: React.FC<PageRenderer> = ({
     showPageCanvas();
   }, [showPageCanvas]);
 
-  const documentFocused = selectedDocument?.id === file.id;
+  const documentFocused = documentId === file.id;
 
+  // BUG: Highlighting doesn't work when clicking on citations in text editor
   const maybeHighlight = useCallback(
-    () =>
-      debounce(() => {
-        if (
-          documentFocused &&
-          selectedCitation &&
-          selectedCitation.page === pageNumber + 1 &&
-          !isHighlighted
-        ) {
-          multiHighlight(
-            selectedCitation.text,
-            pageNumber,
-            // pdfFocusState.citation.color,
-          );
-          setIsHighlighted(true);
-        }
-      }, 50),
-    [pageNumber, isHighlighted, documentFocused, selectedCitation],
+    debounce(() => {
+      if (
+        documentFocused &&
+        selectedCitation &&
+        Number(selectedCitation.page) === pageNumber + 1 &&
+        !isHighlighted
+      ) {
+        multiHighlight(
+          selectedCitation.text,
+          pageNumber,
+          // pdfFocusState.citation.color,
+        );
+        setIsHighlighted(true);
+      }
+    }, 50),
+    [pageNumber, documentFocused, selectedCitationSourceNum],
   );
 
   const onPageRenderSuccess = useCallback(
     (page: { width: number }) => {
-      // console.log("triggering rerender for page", index);
       showPageCanvas();
       maybeHighlight();
       // react-pdf absolutely pins the pdf into the upper left corner
@@ -170,12 +167,12 @@ const PageRenderer: React.FC<PageRenderer> = ({
         setShouldCenter(false);
       }
     },
-    [showPageCanvas, listWidth, maybeHighlight],
+    [showPageCanvas, listWidth],
   );
 
   useEffect(() => {
     maybeHighlight();
-  }, [documentFocused, inView, maybeHighlight]);
+  }, [documentFocused, inView]);
 
   return (
     <div
@@ -216,15 +213,11 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
   ({ file, scale, setIndex, setScaleFit, setNumPages }, ref) => {
     const windowWidth = useWindowWidth();
     const windowHeight = useWindowHeight();
-    // const height = (windowHeight || 0) - PDF_HEADER_SIZE_PX;
+
     const TOP_BAR_SIZE_PX = 60;
     const height = (windowHeight || 0) - TOP_BAR_SIZE_PX - PDF_HEADER_SIZE_PX;
-    // const newWidthPx = 0.42 * (windowWidth || 0) - 46;
-    const newWidthPx = 0.42 * (windowWidth || 0) - 54;
-    // const newWidthPx =
-    //   PDF_WIDTH_PERCENTAGE * 0.01 * (windowWidth || 0) -
-    //   PDF_SIDEBAR_SIZE_PX -
-    //   HORIZONTAL_GUTTER_SIZE_PX;
+    // const newWidthPx = 0.42 * (windowWidth || 0) - 54;
+    const newWidthPx = 0.42 * (windowWidth || 0) - 46;
 
     const [pdf, setPdf] = useState<PdfType | null>(null);
     const [pdfFile, setPdfFile] = useState<string | null>(null);
@@ -244,6 +237,11 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
     useEffect(() => {
       fetchPdf();
     }, [fetchPdf]);
+
+    const { selectedCitationSourceNum, citations } = useBoundStore((s) => s);
+    const selectedCitation = citations.find(
+      (c) => c.source_num === selectedCitationSourceNum,
+    );
 
     useEffect(() => {
       // Changing scale changes the measurement of the item, so we need to bust the cache, see:
@@ -284,6 +282,8 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
       }
       loadFirstPage().catch(() => console.log('page load error'));
       setNumPages(pdf.numPages);
+      selectedCitation &&
+        onItemClick({ pageNumber: Number(selectedCitation.page) + 1 });
     }, [pdf, setNumPages, setScaleFit, newWidthPx]);
 
     React.useImperativeHandle(ref, () => ({
@@ -338,6 +338,7 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
           onLoadSuccess={onDocumentLoadSuccess}
           loading={loadingDiv}
         >
+          {/* BUG: OverflowX and OverflowY */}
           {pdf ? (
             <ScrollArea.Root className="w-full overflow-hidden">
               <List

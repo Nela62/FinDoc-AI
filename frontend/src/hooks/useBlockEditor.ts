@@ -7,6 +7,7 @@ import { useCallback, useEffect } from 'react';
 import { Citation } from '@/stores/citations-store';
 import { Report } from '@/stores/reports-store';
 import { useBoundStore } from '@/providers/store-provider';
+import { SidebarTabs } from '@/stores/sidedbar-tabs-store';
 
 const debounce = require('lodash.debounce');
 
@@ -33,9 +34,10 @@ export const useBlockEditor = (reportId: string) => {
     isAiInserting,
     setIsAiInserting,
     setAiError,
-    setSelectedCitation,
+    setSelectedCitationSourceNum,
     reports,
     updateReport,
+    setSelectedTab,
   } = useBoundStore((state) => state);
   // FIX: the reports don't update
   const editor = useEditor({
@@ -44,7 +46,8 @@ export const useBlockEditor = (reportId: string) => {
     editorProps: {
       handleClickOn: (view, pos, node) => {
         if (node.type.name === 'citation') {
-          setSelectedCitation(node.attrs.sourceNum);
+          setSelectedCitationSourceNum(node.attrs.sourceNum);
+          setSelectedTab(SidebarTabs.Citation);
         }
       },
       attributes: {

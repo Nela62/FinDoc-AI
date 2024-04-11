@@ -2,11 +2,26 @@ import { ViewPdf } from '@/components/pdf-viewer/ViewPdf';
 import { useBoundStore } from '@/providers/store-provider';
 
 export const InspectCitation = () => {
-  const { selectedCitation, documentId, documents } = useBoundStore(
-    (state) => state,
-  );
+  const {
+    documentId,
+    documents,
+    selectedCitationSourceNum,
+    setDocumentId,
+    citations,
+  } = useBoundStore((state) => state);
+
+  if (selectedCitationSourceNum && !documentId) {
+    setDocumentId(
+      citations.find((c) => c.source_num === selectedCitationSourceNum)
+        ?.doc_id || '',
+    );
+  }
+
   const doc = documents.find((doc) => doc.id === documentId);
 
-  if (!doc) return <div>Document not found</div>;
+  if (!doc) {
+    return <p>Document not found</p>;
+  }
+
   return <ViewPdf file={doc} />;
 };

@@ -24,26 +24,33 @@ const usePDFViewer = (file: Document) => {
   const [isPdfRendered, setIsPdfRendered] = useState(false);
   const [zoomLevelIdx, setZoomLevelIdx] = useState(startZoomLevelIdx);
 
-  const { selectedCitation, selectedDocument } = useBoundStore((s) => s);
+  const { selectedCitationSourceNum, documentId, citations } = useBoundStore(
+    (s) => s,
+  );
+
+  const selectedCitation = citations.find(
+    (c) => c.source_num === selectedCitationSourceNum,
+  );
 
   const pdfFocusRef = useRef<PdfFocusHandler | null>(null);
 
   const goToPage = (page: number) => {
     if (pdfFocusRef.current) {
+      console.log('scrolling to page', page);
       pdfFocusRef.current.scrollToPage(page);
     }
   };
 
   useEffect(() => {
-    if (!selectedCitation || !selectedDocument) return;
+    if (!selectedCitationSourceNum || !documentId) return;
 
-    const activeDocumentId = selectedDocument.id;
+    const activeDocumentId = documentId;
     if (activeDocumentId === file.id) {
-      if (selectedCitation.page) {
+      if (selectedCitation && selectedCitation.page) {
         goToPage(selectedCitation.page - 1);
       }
     }
-  }, [file, selectedCitation, selectedDocument]);
+  }, [file, selectedCitation]);
 
   const setCurrentPageNumber = useCallback((n: number) => {
     setScrolledIndex(n);
