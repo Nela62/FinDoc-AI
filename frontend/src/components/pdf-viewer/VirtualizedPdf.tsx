@@ -282,6 +282,7 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
       }
       loadFirstPage().catch(() => console.log('page load error'));
       setNumPages(pdf.numPages);
+      // BUG: this doesn't properly work. takes me to the wrong page
       selectedCitation &&
         onItemClick({ pageNumber: Number(selectedCitation.page) + 1 });
     }, [pdf, setNumPages, setScaleFit, newWidthPx]);
