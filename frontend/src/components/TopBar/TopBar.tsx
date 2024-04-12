@@ -52,10 +52,10 @@ export const TopBar = ({ editor }: { editor: Editor }) => {
         </div>
       </div>
       <div className="flex gap-4">
-        {/* <ExportButton editor={editor} /> */}
-        <button>
+        <ExportButton editor={editor} />
+        {/* <button>
           <p className="">Export</p>
-        </button>
+        </button> */}
 
         <div
           // style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}

@@ -52,7 +52,7 @@ export const generateDocxFile = async (
   const companyName = 'Amazon.com Inc.';
   const content = json.content ?? [];
 
-  const headerImage = await fetchImage('docx_header_argus.png');
+  const headerImage = await fetchImage('docx_header.png');
 
   const doc = new Document({
     // TODO: add user name
