@@ -47,7 +47,7 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
 
           const link = document.createElement('a');
           link.href = url;
-          link.download = 'data.docx';
+          link.download = 'report.docx';
           link.click();
 
           URL.revokeObjectURL(url);
