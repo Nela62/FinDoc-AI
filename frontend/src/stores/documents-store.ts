@@ -26,7 +26,7 @@ export interface DocumentsState {
 }
 
 export type DocumentsActions = {
-  addDocuments: (documents: DocumentsState[]) => void;
+  addDocuments: (documents: Document[]) => void;
 };
 
 export const createDocumentsSlice = (set: any) => ({

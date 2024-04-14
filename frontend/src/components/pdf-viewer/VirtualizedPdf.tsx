@@ -22,7 +22,6 @@ import {
   VERTICAL_GUTTER_SIZE_PX,
 } from './pdfDisplayConstants';
 
-// @ts-ignore
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
@@ -30,11 +29,6 @@ import { multiHighlight } from '@/lib/utils/multi-line-highlight';
 import { useBoundStore } from '@/providers/store-provider';
 import { Document as PdfDocument } from '@/stores/documents-store';
 import { createServiceClient } from '@/lib/utils/supabase/client';
-
-// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-//   'pdfjs-dist/build/pdf.worker.min.js',
-//   import.meta.url,
-// ).toString();
 
 const pdfjsOptions = pdfjs.GlobalWorkerOptions;
 const pdfjsVersion = pdfjs.version;
@@ -284,23 +278,25 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
       setNumPages(pdf.numPages);
       // BUG: this doesn't properly work. takes me to the wrong page
       selectedCitation &&
-        onItemClick({ pageNumber: Number(selectedCitation.page) + 1 });
+        onItemClick({ pageNumber: String(Number(selectedCitation.page) + 1) });
     }, [pdf, setNumPages, setScaleFit, newWidthPx]);
 
     React.useImperativeHandle(ref, () => ({
       // This function can be called from the parent component
       scrollToPage: (page: number) => {
-        onItemClick({ pageNumber: page });
+        onItemClick({ pageNumber: String(page) });
       },
     }));
 
     const onItemClick = ({
       pageNumber: itemPageNumber,
     }: {
-      pageNumber: number;
+      pageNumber: string;
     }) => {
       const fixedPosition =
-        itemPageNumber * (PAGE_HEIGHT + VERTICAL_GUTTER_SIZE_PX) * scale;
+        Number(itemPageNumber) *
+        (PAGE_HEIGHT + VERTICAL_GUTTER_SIZE_PX) *
+        scale;
       if (listRef.current) {
         listRef.current.scrollTo(fixedPosition);
       }
@@ -331,62 +327,62 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
       // <div
       //   className={`relative h-[calc(100vh-60px)] w-full border-gray-pdf bg-gray-pdf items-center justify-center`}
       // >
-      pdfFile ? (
-        <Document
-          key={file.url}
-          onItemClick={onItemClick}
-          file={pdfFile}
-          onLoadSuccess={onDocumentLoadSuccess}
-          loading={loadingDiv}
-        >
-          {/* BUG: OverflowX and OverflowY */}
-          {pdf ? (
-            <ScrollArea.Root className="w-full overflow-hidden">
-              <List
-                ref={listRef}
-                width={newWidthPx + HORIZONTAL_GUTTER_SIZE_PX}
-                height={height}
-                itemCount={pdf.numPages}
-                itemSize={getPageHeight}
-                estimatedItemSize={
-                  (PAGE_HEIGHT + VERTICAL_GUTTER_SIZE_PX) * scale
-                }
-                outerElementType={ScrollArea.Viewport}
-              >
-                {({ index, style }) => (
-                  <PageRenderer
-                    file={file}
-                    key={`page-${index}`}
-                    pageNumber={index}
-                    style={style}
-                    scale={scale}
-                    listWidth={newWidthPx}
-                    setPageInView={setIndex}
-                  />
-                )}
-              </List>
-              <ScrollArea.Scrollbar
-                className="flex select-none touch-none p-[1px] bg-zinc-100 transition-colors duration-[160ms] ease-out hover:bg-zinc-200 data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5"
-                orientation="vertical"
-              >
-                <ScrollArea.Thumb className="flex-1 bg-gray-400 hover:bg-gray-500 rounded-[10px] relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]" />
-              </ScrollArea.Scrollbar>
-              <ScrollArea.Scrollbar
-                className="flex select-none touch-none p-[1px] bg-zinc-100 transition-colors duration-[160ms] ease-out hover:bg-blackA5 data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5"
-                orientation="horizontal"
-              >
-                <ScrollArea.Thumb className="flex-1 bg-gray-400 hover:bg-gray-500 rounded-[10px] relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]" />
-              </ScrollArea.Scrollbar>
-            </ScrollArea.Root>
-          ) : null}
-        </Document>
-      ) : null
-      // </div>
+      <div>
+        {pdfFile ? (
+          <Document
+            key={file.url}
+            onItemClick={onItemClick}
+            file={pdfFile}
+            onLoadSuccess={onDocumentLoadSuccess}
+            loading={loadingDiv}
+          >
+            {/* BUG: OverflowX and OverflowY */}
+            {pdf ? (
+              <ScrollArea.Root className="w-full overflow-hidden">
+                <List
+                  ref={listRef}
+                  width={newWidthPx + HORIZONTAL_GUTTER_SIZE_PX}
+                  height={height}
+                  itemCount={pdf.numPages}
+                  itemSize={getPageHeight}
+                  estimatedItemSize={
+                    (PAGE_HEIGHT + VERTICAL_GUTTER_SIZE_PX) * scale
+                  }
+                  outerElementType={ScrollArea.Viewport}
+                >
+                  {({ index, style }) => (
+                    <PageRenderer
+                      file={file}
+                      key={`page-${index}`}
+                      pageNumber={index}
+                      style={style}
+                      scale={scale}
+                      listWidth={newWidthPx}
+                      setPageInView={setIndex}
+                    />
+                  )}
+                </List>
+                <ScrollArea.Scrollbar
+                  className="flex select-none touch-none p-[1px] bg-zinc-100 transition-colors ease-out hover:bg-zinc-200 data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5"
+                  orientation="vertical"
+                >
+                  <ScrollArea.Thumb className="flex-1 bg-gray-400 hover:bg-gray-500 rounded-[10px] relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]" />
+                </ScrollArea.Scrollbar>
+                <ScrollArea.Scrollbar
+                  className="flex select-none touch-none p-[1px] bg-zinc-100 transition-colors ease-out hover:bg-blackA5 data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5"
+                  orientation="horizontal"
+                >
+                  <ScrollArea.Thumb className="flex-1 bg-gray-400 hover:bg-gray-500 rounded-[10px] relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]" />
+                </ScrollArea.Scrollbar>
+              </ScrollArea.Root>
+            ) : null}
+          </Document>
+        ) : null}
+      </div>
     );
   },
 );
 const MemoizedVirtualizedPDF = memo(VirtualizedPDF);
-
 MemoizedVirtualizedPDF.displayName = 'VirtualizedPDF';
 
 export default MemoizedVirtualizedPDF;

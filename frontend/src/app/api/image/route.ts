@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     await supabase.storage.createBucket('images');
   }
 
-  if (!img) {
+  if (!img || !(img instanceof File)) {
     return Response.error();
   }
 

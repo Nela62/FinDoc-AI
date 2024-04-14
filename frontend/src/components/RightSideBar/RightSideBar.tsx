@@ -22,7 +22,7 @@ export const RightSideBar = () => {
           {selectedTab === SidebarTabs.Audit && <Audit />}
         </ScrollArea.Viewport>
         <ScrollArea.Scrollbar
-          className="flex select-none touch-none p-[2.5px] mr-2.5 mt-3 transition-colors duration-[160ms] ease-out data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5 z-20"
+          className="flex select-none touch-none p-[2.5px] mr-2.5 mt-3 transition-colors ease-out data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5 z-20"
           orientation="vertical"
         >
           <ScrollArea.Thumb className="flex-1 bg-gray-400 hover:bg-gray-500 rounded-[10px] relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]" />

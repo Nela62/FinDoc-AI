@@ -1,27 +1,27 @@
-import { Editor } from '@tiptap/react'
-import { useCallback, useMemo } from 'react'
-import { ShouldShowProps } from '../../types'
-import { isCustomNodeSelected, isTextSelected } from '@/lib/utils'
+import { Editor } from '@tiptap/react';
+import { useCallback, useMemo } from 'react';
+import { isCustomNodeSelected, isTextSelected } from '@/lib/utils';
+import { ShouldShowProps } from '../types';
 
 export const useTextmenuStates = (editor: Editor) => {
   const shouldShow = useCallback(
     ({ view, from }: ShouldShowProps) => {
       if (!view) {
-        return false
+        return false;
       }
 
-      const domAtPos = view.domAtPos(from || 0).node as HTMLElement
-      const nodeDOM = view.nodeDOM(from || 0) as HTMLElement
-      const node = nodeDOM || domAtPos
+      const domAtPos = view.domAtPos(from || 0).node as HTMLElement;
+      const nodeDOM = view.nodeDOM(from || 0) as HTMLElement;
+      const node = nodeDOM || domAtPos;
 
       if (isCustomNodeSelected(editor, node)) {
-        return false
+        return false;
       }
 
-      return isTextSelected({ editor })
+      return isTextSelected({ editor });
     },
     [editor],
-  )
+  );
 
   return {
     isBold: editor.isActive('bold'),
@@ -40,5 +40,5 @@ export const useTextmenuStates = (editor: Editor) => {
     currentFont: editor.getAttributes('textStyle')?.fontFamily || undefined,
     currentSize: editor.getAttributes('textStyle')?.fontSize || undefined,
     shouldShow,
-  }
-}
+  };
+};
