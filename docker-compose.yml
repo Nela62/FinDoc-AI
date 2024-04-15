@@ -6,16 +6,18 @@ services:
     volumes:
       - ./backend:/app 
     ports:
-      - "127.0.0.1:8000:8000"
+      - 8000:8000
     env_file:
       - ./backend/.env.dev
   client:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    volumes:
-      - ./frontend:/app
+      args:
+       TIPTAP_PRO_TOKEN: LpVl8ju9nGIAYalWz3wM74GJ3HCuiADGQsnyoGgEdbFSna70UdMKuVN+6Z6snRtI
+    # volumes:
+    #   - ./frontend:/app
     ports:
-      - "127.0.0.1:3000:3000"
+      - 3000:3000
     env_file:
-      - ./frontend/.env.development
+      - ./frontend/.env.dev
