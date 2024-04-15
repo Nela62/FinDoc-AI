@@ -1,11 +1,21 @@
 services:
-  finpanel-backend-fastapi:
-   build:
-     context: ./backend
-     dockerfile: Dockerfile
-   volumes:
-    - ./backend:/app 
-   ports:
-    - "127.0.0.1:8000:8000"
-   env_file:
-    - ./backend/.env.dev
+  server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app 
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - ./backend/.env.dev
+  client:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file:
+      - ./frontend/.env.development
