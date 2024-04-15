@@ -6,7 +6,6 @@ import sys
 # import sentry_sdk
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-from sqlalchemy.engine import create_engine, Engine
 
 # from llama_index.node_parser.text.utils import split_by_sentence_tokenizer
 
@@ -14,7 +13,6 @@ from app.api.api import api_router
 from app.core.config import settings, AppEnvironment
 
 # from app.loader_io import loader_io_router
-from contextlib import asynccontextmanager
 
 logger = logging.getLogger(__name__)
 
@@ -94,3 +92,7 @@ def start():
         reload=live_reload,
         workers=settings.UVICORN_WORKER_COUNT,
     )
+
+
+# if __name__ == "__main__":
+#     start()

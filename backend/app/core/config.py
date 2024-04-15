@@ -79,6 +79,7 @@ class Settings(PreviewPrefixedSettings):
     SUPABASE_URL: str
     SUPABASE_KEY: str
     SERVICE_SUPABASE_KEY: str
+    DATABASE_URL: str
     # SUPABASE_STORAGE_URL: str
     PUBLIC_DOCS_STORAGE_URL: str = "sec-filings"
     PRIVATE_DOCS_STORAGE_URL: str = "library"
@@ -110,19 +111,6 @@ class Settings(PreviewPrefixedSettings):
         When running locally, this should be set to the localstack endpoint.
         """
         return None if self.RENDER else "http://127.0.0.1:54324"
-
-    @computed_field
-    @property
-    def DATABASE_URL(self) -> str:
-        """
-        Used for setting the database URL.
-        When running locally, this should be set to the local pg database URL.
-        """
-        return (
-            None
-            if self.RENDER
-            else "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
-        )
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
