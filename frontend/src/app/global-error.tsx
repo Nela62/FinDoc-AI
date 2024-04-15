@@ -4,7 +4,13 @@ import * as Sentry from '@sentry/nextjs';
 import Error from 'next/error';
 import { useEffect } from 'react';
 
-export default function GlobalError({ error }) {
+export default function GlobalError({
+  error,
+  statusCode,
+}: {
+  error: Error;
+  statusCode: number;
+}) {
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);
@@ -12,7 +18,7 @@ export default function GlobalError({ error }) {
   return (
     <html>
       <body>
-        <Error statusCode={error.statusCode} />
+        <Error statusCode={statusCode ?? 400} />
       </body>
     </html>
   );
