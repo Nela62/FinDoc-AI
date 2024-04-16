@@ -9,6 +9,7 @@ import { useBlockEditor } from '@/hooks/useBlockEditor';
 import { Editor, EditorContent } from '@tiptap/react';
 import 'ldrs/ring';
 
+import { useLogger } from 'next-axiom';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as ScrollArea from '@radix-ui/react-scroll-area';
@@ -72,6 +73,12 @@ interface OptionsState {
 
 // TODO: turn this into a form hook
 export default function Report({ params }: { params: { report: string } }) {
+  const log = useLogger();
+
+  log.debug('Env variable', {
+    supabaseURL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  });
   const { report: reportId } = params;
   const { reports, setSelectedReport, updateReport, addDocuments } =
     useBoundStore((state) => state);

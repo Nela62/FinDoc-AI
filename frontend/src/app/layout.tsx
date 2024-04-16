@@ -1,3 +1,4 @@
+import { AxiomWebVitals } from 'next-axiom';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -22,6 +23,8 @@ export default function RootLayout({
       <body className={`${inter.className} h-full flex flex-col bg-zinc-50`}>
         <main className="h-full">
           <StoreProvider>{children}</StoreProvider>
+
+          <AxiomWebVitals />
         </main>
       </body>
     </html>
