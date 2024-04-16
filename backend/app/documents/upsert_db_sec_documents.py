@@ -1,16 +1,17 @@
 import os
+
 # from fire import Fire
 from tqdm import tqdm
+
 # import asyncio
 import financedatabase as fd
 from app.documents.file_utils import get_available_filings, Filing
-from app.documents.stock_utils import get_stocks_by_symbol, Stock
 from app.supabase.client import service_client, vector_client
 from llama_index.readers.file import PDFReader
 from llama_index.vector_stores.supabase import SupabaseVectorStore
 from fastapi.encoders import jsonable_encoder
 from llama_index.llms.anthropic import Anthropic
-from llama_index.core import Settings, VectorStoreIndex, ServiceContext, StorageContext
+from llama_index.core import VectorStoreIndex, ServiceContext, StorageContext
 from llama_index.embeddings.voyageai import VoyageEmbedding
 from app.core.config import settings
 
