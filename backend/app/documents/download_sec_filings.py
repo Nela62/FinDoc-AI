@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 import asyncio
 import pdfkit
 from app.documents.file_utils import filing_exists
-from fire import Fire
+# from fire import Fire
 from sec_edgar_downloader import Downloader
 from distutils.spawn import find_executable
 from tqdm.contrib.itertools import product
@@ -142,6 +142,6 @@ async def main(
     await async_upsert_documents_from_filings(output_dir)
 
 
-if __name__ == "__main__":
-    with TemporaryDirectory() as temp_dir:
-        Fire(main(temp_dir))
+# if __name__ == "__main__":
+#     with TemporaryDirectory() as temp_dir:
+#         Fire(main(temp_dir))

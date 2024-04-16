@@ -1,7 +1,7 @@
 import os
-from fire import Fire
+# from fire import Fire
 from tqdm import tqdm
-import asyncio
+# import asyncio
 import financedatabase as fd
 from app.documents.file_utils import get_available_filings, Filing
 from app.documents.stock_utils import get_stocks_by_symbol, Stock
@@ -130,5 +130,5 @@ async def main_upsert_documents_from_filings(doc_dir: str = DEFAULT_DOC_DIR):
     await async_upsert_documents_from_filings(doc_dir)
 
 
-if __name__ == "__main__":
-    Fire(main_upsert_documents_from_filings)
+# if __name__ == "__main__":
+#     Fire(main_upsert_documents_from_filings)
