@@ -75,9 +75,12 @@ interface OptionsState {
 export default function Report({ params }: { params: { report: string } }) {
   const log = useLogger();
 
+  if (!process.env.NEXT_PUBLIC_SERVICE_SUPABASE_KEY) {
+    log.error('No service key');
+  }
+
   log.debug('Env variable', {
-    supabaseServiceKey:
-      process.env.NEXT_PUBLIC_NEXT_PUBLIC_SERVICE_SUPABASE_KEY?.length,
+    supabaseServiceKey: process.env.NEXT_PUBLIC_SERVICE_SUPABASE_KEY?.length,
   });
   const { report: reportId } = params;
   const { reports, setSelectedReport, updateReport, addDocuments } =
