@@ -76,8 +76,8 @@ export default function Report({ params }: { params: { report: string } }) {
   const log = useLogger();
 
   log.debug('Env variable', {
-    supabaseURL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    supabaseServiceKey:
+      process.env.NEXT_PUBLIC_NEXT_PUBLIC_SERVICE_SUPABASE_KEY?.length,
   });
   const { report: reportId } = params;
   const { reports, setSelectedReport, updateReport, addDocuments } =
