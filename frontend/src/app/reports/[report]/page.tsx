@@ -82,6 +82,7 @@ export default function Report({ params }: { params: { report: string } }) {
   const { report: reportId } = params;
   const { reports, setSelectedReport, updateReport, addDocuments } =
     useBoundStore((state) => state);
+
   const supabase = createServiceClient();
   const [isLoading, setIsLoading] = useState(false);
 

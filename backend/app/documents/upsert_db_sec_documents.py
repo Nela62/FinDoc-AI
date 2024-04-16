@@ -4,7 +4,7 @@ from tqdm import tqdm
 import asyncio
 import financedatabase as fd
 from app.documents.file_utils import get_available_filings, Filing
-from stock_utils import get_stocks_by_symbol, Stock
+from app.documents.stock_utils import get_stocks_by_symbol, Stock
 from app.supabase.client import service_client, vector_client
 from llama_index.readers.file import PDFReader
 from llama_index.vector_stores.supabase import SupabaseVectorStore
@@ -122,12 +122,12 @@ async def async_upsert_documents_from_filings(doc_dir: str):
         await upsert_document(doc_dir, name, filing)
 
 
-def main_upsert_documents_from_filings(doc_dir: str = DEFAULT_DOC_DIR):
+async def main_upsert_documents_from_filings(doc_dir: str = DEFAULT_DOC_DIR):
     """
     Upserts SEC documents into the database based on what has been downloaded to the filesystem.
     """
 
-    asyncio.run(async_upsert_documents_from_filings(doc_dir))
+    await async_upsert_documents_from_filings(doc_dir)
 
 
 if __name__ == "__main__":

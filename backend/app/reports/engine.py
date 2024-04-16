@@ -1,4 +1,5 @@
 from llama_index.vector_stores.supabase import SupabaseVectorStore
+import asyncio
 
 from typing import Dict, Any, Optional, List
 from llama_index.core import (
@@ -8,6 +9,8 @@ from llama_index.core import (
     VectorStoreIndex,
 )
 import json
+
+from tempfile import TemporaryDirectory
 from llama_index.core.callbacks.base import BaseCallbackHandler, CallbackManager
 from llama_index.core.agent import ReActAgent
 from llama_index.agent.openai import OpenAIAgent
@@ -38,6 +41,7 @@ from llama_index.postprocessor.cohere_rerank import CohereRerank
 from anyio.streams.memory import MemoryObjectSendStream
 
 from llama_index.core.schema import NodeWithScore, MetadataMode
+from app.documents.download_sec_filings import main as download_sec_documents
 
 # import logging
 # import sys
@@ -85,7 +89,7 @@ def qualitative_question_engine(input: str, service_context: ServiceContext) -> 
     return response
 
 
-def get_available_docs(cik: str):
+async def get_available_docs(cik: str):
     docs = (
         service_client.table("documents")
         .select("*")
@@ -94,6 +98,19 @@ def get_available_docs(cik: str):
         .eq("doc_type", "10-K")
         .execute()
     )
+
+    if len(docs.data) == 0:
+        with TemporaryDirectory() as temp_dir:
+            await download_sec_documents(output_dir=temp_dir, ciks=[cik])
+        docs = (
+            service_client.table("documents")
+            .select("*")
+            .eq("cik", cik)
+            .eq("year", 2023)
+            .eq("doc_type", "10-K")
+            .execute()
+        )
+
     return docs.data
 
 
@@ -115,8 +132,8 @@ def process_nodes(nodes: List[NodeWithScore], query: str):
     return cohere_rerank.postprocess_nodes(nodes=nodes, query_str=query)
 
 
-def get_reports_engine(cik: str):
-    docs = get_available_docs(cik)
+async def get_reports_engine(cik: str):
+    docs = await get_available_docs(cik)
     retriever = get_nodes(docs[0]["id"], get_rag_service_context())
 
     prompts = [
@@ -135,14 +152,12 @@ def get_reports_engine(cik: str):
 
     for prompt in prompts:
         for node in process_nodes(retriever.retrieve(prompt), prompt):
-            print(node.id_)
             exists = [n for n in nodes if n["node_id"] == node.id_]
-            print(exists)
             if len(exists) > 0:
                 continue
             # TODO: fetch data only for the used nodes
             # TODO: when appending nodes, make sure there are no duplicates
-            
+
             nodes.append(
                 {
                     "node_id": node.id_,

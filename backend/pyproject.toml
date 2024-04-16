@@ -34,6 +34,7 @@ financedatabase = "^2.2.2"
 llama-index-postprocessor-cohere-rerank = "^0.1.2"
 gunicorn = "^21.2.0"
 email-validator = "^2.1.1"
+sec-edgar-downloader = "^5.0.2"
 
 
 

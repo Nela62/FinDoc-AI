@@ -6,13 +6,13 @@ from tempfile import TemporaryDirectory
 
 import asyncio
 import pdfkit
-from file_utils import filing_exists
+from app.documents.file_utils import filing_exists
 from fire import Fire
 from sec_edgar_downloader import Downloader
 from distutils.spawn import find_executable
 from tqdm.contrib.itertools import product
 from app.supabase.client import service_client
-from upsert_db_sec_documents import (
+from app.documents.upsert_db_sec_documents import (
     async_upsert_documents_from_filings,
 )
 from app.schema import SecDocumentMetadata as Filing
@@ -106,7 +106,7 @@ def _convert_to_pdf(output_dir: str):
 
 
 # Note: after and before strings must be in the form "YYYY-MM-DD"
-def main(
+async def main(
     output_dir: str = DEFAULT_OUTPUT_DIR,
     ciks: List[str] = DEFAULT_CIKS,
     file_types: List[str] = DEFAULT_FILING_TYPES,
@@ -139,7 +139,7 @@ def main(
     _convert_to_pdf(output_dir)
 
     print("Uploading to Supabase storage")
-    asyncio.run(async_upsert_documents_from_filings(output_dir))
+    await async_upsert_documents_from_filings(output_dir)
 
 
 if __name__ == "__main__":

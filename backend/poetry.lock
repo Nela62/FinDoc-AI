@@ -2756,6 +2756,21 @@ full = ["Pillow (>=8.0.0)", "PyCryptodome", "cryptography"]
 image = ["Pillow (>=8.0.0)"]
 
 [[package]]
+name = "pyrate-limiter"
+version = "3.6.0"
+description = "Python Rate-Limiter using Leaky-Bucket Algorithm"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "pyrate_limiter-3.6.0-py3-none-any.whl", hash = "sha256:715e9f08c6fe2a00d0cae5b1a6647d68ffeb2a54dc0cc2cff4e046b067ce6da4"},
+    {file = "pyrate_limiter-3.6.0.tar.gz", hash = "sha256:390f97066b322732e498c9e921fbdfd31d9ec0070a14e06da9af0efc62e091e4"},
+]
+
+[package.extras]
+all = ["filelock (>=3.0)", "psycopg[pool] (>=3.1.18,<4.0.0)", "redis (>=5.0.0,<6.0.0)"]
+docs = ["furo (>=2022.3.4,<2023.0.0)", "myst-parser (>=0.17)", "sphinx (>=4.3.0,<5.0.0)", "sphinx-autodoc-typehints (>=1.17,<2.0)", "sphinx-copybutton (>=0.5)", "sphinxcontrib-apidoc (>=0.3,<0.4)"]
+
+[[package]]
 name = "pytest"
 version = "8.1.1"
 description = "pytest: simple powerful testing with Python"
@@ -3238,6 +3253,25 @@ numpy = ">=1.22.4,<1.29.0"
 dev = ["click", "cython-lint (>=0.12.2)", "doit (>=0.36.0)", "mypy", "pycodestyle", "pydevtool", "rich-click", "ruff", "types-psutil", "typing_extensions"]
 doc = ["jupytext", "matplotlib (>2)", "myst-nb", "numpydoc", "pooch", "pydata-sphinx-theme (==0.9.0)", "sphinx (!=4.1.0)", "sphinx-design (>=0.2.0)"]
 test = ["asv", "gmpy2", "hypothesis", "mpmath", "pooch", "pytest", "pytest-cov", "pytest-timeout", "pytest-xdist", "scikit-umfpack", "threadpoolctl"]
+
+[[package]]
+name = "sec-edgar-downloader"
+version = "5.0.2"
+description = "Download SEC filings from the EDGAR database using Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "sec_edgar_downloader-5.0.2-py3-none-any.whl", hash = "sha256:cab5ed1de1fce59722b609567f4c1790b2bf96308f7e6c74671e83b27dde7316"},
+    {file = "sec_edgar_downloader-5.0.2.tar.gz", hash = "sha256:65135b673c8ff1c4f2c400ae6828b8720ba5af3bc7c58729000ef741e3403e56"},
+]
+
+[package.dependencies]
+pyrate-limiter = ">=3.1.0"
+requests = "*"
+
+[package.extras]
+doc = ["doc8", "sphinx", "sphinx-autobuild", "sphinx-autodoc-typehints"]
+test = ["pre-commit", "pytest", "pytest-cov"]
 
 [[package]]
 name = "six"
@@ -4214,4 +4248,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11,<3.12"
-content-hash = "5fdb48aeda68409c69f8c254fcadb8587e707fdc9ea0c27cf98e995842149c0d"
+content-hash = "7e59939a2d3ce69712afe691f10e292dc8220f34bb43328b870c3a809985d688"
