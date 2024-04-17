@@ -1,6 +1,6 @@
 'use client';
 
-import { NavBar } from '@/components/NavBar';
+import { NavBar } from '@/components/OldNavBar';
 import { ContentItemMenu, LinkMenu, TextMenu } from '@/components/menus';
 import ImageBlockMenu from '@/extensions/ImageBlock/components/ImageBlockMenu';
 import { ColumnsMenu } from '@/extensions/MultiColumn/menus';

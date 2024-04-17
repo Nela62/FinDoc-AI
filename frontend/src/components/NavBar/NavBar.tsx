@@ -1,65 +1,103 @@
-import { cn, getNanoId } from '@/lib/utils';
-import { useBoundStore } from '@/providers/store-provider';
-import { ReportType } from '@/stores/reports-store';
-
 import Link from 'next/link';
-
-import { useRouter } from 'next/navigation';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/Tooltip';
+import {
+  Briefcase,
+  Building2,
+  Database,
+  Files,
+  Home,
+  MessageSquareText,
+  Settings,
+} from 'lucide-react';
 
 export const NavBar = () => {
-  const { reports, addNewReport, selectedReport } = useBoundStore(
-    (state) => state,
-  );
-
-  const { push } = useRouter();
-
-  const createNewDocument = () => {
-    const newReport = {
-      id: getNanoId(),
-      title: 'Untitled',
-      companyTicker: '',
-      type: ReportType.Other,
-      content: '',
-    };
-    addNewReport(newReport);
-    push('/reports/' + newReport.id);
-  };
-
-  const companies = new Set(reports.map((report) => report.companyTicker));
-
   return (
-    <div className="h-full w-48 min-w-48 py-1 ml-3 mr-2 pt-3">
-      <div className="flex flex-col gap-2 text-sm text-gray-600">
-        <div className="flex justify-between items-center">
-          <p className="font-semibold text-gray-500 text-xs">REPORTS</p>
-          <button onClick={createNewDocument}>
-            <p className="text-xs font-medium border-[0.5px] border-zinc-300 rounded-md bg-white shadow-sm px-2.5 py-1.5 hover:border-zinc-400">
-              + New
-            </p>
-          </button>
-        </div>
-        {Array.from(companies).map((company) => (
-          <div className="flex flex-col gap-2 pl-3" key={company}>
-            <p className="font-bold text-xs mt-2">{company}</p>
-            {reports
-              .filter((r) => r.companyTicker === company)
-              .map((report) => (
-                <Link
-                  key={report.id}
-                  href={`/reports/${report.id}`}
-                  className={cn(
-                    selectedReport.id === report.id && 'font-semibold',
-                    'text-xs',
-                  )}
-                >
-                  {report.title.length > 30
-                    ? report.title.slice(0, 27) + '...'
-                    : report.title}
-                </Link>
-              ))}
-          </div>
-        ))}
-      </div>
-    </div>
+    <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
+      <nav className="flex flex-col items-center gap-4 px-2 py-4">
+        <Link
+          href="#"
+          className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
+        >
+          <Briefcase className="h-4 w-4 transition-all group-hover:scale-110" />
+          <span className="sr-only">Acme Inc</span>
+        </Link>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="#"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8 cursor-not-allowed"
+            >
+              <Home className="h-5 w-5" />
+              <span className="sr-only">Dashboard</span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right">Dashboard - coming soon!</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="#"
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+            >
+              <Files className="h-5 w-5" />
+              <span className="sr-only">Reports</span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right">Reports</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="#"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8 cursor-not-allowed"
+            >
+              <Building2 className="h-5 w-5" />
+              <span className="sr-only">Companies</span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right">Companies - coming soon!</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="#"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8 cursor-not-allowed"
+            >
+              <MessageSquareText className="h-5 w-5" />
+              <span className="sr-only">Chat</span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right">Chat - coming soon!</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="#"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8 cursor-not-allowed"
+            >
+              <Database className="h-5 w-5" />
+              <span className="sr-only">Data Sources</span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            Data Sources - coming soon!
+          </TooltipContent>
+        </Tooltip>
+      </nav>
+      <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="#"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8 cursor-not-allowed"
+            >
+              <Settings className="h-5 w-5" />
+              <span className="sr-only">Settings</span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right">Settings - coming soon!</TooltipContent>
+        </Tooltip>
+      </nav>
+    </aside>
   );
 };
