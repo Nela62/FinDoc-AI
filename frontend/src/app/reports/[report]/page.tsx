@@ -16,7 +16,7 @@ import * as ScrollArea from '@radix-ui/react-scroll-area';
 
 import '@/styles/index.css';
 import { SquarePen, X, Wand2Icon, ChevronDown } from 'lucide-react';
-import { Combobox } from '@/components/ui/Combobox';
+import { Combobox } from '@/components/ui/OldCombobox';
 import { tickers } from '@/lib/data/tickers';
 import { getPrompts } from './prompts';
 import { TopBar } from '@/components/TopBar/TopBar';
@@ -363,7 +363,7 @@ export default function Report({ params }: { params: { report: string } }) {
                     className={`${
                       !options.companyTicker || !options.type
                         ? 'bg-indigo8 text-zinc-50 cursor-not-allowed'
-                        : 'bg-indigo11 text-white'
+                        : 'bg-accent text-white'
                     } flex gap-2 items-center justify-center text-left w-1/2  rounded-md px-[15px] font-medium focus:shadow-[0_0_0_2px] focus:outline-none text-sm py-1`}
                     onClick={() => {
                       // console.log('generation report');

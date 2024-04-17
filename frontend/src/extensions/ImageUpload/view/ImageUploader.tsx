@@ -1,6 +1,6 @@
 import { Spinner } from '@/components/ui/Spinner';
 import { useDropZone, useFileUpload, useUploader } from './hooks';
-import { Button } from '@/components/ui/Button';
+import { TipTapButton } from '@/components/ui/TipTapButton';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 import { ChangeEvent, useCallback } from 'react';
@@ -51,7 +51,7 @@ export const ImageUploader = ({
           {draggedInside ? 'Drop image here' : 'Drag and drop or'}
         </div>
         <div>
-          <Button
+          <TipTapButton
             disabled={draggedInside}
             onClick={handleUploadClick}
             variant="primary"
@@ -59,7 +59,7 @@ export const ImageUploader = ({
           >
             <Icon name="Upload" />
             Upload an image
-          </Button>
+          </TipTapButton>
         </div>
       </div>
       <input

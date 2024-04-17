@@ -65,7 +65,7 @@ export const TopBar = ({ editor }: { editor: Editor }) => {
             className={`${
               selectedTab === SidebarTabs.Audit ||
               selectedTab === SidebarTabs.Citation
-                ? 'text-white bg-indigo11'
+                ? 'text-white bg-accent'
                 : 'text-zinc-600'
             } flex gap-1 items-center  px-2 py-1.5`}
           >

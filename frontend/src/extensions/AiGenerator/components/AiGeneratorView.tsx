@@ -6,7 +6,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuid } from 'uuid';
-import { Button } from '@/components/ui/Button';
+import { TipTapButton } from '@/components/ui/TipTapButton';
 import { Loader } from '@/components/ui/Loader';
 import { Panel, PanelHeadline } from '@/components/ui/Panel';
 import { Textarea } from '@/components/ui/Textarea';
@@ -141,29 +141,33 @@ export const AiGeneratorView = ({
       {!isFetching && (
         <div className={` flex justify-end w-auto gap-3 mt-4`}>
           {previewText && (
-            <Button
+            <TipTapButton
               variant="ghost"
               className="text-red-500 hover:bg-red-500/10 hover:text-red-500"
               onClick={discard}
             >
               <Icon name="Trash" />
               Discard
-            </Button>
+            </TipTapButton>
           )}
           {previewText && (
-            <Button variant="ghost" onClick={insert} disabled={!previewText}>
+            <TipTapButton
+              variant="ghost"
+              onClick={insert}
+              disabled={!previewText}
+            >
               <Icon name="Check" />
               Insert
-            </Button>
+            </TipTapButton>
           )}
-          <Button
+          <TipTapButton
             variant="primary"
             // onClick={generateText}
             style={{ whiteSpace: 'nowrap' }}
           >
             {previewText ? <Icon name="Repeat" /> : <Icon name="Sparkles" />}
             {previewText ? 'Regenerate' : 'Generate text'}
-          </Button>
+          </TipTapButton>
         </div>
       )}
       {isFetching && (

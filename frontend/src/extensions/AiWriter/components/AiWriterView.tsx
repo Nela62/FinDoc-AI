@@ -7,7 +7,7 @@ import { useCallback, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuid } from 'uuid';
 
-import { Button } from '@/components/ui/Button';
+import { TipTapButton } from '@/components/ui/TipTapButton';
 import { Loader } from '@/components/ui/Loader';
 import { Panel, PanelHeadline } from '@/components/ui/Panel';
 import { Textarea } from '@/components/ui/Textarea';
@@ -168,11 +168,11 @@ export const AiWriterView = ({
             <div className="flex justify-between w-auto gap-1">
               <Dropdown.Root>
                 <Dropdown.Trigger asChild>
-                  <Button variant="tertiary">
+                  <TipTapButton variant="tertiary">
                     <Icon name="Mic" />
                     {/* {currentTone?.label || 'Change tone'} */}
                     <Icon name="ChevronDown" />
-                  </Button>
+                  </TipTapButton>
                 </Dropdown.Trigger>
                 <Dropdown.Portal>
                   <Dropdown.Content side="bottom" align="start" asChild>
@@ -202,26 +202,26 @@ export const AiWriterView = ({
             </div>
             <div className="flex justify-between w-auto gap-1">
               {previewText && (
-                <Button
+                <TipTapButton
                   variant="ghost"
                   className="text-red-500 hover:bg-red-500/10 hover:text-red-500"
                   onClick={discard}
                 >
                   <Icon name="Trash" />
                   Discard
-                </Button>
+                </TipTapButton>
               )}
               {previewText && (
-                <Button
+                <TipTapButton
                   variant="ghost"
                   onClick={insert}
                   disabled={!previewText}
                 >
                   <Icon name="Check" />
                   Insert
-                </Button>
+                </TipTapButton>
               )}
-              <Button
+              <TipTapButton
                 variant="primary"
                 onClick={generateText}
                 style={{ whiteSpace: 'nowrap' }}
@@ -232,7 +232,7 @@ export const AiWriterView = ({
                   <Icon name="Sparkles" />
                 )}
                 {previewText ? 'Regenerate' : 'Generate text'}
-              </Button>
+              </TipTapButton>
             </div>
           </div>
         </div>

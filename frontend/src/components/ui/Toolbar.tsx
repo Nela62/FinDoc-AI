@@ -2,7 +2,7 @@ import React, { ButtonHTMLAttributes, HTMLProps, forwardRef } from 'react';
 
 import { cn } from '@/lib/utils';
 import { Surface } from './Surface';
-import { Button, ButtonProps } from './Button';
+import { TipTapButton, TipTapButtonProps } from './TipTapButton';
 import Tooltip from './Tooltip';
 
 export type ToolbarWrapperProps = {
@@ -71,8 +71,8 @@ export type ToolbarButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   activeClassname?: string;
   tooltip?: string;
   tooltipShortcut?: string[];
-  buttonSize?: ButtonProps['buttonSize'];
-  variant?: ButtonProps['variant'];
+  buttonSize?: TipTapButtonProps['buttonSize'];
+  variant?: TipTapButtonProps['variant'];
 };
 
 const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>(
@@ -92,7 +92,7 @@ const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>(
     const buttonClass = cn('gap-1 min-w-[2rem] px-2 w-auto', className);
 
     const content = (
-      <Button
+      <TipTapButton
         activeClassname={activeClassname}
         className={buttonClass}
         variant={variant}
@@ -101,7 +101,7 @@ const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>(
         {...rest}
       >
         {children}
-      </Button>
+      </TipTapButton>
     );
 
     if (tooltip) {
