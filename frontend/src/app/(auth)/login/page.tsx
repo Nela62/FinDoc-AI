@@ -62,6 +62,7 @@ export default function Login({
 
     return redirect('/login?message=Check email to continue sign in process');
   };
+  // TODO: add tanstack/react-query for auth and isloading
 
   return (
     <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">

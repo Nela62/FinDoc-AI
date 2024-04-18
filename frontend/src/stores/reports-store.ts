@@ -1,6 +1,5 @@
 import { initialContent } from '@/lib/data/initialContent';
 import { Content } from '@tiptap/core';
-import { create } from 'domain';
 
 export enum ReportType {
   EquityAnalyst = 'Equity Analyst Report',
