@@ -6,7 +6,6 @@ import { createClient } from '@/lib/utils/supabase/server';
 
 export async function onDemoSubmit(values: formType) {
   if (values.password !== process.env.DEMO_PASSWORD) {
-    console.log(process.env.DEMO_PASSWORD, values.password);
     return redirect('/login?message=Incorrect password');
   }
 
@@ -19,5 +18,5 @@ export async function onDemoSubmit(values: formType) {
     return redirect('/login?message=Could not authenticate user');
   }
 
-  return redirect('/reports/new');
+  return redirect('/reports/all');
 }

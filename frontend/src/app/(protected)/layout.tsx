@@ -1,16 +1,33 @@
 import { NavBar } from '@/components/navBar/NavBar';
 import { TooltipProvider } from '@/components/ui/Tooltip';
 
-export default function Layout({
+import { Header } from '@/components/header/Header';
+import { createClient } from '@/lib/utils/supabase/server';
+import { redirect } from 'next/navigation';
+
+export default async function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect('/login');
+  }
+
   return (
     <TooltipProvider>
-      <div className="flex h-screen w-full flex-col bg-muted/40">
+      <div className="flex h-screen w-full bg-muted/40">
         <NavBar />
-        {children}
+        <div className="flex flex-col w-full">
+          <Header />
+          <main className="grid flex-1 items-start gap-4 p-4">{children}</main>
+        </div>
       </div>
     </TooltipProvider>
   );

@@ -28,7 +28,6 @@ import {
 } from '@/lib/data/newAmazonReport';
 import { Recommendation, ReportType } from '@/stores/reports-store';
 import { useBoundStore } from '@/providers/store-provider';
-import { createServiceClient } from '@/lib/utils/supabase/client';
 export type AiState = {
   isAiLoading: boolean;
   aiError?: string | null;
@@ -36,6 +35,7 @@ export type AiState = {
 
 import { DocumentType } from '@/stores/documents-store';
 import { EditorToolbar } from '@/components/Toolbar';
+import { createClient } from '@/lib/utils/supabase/client';
 
 const generateReport = async (ticker: string, editor: Editor) => {
   const company = tickers.find((t) => t.value === ticker)?.label;
@@ -73,19 +73,12 @@ interface OptionsState {
 
 // TODO: turn this into a form hook
 export default function Report({ params }: { params: { report: string } }) {
-  const log = useLogger();
-
-  log.debug('Env variable', {
-    supabaseServiceKey: process.env.NEXT_PUBLIC_SERVICE_SUPABASE_KEY?.slice(
-      0,
-      6,
-    ),
-  });
   const { report: reportId } = params;
-  const { reports, setSelectedReport, updateReport, addDocuments } =
-    useBoundStore((state) => state);
+  const { reports, updateReport, addDocuments } = useBoundStore(
+    (state) => state,
+  );
 
-  const supabase = createServiceClient();
+  const supabase = createClient();
   const [isLoading, setIsLoading] = useState(false);
 
   const { editor, characterCount, isEmpty } = useBlockEditor(reportId);
@@ -135,7 +128,6 @@ export default function Report({ params }: { params: { report: string } }) {
 
   useEffect(() => {
     if (!report) return;
-    setSelectedReport(report);
     fetchDocuments();
   }, []);
 
@@ -337,19 +329,21 @@ export default function Report({ params }: { params: { report: string } }) {
                     } flex gap-2 w-1/2 border-zinc-300  border text-zinc-600 bg-white py-2 items-center justify-center rounded-md px-[15px] font-medium leading-none focus:outline-none text-sm`}
                     onClick={() => {
                       if (!options.companyTicker || !options.type) return;
-                      updateReport({
-                        id: reportId,
-                        title: `${getDateName()} - ${
-                          ReportType[
-                            (options.type as keyof typeof ReportType) ?? 'Other'
-                          ]
-                        }`,
-                        ...options,
-                        type: ReportType[
-                          (options.type as keyof typeof ReportType) ?? 'Other'
-                        ],
-                        content: '',
-                      });
+                      // updateReport({
+                      //   id: reportId,
+                      //   title: `${getDateName()} - ${
+                      //     ReportType[
+                      //       (options.type as keyof typeof ReportType) ?? 'Other'
+                      //     ]
+                      //   }`,
+                      //   ...options,
+                      //   type: ReportType[
+                      //     (options.type as keyof typeof ReportType) ?? 'Other'
+                      //   ],
+                      //   content: '',
+                      //   lastUpdated: new Date(),
+                      //   status:
+                      // });
                       console.log(reports);
                       // generateReport(options.company, editor);
                     }}
@@ -389,19 +383,19 @@ export default function Report({ params }: { params: { report: string } }) {
                         type();
                       }
 
-                      updateReport({
-                        id: reportId,
-                        title: `${getDateName()} - ${
-                          ReportType[
-                            (options.type as keyof typeof ReportType) ?? 'Other'
-                          ]
-                        }`,
-                        ...options,
-                        type: ReportType[
-                          (options.type as keyof typeof ReportType) ?? 'Other'
-                        ],
-                        content: '',
-                      });
+                      // updateReport({
+                      //   id: reportId,
+                      //   title: `${getDateName()} - ${
+                      //     ReportType[
+                      //       (options.type as keyof typeof ReportType) ?? 'Other'
+                      //     ]
+                      //   }`,
+                      //   ...options,
+                      //   type: ReportType[
+                      //     (options.type as keyof typeof ReportType) ?? 'Other'
+                      //   ],
+                      //   content: '',
+                      // });
 
                       typeContent(editor, newAmazonReport.content, 600);
                     }}

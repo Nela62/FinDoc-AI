@@ -28,7 +28,7 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import { multiHighlight } from '@/lib/utils/multi-line-highlight';
 import { useBoundStore } from '@/providers/store-provider';
 import { Document as PdfDocument } from '@/stores/documents-store';
-import { createServiceClient } from '@/lib/utils/supabase/client';
+import { createClient } from '@/lib/utils/supabase/client';
 
 const pdfjsOptions = pdfjs.GlobalWorkerOptions;
 const pdfjsVersion = pdfjs.version;
@@ -217,7 +217,7 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
     const [pdfFile, setPdfFile] = useState<string | null>(null);
     const listRef = useRef<List>(null);
 
-    const supabase = createServiceClient();
+    const supabase = createClient();
 
     const fetchPdf = useCallback(async () => {
       const { data, error } = await supabase.storage

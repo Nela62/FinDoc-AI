@@ -1,5 +1,6 @@
 import { initialContent } from '@/lib/data/initialContent';
 import { Content } from '@tiptap/core';
+import { create } from 'domain';
 
 export enum ReportType {
   EquityAnalyst = 'Equity Analyst Report',
@@ -16,6 +17,13 @@ export enum Recommendation {
   Underweight = 'Underweight',
 }
 
+export enum ReportStatus {
+  Draft = 'Draft',
+  InReview = 'In Review',
+  Approved = 'Approved',
+  Published = 'Published',
+}
+
 // TODO: figure out how to deal with saving and loading content in demo, test, and prod env
 export type Report = {
   id: string;
@@ -25,59 +33,61 @@ export type Report = {
   recommendation?: Recommendation;
   targetPrice?: string;
   content: Content;
-  // dateCreated: Date;
-  // lastUpdated: Date;
+  status: ReportStatus;
+  createdAt: Date;
+  lastUpdated: Date;
 };
 
 export type ReportsState = {
   reports: Report[];
-  selectedReport: Report;
 };
 
 export type ReportsActions = {
+  setReports: (reports: Report[]) => void;
   addNewReport: (report: Report) => void;
-  setSelectedReport: (report: Report) => void;
+  addReports: (reports: Report[]) => void;
   updateReport: (report: Report) => void;
 };
 
-const demoDefaultState = {
-  reports: [
-    {
-      id: 'Dzd7LhprkD',
-      title: 'Oct 23, 2023 - Equity Analyst Report',
-      companyTicker: 'AAPL',
-      type: ReportType.EquityAnalyst,
-      content: '',
-    },
-    {
-      id: 'r6BJzHbnCG',
-      title: 'Q4 2023 - Earnings Call Note',
-      companyTicker: 'AAPL',
-      type: ReportType.EarningsCallNote,
-      content: '',
-    },
-    {
-      id: 'c6TWdN9N9k',
-      title: 'Dec 14, 2023 - Equity Analyst Report',
-      companyTicker: 'AMZN',
-      type: ReportType.EquityAnalyst,
-      content: initialContent,
-    },
-  ],
-  selectedReport: {
+export const demoReports: Report[] = [
+  {
+    id: 'Dzd7LhprkD',
+    title: 'Oct 23, 2023 - Equity Analyst Report',
+    companyTicker: 'AAPL',
+    type: ReportType.EquityAnalyst,
+    status: ReportStatus.Draft,
+    createdAt: new Date('2023-10-14'),
+    lastUpdated: new Date('2023-10-23'),
+    content: '',
+  },
+  {
+    id: 'r6BJzHbnCG',
+    title: 'Q4 2023 - Earnings Call Note',
+    companyTicker: 'AAPL',
+    type: ReportType.EarningsCallNote,
+    status: ReportStatus.Draft,
+    createdAt: new Date('2023-10-23'),
+    lastUpdated: new Date('2023-12-18'),
+    content: '',
+  },
+  {
     id: 'c6TWdN9N9k',
     title: 'Dec 14, 2023 - Equity Analyst Report',
     companyTicker: 'AMZN',
     type: ReportType.EquityAnalyst,
+    status: ReportStatus.InReview,
+    createdAt: new Date('2023-12-14'),
+    lastUpdated: new Date('2023-12-14'),
     content: initialContent,
   },
-};
+];
 
 export const createReportsSlice = (set: any) => ({
-  ...demoDefaultState,
+  reports: [],
+  setReports: (reports: Report[]) => set({ reports }),
   addNewReport: (report: Report) =>
     set((state: any) => ({ reports: [...state.reports, report] })),
-  setSelectedReport: (report: Report) => set({ selectedReport: report }),
+  addReports: (reports: Report[]) => set({ reports }),
   // TODO: there must be a better way to update a report
   updateReport: (report: Report) =>
     set((state: any) => ({

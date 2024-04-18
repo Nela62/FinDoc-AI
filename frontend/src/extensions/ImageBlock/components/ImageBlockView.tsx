@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { createServiceClient } from '@/lib/utils/supabase/client';
+import { createClient } from '@/lib/utils/supabase/client';
 import { Node } from '@tiptap/pm/model';
 import { Editor, NodeViewWrapper } from '@tiptap/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -16,7 +16,7 @@ interface ImageBlockViewProps {
 }
 
 export const ImageBlockView = (props: ImageBlockViewProps) => {
-  const supabase = createServiceClient();
+  const supabase = createClient();
   const [url, setUrl] = useState<string>('');
 
   const { editor, getPos, node } = props;
