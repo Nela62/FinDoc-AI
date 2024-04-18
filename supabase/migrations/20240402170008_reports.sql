@@ -8,3 +8,13 @@ create table reports {
   created_at timestamp with time zone default now() not null,
   updated_at timestamp with time zone default now() not null
 }
+
+create table demo_reports {
+  id uuid primary key default gen_random_uuid(),
+  company_ticker text not null,
+  company_name text not null,
+  html text,
+  json jsonb,
+  created_at timestamp with time zone default now() not null,
+  updated_at timestamp with time zone default now() not null
+}
