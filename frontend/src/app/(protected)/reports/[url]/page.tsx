@@ -40,7 +40,7 @@ export type AiState = {
 import { DocumentType } from '@/stores/documents-store';
 import { EditorToolbar } from '@/components/Toolbar';
 import { EditorComponent } from './EditorComponent';
-import { createClient } from '@/lib/utils/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { getReportById } from '@/lib/queries';
 import { redirect } from 'next/navigation';
 

@@ -28,7 +28,7 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import { multiHighlight } from '@/lib/utils/multi-line-highlight';
 import { useBoundStore } from '@/providers/store-provider';
 import { Document as PdfDocument } from '@/stores/documents-store';
-import { createClient } from '@/lib/utils/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 const pdfjsOptions = pdfjs.GlobalWorkerOptions;
 const pdfjsVersion = pdfjs.version;

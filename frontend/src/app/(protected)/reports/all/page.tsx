@@ -6,7 +6,7 @@ import {
 import { prefetchQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { cookies } from 'next/headers';
 
-import { createClient } from '@/lib/utils/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { AllReportsTable } from './AllReportsTable';
 import { getDemoReports } from '@/lib/queries';
 import { redirect } from 'next/navigation';

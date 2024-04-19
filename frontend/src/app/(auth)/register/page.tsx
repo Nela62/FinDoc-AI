@@ -5,7 +5,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 // import { SubmitButton } from './submit-button';
 
-import { createClient } from '@/lib/utils/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';

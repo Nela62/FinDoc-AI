@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { createClient } from '@/lib/utils/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { Node } from '@tiptap/pm/model';
 import { Editor, NodeViewWrapper } from '@tiptap/react';
 import { useCallback, useEffect, useRef, useState } from 'react';

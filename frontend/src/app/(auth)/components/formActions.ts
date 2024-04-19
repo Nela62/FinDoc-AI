@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { formType } from './AuthForm';
-import { createClient } from '@/lib/utils/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 export async function onDemoSubmit(values: formType) {
   if (values.password !== process.env.DEMO_PASSWORD) {

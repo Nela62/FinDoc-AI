@@ -1,4 +1,4 @@
-import { createServerServiceClient } from '@/lib/utils/supabase/server';
+import { createServerServiceClient } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
   const supabase = createServerServiceClient();

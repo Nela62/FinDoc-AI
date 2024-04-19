@@ -9,7 +9,6 @@ import { v4 as uuid } from 'uuid';
 import { TipTapButton } from '@/components/ui/TipTapButton';
 import { Loader } from '@/components/ui/Loader';
 import { Panel, PanelHeadline } from '@/components/ui/Panel';
-import { Textarea } from '@/components/ui/Textarea';
 import { Icon } from '@/components/ui/Icon';
 
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
@@ -18,7 +17,7 @@ import { Surface } from '@/components/ui/Surface';
 import { DropdownButton } from '@/components/ui/Dropdown';
 import { Citation } from '@/stores/citations-store';
 import { useBoundStore } from '@/providers/store-provider';
-import { markdownToHtml, markdownToJson } from '@/lib/utils';
+import { markdownToHtml, markdownToJson } from '@/lib/utils/formatText';
 
 export interface DataProps {
   text: string;

@@ -15,3 +15,4 @@ export * from './isCustomNodeSelected';
 export * from './isTextSelected';
 export * from './nanoId';
 export * from './formatText';
+export * from './multi-line-highlight';

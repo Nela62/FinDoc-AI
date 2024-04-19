@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/Tooltip';
 import {
   Briefcase,
   Building2,
@@ -12,6 +11,7 @@ import {
   PlusSquare,
   Settings,
 } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipTrigger } from '../ui/Tooltip';
 
 // TODO: highlight the selected item and get the current route
 export const NavBar = () => {

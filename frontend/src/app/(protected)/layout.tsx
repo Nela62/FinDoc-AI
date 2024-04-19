@@ -2,7 +2,7 @@ import { NavBar } from '@/components/navBar/NavBar';
 import { TooltipProvider } from '@/components/ui/Tooltip';
 
 import { Header } from '@/components/header/Header';
-import { createClient } from '@/lib/utils/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
 export default async function Layout({
