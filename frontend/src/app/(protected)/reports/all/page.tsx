@@ -9,6 +9,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/utils/supabase/server';
 import { AllReportsTable } from './AllReportsTable';
 import { getDemoReports } from '@/lib/queries';
+import { redirect } from 'next/navigation';
 
 // TODO: add table pagination
 // TODO: add tabler filtering
@@ -23,6 +24,14 @@ export default async function ReportsPage() {
   if (error) {
     console.error(error);
     throw new Error('Failed to fetch user');
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect('/login');
   }
 
   // @ts-ignore

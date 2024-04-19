@@ -48,7 +48,7 @@ export const Header = () => {
       </Breadcrumb>
       <Button
         variant="outline"
-        className="relative rounded-lg pl-4 md:w-40 lg:w-64 text-muted-foreground shadow-sm border-input font-light justify-start"
+        className="relative rounded-lg pl-4 md:w-40 lg:w-56 text-muted-foreground shadow-sm border-input font-light justify-start"
       >
         Search...
       </Button>

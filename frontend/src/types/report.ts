@@ -1,26 +1,19 @@
 import { Content } from '@tiptap/react';
 
-export enum ReportType {
-  EquityAnalyst = 'Equity Analyst Report',
-  EarningsCallNote = 'Earnings Call Note',
-  Other = 'Other',
-}
+export type ReportType =
+  | 'Equity Analyst Report'
+  | 'Earnings Call Note'
+  | 'Other';
 
-export enum Recommendation {
-  Auto = 'Auto',
-  Buy = 'Buy',
-  Hold = 'Hold',
-  Sell = 'Sell',
-  Overweight = 'Overweight',
-  Underweight = 'Underweight',
-}
+export type Recommendation =
+  | 'Auto'
+  | 'Buy'
+  | 'Hold'
+  | 'Sell'
+  | 'Overweight'
+  | 'Underweight';
 
-export enum ReportStatus {
-  Draft = 'Draft',
-  InReview = 'In Review',
-  Approved = 'Approved',
-  Published = 'Published',
-}
+export type ReportStatus = 'Draft' | 'In Review' | 'Approved' | 'Published';
 
 export type Report = {
   id: string;

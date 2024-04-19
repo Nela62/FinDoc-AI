@@ -26,7 +26,7 @@ export const Audit = () => {
         className="flex gap-2 border-b-[0.5px] border-zinc-300 px-3 text-sm py-3 text-left"
         onClick={() => {
           setSelectedCitationSourceNum(citation.source_num);
-          setSelectedTab(SidebarTabs.Citation);
+          setSelectedTab('Citation');
           setDocumentId(doc.id);
         }}
       >

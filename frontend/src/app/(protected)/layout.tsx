@@ -26,7 +26,7 @@ export default async function Layout({
         <NavBar />
         <div className="flex flex-col w-full">
           <Header />
-          <main className="grid flex-1 items-start gap-4 p-4">{children}</main>
+          <main className="grid flex-1 items-start">{children}</main>
         </div>
       </div>
     </TooltipProvider>

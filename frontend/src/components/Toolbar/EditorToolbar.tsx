@@ -13,6 +13,7 @@ import { useTextmenuContentTypes } from './hooks/useTextmenuContentTypes';
 import { ContentTypePicker } from './components/ContentTypePicker';
 import { AIDropdown } from './components/AIDropdown';
 import { EditLinkPopover } from './components/EditLinkPopover';
+import { Card } from '../ui/card';
 
 // We memorize the button so each button is not rerendered
 // on every editor state change
@@ -32,10 +33,7 @@ export const EditorToolbar = ({ editor }: TextMenuProps) => {
   const blockOptions = useTextmenuContentTypes(editor);
 
   return (
-    <Toolbar.Wrapper
-      className="w-full rounded-[0px] h-[44px] border-b border-neutral-200"
-      withBorder={false}
-    >
+    <div className="flex items-center px-3">
       {/* <AIDropdown
           onCompleteSentence={commands.onCompleteSentence}
           onEmojify={commands.onEmojify}
@@ -197,6 +195,6 @@ export const EditorToolbar = ({ editor }: TextMenuProps) => {
           </Toolbar.Wrapper>
         </Popover.Content>
       </Popover.Root>
-    </Toolbar.Wrapper>
+    </div>
   );
 };

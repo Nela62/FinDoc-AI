@@ -1,11 +1,10 @@
 'use client';
 
-import { Editor, useEditor, Node as Node } from '@tiptap/react';
+import { Editor, useEditor, Node as Node, Content } from '@tiptap/react';
 
 import { ExtensionKit } from '@/extensions/extension-kit';
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Citation } from '@/stores/citations-store';
-import { Report } from '@/stores/reports-store';
 import { useBoundStore } from '@/providers/store-provider';
 import { SidebarTabs } from '@/stores/sidedbar-tabs-store';
 
@@ -25,7 +24,7 @@ const getAiCompletion = async () => {
   return response.json();
 };
 
-export const useBlockEditor = (reportId: string) => {
+export const useBlockEditor = () => {
   const {
     isEmpty,
     setIsEmpty,
@@ -47,7 +46,7 @@ export const useBlockEditor = (reportId: string) => {
       handleClickOn: (view, pos, node) => {
         if (node.type.name === 'citation') {
           setSelectedCitationSourceNum(node.attrs.sourceNum);
-          setSelectedTab(SidebarTabs.Citation);
+          setSelectedTab('Citation');
         }
       },
       attributes: {
@@ -57,34 +56,28 @@ export const useBlockEditor = (reportId: string) => {
         class: 'min-h-full',
       },
     },
-    // TODO: remove this once dev is done
-    onCreate: ({ editor }) => {
-      if (editor.isEmpty) {
-        // editor.commands.setContent(initialContent);
-      }
-      editor.commands.setContent(
-        reports.find((r: Report) => r.id === reportId)?.content || '',
-      );
-    },
+    // onCreate: ({ editor }) => {
+    //   content && editor.commands.setContent(content);
+    // },
     onUpdate({ editor }) {
       if (editor.isEmpty) {
         setIsEmpty(true);
       }
 
-      const saveContent = debounce(() => {
-        const report = reports.find((r: Report) => r.id === reportId);
+      // const saveContent = debounce(() => {
+      //   const report = reports.find((r: Report) => r.id === reportId);
 
-        if (!report) {
-          return;
-        }
+      //   if (!report) {
+      //     return;
+      //   }
 
-        updateReport({
-          ...report,
-          content: editor.getJSON(),
-        });
-      }, 1000);
+      //   updateReport({
+      //     ...report,
+      //     content: editor.getJSON(),
+      //   });
+      // }, 1000);
 
-      saveContent();
+      // saveContent();
     },
     // onTransaction({ editor }) {
     //   if (isAiInserting) {
