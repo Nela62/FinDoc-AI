@@ -11,7 +11,7 @@ import {
   PlusSquare,
   Settings,
 } from 'lucide-react';
-import { Tooltip, TooltipTrigger, TooltipTrigger } from '../ui/Tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 // TODO: highlight the selected item and get the current route
 export const NavBar = () => {

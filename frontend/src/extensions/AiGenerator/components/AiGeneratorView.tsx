@@ -18,6 +18,7 @@ import { DropdownButton } from '@/components/ui/Dropdown';
 import { Citation } from '@/stores/citations-store';
 import { useBoundStore } from '@/providers/store-provider';
 import { markdownToHtml, markdownToJson } from '@/lib/utils/formatText';
+import { createClient } from '@/lib/supabase/client';
 
 export interface DataProps {
   text: string;
@@ -39,6 +40,7 @@ export const AiGeneratorView = ({
 
   const [previewText, setPreviewText] = useState<string>('');
   const [isFetching, setIsFetching] = useState(false);
+  const supabase = createClient();
   const textareaId = useMemo(() => uuid(), []);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const tempCitations = useRef<Citation[]>([]);
@@ -63,6 +65,12 @@ export const AiGeneratorView = ({
     setIsFetching(true);
 
     try {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+      if (!session) return;
+
       const response = await fetch(`${baseUrl}/aigenerator`, {
         method: 'POST',
         body: JSON.stringify({
@@ -73,7 +81,10 @@ export const AiGeneratorView = ({
             node_id: c.node_id,
           })),
         }),
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          Authorization: session.access_token,
+        },
       });
 
       const json = await response.json();

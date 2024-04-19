@@ -4,7 +4,6 @@ import logging
 import re
 import asyncio
 
-from app.supabase.client import service_client
 from typing import List
 
 from pydantic import BaseModel

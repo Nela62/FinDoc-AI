@@ -103,7 +103,7 @@ async def get_available_docs(cik: str):
         with TemporaryDirectory() as temp_dir:
             await download_sec_documents(output_dir=temp_dir, ciks=[cik])
         docs = (
-            service_client.table("documents")
+            client.table("documents")
             .select("*")
             .eq("cik", cik)
             .eq("year", 2023)

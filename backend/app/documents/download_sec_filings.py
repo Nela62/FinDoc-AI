@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 import asyncio
 import pdfkit
 from app.documents.file_utils import filing_exists
+
 # from fire import Fire
 from sec_edgar_downloader import Downloader
 from distutils.spawn import find_executable

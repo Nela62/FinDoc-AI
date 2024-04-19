@@ -1,5 +1,6 @@
 import { Icon } from '@/components/ui/Icon';
 import { Surface } from '@/components/ui/Surface';
+import TipTapTooltip from '@/components/ui/TipTapTooltip';
 import { Toolbar } from '@/components/ui/Toolbar';
 
 export type LinkPreviewPanelProps = {
@@ -29,11 +30,11 @@ export const LinkPreviewPanel = ({
           <Icon name="Pen" />
         </Toolbar.Button>
       </TipTapTooltip>
-      <Tooltip title="Remove link">
+      <TipTapTooltip title="Remove link">
         <Toolbar.Button onClick={onClear}>
           <Icon name="Trash2" />
         </Toolbar.Button>
-      </Tooltip>
+      </TipTapTooltip>
     </Surface>
   );
 };

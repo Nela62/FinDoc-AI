@@ -1,5 +1,5 @@
 import { NavBar } from '@/components/navBar/NavBar';
-import { TooltipProvider } from '@/components/ui/Tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 import { Header } from '@/components/header/Header';
 import { createClient } from '@/lib/supabase/server';

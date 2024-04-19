@@ -4,13 +4,14 @@ import logging
 import sys
 
 # import sentry_sdk
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from starlette.middleware.cors import CORSMiddleware
 
 # from llama_index.node_parser.text.utils import split_by_sentence_tokenizer
 
 from app.api.api import api_router
 from app.core.config import settings, AppEnvironment
+from app.supabase.client import supabase
 
 # from app.loader_io import loader_io_router
 
@@ -54,6 +55,16 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_PREFIX}/openapi.json",
 )
+
+
+@app.middleware("http")
+async def authenticate(request: Request, call_next):
+    access_token = request.headers.get("Authorization")
+    user = supabase.auth.get_user(access_token)
+    print(user)
+    if not user:
+        return {"error": "Unauthorized"}, 401
+    return await call_next(request)
 
 
 if settings.BACKEND_CORS_ORIGINS:

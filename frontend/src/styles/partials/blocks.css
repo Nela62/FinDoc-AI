@@ -58,5 +58,5 @@
 }
 
 .node-citation {
-  @apply text-accent font-semibold focus:outline-none pl-1 cursor-pointer;
+  @apply text-primary font-semibold focus:outline-none pl-1 cursor-pointer;
 }

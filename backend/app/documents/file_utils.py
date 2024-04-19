@@ -4,7 +4,6 @@ import datetime
 
 import pandas as pd
 from pydantic import BaseModel
-from app.supabase.client import service_client
 
 
 class Filing(BaseModel):
