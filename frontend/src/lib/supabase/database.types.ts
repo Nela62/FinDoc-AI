@@ -9,6 +9,110 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      citations: {
+        Row: {
+          created_at: string
+          doc_id: string | null
+          id: string
+          node_id: string | null
+          page: number | null
+          report_id: string
+          source_num: number
+          text: string
+          updated_at: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_id?: string | null
+          id?: string
+          node_id?: string | null
+          page?: number | null
+          report_id: string
+          source_num: number
+          text: string
+          updated_at?: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_id?: string | null
+          id?: string
+          node_id?: string | null
+          page?: number | null
+          report_id?: string
+          source_num?: number
+          text?: string
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "citations_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "citations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demo_citations: {
+        Row: {
+          created_at: string
+          doc_id: string | null
+          id: string
+          node_id: string | null
+          page: number | null
+          report_id: string
+          source_num: number
+          text: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          doc_id?: string | null
+          id?: string
+          node_id?: string | null
+          page?: number | null
+          report_id: string
+          source_num: number
+          text: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          doc_id?: string | null
+          id?: string
+          node_id?: string | null
+          page?: number | null
+          report_id?: string
+          source_num?: number
+          text?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_citations_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demo_reports: {
         Row: {
           company_ticker: string
@@ -102,21 +206,6 @@ export type Database = {
           updated_at?: string | null
           url?: string
           year?: number
-        }
-        Relationships: []
-      }
-      placeholder: {
-        Row: {
-          created_at: string
-          id: number
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-        }
-        Update: {
-          created_at?: string
-          id?: number
         }
         Relationships: []
       }

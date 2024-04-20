@@ -1,6 +1,6 @@
 import { useBoundStore } from '@/providers/store-provider';
 import { Citation } from '@/stores/citations-store';
-import { SidebarTabs } from '@/stores/sidedbar-tabs-store';
+import { SidebarTabs } from '@/stores/sidebar-tabs-store';
 import { IconFileTypePdf } from '@tabler/icons-react';
 import { Expand } from 'lucide-react';
 import { DocumentType } from '@/stores/documents-store';

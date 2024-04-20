@@ -6,7 +6,7 @@ import { ExtensionKit } from '@/extensions/extension-kit';
 import { useEffect } from 'react';
 import { Citation } from '@/stores/citations-store';
 import { useBoundStore } from '@/providers/store-provider';
-import { SidebarTabs } from '@/stores/sidedbar-tabs-store';
+import { SidebarTabs } from '@/stores/sidebar-tabs-store';
 
 const debounce = require('lodash.debounce');
 

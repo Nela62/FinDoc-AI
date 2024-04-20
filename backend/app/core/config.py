@@ -72,7 +72,7 @@ class Settings(PreviewPrefixedSettings):
     PROJECT_NAME: str = "finpanel_web_app"
     API_PREFIX: str = "/api"
     # DATABASE_URL: str
-    LOG_LEVEL: str = "DEBUG"
+    LOG_LEVEL: str = "INFO"
     IS_DEMO: bool = False
     IS_PULL_REQUEST: bool = False
     RENDER: bool = False

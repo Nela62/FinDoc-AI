@@ -11,7 +11,7 @@ import {
 import { Document } from '@/stores/documents-store';
 import { zoomLevels } from '@/hooks/usePdfViewer';
 import { useBoundStore } from '@/providers/store-provider';
-import { SidebarTabs } from '@/stores/sidedbar-tabs-store';
+import { SidebarTabs } from '@/stores/sidebar-tabs-store';
 import { IconArrowBack } from '@tabler/icons-react';
 
 interface PDFOptionsBarProps {

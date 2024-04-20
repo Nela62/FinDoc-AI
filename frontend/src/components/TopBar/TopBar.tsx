@@ -10,7 +10,7 @@ import {
   Stamp,
 } from 'lucide-react';
 import { useBoundStore } from '@/providers/store-provider';
-import { SidebarTabs } from '@/stores/sidedbar-tabs-store';
+import { SidebarTabs } from '@/stores/sidebar-tabs-store';
 
 // TODO: refactor sidebar buttons, change their colors when selected and add on click functionality
 

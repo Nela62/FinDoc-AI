@@ -1,22 +1,28 @@
-import { Citation } from './citations-store';
+import { clear } from 'console';
 
 export type PdfState = {
   documentId: string;
   pageNumber: number;
-  citation?: Citation;
+  citation?: number;
 };
 
 export type PdfActions = {
   setDocumentId: (documentId: string) => void;
   setPageNumber: (pageNumber: number) => void;
-  setCitation: (citation: Citation) => void;
+  setCitation: (citation: number) => void;
+  clearCitation: () => void;
 };
 
-export const createPdfSlice = (set: any) => ({
+// Does it work to set undefined like this?
+export const createPdfSlice = (set: any, get: any) => ({
   documentId: '',
   pageNumber: 1,
   citation: undefined,
   setDocumentId: (documentId: string) => set({ documentId }),
   setPageNumber: (pageNumber: number) => set({ pageNumber }),
-  setCitation: (citation: Citation) => set({ citation }),
+  setCitation: (citation: number) => {
+    get().setSelectedTab('Audit');
+    set({ citation });
+  },
+  clearCitation: () => set({ citation: undefined }),
 });
