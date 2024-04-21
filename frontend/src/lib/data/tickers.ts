@@ -1,6 +1,4 @@
-import { Option } from '@/components/ui/OldCombobox';
-
-export const tickers: Option[] = [
+export const tickers = [
   { label: 'Microsoft Corporation', value: 'MSFT' },
   { label: 'Apple Inc.', value: 'AAPL' },
   { label: 'Amazon.com Inc.', value: 'AMZN' },

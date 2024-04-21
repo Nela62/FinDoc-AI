@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import { Content } from '@tiptap/react';
 
 import { useBlockEditor } from '@/hooks/useBlockEditor';
-import { EditorToolbar } from '@/components/Toolbar';
 
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
@@ -20,8 +19,9 @@ import { Card } from '@/components/ui/card';
 import { useBoundStore } from '@/providers/store-provider';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SidebarTabs } from '@/stores/sidebar-tabs-store';
-import { RightSidebar } from '@/components/RightSidebar';
 import { EditorComponent } from './EditorComponent';
+import { EditorToolbar } from '@/components/Toolbar/EditorToolbar';
+import { RightSidebar } from '@/components/RightSidebar/RightSidebar';
 
 // TODO: Might want to add table of contents
 // TODO: add body/metrics/formatting

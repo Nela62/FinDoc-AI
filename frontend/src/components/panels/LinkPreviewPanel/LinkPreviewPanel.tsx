@@ -1,6 +1,6 @@
 import { Icon } from '@/components/ui/Icon';
 import { Surface } from '@/components/ui/Surface';
-import TipTapTooltip from '@/components/ui/TipTapTooltip';
+import TipTapTooltip from '@/components/ui/TipTapTooltip/TipTapTooltip';
 import { Toolbar } from '@/components/ui/Toolbar';
 
 export type LinkPreviewPanelProps = {

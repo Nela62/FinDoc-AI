@@ -2,11 +2,13 @@ import { Card } from '@/components/ui/card';
 import { Editor, EditorContent } from '@tiptap/react';
 import { useRef } from 'react';
 
-import { ContentItemMenu, LinkMenu } from '@/components/menus';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ImageBlockMenu from '@/extensions/ImageBlock/components/ImageBlockMenu';
-import { ColumnsMenu } from '@/extensions/MultiColumn/menus';
-import { TableColumnMenu, TableRowMenu } from '@/extensions/Table/menus';
+import { ContentItemMenu } from '@/components/menus/ContentItemMenu/ContentItemMenu';
+import LinkMenu from '@/components/menus/LinkMenu/LinkMenu';
+import ColumnsMenu from '@/extensions/MultiColumn/menus/ColumnsMenu';
+import TableRowMenu from '@/extensions/Table/menus/TableRow/TableRow';
+import TableColumnMenu from '@/extensions/Table/menus/TableColumn/TableColumn';
 
 export const EditorComponent = ({ editor }: { editor: Editor }) => {
   const menuContainerRef = useRef(null);

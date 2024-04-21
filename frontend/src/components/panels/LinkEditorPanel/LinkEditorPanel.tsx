@@ -1,7 +1,7 @@
-import { TipTapButton } from '@/components/ui/TipTapButton';
-import { TipTapToggle } from '@/components/ui/TipTapToggle';
 import { Icon } from '@/components/ui/Icon';
 import { Surface } from '@/components/ui/Surface';
+import { TipTapButton } from '@/components/ui/TipTapButton/TipTapButton';
+import { TipTapToggle } from '@/components/ui/TipTapToggle/Toggle';
 import { useState, useCallback, useMemo } from 'react';
 
 export type LinkEditorPanelProps = {

@@ -6,13 +6,13 @@ import { BubbleMenu, Editor } from '@tiptap/react';
 import { memo } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { Surface } from '@/components/ui/Surface';
-import { ColorPicker } from '@/components/panels';
 import { FontFamilyPicker } from './components/FontFamilyPicker';
 import { FontSizePicker } from './components/FontSizePicker';
 import { useTextmenuContentTypes } from './hooks/useTextmenuContentTypes';
 import { ContentTypePicker } from './components/ContentTypePicker';
 import { AIDropdown } from './components/AIDropdown';
 import { EditLinkPopover } from './components/EditLinkPopover';
+import { ColorPicker } from '@/components/panels/Colorpicker/Colorpicker';
 
 // We memorize the button so each button is not rerendered
 // on every editor state change

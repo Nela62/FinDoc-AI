@@ -1,16 +1,11 @@
+import AiGenerator from '@/extensions/AiGenerator/AiGenerator';
+import Figcaption from '@/extensions/Figcaption/Figcaption';
+import HorizontalRule from '@/extensions/HorizontalRule/HorizontalRule';
+import ImageBlock from '@/extensions/ImageBlock/ImageBlock';
+import ImageUpload from '@/extensions/ImageUpload/ImageUpload';
+import Link from '@/extensions/Link/Link';
+import { TableOfContentsNode } from '@/extensions/TableOfContentsNode/TableOfContentsNode';
 import { Editor } from '@tiptap/react';
-
-import {
-  // AiWriter,
-  // AiImage,
-  AiGenerator,
-  Figcaption,
-  HorizontalRule,
-  ImageBlock,
-  ImageUpload,
-  Link,
-} from '@/extensions';
-import { TableOfContentsNode } from '@/extensions/TableOfContentsNode';
 
 export const isTableGripSelected = (node: HTMLElement) => {
   let container = node;

@@ -2,12 +2,12 @@ import { NodeViewWrapper, NodeViewWrapperProps } from '@tiptap/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuid } from 'uuid';
-import { TipTapButton } from '@/components/ui/TipTapButton';
 import { Icon } from '@/components/ui/Icon';
 import { Citation } from '@/stores/citations-store';
 import { useBoundStore } from '@/providers/store-provider';
 import { markdownToHtml, markdownToJson } from '@/lib/utils/formatText';
 import { createClient } from '@/lib/supabase/client';
+import { TipTapButton } from '@/components/ui/TipTapButton/TipTapButton';
 
 export interface DataProps {
   text: string;

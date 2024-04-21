@@ -1,8 +1,7 @@
 'use client';
 
+import { useCallback } from 'react';
 import Tippy from '@tippyjs/react/headless';
-import React, { useCallback } from 'react';
-
 import { TippyProps, TooltipProps } from './types';
 
 const isMac =
