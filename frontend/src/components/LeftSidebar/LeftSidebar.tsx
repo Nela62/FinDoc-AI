@@ -14,7 +14,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 // TODO: highlight the selected item and get the current route
-export const NavBar = () => {
+export const LeftSidebar = () => {
   return (
     <aside className="hidden w-14 flex-col border-r bg-background sm:flex">
       <nav className="flex flex-col items-center gap-4 px-2 py-4">
