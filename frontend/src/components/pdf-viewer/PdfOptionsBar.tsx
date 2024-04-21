@@ -1,4 +1,3 @@
-// PDFOptionsBar.tsx
 import { useEffect, useState } from 'react';
 import {
   ZoomOut,
@@ -44,8 +43,7 @@ export const PDFOptionsBar: React.FC<PDFOptionsBarProps> = ({
   zoomOutEnabled,
 }) => {
   const [zoomPopoverOpen, setZoomPopoverOpen] = useState(false);
-  const { setSelectedTab, setSelectedCitationSourceNum, setDocumentId } =
-    useBoundStore((state) => state);
+  const { clearCitation, clearDocument } = useBoundStore((state) => state);
 
   const handleZoomSelection = (zoom: string) => {
     setZoomLevel(zoom);
@@ -53,9 +51,8 @@ export const PDFOptionsBar: React.FC<PDFOptionsBarProps> = ({
   };
 
   const handleGoBack = () => {
-    setSelectedTab(SidebarTabs.Audit);
-    setSelectedCitationSourceNum(null);
-    setDocumentId('');
+    clearCitation();
+    clearDocument();
   };
 
   const [inputValue, setInputValue] = useState(`${scrolledIndex + 1}`);

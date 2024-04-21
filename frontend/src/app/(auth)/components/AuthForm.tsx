@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { onDemoSubmit } from './formActions';
 import { useBoundStore } from '@/providers/store-provider';
-import { demoReports } from '@/stores/reports-store';
+// import { demoReports } from '@/stores/reports-store';
 
 const formSchema = z.object({
   password: z.string().min(2).max(50),
@@ -26,7 +26,7 @@ const formSchema = z.object({
 export type formType = z.infer<typeof formSchema>;
 
 export const AuthForm = () => {
-  const { addReports } = useBoundStore((state) => state);
+  // const { addReports } = useBoundStore((state) => state);
   const form = useForm<formType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -36,9 +36,9 @@ export const AuthForm = () => {
 
   const onSubmit = async (values: formType) => {
     await onDemoSubmit(values);
-    if (process.env.NEXT_PUBLIC_IS_DEMO === 'true') {
-      addReports(demoReports);
-    }
+    // if (process.env.NEXT_PUBLIC_IS_DEMO === 'true') {
+    //   addReports(demoReports);
+    // }
   };
 
   // TODO: add isPending control

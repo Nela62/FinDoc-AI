@@ -27,6 +27,39 @@ export default function NewReport() {
 
   type Option = { label: string; value: string };
 
+  interface OptionsState {
+    type: string;
+    companyTicker: string;
+    recommendation: Recommendation;
+    targetPrice?: string;
+  }
+  const generateReport = async (ticker: string, editor: Editor) => {
+    const company = tickers.find((t) => t.value === ticker)?.label;
+
+    if (!company) {
+      return;
+    }
+
+    editor.commands.insertContent('<h1>' + company + '</h1>');
+
+    const prompts = getPrompts(company);
+
+    for (let i = 0; i < prompts.length; i++) {
+      const res = await fetch('/api/generation', {
+        method: 'POST',
+        body: JSON.stringify({
+          company,
+          prompt: prompts[i].prompt,
+        }),
+      });
+      const body = await res.json();
+      editor.commands.insertContent('<h2>' + prompts[i].section + '</h2>');
+      editor.commands.insertContent(
+        '<p>' + body.response.replace(/\n/g, '') + '</p>',
+      );
+    }
+  };
+
   function SelectorComponent({
     topLabel,
     label,

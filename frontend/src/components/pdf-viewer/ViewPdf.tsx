@@ -1,4 +1,4 @@
-// ViewPdf.tsx
+
 import usePDFViewer from '@/hooks/usePdfViewer';
 import { PDFOptionsBar } from './PdfOptionsBar';
 import React from 'react';

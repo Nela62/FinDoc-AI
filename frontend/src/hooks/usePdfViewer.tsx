@@ -1,5 +1,4 @@
-import { Citation } from '@/stores/citations-store';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PdfFocusHandler } from '@/components/pdf-viewer/VirtualizedPdf';
 import { useBoundStore } from '@/providers/store-provider';
 import { Document } from '@/stores/documents-store';
@@ -24,12 +23,11 @@ const usePDFViewer = (file: Document) => {
   const [isPdfRendered, setIsPdfRendered] = useState(false);
   const [zoomLevelIdx, setZoomLevelIdx] = useState(startZoomLevelIdx);
 
-  const { selectedCitationSourceNum, documentId, citations } = useBoundStore(
-    (s) => s,
-  );
+  const { citation, documentId, citations } = useBoundStore((s) => s);
 
-  const selectedCitation = citations.find(
-    (c) => c.source_num === selectedCitationSourceNum,
+  const selectedCitation = useMemo(
+    () => citations.find((c) => c.source_num === citation),
+    [citations, citation],
   );
 
   const pdfFocusRef = useRef<PdfFocusHandler | null>(null);
@@ -42,7 +40,7 @@ const usePDFViewer = (file: Document) => {
   };
 
   useEffect(() => {
-    if (!selectedCitationSourceNum || !documentId) return;
+    if (!selectedCitation || !documentId) return;
 
     const activeDocumentId = documentId;
     if (activeDocumentId === file.id) {
@@ -50,7 +48,7 @@ const usePDFViewer = (file: Document) => {
         goToPage(selectedCitation.page - 1);
       }
     }
-  }, [file, selectedCitation]);
+  }, [file, documentId, selectedCitation]);
 
   const setCurrentPageNumber = useCallback((n: number) => {
     setScrolledIndex(n);

@@ -8,29 +8,52 @@ import { Card } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 
 export const RightSideBar = () => {
-  const { selectedTab, setSelectedTab } = useBoundStore((state) => state);
+  const {
+    selectedDocument,
+    setSelectedTab,
+    selectedTab,
+    citation,
+    documentId,
+  } = useBoundStore((state) => state);
 
-  // return <Card></Card>;
+  console.log(citation);
 
-  return selectedTab === 'Citation' ? (
-    <div className="pt-3 pr-3 pl-2 h-full w-5/12">
-      <InspectCitation />
-    </div>
-  ) : (
-    <Tabs value={selectedTab} onValueChange={setSelectedTab} className="">
-      <TabsList>
-        <TabsTrigger value="Audit">Audit</TabsTrigger>
-        <TabsTrigger value="Chat">Chat</TabsTrigger>
-        <TabsTrigger value="Library">Library</TabsTrigger>
-        <TabsTrigger value="Settings">Settings</TabsTrigger>
-      </TabsList>
-      <TabsContent value="Audit">
-        <Card className="mr-4 w-[360px] flex flex-col overflow-hidden relative h-full">
-          <ScrollArea className="h-[calc(100vh-114px)] w-[360px]">
-            {selectedTab === 'Audit' && <Audit />}
-          </ScrollArea>
+  return (
+    <>
+      <TabsContent value="Audit" className="mt-0">
+        {citation ? (
+          <Card className="">
+            <InspectCitation />
+          </Card>
+        ) : (
+          <Card className="w-[360px] flex flex-col overflow-hidden relative h-full">
+            <ScrollArea className="h-full w-[360px]">
+              {selectedTab === 'Audit' && <Audit />}
+            </ScrollArea>
+          </Card>
+        )}
+      </TabsContent>
+      <TabsContent value="Chat" className="mt-0">
+        <Card className="w-[360px] flex flex-col overflow-hidden relative h-full">
+          {/* <ScrollArea className="h-full w-[360px]">
+              {selectedTab === 'Audit' && <Audit />}
+            </ScrollArea> */}
         </Card>
       </TabsContent>
-    </Tabs>
+      <TabsContent value="Library" className="mt-0">
+        <Card className="w-[360px] flex flex-col overflow-hidden relative h-full">
+          {/* <ScrollArea className="h-full w-[360px]">
+              {selectedTab === 'Audit' && <Audit />}
+            </ScrollArea> */}
+        </Card>
+      </TabsContent>
+      <TabsContent value="Settings" className="mt-0">
+        <Card className="w-[360px] flex flex-col overflow-hidden relative h-full">
+          {/* <ScrollArea className="h-full w-[360px]">
+              {selectedTab === 'Audit' && <Audit />}
+            </ScrollArea> */}
+        </Card>
+      </TabsContent>
+    </>
   );
 };

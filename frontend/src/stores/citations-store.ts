@@ -19,8 +19,6 @@ export type CitationsActions = {
   addCitations: (citations: Citation[]) => void;
 };
 
-// TODO: accept and pass initial state
-
 export const createCitationsSlice = (set: any) => ({
   citations: [],
   addCitations: (newCitations: Citation[]) =>

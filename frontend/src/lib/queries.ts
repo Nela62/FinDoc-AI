@@ -12,3 +12,8 @@ export function getReportById(client: TypedSupabaseClient, url: string) {
     .throwOnError()
     .single();
 }
+
+export function fetchFile(client: TypedSupabaseClient, url: string) {
+  // return client.storage.from('public').createSignedUrl(url, 60);
+  return client.storage.from('public-documents').download(url);
+}

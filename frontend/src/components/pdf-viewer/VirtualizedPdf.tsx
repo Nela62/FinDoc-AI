@@ -2,7 +2,14 @@
 
 import type { CSSProperties } from 'react';
 
-import React, { useCallback, useState, useEffect, useRef, memo } from 'react';
+import React, {
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+  memo,
+  useMemo,
+} from 'react';
 import { forwardRef } from 'react';
 
 import { VariableSizeList as List } from 'react-window';
@@ -29,6 +36,7 @@ import { multiHighlight } from '@/lib/utils/multi-line-highlight';
 import { useBoundStore } from '@/providers/store-provider';
 import { Document as PdfDocument } from '@/stores/documents-store';
 import { createClient } from '@/lib/supabase/client';
+import { fetchFile } from '@/lib/queries';
 
 const pdfjsOptions = pdfjs.GlobalWorkerOptions;
 const pdfjsVersion = pdfjs.version;
@@ -61,9 +69,7 @@ const PageRenderer: React.FC<PageRenderer> = ({
   listWidth,
   setPageInView,
 }) => {
-  const { selectedCitationSourceNum, documentId, citations } = useBoundStore(
-    (s) => s,
-  );
+  const { citation, documentId, citations } = useBoundStore((s) => s);
   const [shouldCenter, setShouldCenter] = useState(false);
   const [isHighlighted, setIsHighlighted] = useState(false);
 
@@ -71,8 +77,9 @@ const PageRenderer: React.FC<PageRenderer> = ({
   const { ref: inViewRef, inView } = useInView({
     threshold: OBSERVER_THRESHOLD_PERCENTAGE * Math.min(1 / scale, 1),
   });
-  const selectedCitation = citations.find(
-    (c) => c.source_num === selectedCitationSourceNum,
+  const selectedCitation = useMemo(
+    () => citations.find((c) => c.source_num === citation),
+    [citations, citation],
   );
   // BUG: In-pdf link navigation doesn't work
 
@@ -126,6 +133,8 @@ const PageRenderer: React.FC<PageRenderer> = ({
   const documentFocused = documentId === file.id;
 
   // BUG: Highlighting doesn't work when clicking on citations in text editor
+
+  // TODO: fix this
   const maybeHighlight = useCallback(
     debounce(() => {
       if (
@@ -142,7 +151,7 @@ const PageRenderer: React.FC<PageRenderer> = ({
         setIsHighlighted(true);
       }
     }, 50),
-    [pageNumber, documentFocused, selectedCitationSourceNum],
+    [pageNumber, documentFocused, citation],
   );
 
   const onPageRenderSuccess = useCallback(
@@ -220,21 +229,20 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
     const supabase = createClient();
 
     const fetchPdf = useCallback(async () => {
-      const { data, error } = await supabase.storage
-        .from('public-documents')
-        .download(file.url);
+      const { data, error } = await fetchFile(supabase, file.url);
       if (error) console.log(error);
       if (!data) return;
       setPdfFile(URL.createObjectURL(data));
-    }, [file.url]);
+    }, [file.url, supabase]);
 
     useEffect(() => {
       fetchPdf();
     }, [fetchPdf]);
 
-    const { selectedCitationSourceNum, citations } = useBoundStore((s) => s);
-    const selectedCitation = citations.find(
-      (c) => c.source_num === selectedCitationSourceNum,
+    const { citation, citations } = useBoundStore((s) => s);
+    const selectedCitation = useMemo(
+      () => citations.find((c) => c.source_num === citation),
+      [citations, citation],
     );
 
     useEffect(() => {
@@ -252,6 +260,19 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
       const actualHeight = (PAGE_HEIGHT + VERTICAL_GUTTER_SIZE_PX) * scale;
       return actualHeight;
     }
+
+    const onItemClick = useCallback(
+      ({ pageNumber: itemPageNumber }: { pageNumber: string }) => {
+        const fixedPosition =
+          Number(itemPageNumber) *
+          (PAGE_HEIGHT + VERTICAL_GUTTER_SIZE_PX) *
+          scale;
+        if (listRef.current) {
+          listRef.current.scrollTo(fixedPosition);
+        }
+      },
+      [scale, listRef],
+    );
 
     useEffect(() => {
       if (!pdf) {
@@ -279,7 +300,14 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
       // BUG: this doesn't properly work. takes me to the wrong page
       selectedCitation &&
         onItemClick({ pageNumber: String(Number(selectedCitation.page) + 1) });
-    }, [pdf, setNumPages, setScaleFit, newWidthPx]);
+    }, [
+      pdf,
+      setNumPages,
+      setScaleFit,
+      newWidthPx,
+      onItemClick,
+      selectedCitation,
+    ]);
 
     React.useImperativeHandle(ref, () => ({
       // This function can be called from the parent component
@@ -287,20 +315,6 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
         onItemClick({ pageNumber: String(page) });
       },
     }));
-
-    const onItemClick = ({
-      pageNumber: itemPageNumber,
-    }: {
-      pageNumber: string;
-    }) => {
-      const fixedPosition =
-        Number(itemPageNumber) *
-        (PAGE_HEIGHT + VERTICAL_GUTTER_SIZE_PX) *
-        scale;
-      if (listRef.current) {
-        listRef.current.scrollTo(fixedPosition);
-      }
-    };
 
     const loadingDiv = () => {
       return (
@@ -338,6 +352,7 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
           >
             {/* BUG: OverflowX and OverflowY */}
             {pdf ? (
+              // TODO: change to ui component ScrollArea
               <ScrollArea.Root className="w-full overflow-hidden">
                 <List
                   ref={listRef}
