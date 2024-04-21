@@ -7,7 +7,7 @@ import { Toolbar } from '@/components/ui/Toolbar';
 import { Icon } from '@/components/ui/Icon';
 import { ImageBlockWidth } from './ImageBlockWidth';
 import { MenuProps } from '@/components/menus/types';
-import { getRenderContainer } from '@/lib/utils/getRenderContainer';
+import { getRenderContainer } from '@/lib/utils';
 
 export const ImageBlockMenu = ({
   editor,

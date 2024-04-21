@@ -2,6 +2,7 @@
   "name": "finpanel_web",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "dev": "next dev",
@@ -131,5 +132,11 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./*": "./*.ts",
+    "./font/*": "./font/*/index.ts",
+    "./dist/*": "./dist/*/index.ts"
   }
 }
