@@ -33,9 +33,7 @@ export const useBlockEditor = () => {
     isAiInserting,
     setIsAiInserting,
     setAiError,
-    setSelectedCitationSourceNum,
-    reports,
-    updateReport,
+    setCitation,
     setSelectedTab,
   } = useBoundStore((state) => state);
   // FIX: the reports don't update
@@ -45,8 +43,7 @@ export const useBlockEditor = () => {
     editorProps: {
       handleClickOn: (view, pos, node) => {
         if (node.type.name === 'citation') {
-          setSelectedCitationSourceNum(node.attrs.sourceNum);
-          setSelectedTab('Citation');
+          setCitation(node.attrs.sourceNum);
         }
       },
       attributes: {

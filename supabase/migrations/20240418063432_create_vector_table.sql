@@ -17,6 +17,7 @@ create table documents (
   period_of_report_date date not null,
   filed_as_of_date date not null,
   date_as_of_change date not null,
+  embedding vector(1024),
   primary key (id)
 );
 

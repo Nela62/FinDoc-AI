@@ -1,20 +1,9 @@
-import {
-  Extension,
-  NodeViewWrapper,
-  NodeViewWrapperProps,
-} from '@tiptap/react';
+import { NodeViewWrapper, NodeViewWrapperProps } from '@tiptap/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuid } from 'uuid';
 import { TipTapButton } from '@/components/ui/TipTapButton';
-import { Loader } from '@/components/ui/Loader';
-import { Panel, PanelHeadline } from '@/components/ui/Panel';
 import { Icon } from '@/components/ui/Icon';
-
-import * as Dropdown from '@radix-ui/react-dropdown-menu';
-import { Toolbar } from '@/components/ui/Toolbar';
-import { Surface } from '@/components/ui/Surface';
-import { DropdownButton } from '@/components/ui/Dropdown';
 import { Citation } from '@/stores/citations-store';
 import { useBoundStore } from '@/providers/store-provider';
 import { markdownToHtml, markdownToJson } from '@/lib/utils/formatText';
@@ -35,9 +24,6 @@ export const AiGeneratorView = ({
   deleteNode,
 }: NodeViewWrapperProps) => {
   const promptType: string = node.attrs.promptType;
-  // const text =
-  //   "Based on the provided context, Apple has a minority market share in the global smartphone, personal computer and tablet markets compared to its competitors. This smaller market share can make third-party software developers less inclined to prioritize developing applications for Apple's platforms.\nThe context does not provide specific details on Apple's market share or position in the wearables industry compared to rivals. It also does not comment on the strength of Apple's management team or their ability to execute on future growth initiatives.\nThe information focuses more on the challenges Apple faces due to its smaller market share in certain product categories, and the potential impacts on the availability of third-party software for its devices. Additional context would be needed to comprehensively address Apple's competitive position across its major product lines and the capabilities of its management.";
-
   const [previewText, setPreviewText] = useState<string>('');
   const [isFetching, setIsFetching] = useState(false);
   const supabase = createClient();
@@ -112,7 +98,7 @@ export const AiGeneratorView = ({
       setIsFetching(false);
       toast.error(message);
     }
-  }, [baseUrl, promptType, citations]);
+  }, [baseUrl, promptType, citations, supabase.auth]);
 
   useEffect(() => {
     generateText();

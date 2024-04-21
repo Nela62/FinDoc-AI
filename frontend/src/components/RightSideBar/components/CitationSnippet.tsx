@@ -5,16 +5,20 @@ import { IconFileTypePdf } from '@tabler/icons-react';
 import { Expand } from 'lucide-react';
 import { DocumentType } from '@/stores/documents-store';
 import { Citation } from '@/stores/citations-store';
+import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
+import { fetchDocuments } from '@/lib/queries';
+import { createClient } from '@/lib/supabase/client';
 
 // TODO: handle long text wrapping
 export const CitationSnippet = ({ citation }: { citation: Citation }) => {
-  const { citations, documents, documentId, setCitation } = useBoundStore(
-    (state) => state,
-  );
+  const { setCitation } = useBoundStore((state) => state);
+
+  const supabase = createClient();
+  const { data: documents, error } = useQuery(fetchDocuments(supabase));
 
   const doc = useMemo(
-    () => documents.find((doc) => doc.id === documentId),
-    [documentId, documents],
+    () => documents?.find((doc) => doc.id === citation.doc_id),
+    [documents, citation.doc_id],
   );
 
   if (!doc || !citation) {
@@ -50,7 +54,7 @@ export const CitationSnippet = ({ citation }: { citation: Citation }) => {
           </div>
         </div>
         {/* TODO: install a package to limit text to three lines only */}
-        <p className="text-xs mt-1 text-zinc-400 font-medium italic">
+        <p className="text-xs mt-1 text-zinc-400 italic">
           {`"${citation.text.slice(0, 141)}..."`}
         </p>
       </div>

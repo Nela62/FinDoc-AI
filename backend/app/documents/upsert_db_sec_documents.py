@@ -60,7 +60,7 @@ async def upsert_document(doc_dir: str, name: str, filing: Filing):
     doc_id = res.data[0]["id"]
     print(doc_id)
     with open(filing.file_path, "rb") as f:
-        service_client.storage.from_("public-documents").upload(
+        service_client.storage.from_("sec-filings").upload(
             file=f,
             path=doc_path,
             file_options={"content-type": "application/pdf"},
@@ -96,13 +96,15 @@ async def upsert_document(doc_dir: str, name: str, filing: Filing):
     for doc in docs:
         doc.doc_id = doc_id
 
+    vx = vector_client.get_or_create_collection(name="documents", dimension=1024)
+
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     VectorStoreIndex.from_documents(
         docs,
         storage_context=storage_context,
         service_context=service_context,
     )
-    vx = vector_client.get_or_create_collection(name="documents", dimension=1024)
+
     vx.create_index()
 
 

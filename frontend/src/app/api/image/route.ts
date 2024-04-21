@@ -1,7 +1,7 @@
-import { createServerServiceClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/client';
 
 export async function POST(req: Request) {
-  const supabase = createServerServiceClient();
+  const supabase = createClient();
   const formData = await req.formData();
   const img = formData.get('img');
 

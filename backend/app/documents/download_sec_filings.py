@@ -118,9 +118,9 @@ async def main(
 ):
     print("Creating a bucket for public documents if it doesn't exist")
     try:
-        service_client.storage.get_bucket("public-documents")
+        service_client.storage.get_bucket("sec-filings")
     except:
-        service_client.storage.create_bucket("public-documents")
+        service_client.storage.create_bucket("sec-filings")
 
     print('Downloading filings to "{}"'.format(Path(output_dir).absolute()))
     print("File Types: {}".format(file_types))

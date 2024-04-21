@@ -71,9 +71,9 @@ export type Database = {
           created_at: string
           doc_id: string | null
           id: string
-          node_id: string | null
+          node_id: string
           page: number | null
-          report_id: string
+          report_url: string
           source_num: number
           text: string
           updated_at: string
@@ -83,9 +83,9 @@ export type Database = {
           created_at?: string
           doc_id?: string | null
           id?: string
-          node_id?: string | null
+          node_id: string
           page?: number | null
-          report_id: string
+          report_url: string
           source_num: number
           text: string
           updated_at?: string
@@ -95,9 +95,9 @@ export type Database = {
           created_at?: string
           doc_id?: string | null
           id?: string
-          node_id?: string | null
+          node_id?: string
           page?: number | null
-          report_id?: string
+          report_url?: string
           source_num?: number
           text?: string
           updated_at?: string
@@ -105,11 +105,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "demo_citations_report_id_fkey"
-            columns: ["report_id"]
+            foreignKeyName: "public_demo_citations_report_url_fkey"
+            columns: ["report_url"]
             isOneToOne: false
-            referencedRelation: "reports"
-            referencedColumns: ["id"]
+            referencedRelation: "demo_reports"
+            referencedColumns: ["url"]
           },
         ]
       }

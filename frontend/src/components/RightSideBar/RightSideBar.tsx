@@ -16,8 +16,6 @@ export const RightSideBar = () => {
     documentId,
   } = useBoundStore((state) => state);
 
-  console.log(citation);
-
   return (
     <>
       <TabsContent value="Audit" className="mt-0">

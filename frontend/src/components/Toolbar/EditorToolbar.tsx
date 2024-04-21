@@ -14,6 +14,7 @@ import { ContentTypePicker } from './components/ContentTypePicker';
 import { AIDropdown } from './components/AIDropdown';
 import { EditLinkPopover } from './components/EditLinkPopover';
 import { Card } from '../ui/card';
+import { ExportButton } from '../TopBar/export/ExportButton';
 
 // We memorize the button so each button is not rerendered
 // on every editor state change
@@ -135,66 +136,57 @@ export const EditorToolbar = ({ editor }: TextMenuProps) => {
           </Surface>
         </Popover.Content>
       </Popover.Root>
-      <Popover.Root>
-        <Popover.Trigger asChild>
-          <MemoButton tooltip="More options">
-            <Icon name="MoreVertical" />
-          </MemoButton>
-        </Popover.Trigger>
-        <Popover.Content side="top" asChild>
-          <Toolbar.Wrapper>
-            <MemoButton
-              tooltip="Subscript"
-              tooltipShortcut={['Mod', '.']}
-              onClick={commands.onSubscript}
-              active={states.isSubscript}
-            >
-              <Icon name="Subscript" />
-            </MemoButton>
-            <MemoButton
-              tooltip="Superscript"
-              tooltipShortcut={['Mod', ',']}
-              onClick={commands.onSuperscript}
-              active={states.isSuperscript}
-            >
-              <Icon name="Superscript" />
-            </MemoButton>
-            <Toolbar.Divider />
-            <MemoButton
-              tooltip="Align left"
-              tooltipShortcut={['Shift', 'Mod', 'L']}
-              // onClick={commands.onAlignLeft}
-              active={states.isAlignLeft}
-            >
-              <Icon name="AlignLeft" />
-            </MemoButton>
-            <MemoButton
-              tooltip="Align center"
-              tooltipShortcut={['Shift', 'Mod', 'E']}
-              // onClick={commands.onAlignCenter}
-              active={states.isAlignCenter}
-            >
-              <Icon name="AlignCenter" />
-            </MemoButton>
-            <MemoButton
-              tooltip="Align right"
-              tooltipShortcut={['Shift', 'Mod', 'R']}
-              // onClick={commands.onAlignRight}
-              active={states.isAlignRight}
-            >
-              <Icon name="AlignRight" />
-            </MemoButton>
-            <MemoButton
-              tooltip="Justify"
-              tooltipShortcut={['Shift', 'Mod', 'J']}
-              // onClick={commands.onAlignJustify}
-              active={states.isAlignJustify}
-            >
-              <Icon name="AlignJustify" />
-            </MemoButton>
-          </Toolbar.Wrapper>
-        </Popover.Content>
-      </Popover.Root>
+      <MemoButton
+        tooltip="Subscript"
+        tooltipShortcut={['Mod', '.']}
+        onClick={commands.onSubscript}
+        active={states.isSubscript}
+      >
+        <Icon name="Subscript" />
+      </MemoButton>
+      <MemoButton
+        tooltip="Superscript"
+        tooltipShortcut={['Mod', ',']}
+        onClick={commands.onSuperscript}
+        active={states.isSuperscript}
+      >
+        <Icon name="Superscript" />
+      </MemoButton>
+      <Toolbar.Divider />
+      <MemoButton
+        tooltip="Align left"
+        tooltipShortcut={['Shift', 'Mod', 'L']}
+        // onClick={commands.onAlignLeft}
+        active={states.isAlignLeft}
+      >
+        <Icon name="AlignLeft" />
+      </MemoButton>
+      <MemoButton
+        tooltip="Align center"
+        tooltipShortcut={['Shift', 'Mod', 'E']}
+        // onClick={commands.onAlignCenter}
+        active={states.isAlignCenter}
+      >
+        <Icon name="AlignCenter" />
+      </MemoButton>
+      <MemoButton
+        tooltip="Align right"
+        tooltipShortcut={['Shift', 'Mod', 'R']}
+        // onClick={commands.onAlignRight}
+        active={states.isAlignRight}
+      >
+        <Icon name="AlignRight" />
+      </MemoButton>
+      <MemoButton
+        tooltip="Justify"
+        tooltipShortcut={['Shift', 'Mod', 'J']}
+        // onClick={commands.onAlignJustify}
+        active={states.isAlignJustify}
+      >
+        <Icon name="AlignJustify" />
+      </MemoButton>
+      <Toolbar.Divider />
+      <ExportButton editor={editor} />
     </div>
   );
 };

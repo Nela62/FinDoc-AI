@@ -9,7 +9,7 @@ import { EditorToolbar } from '@/components/Toolbar';
 
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
-import { getReportById } from '@/lib/queries';
+import { fetchCitations, fetchReportById } from '@/lib/queries';
 import {
   Recommendation,
   ReportStatus,
@@ -31,11 +31,14 @@ export const ReportPage = ({ url }: { url: string }) => {
   const { editor } = useBlockEditor();
 
   const supabase = createClient();
-  const { data, error } = useQuery(getReportById(supabase, url));
 
-  const { selectedTab, setSelectedTab, citation } = useBoundStore(
-    (state) => state,
+  const { data, error } = useQuery(fetchReportById(supabase, url));
+  const { data: citationsData, error: citationsError } = useQuery(
+    fetchCitations(supabase, url),
   );
+
+  const { selectedTab, setSelectedTab, addCitations, resetCitations } =
+    useBoundStore((state) => state);
 
   useEffect(() => {
     if (!data || error || !editor) {
@@ -55,6 +58,13 @@ export const ReportPage = ({ url }: { url: string }) => {
 
     editor.commands.setContent(parsedReport.json_content);
   }, [data, editor, error]);
+
+  useEffect(() => {
+    if (citationsData && citationsData.length > 0) {
+      resetCitations();
+      addCitations(citationsData);
+    }
+  }, [addCitations, resetCitations, citationsData, citationsError]);
 
   return editor ? (
     <Tabs

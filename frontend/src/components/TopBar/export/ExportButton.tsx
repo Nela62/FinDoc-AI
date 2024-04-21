@@ -2,11 +2,12 @@
 
 import { Editor, EditorContent, JSONContent } from '@tiptap/react';
 import { generateDocxFile } from './components/docxExport';
+import { Button } from '@/components/ui/button';
 
 export const ExportButton = ({ editor }: { editor: Editor }) => {
   return (
-    <div>
-      <button
+    <div className="flex text-sm">
+      {/* <button
         onClick={() => {
           const json = editor.getJSON();
           const jsonString = JSON.stringify(json, null, 2);
@@ -38,8 +39,10 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
         }}
       >
         Export to HTML
-      </button>
-      <button
+      </button> */}
+      <Button
+        variant="ghost"
+        className="text-foreground/60"
         onClick={async () => {
           const json: JSONContent = editor.getJSON();
           const blob = await generateDocxFile('ARGUS', json);
@@ -53,8 +56,8 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
           URL.revokeObjectURL(url);
         }}
       >
-        Export to DOCX
-      </button>
+        Export
+      </Button>
     </div>
   );
 };

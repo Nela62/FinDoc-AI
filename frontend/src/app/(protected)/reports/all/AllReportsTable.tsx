@@ -28,7 +28,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
-import { getDemoReports } from '@/lib/queries';
+import { fetchDemoReports } from '@/lib/queries';
 import { type Report } from '@/types/report';
 
 const columns: ColumnDef<Report>[] = [
@@ -70,7 +70,7 @@ export const AllReportsTable = () => {
     data: reports,
     error,
     isLoading,
-  } = useQuery(getDemoReports(supabase));
+  } = useQuery(fetchDemoReports(supabase));
 
   function onRowClick(row: Report) {
     console.log('clicked on row');
