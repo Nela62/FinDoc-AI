@@ -21,7 +21,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SidebarTabs } from '@/stores/sidebar-tabs-store';
 import { EditorComponent } from './EditorComponent';
 import { EditorToolbar } from '@/components/Toolbar/EditorToolbar';
-import { RightSidebar } from '@/components/RightSidebar/RightSidebar';
+import { Sidebar } from '@/components/Sidebar/Sidebar';
 
 // TODO: Might want to add table of contents
 // TODO: add body/metrics/formatting
@@ -104,7 +104,7 @@ export const ReportPage = ({ url }: { url: string }) => {
       <div className="flex gap-3 h-[calc(100vh-120px)]">
         <EditorComponent editor={editor} />
         {/* BUG: why does this rerender every time an editor rerenders */}
-        <RightSidebar />
+        <Sidebar />
       </div>
     </Tabs>
   ) : (

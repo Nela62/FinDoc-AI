@@ -5,9 +5,9 @@ import { InspectCitation } from './components/InspectCitation';
 import { Audit } from './components/Audit';
 import { ScrollArea } from '../ui/scroll-area';
 import { Card } from '../ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { TabsContent } from '../ui/tabs';
 
-export const RightSidebar = () => {
+export const Sidebar = () => {
   const {
     selectedDocument,
     setSelectedTab,
