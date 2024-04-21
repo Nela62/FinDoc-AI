@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation';
+
 export default function Home() {
-  return <div className="flex max-w-5xl mx-auto py-4 h-full"></div>;
+  return redirect('/reports/all');
 }
