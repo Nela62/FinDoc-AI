@@ -15,9 +15,7 @@ import { SidebarTabs } from '@/stores/sidebar-tabs-store';
 // TODO: refactor sidebar buttons, change their colors when selected and add on click functionality
 
 export const TopBar = ({ editor }: { editor: Editor }) => {
-  const { selectedReport, selectedTab, setSelectedTab } = useBoundStore(
-    (s) => s,
-  );
+  const { selectedTab, setSelectedTab } = useBoundStore((s) => s);
 
   return (
     <div
@@ -39,7 +37,7 @@ export const TopBar = ({ editor }: { editor: Editor }) => {
         <div className="flex ml-2 items-center gap-1 text-zinc-500">
           <p>Reports</p>
           <ChevronRight className="h-4 w-4" />
-          {selectedReport.companyTicker ? (
+          {/* {selectedReport.companyTicker ? (
             <>
               <p className="t">{selectedReport.companyTicker}</p>
 
@@ -48,7 +46,7 @@ export const TopBar = ({ editor }: { editor: Editor }) => {
             </>
           ) : (
             <p className="w-full">Create New Report</p>
-          )}
+          )} */}
         </div>
       </div>
       <div className="flex gap-4">
@@ -63,10 +61,7 @@ export const TopBar = ({ editor }: { editor: Editor }) => {
         >
           <button
             className={`${
-              selectedTab === SidebarTabs.Audit ||
-              selectedTab === SidebarTabs.Citation
-                ? 'text-white bg-accent'
-                : 'text-zinc-600'
+              selectedTab === 'Audit' ? 'text-white bg-accent' : 'text-zinc-600'
             } flex gap-1 items-center  px-2 py-1.5`}
           >
             <Stamp className="h-4 w-4" />

@@ -2,9 +2,6 @@
 
 import { API } from '@/lib/api';
 import {
-  AiWriter,
-  AiImage,
-  AiGenerator,
   CharacterCount,
   Citation,
   Color,
@@ -47,9 +44,6 @@ export const ExtensionKit = () => [
   Columns,
   TaskList,
   TaskItem.configure({ nested: true }),
-  AiWriter,
-  AiImage,
-  AiGenerator,
   Column,
   Citation,
   Selection,
