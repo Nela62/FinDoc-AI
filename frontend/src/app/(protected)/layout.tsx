@@ -1,9 +1,9 @@
-import { NavBar } from '@/components/navBar/NavBar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 import { Header } from '@/components/header/Header';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { NavBar } from '@/components/NavBar/NavBar';
 
 export default async function Layout({
   children,
