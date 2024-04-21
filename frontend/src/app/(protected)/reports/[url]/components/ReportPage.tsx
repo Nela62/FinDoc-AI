@@ -20,7 +20,7 @@ import { Card } from '@/components/ui/card';
 import { useBoundStore } from '@/providers/store-provider';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SidebarTabs } from '@/stores/sidebar-tabs-store';
-import { RightSideBar } from '@/components/RightSidebar';
+import { RightSidebar } from '@/components/RightSidebar';
 import { EditorComponent } from './EditorComponent';
 
 // TODO: Might want to add table of contents
@@ -104,7 +104,7 @@ export const ReportPage = ({ url }: { url: string }) => {
       <div className="flex gap-3 h-[calc(100vh-120px)]">
         <EditorComponent editor={editor} />
         {/* BUG: why does this rerender every time an editor rerenders */}
-        <RightSideBar />
+        <RightSidebar />
       </div>
     </Tabs>
   ) : (

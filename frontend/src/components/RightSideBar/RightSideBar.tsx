@@ -7,7 +7,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Card } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 
-export const RightSideBar = () => {
+export const RightSidebar = () => {
   const {
     selectedDocument,
     setSelectedTab,
