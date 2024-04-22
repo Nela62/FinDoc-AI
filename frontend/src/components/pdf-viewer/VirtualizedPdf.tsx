@@ -136,22 +136,23 @@ const PageRenderer: React.FC<PageRenderer> = ({
 
   // TODO: fix this
   const maybeHighlight = useCallback(
-    debounce(() => {
-      if (
-        documentFocused &&
-        selectedCitation &&
-        Number(selectedCitation.page) === pageNumber + 1 &&
-        !isHighlighted
-      ) {
-        multiHighlight(
-          selectedCitation.text,
-          pageNumber,
-          // pdfFocusState.citation.color,
-        );
-        setIsHighlighted(true);
-      }
-    }, 50),
-    [pageNumber, documentFocused, citation],
+    () =>
+      debounce(() => {
+        if (
+          documentFocused &&
+          selectedCitation &&
+          Number(selectedCitation.page) === pageNumber + 1 &&
+          !isHighlighted
+        ) {
+          multiHighlight(
+            selectedCitation.text,
+            pageNumber,
+            // pdfFocusState.citation.color,
+          );
+          setIsHighlighted(true);
+        }
+      }, 50),
+    [pageNumber, documentFocused, isHighlighted, selectedCitation],
   );
 
   const onPageRenderSuccess = useCallback(
@@ -170,12 +171,12 @@ const PageRenderer: React.FC<PageRenderer> = ({
         setShouldCenter(false);
       }
     },
-    [showPageCanvas, listWidth],
+    [showPageCanvas, listWidth, maybeHighlight],
   );
 
   useEffect(() => {
     maybeHighlight();
-  }, [documentFocused, inView]);
+  }, [documentFocused, inView, maybeHighlight]);
 
   return (
     <div
@@ -301,7 +302,7 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
       setNumPages(pdf.numPages);
       // BUG: this doesn't properly work. takes me to the wrong page
       selectedCitation &&
-        onItemClick({ pageNumber: String(Number(selectedCitation.page) + 1) });
+        onItemClick({ pageNumber: String(Number(selectedCitation.page) - 1) });
     }, [
       pdf,
       setNumPages,

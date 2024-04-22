@@ -72,11 +72,13 @@ export const Header = () => {
               <Link href={subSectionObject.href}>{subSectionObject.label}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
           {subSection !== 'new' && subSection !== 'all' && data && (
-            <BreadcrumbItem>
-              <BreadcrumbPage>{data.title}</BreadcrumbPage>
-            </BreadcrumbItem>
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{data.title}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
           )}
         </BreadcrumbList>
       </Breadcrumb>
