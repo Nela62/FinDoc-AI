@@ -22,7 +22,9 @@ export default function RootLayout({
   return (
     <ReactQueryClientProvider>
       <html lang="en" className="h-full font-sans">
-        <body className={`${inter.className} h-full flex flex-col bg-zinc-50`}>
+        <body
+          className={`${inter.className} h-full flex flex-col bg-background`}
+        >
           <main className="h-full">
             <StoreProvider>{children}</StoreProvider>
           </main>

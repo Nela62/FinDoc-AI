@@ -37,23 +37,22 @@ export const Header = () => {
       section !== 'reports' || subSection === 'new' || subSection === 'all',
   });
 
-  let breadcrumbs = [];
+  let subSectionObject = { label: '', href: '' };
 
   if (section === 'reports') {
-    breadcrumbs.push({ label: 'Reports', href: '/reports/all' });
     switch (subSection) {
       case 'all':
-        breadcrumbs.push({ label: 'All Reports', href: '/reports/all' });
+        subSectionObject = { label: 'All Reports', href: '/reports/all' };
         break;
       case 'new':
-        breadcrumbs.push({ label: 'New Report', href: '/reports/new' });
+        subSectionObject = { label: 'New Report', href: '/reports/new' };
         break;
       default:
         if (data) {
-          breadcrumbs.push(
-            { label: data.company_ticker, href: '/reports/all' },
-            { label: data.title, href: pathname },
-          );
+          subSectionObject = {
+            label: data.company_ticker,
+            href: '/reports/all',
+          };
         }
     }
   }
@@ -62,33 +61,23 @@ export const Header = () => {
     <header className="flex justify-between h-14 items-center gap-4 bg-muted/40 px-4">
       <Breadcrumb className="hidden md:flex grow">
         <BreadcrumbList>
-          {breadcrumbs.map((breadcrumb, index) => (
-            <div className="flex" key={`${breadcrumb.label} ${index}`}>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href={breadcrumb.href}>{breadcrumb.label}</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              {index !== breadcrumbs.length - 1 && <BreadcrumbSeparator />}
-            </div>
-          ))}
-          {/* <BreadcrumbItem>
+          <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="#">Reports</Link>
+              <Link href="/reports/all">Reports</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="#">AMZN</Link>
+              <Link href={subSectionObject.href}>{subSectionObject.label}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              Dec 14, 2023 - Equity Analyst Report
-            </BreadcrumbPage>
-          </BreadcrumbItem> */}
+          {subSection !== 'new' && subSection !== 'all' && data && (
+            <BreadcrumbItem>
+              <BreadcrumbPage>{data.title}</BreadcrumbPage>
+            </BreadcrumbItem>
+          )}
         </BreadcrumbList>
       </Breadcrumb>
       <Button

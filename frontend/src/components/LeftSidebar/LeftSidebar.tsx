@@ -27,8 +27,8 @@ export const LeftSidebar = () => {
             src="/white_coreline.png"
             className="transition-all group-hover:scale-110"
             alt="coreline logo"
-            height={16}
-            width={16}
+            height={20}
+            width={20}
           />
           {/* <Briefcase className="h-4 w-4 transition-all group-hover:scale-110" /> */}
           <span className="sr-only">Acme Inc</span>
@@ -40,10 +40,10 @@ export const LeftSidebar = () => {
               className="flex h-9 w-9 items-center justify-center rounded-lg text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
             >
               <PlusSquare className="h-5 w-5" />
-              <span className="sr-only">Create New Report</span>
+              <span className="sr-only">New Report</span>
             </Link>
           </TooltipTrigger>
-          <TooltipContent side="right">Create New Report</TooltipContent>
+          <TooltipContent side="right">New Report</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
