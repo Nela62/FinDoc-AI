@@ -122,7 +122,13 @@ export const AllReportsTable = () => {
                 Export
               </span>
             </Button>
-            <Button size="sm" className="h-7 gap-1">
+            <Button
+              size="sm"
+              className="h-7 gap-1"
+              onClick={() => {
+                router.push('/reports/new');
+              }}
+            >
               <PlusCircle className="h-3.5 w-3.5" />
               <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                 New Report
@@ -135,7 +141,7 @@ export const AllReportsTable = () => {
             <CardHeader>
               <CardTitle>Reports</CardTitle>
               <CardDescription>
-                Manage your products and view their sales performance.
+                View and manage your financial reports.
               </CardDescription>
             </CardHeader>
             <CardContent>

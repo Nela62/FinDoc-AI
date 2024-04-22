@@ -9,10 +9,16 @@ import { createClient } from '@/lib/supabase/server';
 import { AllReportsTable } from './AllReportsTable';
 import { fetchDemoReports } from '@/lib/queries';
 import { redirect } from 'next/navigation';
+import { Metadata } from 'next';
 
 // TODO: add table pagination
 // TODO: add tabler filtering
 // TODO: add export functionality
+
+export const metadata: Metadata = {
+  title: 'Coreline - View All Reports',
+  description: 'Supercharge your financial report generation',
+};
 
 export default async function ReportsPage() {
   const queryClient = new QueryClient();

@@ -18,6 +18,12 @@ import { createClient } from '@/lib/supabase/server';
 import { fetchCitations, fetchDocuments, fetchReportById } from '@/lib/queries';
 import { redirect } from 'next/navigation';
 import { ReportPage } from './components/ReportPage';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Coreline - View Report',
+  description: 'Supercharge your financial report generation',
+};
 
 export default async function Report({ params }: { params: { url: string } }) {
   const queryClient = new QueryClient();

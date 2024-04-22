@@ -6,6 +6,8 @@
 //     targetPrice: undefined,
 //   });
 
+import { Metadata } from 'next';
+
 //   const updateOption = (key: string, value: string) => {
 //     setOptions((prev) => ({ ...prev, [key]: value }));
 //   };
@@ -340,6 +342,11 @@
 //     </div>
 //   );
 // }
+
+export const metadata: Metadata = {
+  title: 'Coreline - Create a new report',
+  description: 'Supercharge your financial report generation',
+};
 
 export default function NewReport() {
   return <div>Create new report</div>;
