@@ -21,13 +21,58 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { signOut } from './actions';
+import { usePathname } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { fetchReportById } from '@/lib/queries';
+import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 
 export const Header = () => {
+  const pathname = usePathname();
+  const section = pathname.split('/')[1];
+  const subSection = pathname.split('/')[2];
+
+  const supabase = createClient();
+  const { data, error } = useQuery(fetchReportById(supabase, subSection), {
+    enabled:
+      section !== 'reports' || subSection === 'new' || subSection === 'all',
+  });
+
+  let breadcrumbs = [];
+
+  if (section === 'reports') {
+    breadcrumbs.push({ label: 'Reports', href: '/reports/all' });
+    switch (subSection) {
+      case 'all':
+        breadcrumbs.push({ label: 'All Reports', href: '/reports/all' });
+        break;
+      case 'new':
+        breadcrumbs.push({ label: 'New Report', href: '/reports/new' });
+        break;
+      default:
+        if (data) {
+          breadcrumbs.push(
+            { label: data.company_ticker, href: '/reports/all' },
+            { label: data.title, href: pathname },
+          );
+        }
+    }
+  }
+
   return (
     <header className="flex justify-between h-14 items-center gap-4 bg-muted/40 px-4">
       <Breadcrumb className="hidden md:flex grow">
         <BreadcrumbList>
-          <BreadcrumbItem>
+          {breadcrumbs.map((breadcrumb, index) => (
+            <>
+              <BreadcrumbItem key={`${breadcrumb.label} ${index}`}>
+                <BreadcrumbLink asChild>
+                  <Link href={breadcrumb.href}>{breadcrumb.label}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              {index !== breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+            </>
+          ))}
+          {/* <BreadcrumbItem>
             <BreadcrumbLink asChild>
               <Link href="#">Reports</Link>
             </BreadcrumbLink>
@@ -43,7 +88,7 @@ export const Header = () => {
             <BreadcrumbPage>
               Dec 14, 2023 - Equity Analyst Report
             </BreadcrumbPage>
-          </BreadcrumbItem>
+          </BreadcrumbItem> */}
         </BreadcrumbList>
       </Breadcrumb>
       <Button
