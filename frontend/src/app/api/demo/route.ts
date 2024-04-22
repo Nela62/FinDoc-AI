@@ -4,7 +4,14 @@ import { serviceClient } from '@/lib/supabase/service';
 export async function GET(req: Request) {
   // const { id, content } = await req.json();
 
-  // const supabase = serviceClient();
+  const supabase = serviceClient();
+  const url = await supabase.storage
+    .from('sec-filings')
+    .createSignedUrl(
+      'sec-edgar-filings/0001018724/10-K/0001018724-24-000008/primary-document.pdf',
+      3600,
+    );
+  console.log(url);
   // const { data, error } = await supabase
   //   .from('demo_citations')
   //   // .select('*')

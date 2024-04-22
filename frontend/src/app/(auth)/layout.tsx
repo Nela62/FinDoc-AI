@@ -44,7 +44,7 @@ export default function Layout({
         </Link> */}
         <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
           <div className="absolute inset-0 bg-zinc-900" />
-          <div className="relative z-20 flex gap-2 items-center text-lg font-medium">
+          <div className="relative z-20 flex gap-2 items-center text-lg font-semibold">
             <Image
               src="/white_coreline.png"
               alt="coreline logo"

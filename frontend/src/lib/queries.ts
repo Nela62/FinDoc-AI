@@ -24,8 +24,10 @@ export function fetchCitations(client: TypedSupabaseClient, url: string) {
 // TODO: experiment with using a signedUrl instead
 export function fetchFile(client: TypedSupabaseClient, url: string) {
   // return client.storage.from('sec-filings').createSignedUrl(url, 36000);
-  console.log(url);
-  return client.storage.from('sec-filings').download(url);
+  return fetch('/api/document', {
+    method: 'POST',
+    body: JSON.stringify({ url }),
+  });
 }
 
 // TODO: can I make it better?

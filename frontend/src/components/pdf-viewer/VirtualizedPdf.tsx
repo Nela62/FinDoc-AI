@@ -229,10 +229,12 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
     const supabase = createClient();
 
     const fetchPdf = useCallback(async () => {
-      const { data, error } = await fetchFile(supabase, file.url);
-      if (error) console.log(error);
-      if (!data) return;
-      setPdfFile(URL.createObjectURL(data));
+      const res = await fetchFile(supabase, file.url);
+      const url = await res.json();
+
+      if (!url) return;
+      // setPdfFile(URL.createObjectURL(data));
+      setPdfFile(url);
     }, [file.url, supabase]);
 
     useEffect(() => {

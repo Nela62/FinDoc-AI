@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Briefcase,
   Building2,
@@ -22,7 +23,14 @@ export const LeftSidebar = () => {
           href="#"
           className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
         >
-          <Briefcase className="h-4 w-4 transition-all group-hover:scale-110" />
+          <Image
+            src="/white_coreline.png"
+            className="transition-all group-hover:scale-110"
+            alt="coreline logo"
+            height={16}
+            width={16}
+          />
+          {/* <Briefcase className="h-4 w-4 transition-all group-hover:scale-110" /> */}
           <span className="sr-only">Acme Inc</span>
         </Link>
         <Tooltip>
