@@ -17,7 +17,7 @@ export default function Login({
 }: {
   searchParams: { message: string };
 }) {
-  const isDemo = process.env.IS_DEMO === 'true';
+  const isDemo = process.env.NEXT_PUBLIC_IS_DEMO === 'true';
 
   const signIn = async (values: { password: string }) => {
     'use server';
