@@ -24,12 +24,6 @@ export default async function ReportsPage() {
   const queryClient = new QueryClient();
   const supabase = createClient();
 
-  const { data, error } = await supabase.auth.getUser();
-  if (error) {
-    console.error(error);
-    throw new Error('Failed to fetch user');
-  }
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
