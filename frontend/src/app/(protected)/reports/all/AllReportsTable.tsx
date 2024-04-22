@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 import { ColumnDef } from '@tanstack/react-table';
 import { File, ListFilter, Loader, PlusCircle } from 'lucide-react';
@@ -33,7 +34,18 @@ import { type Report } from '@/types/report';
 
 const columns: ColumnDef<Report>[] = [
   { accessorKey: 'company_ticker', header: 'Ticker' },
-  { accessorKey: 'title', header: 'Title' },
+  {
+    accessorKey: 'title',
+    header: 'Title',
+    cell: ({ row }) => {
+      console.log(row);
+      return (
+        <Link className="hover:underline" href={`/reports/${row.original.url}`}>
+          {row.getValue('title')}
+        </Link>
+      );
+    },
+  },
   {
     accessorKey: 'status',
     header: 'Status',
@@ -72,85 +84,78 @@ export const AllReportsTable = () => {
     isLoading,
   } = useQuery(fetchDemoReports(supabase));
 
-  function onRowClick(row: Report) {
-    console.log('clicked on row');
-    router.push(`/reports/${row.url}`);
-  }
-
   return (
-    <Tabs defaultValue="all">
-      <div className="flex items-center">
-        <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="active">Draft</TabsTrigger>
-          <TabsTrigger value="draft">In Review</TabsTrigger>
-          <TabsTrigger value="published" className="">
-            Published
-          </TabsTrigger>
-        </TabsList>
-        <div className="ml-auto flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 gap-1">
-                <ListFilter className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                  Filter
-                </span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem checked>
-                Active
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Draft</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Archived</DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button size="sm" variant="outline" className="h-7 gap-1">
-            <File className="h-3.5 w-3.5" />
-            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Export
-            </span>
-          </Button>
-          <Button size="sm" className="h-7 gap-1">
-            <PlusCircle className="h-3.5 w-3.5" />
-            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              New Report
-            </span>
-          </Button>
+    <div className="mx-4">
+      <Tabs defaultValue="all">
+        <div className="flex items-center">
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="active">Draft</TabsTrigger>
+            <TabsTrigger value="draft">In Review</TabsTrigger>
+            <TabsTrigger value="published" className="">
+              Published
+            </TabsTrigger>
+          </TabsList>
+          <div className="ml-auto flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-7 gap-1">
+                  <ListFilter className="h-3.5 w-3.5" />
+                  <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                    Filter
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem checked>
+                  Active
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem>Draft</DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem>Archived</DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button size="sm" variant="outline" className="h-7 gap-1">
+              <File className="h-3.5 w-3.5" />
+              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                Export
+              </span>
+            </Button>
+            <Button size="sm" className="h-7 gap-1">
+              <PlusCircle className="h-3.5 w-3.5" />
+              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                New Report
+              </span>
+            </Button>
+          </div>
         </div>
-      </div>
-      <TabsContent value="all">
-        <Card x-chunk="dashboard-06-chunk-0">
-          <CardHeader>
-            <CardTitle>Reports</CardTitle>
-            <CardDescription>
-              Manage your products and view their sales performance.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {reports ? (
-              <DataTable
-                columns={columns}
-                data={reports as Report[]}
-                onRowClick={onRowClick}
-              />
-            ) : (
-              <Loader className="mr-2 h-4 w-4 animate-spin" />
+        <TabsContent value="all">
+          <Card x-chunk="dashboard-06-chunk-0">
+            <CardHeader>
+              <CardTitle>Reports</CardTitle>
+              <CardDescription>
+                Manage your products and view their sales performance.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {reports ? (
+                <DataTable columns={columns} data={reports as Report[]} />
+              ) : (
+                <Loader className="mr-2 h-4 w-4 animate-spin" />
+              )}
+            </CardContent>
+            {reports && (
+              <CardFooter>
+                <div className="text-xs text-muted-foreground">
+                  Showing <strong>1-{reports.length}</strong> of{' '}
+                  <strong>{reports.length}</strong> reports
+                </div>
+              </CardFooter>
             )}
-          </CardContent>
-          {reports && (
-            <CardFooter>
-              <div className="text-xs text-muted-foreground">
-                Showing <strong>1-{reports.length}</strong> of{' '}
-                <strong>{reports.length}</strong> reports
-              </div>
-            </CardFooter>
-          )}
-        </Card>
-      </TabsContent>
-    </Tabs>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
