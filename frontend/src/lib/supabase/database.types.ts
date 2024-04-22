@@ -113,6 +113,36 @@ export type Database = {
           },
         ]
       }
+      demo_documents_reports: {
+        Row: {
+          document_id: string | null
+          report_url: string | null
+        }
+        Insert: {
+          document_id?: string | null
+          report_url?: string | null
+        }
+        Update: {
+          document_id?: string | null
+          report_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_documents_reports_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demo_documents_reports_report_url_fkey"
+            columns: ["report_url"]
+            isOneToOne: false
+            referencedRelation: "demo_reports"
+            referencedColumns: ["url"]
+          },
+        ]
+      }
       demo_reports: {
         Row: {
           company_ticker: string
@@ -209,6 +239,39 @@ export type Database = {
         }
         Relationships: []
       }
+      documents_reports: {
+        Row: {
+          document_id: string | null
+          id: string
+          report_url: string | null
+        }
+        Insert: {
+          document_id?: string | null
+          id?: string
+          report_url?: string | null
+        }
+        Update: {
+          document_id?: string | null
+          id?: string
+          report_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_reports_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_reports_report_url_fkey"
+            columns: ["report_url"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["url"]
+          },
+        ]
+      }
       reports: {
         Row: {
           company_ticker: string
@@ -222,6 +285,7 @@ export type Database = {
           title: string
           type: string
           updated_at: string
+          url: string
           user_id: string
         }
         Insert: {
@@ -236,6 +300,7 @@ export type Database = {
           title: string
           type: string
           updated_at?: string
+          url: string
           user_id: string
         }
         Update: {
@@ -250,6 +315,7 @@ export type Database = {
           title?: string
           type?: string
           updated_at?: string
+          url?: string
           user_id?: string
         }
         Relationships: [

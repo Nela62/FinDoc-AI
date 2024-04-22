@@ -21,11 +21,18 @@ export function fetchCitations(client: TypedSupabaseClient, url: string) {
     .throwOnError();
 }
 
+// TODO: experiment with using a signedUrl instead
 export function fetchFile(client: TypedSupabaseClient, url: string) {
-  // return client.storage.from('public').createSignedUrl(url, 60);
+  // return client.storage.from('sec-filings').createSignedUrl(url, 36000);
+  console.log(url);
   return client.storage.from('sec-filings').download(url);
 }
 
-export function fetchDocuments(client: TypedSupabaseClient) {
-  return client.from('documents').select('*').throwOnError();
+// TODO: can I make it better?
+export function fetchDocuments(client: TypedSupabaseClient, url: string) {
+  return client
+    .from('demo_documents_reports')
+    .select('documents (*), demo_reports (url)')
+    .eq('demo_reports.url', url)
+    .throwOnError();
 }

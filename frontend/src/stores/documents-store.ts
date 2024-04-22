@@ -38,6 +38,7 @@ export interface DocumentsState {
 
 export type DocumentsActions = {
   addDocuments: (documents: Document[]) => void;
+  setDocuments: (documents: Document[]) => void;
 };
 
 export const createDocumentsSlice = (set: any) => ({
@@ -45,4 +46,5 @@ export const createDocumentsSlice = (set: any) => ({
   selectedDocument: null,
   addDocuments: (newDocuments: Document[]) =>
     set((state: any) => ({ documents: [...state.documents, ...newDocuments] })),
+  setDocuments: (documents: Document[]) => set({ documents }),
 });

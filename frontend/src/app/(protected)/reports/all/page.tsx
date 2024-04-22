@@ -24,11 +24,9 @@ export default async function ReportsPage() {
   const queryClient = new QueryClient();
   const supabase = createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!data.user) {
     return redirect('/login');
   }
 

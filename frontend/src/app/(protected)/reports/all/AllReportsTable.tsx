@@ -38,7 +38,6 @@ const columns: ColumnDef<Report>[] = [
     accessorKey: 'title',
     header: 'Title',
     cell: ({ row }) => {
-      console.log(row);
       return (
         <Link className="hover:underline" href={`/reports/${row.original.url}`}>
           {row.getValue('title')}

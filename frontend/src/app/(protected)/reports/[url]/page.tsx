@@ -39,7 +39,7 @@ export default async function Report({ params }: { params: { url: string } }) {
 
   await prefetchQuery(queryClient, fetchReportById(supabase, params.url));
   await prefetchQuery(queryClient, fetchCitations(supabase, params.url));
-  await prefetchQuery(queryClient, fetchDocuments(supabase));
+  await prefetchQuery(queryClient, fetchDocuments(supabase, params.url));
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

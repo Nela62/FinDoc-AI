@@ -63,14 +63,14 @@ export const Header = () => {
       <Breadcrumb className="hidden md:flex grow">
         <BreadcrumbList>
           {breadcrumbs.map((breadcrumb, index) => (
-            <>
-              <BreadcrumbItem key={`${breadcrumb.label} ${index}`}>
+            <div className="flex" key={`${breadcrumb.label} ${index}`}>
+              <BreadcrumbItem>
                 <BreadcrumbLink asChild>
                   <Link href={breadcrumb.href}>{breadcrumb.label}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               {index !== breadcrumbs.length - 1 && <BreadcrumbSeparator />}
-            </>
+            </div>
           ))}
           {/* <BreadcrumbItem>
             <BreadcrumbLink asChild>

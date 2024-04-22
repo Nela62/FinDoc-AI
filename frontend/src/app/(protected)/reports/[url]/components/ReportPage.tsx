@@ -8,7 +8,7 @@ import { useBlockEditor } from '@/hooks/useBlockEditor';
 
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
-import { fetchCitations, fetchReportById } from '@/lib/queries';
+import { fetchCitations, fetchDocuments, fetchReportById } from '@/lib/queries';
 import {
   Recommendation,
   ReportStatus,
@@ -22,6 +22,7 @@ import { SidebarTabs } from '@/stores/sidebar-tabs-store';
 import { EditorComponent } from './EditorComponent';
 import { EditorToolbar } from '@/components/Toolbar/EditorToolbar';
 import { Sidebar } from '@/components/Sidebar/Sidebar';
+import { Document } from '@/stores/documents-store';
 
 // TODO: Might want to add table of contents
 // TODO: add body/metrics/formatting
@@ -36,9 +37,18 @@ export const ReportPage = ({ url }: { url: string }) => {
   const { data: citationsData, error: citationsError } = useQuery(
     fetchCitations(supabase, url),
   );
+  const { data: documentsData, error: documentsError } = useQuery(
+    fetchDocuments(supabase, url),
+  );
 
-  const { selectedTab, setSelectedTab, addCitations, resetCitations } =
-    useBoundStore((state) => state);
+  const {
+    selectedTab,
+    setSelectedTab,
+    addCitations,
+    resetCitations,
+    documents,
+    setDocuments,
+  } = useBoundStore((state) => state);
 
   useEffect(() => {
     if (!data || error || !editor) {
@@ -65,6 +75,23 @@ export const ReportPage = ({ url }: { url: string }) => {
       addCitations(citationsData);
     }
   }, [addCitations, resetCitations, citationsData, citationsError]);
+
+  useEffect(() => {
+    if (documentsData && documentsData.length > 0) {
+      let docs: Document[] = [];
+      documentsData.forEach(
+        (d) =>
+          d.documents &&
+          docs.push({
+            ...d.documents,
+            quarter: d.documents.quarter
+              ? `Q${d.documents.quarter}`
+              : undefined,
+          }),
+      );
+      setDocuments(docs);
+    }
+  }, [documentsData, setDocuments]);
 
   return editor ? (
     <Tabs

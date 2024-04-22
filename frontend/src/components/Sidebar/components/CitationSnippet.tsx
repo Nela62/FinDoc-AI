@@ -8,18 +8,23 @@ import { Citation } from '@/stores/citations-store';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { fetchDocuments } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
+import { usePathname } from 'next/navigation';
 
 // TODO: handle long text wrapping
 export const CitationSnippet = ({ citation }: { citation: Citation }) => {
   const { setCitation } = useBoundStore((state) => state);
+  const pathname = usePathname();
 
   const supabase = createClient();
-  const { data: documents, error } = useQuery(fetchDocuments(supabase));
-
-  const doc = useMemo(
-    () => documents?.find((doc) => doc.id === citation.doc_id),
-    [documents, citation.doc_id],
+  const { data, error } = useQuery(
+    fetchDocuments(supabase, pathname.split('/')[2]),
   );
+
+  const doc = useMemo(() => {
+    if (data && data.length > 0) {
+      return data.find((d) => d.documents?.id === citation.doc_id)?.documents;
+    } else return null;
+  }, [data, citation.doc_id]);
 
   if (!doc || !citation) {
     return null;

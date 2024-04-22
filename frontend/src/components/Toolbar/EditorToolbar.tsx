@@ -34,7 +34,7 @@ export const EditorToolbar = ({ editor }: TextMenuProps) => {
   const blockOptions = useTextmenuContentTypes(editor);
 
   return (
-    <div className="flex items-center px-3">
+    <div className="flex items-center px-3 z-40">
       {/* <AIDropdown
           onCompleteSentence={commands.onCompleteSentence}
           onEmojify={commands.onEmojify}
