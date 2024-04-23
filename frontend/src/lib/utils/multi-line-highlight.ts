@@ -22,13 +22,13 @@ export const multiHighlight = (
 ) => {
   console.log(pageNumber + 1);
   const highlightColor = 'bg-yellow-200';
-  const parentDiv = document.querySelector(
-    'div[data-page-number="24"] .react-pdf__Page__textContent.textLayer',
-  );
-  if (!parentDiv) return;
-  console.log(parentDiv);
+  // const parentDiv = document.querySelector(
+  //   'div[data-page-number="24"] .react-pdf__Page__textContent.textLayer',
+  // );
+  // if (!parentDiv) return;
+  // console.log(parentDiv);
 
-  console.log(parentDiv.children.item(0));
+  // console.log(parentDiv.children.item(0));
 
   // const spans = document.querySelectorAll(
   //   `div[data-page-number='${
@@ -36,12 +36,17 @@ export const multiHighlight = (
   //   }'] .react-pdf__Page__textContent.textLayer span`,
   // );
 
-  let spans = [];
-  // parentDiv?.children.forEach(
+  // let spans = [];
+  // const spans = parentDiv?.children.forEach(
   //   (child) => child.localName === 'span' && spans.push(child),
   // );
 
-  console.log(spans);
+  // console.log(spans);
+  const spans = document.querySelectorAll(
+    `div[data-page-number='${
+      pageNumber + 1
+    }'] .react-pdf__Page__textContent.textLayer span`,
+  );
 
   const words: WordData[] = [];
   spans.forEach((span, spanIdx) => {
