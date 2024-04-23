@@ -1,3 +1,4 @@
+'use client';
 import Fuse from 'fuse.js';
 
 interface WordData {
@@ -19,12 +20,28 @@ export const multiHighlight = (
   pageNumber: number,
   color = 'finpanel-yellow',
 ) => {
-  const highlightColor = 'bg-finpanel-yellow-light';
-  const spans = document.querySelectorAll(
-    `div[data-page-number='${
-      pageNumber + 1
-    }'] .react-pdf__Page__textContent.textLayer span`,
+  console.log(pageNumber + 1);
+  const highlightColor = 'bg-yellow-200';
+  const parentDiv = document.querySelector(
+    'div[data-page-number="24"] .react-pdf__Page__textContent.textLayer',
   );
+  if (!parentDiv) return;
+  console.log(parentDiv);
+
+  console.log(parentDiv.children.item(0));
+
+  // const spans = document.querySelectorAll(
+  //   `div[data-page-number='${
+  //     pageNumber + 1
+  //   }'] .react-pdf__Page__textContent.textLayer span`,
+  // );
+
+  let spans = [];
+  // parentDiv?.children.forEach(
+  //   (child) => child.localName === 'span' && spans.push(child),
+  // );
+
+  console.log(spans);
 
   const words: WordData[] = [];
   spans.forEach((span, spanIdx) => {

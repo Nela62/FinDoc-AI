@@ -1,4 +1,3 @@
-
 import usePDFViewer from '@/hooks/usePdfViewer';
 import { PDFOptionsBar } from './PdfOptionsBar';
 import React from 'react';
@@ -31,8 +30,9 @@ export const ViewPdf: React.FC<ViewPdfProps> = ({ file }) => {
 
   return (
     <div
-      className="relative border-[0.5px] border-zinc-300 rounded-t-[12px] bg-zinc-100"
-      style={{ boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.2)' }}
+      className="relative"
+      // className="relative border-[0.5px] border-zinc-300 rounded-t-[12px] bg-zinc-100"
+      // style={{ boxShadow: '0px 1px 2px 0px rgba(0,0,0,0.2)' }}
     >
       {scaleText && (
         <PDFOptionsBar

@@ -6,6 +6,6 @@ export const PDF_HEIGHT_PERCENTAGE = 94;
 export const OBSERVER_THRESHOLD_PERCENTAGE = 0.4;
 
 // export const PDF_HEADER_SIZE_PX = 44;
-export const PDF_HEADER_SIZE_PX = 45;
+export const PDF_HEADER_SIZE_PX = 120;
 // export const PDF_SIDEBAR_SIZE_PX = 80;
 export const PDF_SIDEBAR_SIZE_PX = 0;

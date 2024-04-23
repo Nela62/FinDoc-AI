@@ -34,7 +34,6 @@ const usePDFViewer = (file: Document) => {
 
   const goToPage = (page: number) => {
     if (pdfFocusRef.current) {
-      console.log('scrolling to page', page);
       pdfFocusRef.current.scrollToPage(page);
     }
   };

@@ -101,6 +101,9 @@ const PageRenderer: React.FC<PageRenderer> = ({
     },
     [inViewRef],
   );
+  useEffect(() => {
+    // console.log(pageNumber);
+  }, [pageNumber]);
 
   useEffect(() => {
     if (inView) {
@@ -136,22 +139,21 @@ const PageRenderer: React.FC<PageRenderer> = ({
 
   // TODO: fix this
   const maybeHighlight = useCallback(
-    () =>
-      debounce(() => {
-        if (
-          documentFocused &&
-          selectedCitation &&
-          Number(selectedCitation.page) === pageNumber + 1 &&
-          !isHighlighted
-        ) {
-          multiHighlight(
-            selectedCitation.text,
-            pageNumber,
-            // pdfFocusState.citation.color,
-          );
-          setIsHighlighted(true);
-        }
-      }, 50),
+    debounce(() => {
+      if (
+        documentFocused &&
+        selectedCitation &&
+        Number(selectedCitation.page) === pageNumber + 1 &&
+        !isHighlighted
+      ) {
+        multiHighlight(
+          selectedCitation.text,
+          pageNumber,
+          // pdfFocusState.citation.color,
+        );
+        setIsHighlighted(true);
+      }
+    }, 100),
     [pageNumber, documentFocused, isHighlighted, selectedCitation],
   );
 
@@ -218,7 +220,7 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
     const windowWidth = useWindowWidth();
     const windowHeight = useWindowHeight();
 
-    const TOP_BAR_SIZE_PX = 60;
+    const TOP_BAR_SIZE_PX = 46;
     const height = (windowHeight || 0) - TOP_BAR_SIZE_PX - PDF_HEADER_SIZE_PX;
     // const newWidthPx = 0.42 * (windowWidth || 0) - 54;
     const newWidthPx = 0.42 * (windowWidth || 0) - 46;
@@ -300,7 +302,6 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
       }
       loadFirstPage().catch(() => console.log('page load error'));
       setNumPages(pdf.numPages);
-      // BUG: this doesn't properly work. takes me to the wrong page
       selectedCitation &&
         onItemClick({ pageNumber: String(Number(selectedCitation.page) - 1) });
     }, [
@@ -352,10 +353,12 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
             file={pdfFile}
             onLoadSuccess={onDocumentLoadSuccess}
             loading={loadingDiv}
+            onLoadError={(err) => {
+              console.log(err);
+            }}
           >
             {/* BUG: OverflowX and OverflowY */}
             {pdf ? (
-              // TODO: change to ui component ScrollArea
               <ScrollArea.Root className="w-full overflow-hidden">
                 <List
                   ref={listRef}
@@ -368,17 +371,20 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
                   }
                   outerElementType={ScrollArea.Viewport}
                 >
-                  {({ index, style }) => (
-                    <PageRenderer
-                      file={file}
-                      key={`page-${index}`}
-                      pageNumber={index}
-                      style={style}
-                      scale={scale}
-                      listWidth={newWidthPx}
-                      setPageInView={setIndex}
-                    />
-                  )}
+                  {({ index, style }) => {
+                    // console.log(index);
+                    return (
+                      <PageRenderer
+                        file={file}
+                        key={`page-${index}`}
+                        pageNumber={index}
+                        style={style}
+                        scale={scale}
+                        listWidth={newWidthPx}
+                        setPageInView={setIndex}
+                      />
+                    );
+                  }}
                 </List>
                 <ScrollArea.Scrollbar
                   className="flex select-none touch-none p-[1px] bg-zinc-100 transition-colors ease-out hover:bg-zinc-200 data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5"

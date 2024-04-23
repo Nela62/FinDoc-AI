@@ -20,7 +20,7 @@ export const Sidebar = () => {
     <>
       <TabsContent value="Audit" className="mt-0">
         {citation ? (
-          <Card className="">
+          <Card className=" overflow-hidden">
             <InspectCitation />
           </Card>
         ) : (
