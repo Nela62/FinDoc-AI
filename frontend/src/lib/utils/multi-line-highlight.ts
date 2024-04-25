@@ -20,28 +20,8 @@ export const multiHighlight = (
   pageNumber: number,
   color = 'finpanel-yellow',
 ) => {
-  console.log(pageNumber + 1);
   const highlightColor = 'bg-yellow-200';
-  // const parentDiv = document.querySelector(
-  //   'div[data-page-number="24"] .react-pdf__Page__textContent.textLayer',
-  // );
-  // if (!parentDiv) return;
-  // console.log(parentDiv);
 
-  // console.log(parentDiv.children.item(0));
-
-  // const spans = document.querySelectorAll(
-  //   `div[data-page-number='${
-  //     pageNumber + 1
-  //   }'] .react-pdf__Page__textContent.textLayer span`,
-  // );
-
-  // let spans = [];
-  // const spans = parentDiv?.children.forEach(
-  //   (child) => child.localName === 'span' && spans.push(child),
-  // );
-
-  // console.log(spans);
   const spans = document.querySelectorAll(
     `div[data-page-number='${
       pageNumber + 1
@@ -125,7 +105,7 @@ export const multiHighlight = (
   return true;
 };
 
-const HIGHLIGHT_CLASSNAME = 'opacity-40 saturate-[3] highlighted-by-llama ';
+const HIGHLIGHT_CLASSNAME = 'opacity-40 saturate-[3] highlighted-by-finpanel ';
 
 const highlightHtmlElement = (div: HTMLElement, color: string) => {
   const text = div.textContent || '';

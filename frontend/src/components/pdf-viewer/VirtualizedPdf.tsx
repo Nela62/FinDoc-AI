@@ -101,9 +101,6 @@ const PageRenderer: React.FC<PageRenderer> = ({
     },
     [inViewRef],
   );
-  useEffect(() => {
-    // console.log(pageNumber);
-  }, [pageNumber]);
 
   useEffect(() => {
     if (inView) {
@@ -137,25 +134,37 @@ const PageRenderer: React.FC<PageRenderer> = ({
 
   // BUG: Highlighting doesn't work when clicking on citations in text editor
 
+  const conditionalHighlight = () => {
+    // if (Number(selectedCitation.page) === pageNumber + 1)
+    //   console.log(isHighlighted);
+    if (
+      documentFocused &&
+      selectedCitation &&
+      Number(selectedCitation.page) === pageNumber + 1 &&
+      !isHighlighted
+    ) {
+      multiHighlight(
+        selectedCitation.text,
+        pageNumber,
+        // pdfFocusState.citation.color,
+      );
+      setIsHighlighted(true);
+    }
+  };
+
   // TODO: fix this
-  const maybeHighlight = useCallback(
-    debounce(() => {
-      if (
-        documentFocused &&
-        selectedCitation &&
-        Number(selectedCitation.page) === pageNumber + 1 &&
-        !isHighlighted
-      ) {
-        multiHighlight(
-          selectedCitation.text,
-          pageNumber,
-          // pdfFocusState.citation.color,
-        );
-        setIsHighlighted(true);
-      }
-    }, 100),
-    [pageNumber, documentFocused, isHighlighted, selectedCitation],
-  );
+  const maybeHighlight = useCallback(debounce(conditionalHighlight, 50), [
+    pageNumber,
+    isHighlighted,
+    selectedCitation,
+    conditionalHighlight,
+  ]);
+
+  // useEffect(() => {
+  //   return () => {
+  //     maybeHighlight.cancel();
+  //   };
+  // }, []);
 
   const onPageRenderSuccess = useCallback(
     (page: { width: number }) => {
@@ -176,9 +185,10 @@ const PageRenderer: React.FC<PageRenderer> = ({
     [showPageCanvas, listWidth, maybeHighlight],
   );
 
-  useEffect(() => {
-    maybeHighlight();
-  }, [documentFocused, inView, maybeHighlight]);
+  // useEffect(() => {
+  //   console.log('highlight useEffect');
+  //   maybeHighlight();
+  // }, [documentFocused, inView]);
 
   return (
     <div
@@ -233,11 +243,11 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
 
     const fetchPdf = useCallback(async () => {
       const res = await fetchFile(supabase, file.url);
-      const url = await res.json();
+      const blob = await res.blob();
 
-      if (!url) return;
-      // setPdfFile(URL.createObjectURL(data));
-      setPdfFile(url);
+      // if (!url) return;
+      setPdfFile(URL.createObjectURL(blob));
+      // setPdfFile(url);
     }, [file.url, supabase]);
 
     useEffect(() => {

@@ -6,9 +6,14 @@ export async function POST(req: Request) {
   const { url } = await req.json();
 
   const supabase = serviceClient();
+  // const { data, error } = await supabase.storage
+  //   .from('sec-filings')
+  //   .createSignedUrl(url, 36000);
   const { data, error } = await supabase.storage
     .from('sec-filings')
-    .createSignedUrl(url, 36000);
+    .download(url);
+  const headers = new Headers();
+  console.log(data);
 
   if (!data || error) {
     return new NextResponse(null, {
@@ -17,7 +22,16 @@ export async function POST(req: Request) {
     });
   }
 
-  return new NextResponse(JSON.stringify({ url: data.signedUrl }));
+  headers.set('Content-Type', 'application/pdf');
+  headers.set('Content-Length', data.size.toString());
+
+  return new NextResponse(data, {
+    status: 200,
+    statusText: 'OK',
+    headers,
+  });
+
+  // return new NextResponse(JSON.stringify({ url: data.signedUrl }));
   // const headers = new Headers();
 
   // headers.set('Content-Type', 'application/pdf');
