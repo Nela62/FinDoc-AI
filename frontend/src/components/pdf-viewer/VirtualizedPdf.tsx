@@ -38,12 +38,19 @@ import { Document as PdfDocument } from '@/stores/documents-store';
 import { createClient } from '@/lib/supabase/client';
 import { fetchFile } from '@/lib/queries';
 
-const pdfjsOptions = pdfjs.GlobalWorkerOptions;
-const pdfjsVersion = pdfjs.version;
-pdfjsOptions.workerSrc =
-  '//unpkg.com/pdfjs-dist@' +
-  String(pdfjsVersion) +
-  '/legacy/build/pdf.worker.min.js';
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+
+// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+//   // 'pdfjs-dist/build/pdf.worker.min.js',
+//   'pdfjs-dist@3.11.174/build/pdf.worker.js',
+//   import.meta.url,
+// ).toString();
+// const pdfjsOptions = pdfjs.GlobalWorkerOptions;
+// const pdfjsVersion = pdfjs.version;
+// pdfjsOptions.workerSrc =
+//   '//unpkg.com/pdfjs-dist@' +
+//   String(pdfjsVersion) +
+//   '/legacy/build/pdf.worker.min.js';
 
 interface PageType {
   getViewport: (arg0: { scale: number }) => { width: number };
@@ -277,7 +284,7 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
     }
 
     const onItemClick = useCallback(
-      ({ pageNumber: itemPageNumber }: { pageNumber: string }) => {
+      ({ pageNumber: itemPageNumber }: { pageNumber: number }) => {
         const fixedPosition =
           Number(itemPageNumber) *
           (PAGE_HEIGHT + VERTICAL_GUTTER_SIZE_PX) *
@@ -313,7 +320,7 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
       loadFirstPage().catch(() => console.log('page load error'));
       setNumPages(pdf.numPages);
       selectedCitation &&
-        onItemClick({ pageNumber: String(Number(selectedCitation.page) - 1) });
+        onItemClick({ pageNumber: Number(selectedCitation.page) - 1 });
     }, [
       pdf,
       setNumPages,
@@ -326,7 +333,7 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
     React.useImperativeHandle(ref, () => ({
       // This function can be called from the parent component
       scrollToPage: (page: number) => {
-        onItemClick({ pageNumber: String(page) });
+        onItemClick({ pageNumber: page });
       },
     }));
 
