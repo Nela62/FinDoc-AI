@@ -5,7 +5,8 @@ import './globals.css';
 
 import 'cal-sans';
 import { StoreProvider } from '@/providers/store-provider';
-import { ReactQueryClientProvider } from '@/components/ReactQueryClientProvider';
+import { ReactQueryClientProvider } from '@/providers/ReactQueryClientProvider';
+import { CSPostHogProvider } from '@/providers/PostHogClientProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,17 +21,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ReactQueryClientProvider>
-      <html lang="en" className="h-full font-sans">
-        <body
-          className={`${inter.className} h-full flex flex-col bg-background`}
-        >
-          <main className="h-full">
-            <StoreProvider>{children}</StoreProvider>
-          </main>
-        </body>
-        <AxiomWebVitals />
-      </html>
-    </ReactQueryClientProvider>
+    <CSPostHogProvider>
+      <ReactQueryClientProvider>
+        <html lang="en" className="h-full font-sans">
+          <body
+            className={`${inter.className} h-full flex flex-col bg-background`}
+          >
+            <main className="h-full">
+              <StoreProvider>{children}</StoreProvider>
+            </main>
+          </body>
+          <AxiomWebVitals />
+        </html>
+      </ReactQueryClientProvider>
+    </CSPostHogProvider>
   );
 }

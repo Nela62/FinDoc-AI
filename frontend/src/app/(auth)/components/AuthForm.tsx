@@ -36,9 +36,6 @@ export const AuthForm = () => {
 
   const onSubmit = async (values: formType) => {
     await onDemoSubmit(values);
-    // if (process.env.NEXT_PUBLIC_IS_DEMO === 'true') {
-    //   addReports(demoReports);
-    // }
   };
 
   // TODO: add isPending control

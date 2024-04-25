@@ -38,8 +38,10 @@ import { Table } from './Table/Table';
 import { TableRow } from './Table/Row';
 import Document from '@tiptap/extension-document';
 import { Selection } from './Selection/Selection';
+import { AiGenerator } from './AiGenerator/AiGenerator';
 
 export const ExtensionKit = () => [
+  AiGenerator,
   Document,
   Columns,
   TaskList,

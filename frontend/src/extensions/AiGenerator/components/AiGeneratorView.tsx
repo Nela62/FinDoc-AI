@@ -31,7 +31,9 @@ export const AiGeneratorView = ({
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const tempCitations = useRef<Citation[]>([]);
 
-  const { citations, addCitations } = useBoundStore((state) => state);
+  const { citations, addCitations, addDocuments } = useBoundStore(
+    (state) => state,
+  );
 
   function streamContent(content: string, delay: number) {
     let index = 0;
@@ -120,6 +122,23 @@ export const AiGeneratorView = ({
       .run();
     setPreviewText('');
     addCitations(tempCitations.current);
+    // const docs = tempCitations.current.map((c) => c.doc_id);
+    // docs.length > 0 &&
+    //   supabase
+    //     .from('documents')
+    //     .select('*')
+    //     .eq('id', docs[0] ?? '1f9bc0e7-946d-4e94-b1f2-e8ebcc9098e4')
+    //     .single()
+    //     .then(
+    //       ({ data }) =>
+    //         data &&
+    //         addDocuments([
+    //           {
+    //             ...data,
+    //             quarter: data.quarter ? `Q${data.quarter}` : undefined,
+    //           },
+    //         ]),
+    //     );
   }, [editor, from, to, addCitations, previewText]);
 
   const discard = useCallback(() => {

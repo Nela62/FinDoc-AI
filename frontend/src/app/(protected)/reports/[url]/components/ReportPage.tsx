@@ -68,7 +68,6 @@ export const ReportPage = ({ url }: { url: string }) => {
 
     editor.commands.setContent(parsedReport.json_content);
   }, [data, editor, error]);
-
   useEffect(() => {
     if (citationsData && citationsData.length > 0) {
       resetCitations();

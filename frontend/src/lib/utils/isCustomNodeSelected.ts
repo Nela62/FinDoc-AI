@@ -1,4 +1,4 @@
-import AiGenerator from '@/extensions/AiGenerator/AiGenerator';
+import { AiGenerator } from '@/extensions/AiGenerator/AiGenerator';
 import Figcaption from '@/extensions/Figcaption/Figcaption';
 import HorizontalRule from '@/extensions/HorizontalRule/HorizontalRule';
 import ImageBlock from '@/extensions/ImageBlock/ImageBlock';

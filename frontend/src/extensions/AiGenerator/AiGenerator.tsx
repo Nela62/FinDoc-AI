@@ -102,5 +102,3 @@ export const AiGenerator = Node.create({
     return ReactNodeViewRenderer(AiGeneratorView);
   },
 });
-
-export default AiGenerator;
