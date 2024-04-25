@@ -83,9 +83,9 @@ export const AiGeneratorView = ({
         return;
       }
 
-      // streamContent(text, 10);
+      streamContent(text, 10);
 
-      setPreviewText(text);
+      // setPreviewText(text);
 
       setIsFetching(false);
     } catch (errPayload: any) {

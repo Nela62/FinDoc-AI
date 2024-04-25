@@ -172,6 +172,16 @@ export const GROUPS: Group[] = [
         action: (editor) =>
           editor.chain().focus().setAiGenerator('competitive_advantages').run(),
       },
+      {
+        name: 'aiInvestmentThesis',
+        label: 'Investment Thesis',
+        iconName: 'Banknote',
+        description: 'Generate an investment thesis for the selected company',
+        shouldBeHidden: (editor) => editor.isActive('columns'),
+        // action: (editor) => editor.chain().focus().setAiCompetitiveAdvantages().run(),
+        action: (editor) =>
+          editor.chain().focus().setAiGenerator('investment_thesis').run(),
+      },
     ],
   },
 ];
