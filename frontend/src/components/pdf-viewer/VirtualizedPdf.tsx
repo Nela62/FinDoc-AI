@@ -40,18 +40,6 @@ import { fetchFile } from '@/lib/queries';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
-// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-//   // 'pdfjs-dist/build/pdf.worker.min.js',
-//   'pdfjs-dist@3.11.174/build/pdf.worker.js',
-//   import.meta.url,
-// ).toString();
-// const pdfjsOptions = pdfjs.GlobalWorkerOptions;
-// const pdfjsVersion = pdfjs.version;
-// pdfjsOptions.workerSrc =
-//   '//unpkg.com/pdfjs-dist@' +
-//   String(pdfjsVersion) +
-//   '/legacy/build/pdf.worker.min.js';
-
 interface PageType {
   getViewport: (arg0: { scale: number }) => { width: number };
 }

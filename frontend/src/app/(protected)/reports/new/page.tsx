@@ -5,8 +5,11 @@
 //     recommendation: Recommendation.Auto,
 //     targetPrice: undefined,
 //   });
+'use client';
 
-import { Metadata } from 'next';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 //   const updateOption = (key: string, value: string) => {
 //     setOptions((prev) => ({ ...prev, [key]: value }));
@@ -343,11 +346,35 @@ import { Metadata } from 'next';
 //   );
 // }
 
-export const metadata: Metadata = {
-  title: 'Coreline - Create a new report',
-  description: 'Supercharge your financial report generation',
-};
+// export const metadata: Metadata = {
+//   title: 'Create a new report',
+// };
+
+const formSchema = z.object({
+  reportType: z.string(),
+  companyTicker: z.string(),
+  recommendation: z.string(),
+  targetPrice: z.number().optional(),
+});
 
 export default function NewReport() {
-  return <div>Create new report</div>;
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      reportType: '',
+      companyTicker: '',
+      recommendation: 'Auto',
+      targetPrice: undefined,
+    },
+  });
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log(values);
+  }
+
+  return (
+    <div className="flex flex-col items-center h-full justify-center">
+      <h1 className="text-xl font-semibold">Create new report</h1>
+    </div>
+  );
 }
