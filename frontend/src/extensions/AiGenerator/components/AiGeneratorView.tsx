@@ -59,7 +59,7 @@ export const AiGeneratorView = ({
       } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`${baseUrl}/aigenerator`, {
+      const response = await fetch(`${baseUrl}/aigenerator/`, {
         method: 'POST',
         body: JSON.stringify({
           prompt_type: promptType,
