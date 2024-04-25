@@ -8,5 +8,9 @@ if (typeof window !== 'undefined') {
   });
 }
 export function CSPostHogProvider({ children }: { children: React.ReactNode }) {
-  return <PostHogProvider client={posthog}>{children}</PostHogProvider>;
+  if (process.env.NODE_ENV === 'production') {
+    return <PostHogProvider client={posthog}>{children}</PostHogProvider>;
+  } else {
+    return <>{children}</>;
+  }
 }
