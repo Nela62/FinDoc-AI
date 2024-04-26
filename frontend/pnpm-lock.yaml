@@ -83,6 +83,12 @@ importers:
       '@sentry/nextjs':
         specifier: ^7.111.0
         version: 7.112.2(next@14.1.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
+      '@splinetool/react-spline':
+        specifier: ^2.2.6
+        version: 2.2.6(@splinetool/runtime@1.1.9)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@splinetool/runtime':
+        specifier: ^1.1.9
+        version: 1.1.9
       '@supabase-cache-helpers/postgrest-react-query':
         specifier: ^1.6.2
         version: 1.6.2(@supabase/postgrest-js@1.15.2)(@supabase/supabase-js@2.42.5)(@tanstack/react-query@5.32.0(react@18.2.0))(react@18.2.0)
@@ -1314,6 +1320,16 @@ packages:
   '@sentry/webpack-plugin@1.21.0':
     resolution: {integrity: sha512-x0PYIMWcsTauqxgl7vWUY6sANl+XGKtx7DCVnnY7aOIIlIna0jChTAPANTfA2QrK+VK+4I/4JxatCEZBnXh3Og==}
     engines: {node: '>= 8'}
+
+  '@splinetool/react-spline@2.2.6':
+    resolution: {integrity: sha512-y9L2VEbnC6FNZZu8XMmWM9YTTTWal6kJVfP05Amf0QqDNzCSumKsJxZyGUODvuCmiAvy0PfIfEsiVKnSxvhsDw==}
+    peerDependencies:
+      '@splinetool/runtime': '*'
+      react: '>=17.0.0'
+      react-dom: '>=17.0.0'
+
+  '@splinetool/runtime@1.1.9':
+    resolution: {integrity: sha512-5hIipNKLMKF6PG3sGCX1dC9ZOLYARieF7Pw3LsbxbPrrZ65FLrH1UD2JGR3ZuDmNu13d5V7gl4ZLCroiBGml7g==}
 
   '@supabase-cache-helpers/postgrest-core@0.4.7':
     resolution: {integrity: sha512-caAzFRuWWpqQq/9TwrE1f2+jHb5rlQu4noOiKnLvtjQ4J6oedQ6Ai6OIt0bFOtKFZ5ThuuUt9Q655A8MzEtyVA==}
@@ -3224,6 +3240,10 @@ packages:
     resolution: {integrity: sha512-yBYjY9QX2hnRmZHAjG/f13MzmBzxzYgQhFrke06TTyKY5zSTEqkOeukBzIdVA3j3ulu8Qa3MbVFShV7T2RmGtQ==}
     engines: {node: '>= 0.4'}
 
+  on-change@4.0.2:
+    resolution: {integrity: sha512-cMtCyuJmTx/bg2HCpHo3ZLeF7FZnBOapLqZHr2AlLeJ5Ul0Zu2mUJJz051Fdwu/Et2YW04ZD+TtU+gVy0ACNCA==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
 
@@ -3494,6 +3514,9 @@ packages:
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
+  react-merge-refs@2.1.1:
+    resolution: {integrity: sha512-jLQXJ/URln51zskhgppGJ2ub7b2WFKGq3cl3NYKtlHoTG+dN2q7EzWrn3hN3EgPsTMvpR9tpq5ijdp7YwFZkag==}
+
   react-pdf@7.7.1:
     resolution: {integrity: sha512-cbbf/PuRtGcPPw+HLhMI1f6NSka8OJgg+j/yPWTe95Owf0fK6gmVY7OXpTxMeh92O3T3K3EzfE0ML0eXPGwR5g==}
     peerDependencies:
@@ -3657,6 +3680,9 @@ packages:
 
   secure-json-parse@2.7.0:
     resolution: {integrity: sha512-6aU+Rwsezw7VR8/nyvKTx8QpWH9FrcYiXXlqC4z5d5XQBDRqtbfsRjnwGyqbi3gddNtWHuEk9OANUotL26qKUw==}
+
+  semver-compare@1.0.0:
+    resolution: {integrity: sha512-YM3/ITh2MJ5MtzaM429anh+x2jiLVjqILF4m4oyQB18W7Ggea7BfqdH/wGMK7dDiMghv/6WG7znWMwUDzJiXow==}
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
@@ -5182,6 +5208,19 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+
+  '@splinetool/react-spline@2.2.6(@splinetool/runtime@1.1.9)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
+    dependencies:
+      '@splinetool/runtime': 1.1.9
+      lodash.debounce: 4.0.8
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      react-merge-refs: 2.1.1
+
+  '@splinetool/runtime@1.1.9':
+    dependencies:
+      on-change: 4.0.2
+      semver-compare: 1.0.0
 
   '@supabase-cache-helpers/postgrest-core@0.4.7(@supabase/postgrest-js@1.15.2)(@supabase/supabase-js@2.42.5)':
     dependencies:
@@ -7326,6 +7365,8 @@ snapshots:
       define-properties: 1.2.1
       es-object-atoms: 1.0.0
 
+  on-change@4.0.2: {}
+
   once@1.4.0:
     dependencies:
       wrappy: 1.0.2
@@ -7625,6 +7666,8 @@ snapshots:
 
   react-is@16.13.1: {}
 
+  react-merge-refs@2.1.1: {}
+
   react-pdf@7.7.1(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
       clsx: 2.1.1
@@ -7824,6 +7867,8 @@ snapshots:
       loose-envify: 1.4.0
 
   secure-json-parse@2.7.0: {}
+
+  semver-compare@1.0.0: {}
 
   semver@6.3.1: {}
 
