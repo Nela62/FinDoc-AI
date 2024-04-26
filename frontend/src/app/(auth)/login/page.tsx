@@ -1,43 +1,32 @@
 import * as React from 'react';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { SubmitButton } from '../components/SubmitButton';
-import { BrandSubmitButton } from '../components/BrandSubmitButton';
-import { AuthForm } from '../components/AuthForm';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { LoginAuthForm, formType } from './components/LoginAuthForm';
 
-// TODO: change the real login screen completely - remove password and only have OTP
-export default function Login({
-  searchParams,
-}: {
-  searchParams: { message: string };
-}) {
-  const isDemo = process.env.NEXT_PUBLIC_IS_DEMO === 'true';
-
-  const signIn = async (values: { password: string }) => {
+export default function Login() {
+  const signIn = async ({ email, password }: formType) => {
     'use server';
 
-    // const email = formData.get('email') as string;
-    const password = values.password;
     const supabase = createClient();
 
-    // const { data, error } = await supabase.auth.signInWithPassword({
-    //   email,
-    //   password,
-    // });
-
-    // if (error) {
-    //   // return redirect('/login?message=Could not authenticate user');
-    //   return redirect('/login?message=Incorrect password or email');
-    // }
-    // // TODO: fetch reports and redirect to the first one
-    // // TODO: figure out what to redirect to for the real acc
-    // return redirect('/protected');
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { error: error ? error.message : null };
   };
 
   const signUp = async (formData: FormData) => {
@@ -65,103 +54,35 @@ export default function Login({
   // TODO: add tanstack/react-query for auth and isloading
 
   return (
-    <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-      <div className="flex flex-col space-y-2 ">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {isDemo ? 'Demo Account Login' : 'Login'}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {isDemo
-            ? 'Enter the demo password to login'
-            : 'Enter your email below to login to your account'}
-        </p>
+    <div className="mx-auto flex flex-col justify-center space-y-7 w-fit">
+      <div className="flex flex-col gap-2 w-fit mx-auto items-center">
+        <Image
+          src="/coreline_logo.png"
+          alt="Coreline logo"
+          className="h-7 w-7"
+          width={0}
+          height={0}
+          sizes="100vw"
+        />
+        <h2 className="text-3xl font-semibold text-foreground">Welcome back</h2>
       </div>
-      {/* <AuthForm onSubmit={isDemo ? demoSignIn : signIn} /> */}
-      <AuthForm />
-      <div className="grid gap-2">
-        {/* <form className="animate-in">
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              {!isDemo && (
-                <>
-                  <Label className="" htmlFor="email">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    placeholder="name@example.com"
-                    type="email"
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    autoCorrect="off"
-                    required
-                    // disabled={isLoading}
-                  />
-                </>
-              )}
-
-              <Label className="mt-2" htmlFor="password">
-                Password
-              </Label>
-              <Input
-                id="password"
-                placeholder="••••••••"
-                type="password"
-                autoCapitalize="none"
-                autoCorrect="off"
-                required
-                // disabled={isLoading}
-              />
-            </div>
-            <SubmitButton
-              formAction={isDemo ? demoSignIn : signIn}
-              label={isDemo ? 'Sign In' : 'Sign In with Email'}
-            />
-            {searchParams?.message && (
-              <p className="mt-4 p-4 bg-foreground/10 text-foreground text-center">
-                {searchParams.message}
-              </p>
-            )}
-          </div>
-        </form> */}
-        {/* TODO: there must be a better way to manage demo login vs normal login */}
-        {/* TODO: the form looks ugly with all these buttons */}
-        {!isDemo && (
-          <>
-            <div className="relative my-3">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-            <BrandSubmitButton formAction={signIn} brand="Google" />
-            <BrandSubmitButton formAction={signIn} brand="Microsoft" />
-          </>
-        )}
-      </div>
-      {!isDemo && (
-        <p className="px-8 text-center text-sm text-muted-foreground">
-          By clicking continue, you agree to our{' '}
-          <Link
-            href="/terms"
-            className="underline underline-offset-4 hover:text-primary"
-          >
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link
-            href="/privacy"
-            className="underline underline-offset-4 hover:text-primary"
-          >
-            Privacy Policy
+      <Card className="max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardDescription>
+            Enter your email below to login to your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LoginAuthForm formAction={signIn} />
+        </CardContent>
+        <CardFooter className="text-sm justify-center">
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="underline ml-1">
+            Sign up
           </Link>
-          .
-        </p>
-      )}
+        </CardFooter>
+      </Card>
     </div>
   );
 }
