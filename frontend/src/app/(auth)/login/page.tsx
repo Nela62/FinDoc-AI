@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/card';
 import { LoginAuthForm, formType } from './components/LoginAuthForm';
 import { Cover } from './components/Cover';
+
 const signIn = async ({ email, password }: formType) => {
   'use server';
 
@@ -26,6 +27,7 @@ const signIn = async ({ email, password }: formType) => {
   });
   return { error: error ? error.message : null };
 };
+
 export default async function Login() {
   const supabase = createClient();
   const {

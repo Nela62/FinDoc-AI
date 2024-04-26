@@ -33,7 +33,7 @@ export default async function ReportsPage() {
   // @ts-ignore
   // BUG: waiting for fix
   // https://github.com/supabase/auth-js/issues/872
-  if (data && data.user && data.user.is_anonymous) {
+  if (data && data.user) {
     await prefetchQuery(queryClient, fetchDemoReports(supabase));
   }
 

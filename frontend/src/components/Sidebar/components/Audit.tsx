@@ -1,8 +1,21 @@
 import { useBoundStore } from '@/providers/store-provider';
 import { CitationSnippet } from './CitationSnippet';
+import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
+import { fetchCitations } from '@/lib/queries';
+import { createClient } from '@/lib/supabase/client';
+import { usePathname } from 'next/navigation';
 
 export const Audit = () => {
-  const { citations } = useBoundStore((state) => state);
+  const supabase = createClient();
+  const pathname = usePathname();
+  const { data: citations, error: citationsError } = useQuery(
+    fetchCitations(supabase, pathname.split('/').pop() as string),
+  );
+
+  if (!citations) {
+    return;
+  }
+
   return (
     <>
       <p className="italic mt-3 font-semibold text-xs text-center text-zinc-500">

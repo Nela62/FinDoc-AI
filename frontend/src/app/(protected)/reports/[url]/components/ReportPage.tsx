@@ -22,7 +22,7 @@ import { SidebarTabs } from '@/stores/sidebar-tabs-store';
 import { EditorComponent } from './EditorComponent';
 import { EditorToolbar } from '@/components/Toolbar/EditorToolbar';
 import { Sidebar } from '@/components/Sidebar/Sidebar';
-import { Document } from '@/stores/documents-store';
+import { type Document } from '@/types/document';
 
 // TODO: Might want to add table of contents
 // TODO: add body/metrics/formatting
@@ -34,21 +34,14 @@ export const ReportPage = ({ url }: { url: string }) => {
   const supabase = createClient();
 
   const { data, error } = useQuery(fetchReportById(supabase, url));
-  const { data: citationsData, error: citationsError } = useQuery(
+  const { data: citations, error: citationsError } = useQuery(
     fetchCitations(supabase, url),
   );
-  const { data: documentsData, error: documentsError } = useQuery(
+  const { data: documents, error: documentsError } = useQuery(
     fetchDocuments(supabase, url),
   );
 
-  const {
-    selectedTab,
-    setSelectedTab,
-    addCitations,
-    resetCitations,
-    documents,
-    setDocuments,
-  } = useBoundStore((state) => state);
+  const { selectedTab, setSelectedTab } = useBoundStore((state) => state);
 
   useEffect(() => {
     if (!data || error || !editor) {
@@ -68,29 +61,6 @@ export const ReportPage = ({ url }: { url: string }) => {
 
     editor.commands.setContent(parsedReport.json_content);
   }, [data, editor, error]);
-  useEffect(() => {
-    if (citationsData && citationsData.length > 0) {
-      resetCitations();
-      addCitations(citationsData);
-    }
-  }, [addCitations, resetCitations, citationsData, citationsError]);
-
-  useEffect(() => {
-    if (documentsData && documentsData.length > 0) {
-      let docs: Document[] = [];
-      documentsData.forEach(
-        (d) =>
-          d.documents &&
-          docs.push({
-            ...d.documents,
-            quarter: d.documents.quarter
-              ? `Q${d.documents.quarter}`
-              : undefined,
-          }),
-      );
-      setDocuments(docs);
-    }
-  }, [documentsData, setDocuments]);
 
   return editor ? (
     <Tabs
@@ -129,7 +99,6 @@ export const ReportPage = ({ url }: { url: string }) => {
       </Card>
       <div className="flex gap-3 h-[calc(100vh-120px)]">
         <EditorComponent editor={editor} />
-        {/* BUG: why does this rerender every time an editor rerenders */}
         <Sidebar />
       </div>
     </Tabs>

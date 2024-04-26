@@ -16,7 +16,7 @@ export type Database = {
           id: string
           node_id: string | null
           page: number | null
-          report_id: string
+          report_url: string
           source_num: number
           text: string
           updated_at: string
@@ -29,7 +29,7 @@ export type Database = {
           id?: string
           node_id?: string | null
           page?: number | null
-          report_id: string
+          report_url: string
           source_num: number
           text: string
           updated_at?: string
@@ -42,7 +42,7 @@ export type Database = {
           id?: string
           node_id?: string | null
           page?: number | null
-          report_id?: string
+          report_url?: string
           source_num?: number
           text?: string
           updated_at?: string
@@ -51,11 +51,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "citations_report_id_fkey"
-            columns: ["report_id"]
+            foreignKeyName: "citations_report_url_fkey"
+            columns: ["report_url"]
             isOneToOne: false
             referencedRelation: "reports"
-            referencedColumns: ["id"]
+            referencedColumns: ["url"]
           },
           {
             foreignKeyName: "citations_user_id_fkey"
@@ -116,14 +116,17 @@ export type Database = {
       demo_documents_reports: {
         Row: {
           document_id: string | null
+          id: string
           report_url: string | null
         }
         Insert: {
           document_id?: string | null
+          id?: string
           report_url?: string | null
         }
         Update: {
           document_id?: string | null
+          id?: string
           report_url?: string | null
         }
         Relationships: [
@@ -241,19 +244,22 @@ export type Database = {
       }
       documents_reports: {
         Row: {
-          document_id: string | null
+          document_id: string
           id: string
-          report_url: string | null
+          report_url: string
+          user_id: string
         }
         Insert: {
-          document_id?: string | null
+          document_id: string
           id?: string
-          report_url?: string | null
+          report_url: string
+          user_id?: string
         }
         Update: {
-          document_id?: string | null
+          document_id?: string
           id?: string
-          report_url?: string | null
+          report_url?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -270,15 +276,22 @@ export type Database = {
             referencedRelation: "reports"
             referencedColumns: ["url"]
           },
+          {
+            foreignKeyName: "documents_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       reports: {
         Row: {
           company_ticker: string
           created_at: string
-          html: string | null
+          html_content: string | null
           id: string
-          json: Json | null
+          json_content: Json | null
           recommendation: string | null
           status: string
           targetprice: number | null
@@ -291,9 +304,9 @@ export type Database = {
         Insert: {
           company_ticker: string
           created_at?: string
-          html?: string | null
+          html_content?: string | null
           id?: string
-          json?: Json | null
+          json_content?: Json | null
           recommendation?: string | null
           status: string
           targetprice?: number | null
@@ -306,9 +319,9 @@ export type Database = {
         Update: {
           company_ticker?: string
           created_at?: string
-          html?: string | null
+          html_content?: string | null
           id?: string
-          json?: Json | null
+          json_content?: Json | null
           recommendation?: string | null
           status?: string
           targetprice?: number | null

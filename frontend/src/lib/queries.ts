@@ -1,12 +1,12 @@
 import { TypedSupabaseClient } from '../types/supabase';
 
 export function fetchDemoReports(client: TypedSupabaseClient) {
-  return client.from('demo_reports').select('*').throwOnError();
+  return client.from('reports').select('*').throwOnError();
 }
 
 export function fetchReportById(client: TypedSupabaseClient, url: string) {
   return client
-    .from('demo_reports')
+    .from('reports')
     .select('*')
     .eq('url', url)
     .throwOnError()
@@ -15,7 +15,7 @@ export function fetchReportById(client: TypedSupabaseClient, url: string) {
 
 export function fetchCitations(client: TypedSupabaseClient, url: string) {
   return client
-    .from('demo_citations')
+    .from('citations')
     .select('node_id, text, source_num, page, doc_id')
     .eq('report_url', url)
     .throwOnError();
@@ -33,8 +33,8 @@ export function fetchFile(client: TypedSupabaseClient, url: string) {
 // TODO: can I make it better?
 export function fetchDocuments(client: TypedSupabaseClient, url: string) {
   return client
-    .from('demo_documents_reports')
-    .select('documents (*), demo_reports (url)')
-    .eq('demo_reports.url', url)
+    .from('documents_reports')
+    .select('documents (*), reports (url)')
+    .eq('reports.url', url)
     .throwOnError();
 }

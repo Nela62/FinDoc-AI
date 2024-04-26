@@ -3,12 +3,11 @@ import { useMemo } from 'react';
 
 import { IconFileTypePdf } from '@tabler/icons-react';
 import { Expand } from 'lucide-react';
-import { DocumentType } from '@/stores/documents-store';
-import { Citation } from '@/stores/citations-store';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { fetchDocuments } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
 import { usePathname } from 'next/navigation';
+import { Citation } from '@/types/citation';
 
 // TODO: handle long text wrapping
 export const CitationSnippet = ({ citation }: { citation: Citation }) => {
@@ -17,7 +16,7 @@ export const CitationSnippet = ({ citation }: { citation: Citation }) => {
 
   const supabase = createClient();
   const { data, error } = useQuery(
-    fetchDocuments(supabase, pathname.split('/')[2]),
+    fetchDocuments(supabase, pathname.split('/').pop() as string),
   );
 
   const doc = useMemo(() => {
@@ -47,9 +46,7 @@ export const CitationSnippet = ({ citation }: { citation: Citation }) => {
             <p className="text-zinc-600 font-medium text-xs">{`${
               doc.doc_type
             } ${
-              doc.doc_type === DocumentType.TenK
-                ? doc.year
-                : `${doc.quarter} ${doc.year}`
+              doc.doc_type === '10-K' ? doc.year : `${doc.quarter} ${doc.year}`
             } - Page ${citation.page}`}</p>
           </div>
 
