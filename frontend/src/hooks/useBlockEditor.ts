@@ -1,12 +1,17 @@
 'use client';
 
-import { Editor, useEditor, Node as Node, Content } from '@tiptap/react';
+import { Content, Editor, useEditor } from '@tiptap/react';
 
 import { ExtensionKit } from '@/extensions/extension-kit';
 import { useEffect } from 'react';
-import { Citation } from '@/stores/citations-store';
 import { useBoundStore } from '@/providers/store-provider';
-import { SidebarTabs } from '@/stores/sidebar-tabs-store';
+import {
+  useQuery,
+  useUpdateMutation,
+} from '@supabase-cache-helpers/postgrest-react-query';
+import { usePathname } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { fetchReportById } from '@/lib/queries';
 
 const debounce = require('lodash.debounce');
 
@@ -24,7 +29,7 @@ const getAiCompletion = async () => {
   return response.json();
 };
 
-export const useBlockEditor = () => {
+export const useBlockEditor = (reportId: string, content: Content) => {
   const {
     isEmpty,
     setIsEmpty,
@@ -36,6 +41,15 @@ export const useBlockEditor = () => {
     setCitation,
     setSelectedTab,
   } = useBoundStore((state) => state);
+
+  const supabase = createClient();
+
+  const { mutateAsync: update } = useUpdateMutation(
+    supabase.from('reports'),
+    ['id'],
+    null,
+  );
+
   // FIX: the reports don't update
   const editor = useEditor({
     autofocus: false,
@@ -53,28 +67,24 @@ export const useBlockEditor = () => {
         class: 'min-h-full',
       },
     },
-    // onCreate: ({ editor }) => {
-    //   content && editor.commands.setContent(content);
-    // },
+    onCreate: ({ editor }) => {
+      content && editor.commands.setContent(content);
+    },
+
     onUpdate({ editor }) {
       if (editor.isEmpty) {
         setIsEmpty(true);
       }
 
-      // const saveContent = debounce(() => {
-      //   const report = reports.find((r: Report) => r.id === reportId);
+      const saveContent = debounce(() => {
+        update({
+          id: reportId,
+          html_content: editor.getHTML(),
+          json_content: editor.getJSON(),
+        });
+      }, 2000);
 
-      //   if (!report) {
-      //     return;
-      //   }
-
-      //   updateReport({
-      //     ...report,
-      //     content: editor.getJSON(),
-      //   });
-      // }, 1000);
-
-      // saveContent();
+      saveContent();
     },
     // onTransaction({ editor }) {
     //   if (isAiInserting) {

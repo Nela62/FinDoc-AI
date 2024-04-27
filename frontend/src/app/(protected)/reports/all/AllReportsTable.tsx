@@ -29,7 +29,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
-import { fetchDemoReports } from '@/lib/queries';
+import { fetchReports } from '@/lib/queries';
 import { type Report } from '@/types/report';
 
 const columns: ColumnDef<Report>[] = [
@@ -77,11 +77,7 @@ export const AllReportsTable = () => {
   const router = useRouter();
   const supabase = createClient();
 
-  const {
-    data: reports,
-    error,
-    isLoading,
-  } = useQuery(fetchDemoReports(supabase));
+  const { data: reports, error, isLoading } = useQuery(fetchReports(supabase));
 
   return (
     <div className="mx-4">

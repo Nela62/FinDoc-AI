@@ -23,7 +23,7 @@ import {
 import { signOut } from './actions';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { fetchReportById } from '@/lib/queries';
+import { fetchReportByUrl } from '@/lib/queries';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 
 export const Header = () => {
@@ -32,7 +32,7 @@ export const Header = () => {
   const subSection = pathname.split('/')[2];
 
   const supabase = createClient();
-  const { data, error } = useQuery(fetchReportById(supabase, subSection), {
+  const { data, error } = useQuery(fetchReportByUrl(supabase, subSection), {
     enabled:
       section !== 'reports' || subSection === 'new' || subSection === 'all',
   });

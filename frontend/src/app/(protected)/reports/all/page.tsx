@@ -7,7 +7,7 @@ import { prefetchQuery } from '@supabase-cache-helpers/postgrest-react-query';
 
 import { createClient } from '@/lib/supabase/server';
 import { AllReportsTable } from './AllReportsTable';
-import { fetchDemoReports } from '@/lib/queries';
+import { fetchReports } from '@/lib/queries';
 import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
 
@@ -34,7 +34,7 @@ export default async function ReportsPage() {
   // BUG: waiting for fix
   // https://github.com/supabase/auth-js/issues/872
   if (data && data.user) {
-    await prefetchQuery(queryClient, fetchDemoReports(supabase));
+    await prefetchQuery(queryClient, fetchReports(supabase));
   }
 
   return (

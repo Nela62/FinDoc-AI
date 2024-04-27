@@ -15,7 +15,11 @@ export type AiState = {
 };
 import { EditorComponent } from './components/EditorComponent';
 import { createClient } from '@/lib/supabase/server';
-import { fetchCitations, fetchDocuments, fetchReportById } from '@/lib/queries';
+import {
+  fetchCitations,
+  fetchDocuments,
+  fetchReportByUrl,
+} from '@/lib/queries';
 import { redirect } from 'next/navigation';
 import { ReportPage } from './components/ReportPage';
 import { Metadata } from 'next';
@@ -37,7 +41,7 @@ export default async function Report({ params }: { params: { url: string } }) {
     return redirect('/login');
   }
 
-  await prefetchQuery(queryClient, fetchReportById(supabase, params.url));
+  await prefetchQuery(queryClient, fetchReportByUrl(supabase, params.url));
   await prefetchQuery(queryClient, fetchCitations(supabase, params.url));
   await prefetchQuery(queryClient, fetchDocuments(supabase, params.url));
 

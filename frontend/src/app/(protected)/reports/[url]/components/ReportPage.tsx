@@ -8,7 +8,11 @@ import { useBlockEditor } from '@/hooks/useBlockEditor';
 
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
-import { fetchCitations, fetchDocuments, fetchReportById } from '@/lib/queries';
+import {
+  fetchCitations,
+  fetchDocuments,
+  fetchReportByUrl,
+} from '@/lib/queries';
 import {
   Recommendation,
   ReportStatus,
@@ -29,38 +33,16 @@ import { type Document } from '@/types/document';
 // TODO: add loading skeleton
 
 export const ReportPage = ({ url }: { url: string }) => {
-  const { editor } = useBlockEditor();
-
   const supabase = createClient();
 
-  const { data, error } = useQuery(fetchReportById(supabase, url));
-  const { data: citations, error: citationsError } = useQuery(
-    fetchCitations(supabase, url),
-  );
-  const { data: documents, error: documentsError } = useQuery(
-    fetchDocuments(supabase, url),
+  const { data, error } = useQuery(fetchReportByUrl(supabase, url));
+
+  const { editor } = useBlockEditor(
+    data?.id ?? '',
+    (data?.json_content as Content) ?? '',
   );
 
   const { selectedTab, setSelectedTab } = useBoundStore((state) => state);
-
-  useEffect(() => {
-    if (!data || error || !editor) {
-      return;
-    }
-    const parsedReport: Report = {
-      ...data,
-      id: data.id ?? '',
-      type: data.type as ReportType,
-      recommendation: data.recommendation
-        ? (data.recommendation as Recommendation)
-        : undefined,
-      status: data.status as ReportStatus,
-      json_content: data.json_content as Content,
-      html_content: data.html_content as Content,
-    };
-
-    editor.commands.setContent(parsedReport.json_content);
-  }, [data, editor, error]);
 
   return editor ? (
     <Tabs

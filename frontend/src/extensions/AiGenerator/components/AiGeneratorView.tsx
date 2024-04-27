@@ -3,11 +3,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuid } from 'uuid';
 import { Icon } from '@/components/ui/Icon';
-import { Citation } from '@/stores/citations-store';
-import { useBoundStore } from '@/providers/store-provider';
 import { markdownToHtml, markdownToJson } from '@/lib/utils/formatText';
 import { createClient } from '@/lib/supabase/client';
 import { TipTapButton } from '@/components/ui/TipTapButton/TipTapButton';
+import { Citation } from '@/types/citation';
+import {
+  useInsertMutation,
+  useQuery,
+} from '@supabase-cache-helpers/postgrest-react-query';
+import { fetchCitations, fetchDocuments } from '@/lib/queries';
+import { usePathname } from 'next/navigation';
 
 export interface DataProps {
   text: string;
@@ -26,14 +31,31 @@ export const AiGeneratorView = ({
   const promptType: string = node.attrs.promptType;
   const [previewText, setPreviewText] = useState<string>('');
   const [isFetching, setIsFetching] = useState(false);
+
   const supabase = createClient();
+  const pathname = usePathname();
+
+  const { data: documents, error } = useQuery(
+    fetchDocuments(supabase, pathname.split('/').pop() as string),
+  );
+  const { data: citations, error: citationsError } = useQuery(
+    fetchCitations(supabase, pathname.split('/').pop() as string),
+  );
+
+  const { mutateAsync: insertCitations } = useInsertMutation(
+    supabase.from('citations'),
+    ['id'],
+    null,
+  );
+  const { mutateAsync: insertDocuments } = useInsertMutation(
+    supabase.from('documents_reports'),
+    ['id'],
+    null,
+  );
+
   const textareaId = useMemo(() => uuid(), []);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const tempCitations = useRef<Citation[]>([]);
-
-  const { citations, addCitations, addDocuments } = useBoundStore(
-    (state) => state,
-  );
 
   function streamContent(content: string, delay: number) {
     let index = 0;
@@ -63,11 +85,12 @@ export const AiGeneratorView = ({
         method: 'POST',
         body: JSON.stringify({
           prompt_type: promptType,
-          offset: citations.length,
-          citations: citations.map((c: Citation) => ({
-            source_id: c.source_num,
-            node_id: c.node_id,
-          })),
+          offset: citations?.length ?? 0,
+          citations:
+            citations?.map((c: Citation) => ({
+              source_id: c.source_num,
+              node_id: c.node_id,
+            })) ?? [],
         }),
         headers: {
           'content-type': 'application/json',
@@ -114,14 +137,14 @@ export const AiGeneratorView = ({
   const from = getPos();
   const to = from + node.nodeSize;
 
-  const insert = useCallback(() => {
+  const insertContent = useCallback(() => {
     editor
       .chain()
       .focus()
       .insertContentAt({ from, to }, markdownToJson(previewText))
       .run();
     setPreviewText('');
-    addCitations(tempCitations.current);
+    // insertCitations(tempCitations.current);
     // const docs = tempCitations.current.map((c) => c.doc_id);
     // docs.length > 0 &&
     //   supabase
@@ -139,7 +162,7 @@ export const AiGeneratorView = ({
     //           },
     //         ]),
     //     );
-  }, [editor, from, to, addCitations, previewText]);
+  }, [editor, from, to, previewText]);
 
   const discard = useCallback(() => {
     deleteNode();
@@ -168,7 +191,7 @@ export const AiGeneratorView = ({
           {previewText && (
             <TipTapButton
               variant="ghost"
-              onClick={insert}
+              onClick={insertContent}
               disabled={!previewText}
             >
               <Icon name="Check" />

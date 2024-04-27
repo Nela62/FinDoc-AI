@@ -1,22 +1,40 @@
 import { TypedSupabaseClient } from '../types/supabase';
 
-export function fetchDemoReports(client: TypedSupabaseClient) {
-  return client.from('reports').select('*').throwOnError();
-}
-
-export function fetchReportById(client: TypedSupabaseClient, url: string) {
+export function fetchReports(client: TypedSupabaseClient) {
   return client
     .from('reports')
-    .select('*')
+    .select(
+      'id, user_id, title, company_ticker, type, recommendation, targetprice, status, created_at, updated_at, url, html_content, json_content',
+    )
+    .throwOnError();
+}
+
+export function fetchReportByUrl(client: TypedSupabaseClient, url: string) {
+  return client
+    .from('reports')
+    .select(
+      'id, user_id, title, company_ticker, type, recommendation, targetprice, status, created_at, updated_at, url, html_content, json_content',
+    )
     .eq('url', url)
     .throwOnError()
-    .single();
+    .maybeSingle();
+}
+
+export function fetchReportById(client: TypedSupabaseClient, id: string) {
+  return client
+    .from('reports')
+    .select(
+      'id, user_id, title, company_ticker, type, recommendation, targetprice, status, created_at, updated_at, url, html_content, json_content',
+    )
+    .eq('id', id)
+    .throwOnError()
+    .maybeSingle();
 }
 
 export function fetchCitations(client: TypedSupabaseClient, url: string) {
   return client
     .from('citations')
-    .select('node_id, text, source_num, page, doc_id')
+    .select('id, node_id, text, source_num, page, doc_id')
     .eq('report_url', url)
     .throwOnError();
 }
@@ -34,7 +52,9 @@ export function fetchFile(client: TypedSupabaseClient, url: string) {
 export function fetchDocuments(client: TypedSupabaseClient, url: string) {
   return client
     .from('documents_reports')
-    .select('documents (*), reports (url)')
+    .select(
+      'documents (id, url, company_name, company_ticker, accession_number, doc_type, year, quarter, created_at, updated_at, cik, period_of_report_date, filed_as_of_date, date_as_of_change), reports (url)',
+    )
     .eq('reports.url', url)
     .throwOnError();
 }
