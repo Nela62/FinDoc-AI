@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PdfFocusHandler } from '@/components/pdf-viewer/VirtualizedPdf';
 import { useBoundStore } from '@/providers/store-provider';
-import { Document } from '@/stores/documents-store';
+import { type Document } from '@/types/document';
+import { createClient } from '@/lib/supabase/client';
+import { usePathname } from 'next/navigation';
+import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
+import { fetchCitations } from '@/lib/queries';
 
 export const zoomLevels = [
   '50%',
@@ -23,10 +27,17 @@ const usePDFViewer = (file: Document) => {
   const [isPdfRendered, setIsPdfRendered] = useState(false);
   const [zoomLevelIdx, setZoomLevelIdx] = useState(startZoomLevelIdx);
 
-  const { citation, documentId, citations } = useBoundStore((s) => s);
+  const supabase = createClient();
+
+  const pathname = usePathname();
+  const { data: citations, error: citationsError } = useQuery(
+    fetchCitations(supabase, pathname.split('/').pop() as string),
+  );
+
+  const { citation, documentId } = useBoundStore((s) => s);
 
   const selectedCitation = useMemo(
-    () => citations.find((c) => c.source_num === citation),
+    () => citations?.find((c) => c.source_num === citation),
     [citations, citation],
   );
 

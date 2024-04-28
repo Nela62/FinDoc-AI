@@ -34,9 +34,11 @@ import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import { multiHighlight } from '@/lib/utils/multi-line-highlight';
 import { useBoundStore } from '@/providers/store-provider';
-import { Document as PdfDocument } from '@/stores/documents-store';
+import { Document as PdfDocument } from '@/types/document';
 import { createClient } from '@/lib/supabase/client';
-import { fetchFile } from '@/lib/queries';
+import { fetchCitations, fetchFile } from '@/lib/queries';
+import { usePathname } from 'next/navigation';
+import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
@@ -64,16 +66,22 @@ const PageRenderer: React.FC<PageRenderer> = ({
   listWidth,
   setPageInView,
 }) => {
-  const { citation, documentId, citations } = useBoundStore((s) => s);
+  const { citation, documentId } = useBoundStore((s) => s);
   const [shouldCenter, setShouldCenter] = useState(false);
   const [isHighlighted, setIsHighlighted] = useState(false);
+
+  const supabase = createClient();
+  const pathname = usePathname();
+  const { data: citations, error: citationsError } = useQuery(
+    fetchCitations(supabase, pathname.split('/').pop() as string),
+  );
 
   // Get which page is in view from an intersection observer
   const { ref: inViewRef, inView } = useInView({
     threshold: OBSERVER_THRESHOLD_PERCENTAGE * Math.min(1 / scale, 1),
   });
   const selectedCitation = useMemo(
-    () => citations.find((c) => c.source_num === citation),
+    () => citations?.find((c) => c.source_num === citation),
     [citations, citation],
   );
   // BUG: In-pdf link navigation doesn't work
@@ -236,6 +244,11 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
 
     const supabase = createClient();
 
+    const pathname = usePathname();
+    const { data: citations, error: citationsError } = useQuery(
+      fetchCitations(supabase, pathname.split('/').pop() as string),
+    );
+
     const fetchPdf = useCallback(async () => {
       const res = await fetchFile(supabase, file.url);
       const blob = await res.blob();
@@ -249,9 +262,9 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
       fetchPdf();
     }, [fetchPdf]);
 
-    const { citation, citations } = useBoundStore((s) => s);
+    const { citation } = useBoundStore((s) => s);
     const selectedCitation = useMemo(
-      () => citations.find((c) => c.source_num === citation),
+      () => citations?.find((c) => c.source_num === citation),
       [citations, citation],
     );
 

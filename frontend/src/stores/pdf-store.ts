@@ -1,4 +1,4 @@
-import { Citation } from './citations-store';
+import { Citation } from '@/types/citation';
 
 export type PdfState = {
   documentId?: string;

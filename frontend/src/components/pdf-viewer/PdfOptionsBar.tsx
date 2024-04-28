@@ -7,11 +7,11 @@ import {
   ArrowLeft,
   MoveLeft,
 } from 'lucide-react';
-import { Document } from '@/stores/documents-store';
 import { zoomLevels } from '@/hooks/usePdfViewer';
 import { useBoundStore } from '@/providers/store-provider';
 import { SidebarTabs } from '@/stores/sidebar-tabs-store';
 import { IconArrowBack } from '@tabler/icons-react';
+import { type Document } from '@/types/document';
 
 interface PDFOptionsBarProps {
   file: Document;

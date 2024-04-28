@@ -80,7 +80,7 @@ export const AiGeneratorView = ({
         error,
       } = await supabase.auth.getSession();
       if (!session) return;
-
+      // TODO: fix citations and how text is parsed
       const response = await fetch(`${baseUrl}/aigenerator/`, {
         method: 'POST',
         body: JSON.stringify({

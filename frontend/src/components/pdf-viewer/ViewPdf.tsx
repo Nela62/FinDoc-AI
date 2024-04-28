@@ -2,7 +2,7 @@ import usePDFViewer from '@/hooks/usePdfViewer';
 import { PDFOptionsBar } from './PdfOptionsBar';
 import React from 'react';
 import MemoizedVirtualizedPDF from './VirtualizedPdf';
-import { Document } from '@/stores/documents-store';
+import { type Document } from '@/types/document';
 
 interface ViewPdfProps {
   file: Document;
