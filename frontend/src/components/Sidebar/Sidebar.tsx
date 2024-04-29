@@ -8,7 +8,7 @@ import { Card } from '../ui/card';
 import { TabsContent } from '../ui/tabs';
 
 export const Sidebar = () => {
-  const { selectedTab, citation, documentId } = useBoundStore((state) => state);
+  const { selectedTab, citation } = useBoundStore((state) => state);
 
   return (
     <>

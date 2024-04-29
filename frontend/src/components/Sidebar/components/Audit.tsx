@@ -1,18 +1,30 @@
-import { useBoundStore } from '@/providers/store-provider';
 import { CitationSnippet } from './CitationSnippet';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
-import { fetchCitations } from '@/lib/queries';
+import {
+  fetchCitations,
+  fetchDocuments,
+  getReportIdByUrl,
+} from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
 import { usePathname } from 'next/navigation';
 
 export const Audit = () => {
   const supabase = createClient();
+
   const pathname = usePathname();
+  const url = pathname.split('/').pop() as string;
+
+  const { data: report, error: reportError } = useQuery(
+    getReportIdByUrl(supabase, url),
+  );
   const { data: citations, error: citationsError } = useQuery(
-    fetchCitations(supabase, pathname.split('/').pop() as string),
+    fetchCitations(supabase, report?.id ?? ''),
+  );
+  const { data: documents, error } = useQuery(
+    fetchDocuments(supabase, report?.id ?? ''),
   );
 
-  if (!citations) {
+  if (!citations || !report) {
     return;
   }
 
@@ -25,7 +37,11 @@ export const Audit = () => {
           : `Displaying all ${citations.length} citations`}
       </p>
       {citations.map((citation) => (
-        <CitationSnippet key={citation.node_id} citation={citation} />
+        <CitationSnippet
+          key={citation.node_id}
+          citation={citation}
+          documents={documents ?? []}
+        />
       ))}
     </>
   );

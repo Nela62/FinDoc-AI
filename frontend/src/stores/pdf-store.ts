@@ -9,7 +9,7 @@ export type PdfState = {
 export type PdfActions = {
   setDocumentId: (documentId: string) => void;
   setPageNumber: (pageNumber: number) => void;
-  setCitation: (citation: number) => void;
+  setCitation: (citation: number, doc_id: string) => void;
   clearCitation: () => void;
   clearDocument: () => void;
 };
@@ -21,13 +21,11 @@ export const createPdfSlice = (set: any, get: any) => ({
   citation: undefined,
   setDocumentId: (documentId: string) => set({ documentId }),
   setPageNumber: (pageNumber: number) => set({ pageNumber }),
-  setCitation: (citation: number) => {
+  setCitation: (citation: number, doc_id: string) => {
     get().setSelectedTab('Audit');
     set({
       citation: citation,
-      documentId: get().citations.find(
-        (c: Citation) => c.source_num === citation,
-      )?.doc_id,
+      documentId: doc_id,
     });
   },
   clearDocument: () => set({ documentId: undefined }),

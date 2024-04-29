@@ -16,7 +16,7 @@ export type Database = {
           id: string
           node_id: string | null
           page: number | null
-          report_url: string
+          report_id: string
           source_num: number
           text: string
           updated_at: string
@@ -29,7 +29,7 @@ export type Database = {
           id?: string
           node_id?: string | null
           page?: number | null
-          report_url: string
+          report_id: string
           source_num: number
           text: string
           updated_at?: string
@@ -42,7 +42,7 @@ export type Database = {
           id?: string
           node_id?: string | null
           page?: number | null
-          report_url?: string
+          report_id?: string
           source_num?: number
           text?: string
           updated_at?: string
@@ -51,11 +51,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "citations_report_url_fkey"
-            columns: ["report_url"]
+            foreignKeyName: "citations_report_id_fkey"
+            columns: ["report_id"]
             isOneToOne: false
             referencedRelation: "reports"
-            referencedColumns: ["url"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "citations_user_id_fkey"
@@ -203,7 +203,7 @@ export type Database = {
           filed_as_of_date: string
           id: string
           period_of_report_date: string
-          quarter: number | null
+          quarter: string | null
           updated_at: string | null
           url: string
           year: number
@@ -219,7 +219,7 @@ export type Database = {
           filed_as_of_date: string
           id?: string
           period_of_report_date: string
-          quarter?: number | null
+          quarter?: string | null
           updated_at?: string | null
           url: string
           year: number
@@ -235,7 +235,7 @@ export type Database = {
           filed_as_of_date?: string
           id?: string
           period_of_report_date?: string
-          quarter?: number | null
+          quarter?: string | null
           updated_at?: string | null
           url?: string
           year?: number
@@ -245,21 +245,18 @@ export type Database = {
       documents_reports: {
         Row: {
           document_id: string
-          id: string
-          report_url: string
-          user_id: string
+          id: number
+          report_id: string
         }
         Insert: {
           document_id: string
-          id?: string
-          report_url: string
-          user_id?: string
+          id?: number
+          report_id: string
         }
         Update: {
           document_id?: string
-          id?: string
-          report_url?: string
-          user_id?: string
+          id?: number
+          report_id?: string
         }
         Relationships: [
           {
@@ -270,17 +267,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "documents_reports_report_url_fkey"
-            columns: ["report_url"]
+            foreignKeyName: "documents_reports_report_id_fkey"
+            columns: ["report_id"]
             isOneToOne: false
             referencedRelation: "reports"
-            referencedColumns: ["url"]
-          },
-          {
-            foreignKeyName: "documents_reports_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]

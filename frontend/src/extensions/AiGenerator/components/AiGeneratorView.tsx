@@ -11,7 +11,11 @@ import {
   useInsertMutation,
   useQuery,
 } from '@supabase-cache-helpers/postgrest-react-query';
-import { fetchCitations, fetchDocuments } from '@/lib/queries';
+import {
+  fetchCitations,
+  fetchDocuments,
+  getReportIdByUrl,
+} from '@/lib/queries';
 import { usePathname } from 'next/navigation';
 
 export interface DataProps {
@@ -31,15 +35,24 @@ export const AiGeneratorView = ({
   const promptType: string = node.attrs.promptType;
   const [previewText, setPreviewText] = useState<string>('');
   const [isFetching, setIsFetching] = useState(false);
+  const [user, setUser] = useState<string | null>(null);
 
   const supabase = createClient();
   const pathname = usePathname();
+  const reportUrl = pathname.split('/').pop() as string;
 
+  useEffect(() => {
+    supabase.auth.getUser().then((res) => {
+      if (res.data.user) setUser(res.data.user.id);
+    });
+  }, [supabase.auth]);
+
+  const { data: report } = useQuery(getReportIdByUrl(supabase, reportUrl));
   const { data: documents, error } = useQuery(
-    fetchDocuments(supabase, pathname.split('/').pop() as string),
+    fetchDocuments(supabase, report?.id ?? ''),
   );
-  const { data: citations, error: citationsError } = useQuery(
-    fetchCitations(supabase, pathname.split('/').pop() as string),
+  const { data: existingCitations, error: citationsError } = useQuery(
+    fetchCitations(supabase, report?.id ?? ''),
   );
 
   const { mutateAsync: insertCitations } = useInsertMutation(
@@ -85,9 +98,9 @@ export const AiGeneratorView = ({
         method: 'POST',
         body: JSON.stringify({
           prompt_type: promptType,
-          offset: citations?.length ?? 0,
+          offset: existingCitations?.length ?? 0,
           citations:
-            citations?.map((c: Citation) => ({
+            existingCitations?.map((c: Citation) => ({
               source_id: c.source_num,
               node_id: c.node_id,
             })) ?? [],
@@ -123,7 +136,7 @@ export const AiGeneratorView = ({
       setIsFetching(false);
       toast.error(message);
     }
-  }, [baseUrl, promptType, citations, supabase.auth]);
+  }, [baseUrl, promptType, existingCitations, supabase.auth]);
 
   useEffect(() => {
     generateText();
@@ -138,14 +151,29 @@ export const AiGeneratorView = ({
   const to = from + node.nodeSize;
 
   const insertContent = useCallback(() => {
+    if (!user || !report) return;
     editor
       .chain()
       .focus()
       .insertContentAt({ from, to }, markdownToJson(previewText))
       .run();
     setPreviewText('');
-    // insertCitations(tempCitations.current);
-    // const docs = tempCitations.current.map((c) => c.doc_id);
+    insertCitations(
+      tempCitations.current.map((c) => ({
+        ...c,
+        user_id: user,
+        report_id: report.id,
+      })),
+    );
+    const docs = tempCitations.current.reduce((acc: string[], c) => {
+      if (c.doc_id) {
+        acc.push(c.doc_id);
+      }
+      return acc;
+    }, []);
+    insertDocuments(
+      docs.map((doc) => ({ document_id: doc, report_id: report.id })),
+    );
     // docs.length > 0 &&
     //   supabase
     //     .from('documents')
@@ -162,7 +190,16 @@ export const AiGeneratorView = ({
     //           },
     //         ]),
     //     );
-  }, [editor, from, to, previewText]);
+  }, [
+    editor,
+    from,
+    to,
+    previewText,
+    insertCitations,
+    user,
+    insertDocuments,
+    report,
+  ]);
 
   const discard = useCallback(() => {
     deleteNode();

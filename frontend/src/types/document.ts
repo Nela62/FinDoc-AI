@@ -15,7 +15,7 @@ export interface SECDocument extends Ticker {
   url: string;
   year: number;
   doc_type: string;
-  quarter?: string;
+  quarter: string | null;
 }
 
 export interface NewsArticle {

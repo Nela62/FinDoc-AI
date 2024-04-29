@@ -5,7 +5,7 @@ import { type Document } from '@/types/document';
 import { createClient } from '@/lib/supabase/client';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
-import { fetchCitations } from '@/lib/queries';
+import { fetchCitations, getReportIdByUrl } from '@/lib/queries';
 
 export const zoomLevels = [
   '50%',
@@ -30,8 +30,11 @@ const usePDFViewer = (file: Document) => {
   const supabase = createClient();
 
   const pathname = usePathname();
+  const { data: report } = useQuery(
+    getReportIdByUrl(supabase, pathname.split('/').pop() as string),
+  );
   const { data: citations, error: citationsError } = useQuery(
-    fetchCitations(supabase, pathname.split('/').pop() as string),
+    fetchCitations(supabase, report?.id ?? ''),
   );
 
   const { citation, documentId } = useBoundStore((s) => s);

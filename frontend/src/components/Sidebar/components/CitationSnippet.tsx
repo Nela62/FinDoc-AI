@@ -4,26 +4,26 @@ import { useMemo } from 'react';
 import { IconFileTypePdf } from '@tabler/icons-react';
 import { Expand } from 'lucide-react';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
-import { fetchDocuments } from '@/lib/queries';
+import { fetchDocuments, getReportIdByUrl } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
 import { usePathname } from 'next/navigation';
 import { Citation } from '@/types/citation';
+import { type Document } from '@/types/document';
 
 // TODO: handle long text wrapping
-export const CitationSnippet = ({ citation }: { citation: Citation }) => {
+export const CitationSnippet = ({
+  citation,
+  documents,
+}: {
+  citation: Citation;
+  documents: Document[];
+}) => {
   const { setCitation } = useBoundStore((state) => state);
-  const pathname = usePathname();
 
-  const supabase = createClient();
-  const { data, error } = useQuery(
-    fetchDocuments(supabase, pathname.split('/').pop() as string),
+  const doc = useMemo(
+    () => documents.find((doc) => doc?.id === citation.doc_id),
+    [documents, citation.doc_id],
   );
-
-  const doc = useMemo(() => {
-    if (data && data.length > 0) {
-      return data.find((d) => d.documents?.id === citation.doc_id)?.documents;
-    } else return null;
-  }, [data, citation.doc_id]);
 
   if (!doc || !citation) {
     return null;
@@ -33,7 +33,7 @@ export const CitationSnippet = ({ citation }: { citation: Citation }) => {
     <button
       className="flex gap-2 border-b-[0.5px] border-zinc-300 px-3 text-sm py-3 text-left"
       onClick={() => {
-        setCitation(citation.source_num);
+        setCitation(citation.source_num, doc.id);
       }}
     >
       <p className="text-zinc-600">{`[${citation.source_num}]`}</p>

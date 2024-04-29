@@ -9,19 +9,17 @@ export const InspectCitation = () => {
 
   const url = window.location.pathname.split('/')[2];
   const supabase = createClient();
-  const { data, error } = useQuery(fetchDocuments(supabase, url));
+  const { data: documents, error } = useQuery(fetchDocuments(supabase, url));
 
-  if (!data) {
+  if (!documents) {
     return <p>Document not found</p>;
   }
-  console.log(data);
-  return <div></div>;
 
-  // const doc = data.documents.find((doc) => doc.id === documentId);
+  const doc = documents.find((doc) => doc.id === documentId);
 
-  // if (!doc) {
-  //   return <p>Document not found</p>;
-  // }
+  if (!doc) {
+    return <p>Document not found</p>;
+  }
 
-  // return <ViewPdf file={doc} />;
+  return <ViewPdf file={doc} />;
 };

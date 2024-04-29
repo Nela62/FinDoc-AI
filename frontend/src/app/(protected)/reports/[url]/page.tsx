@@ -4,21 +4,14 @@ import {
   QueryClient,
 } from '@tanstack/react-query';
 import { prefetchQuery } from '@supabase-cache-helpers/postgrest-react-query';
-import { Editor } from '@tiptap/react';
 
 import '@/styles/index.css';
-import { tickers } from '@/lib/data/tickers';
-import { getPrompts } from './prompts';
-export type AiState = {
-  isAiLoading: boolean;
-  aiError?: string | null;
-};
-import { EditorComponent } from './components/EditorComponent';
 import { createClient } from '@/lib/supabase/server';
 import {
   fetchCitations,
   fetchDocuments,
-  fetchReportByUrl,
+  fetchReportById,
+  getReportIdByUrl,
 } from '@/lib/queries';
 import { redirect } from 'next/navigation';
 import { ReportPage } from './components/ReportPage';
@@ -41,13 +34,20 @@ export default async function Report({ params }: { params: { url: string } }) {
     return redirect('/login');
   }
 
-  await prefetchQuery(queryClient, fetchReportByUrl(supabase, params.url));
-  await prefetchQuery(queryClient, fetchCitations(supabase, params.url));
-  await prefetchQuery(queryClient, fetchDocuments(supabase, params.url));
+  const { data, error } = await getReportIdByUrl(supabase, params.url);
+
+  if (!data || error) {
+    return <div>No report found</div>;
+  }
+
+  await prefetchQuery(queryClient, fetchReportById(supabase, data.id));
+  await prefetchQuery(queryClient, fetchCitations(supabase, data.id));
+  await prefetchQuery(queryClient, fetchDocuments(supabase, data.id));
+  await prefetchQuery(queryClient, getReportIdByUrl(supabase, params.url));
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <ReportPage url={params.url} />
+      <ReportPage reportId={data.id} />
     </HydrationBoundary>
   );
 }

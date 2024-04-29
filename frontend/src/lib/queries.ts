@@ -1,12 +1,21 @@
 import { TypedSupabaseClient } from '../types/supabase';
 
-export function fetchReports(client: TypedSupabaseClient) {
+export function fetchAllReports(client: TypedSupabaseClient) {
   return client
     .from('reports')
     .select(
       'id, user_id, title, company_ticker, type, recommendation, targetprice, status, created_at, updated_at, url, html_content, json_content',
     )
     .throwOnError();
+}
+
+export function getReportIdByUrl(client: TypedSupabaseClient, url: string) {
+  return client
+    .from('reports')
+    .select('id')
+    .eq('url', url)
+    .throwOnError()
+    .maybeSingle();
 }
 
 export function fetchReportByUrl(client: TypedSupabaseClient, url: string) {
@@ -31,11 +40,11 @@ export function fetchReportById(client: TypedSupabaseClient, id: string) {
     .maybeSingle();
 }
 
-export function fetchCitations(client: TypedSupabaseClient, url: string) {
+export function fetchCitations(client: TypedSupabaseClient, id: string) {
   return client
     .from('citations')
     .select('id, node_id, text, source_num, page, doc_id')
-    .eq('report_url', url)
+    .eq('report_id', id)
     .throwOnError();
 }
 
@@ -49,12 +58,14 @@ export function fetchFile(client: TypedSupabaseClient, url: string) {
 }
 
 // TODO: can I make it better?
-export function fetchDocuments(client: TypedSupabaseClient, url: string) {
-  return client
-    .from('documents_reports')
-    .select(
-      'documents (id, url, company_name, company_ticker, accession_number, doc_type, year, quarter, created_at, updated_at, cik, period_of_report_date, filed_as_of_date, date_as_of_change), reports (url)',
-    )
-    .eq('reports.url', url)
-    .throwOnError();
+export function fetchDocuments(client: TypedSupabaseClient, id: string) {
+  return (
+    client
+      .from('documents')
+      .select(
+        'id, url, company_name, company_ticker, accession_number, doc_type, year, quarter, created_at, updated_at, cik, period_of_report_date, filed_as_of_date, date_as_of_change, reports (id, url)',
+      )
+      // .eq('reports.id', id)
+      .throwOnError()
+  );
 }

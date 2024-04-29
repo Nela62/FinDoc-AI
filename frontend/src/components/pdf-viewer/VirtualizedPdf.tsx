@@ -36,7 +36,7 @@ import { multiHighlight } from '@/lib/utils/multi-line-highlight';
 import { useBoundStore } from '@/providers/store-provider';
 import { Document as PdfDocument } from '@/types/document';
 import { createClient } from '@/lib/supabase/client';
-import { fetchCitations, fetchFile } from '@/lib/queries';
+import { fetchCitations, fetchFile, getReportIdByUrl } from '@/lib/queries';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 
@@ -72,8 +72,11 @@ const PageRenderer: React.FC<PageRenderer> = ({
 
   const supabase = createClient();
   const pathname = usePathname();
+  const { data: report } = useQuery(
+    getReportIdByUrl(supabase, pathname.split('/').pop() as string),
+  );
   const { data: citations, error: citationsError } = useQuery(
-    fetchCitations(supabase, pathname.split('/').pop() as string),
+    fetchCitations(supabase, report?.id ?? ''),
   );
 
   // Get which page is in view from an intersection observer
@@ -245,8 +248,11 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
     const supabase = createClient();
 
     const pathname = usePathname();
+    const { data: report } = useQuery(
+      getReportIdByUrl(supabase, pathname.split('/').pop() as string),
+    );
     const { data: citations, error: citationsError } = useQuery(
-      fetchCitations(supabase, pathname.split('/').pop() as string),
+      fetchCitations(supabase, report?.id ?? ''),
     );
 
     const fetchPdf = useCallback(async () => {
