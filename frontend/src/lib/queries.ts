@@ -9,44 +9,102 @@ export function fetchAllReports(client: TypedSupabaseClient) {
     .throwOnError();
 }
 
-export function getReportIdByUrl(client: TypedSupabaseClient, url: string) {
+export function getReportIdByUrl(
+  client: TypedSupabaseClient,
+  reportUrl: string,
+) {
   return client
     .from('reports')
     .select('id')
-    .eq('url', url)
+    .eq('url', reportUrl)
     .throwOnError()
     .maybeSingle();
 }
 
-export function fetchReportByUrl(client: TypedSupabaseClient, url: string) {
+export function fetchReportByUrl(
+  client: TypedSupabaseClient,
+  reportUrl: string,
+) {
   return client
     .from('reports')
     .select(
       'id, user_id, title, company_ticker, type, recommendation, targetprice, status, created_at, updated_at, url, html_content, json_content',
     )
-    .eq('url', url)
+    .eq('url', reportUrl)
     .throwOnError()
     .maybeSingle();
 }
 
-export function fetchReportById(client: TypedSupabaseClient, id: string) {
+export function fetchReportById(client: TypedSupabaseClient, reportId: string) {
   return client
     .from('reports')
     .select(
       'id, user_id, title, company_ticker, type, recommendation, targetprice, status, created_at, updated_at, url, html_content, json_content',
     )
-    .eq('id', id)
+    .eq('id', reportId)
     .throwOnError()
     .maybeSingle();
 }
 
-export function fetchCitations(client: TypedSupabaseClient, id: string) {
+export function fetchCitedDocuments(
+  client: TypedSupabaseClient,
+  reportId: string,
+) {
   return client
-    .from('citations')
-    .select('id, node_id, text, source_num, page, doc_id')
-    .eq('report_id', id)
+    .from('cited_documents')
+    .select(
+      'id, source_num, top_title, bottom_title, citation_type, last_refreshed',
+    )
+    .eq('report_id', reportId)
     .throwOnError();
 }
+
+export function fetchCitationSnippets(
+  client: TypedSupabaseClient,
+  reportId: string,
+) {
+  return client
+    .from('citation_snippets')
+    .select(
+      'id, source_num, title, text_snippet, cited_documents (id, citation_type)',
+    )
+    .eq('cited_documents.report_id', reportId)
+    .throwOnError();
+}
+
+export function fetchPDFCitation(
+  client: TypedSupabaseClient,
+  citationSnippetId: string,
+) {
+  return client
+    .from('pdf_citations')
+    .select('node_id, text, page, doc_id')
+    .eq('citation_snippet_id', citationSnippetId)
+    .throwOnError();
+}
+
+export function fetchAPICitation(
+  client: TypedSupabaseClient,
+  citationSnippetId: string,
+) {
+  return client
+    .from('api_citations')
+    .select(
+      'api_provider, used_json_data, api_cache (json_data, endpoint, api_provider, accessed_at)',
+    )
+    .eq('citation_snippet_id', citationSnippetId)
+    .throwOnError();
+}
+
+// export function fetchNewsCitation(client: TypedSupabaseClient, citationSnippetId: string) {
+//   return client
+//     .from('news_citations')
+//     .select(
+//       'url, text, title, author, published_at, last_access, overall_sentiment_score, overall_sentiment_label, ticker_sentiment',
+//     )
+//     .eq('citation_snippet_id', citationSnippetId)
+//     .throwOnError();
+// }
 
 // TODO: experiment with using a signedUrl instead
 export function fetchFile(client: TypedSupabaseClient, url: string) {
@@ -58,14 +116,27 @@ export function fetchFile(client: TypedSupabaseClient, url: string) {
 }
 
 // TODO: can I make it better?
-export function fetchDocuments(client: TypedSupabaseClient, id: string) {
-  return (
-    client
-      .from('documents')
-      .select(
-        'id, url, company_name, company_ticker, accession_number, doc_type, year, quarter, created_at, updated_at, cik, period_of_report_date, filed_as_of_date, date_as_of_change, reports (id, url)',
-      )
-      // .eq('reports.id', id)
-      .throwOnError()
-  );
+export function fetchDocuments(client: TypedSupabaseClient, reportId: string) {
+  return client
+    .from('documents')
+    .select(
+      'id, url, company_name, company_ticker, accession_number, doc_type, year, quarter, created_at, updated_at, cik, period_of_report_date, filed_as_of_date, date_as_of_change, reports (id, url)',
+    )
+    .eq('reports.id', reportId)
+    .throwOnError();
+}
+
+export function fetchCitedDocumentByPDFId(
+  client: TypedSupabaseClient,
+  reportId: string,
+  docId: string,
+) {
+  return client
+    .from('cited_documents')
+    .select(
+      'id, source_num, citation_snippets (id, source_num, pdf_citations (id, doc_id, node_id))',
+    )
+    .eq('report_id', reportId)
+    .eq('pdf_citations.doc_id', docId)
+    .throwOnError();
 }

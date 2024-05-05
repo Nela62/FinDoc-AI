@@ -9,56 +9,34 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      citations: {
+      api_cache: {
         Row: {
-          created_at: string
-          doc_id: string | null
+          accessed_at: string
+          api_provider: string
+          endpoint: string
           id: string
-          node_id: string | null
-          page: number | null
-          report_id: string
-          source_num: number
-          text: string
-          updated_at: string
-          url: string | null
+          json_data: Json
           user_id: string
         }
         Insert: {
-          created_at?: string
-          doc_id?: string | null
+          accessed_at?: string
+          api_provider: string
+          endpoint: string
           id?: string
-          node_id?: string | null
-          page?: number | null
-          report_id: string
-          source_num: number
-          text: string
-          updated_at?: string
-          url?: string | null
+          json_data: Json
           user_id: string
         }
         Update: {
-          created_at?: string
-          doc_id?: string | null
+          accessed_at?: string
+          api_provider?: string
+          endpoint?: string
           id?: string
-          node_id?: string | null
-          page?: number | null
-          report_id?: string
-          source_num?: number
-          text?: string
-          updated_at?: string
-          url?: string | null
+          json_data?: Json
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "citations_report_id_fkey"
-            columns: ["report_id"]
-            isOneToOne: false
-            referencedRelation: "reports"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "citations_user_id_fkey"
+            foreignKeyName: "api_cache_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -66,130 +44,156 @@ export type Database = {
           },
         ]
       }
-      demo_citations: {
+      api_citations: {
         Row: {
-          created_at: string
-          doc_id: string | null
+          cache_id: string
+          citation_snippet_id: string
           id: string
-          node_id: string
-          page: number | null
-          report_url: string
-          source_num: number
-          text: string
-          updated_at: string
-          url: string | null
+          used_json_data: Json
+          user_id: string
         }
         Insert: {
-          created_at?: string
-          doc_id?: string | null
+          cache_id: string
+          citation_snippet_id: string
           id?: string
-          node_id: string
-          page?: number | null
-          report_url: string
-          source_num: number
-          text: string
-          updated_at?: string
-          url?: string | null
+          used_json_data: Json
+          user_id: string
         }
         Update: {
-          created_at?: string
-          doc_id?: string | null
+          cache_id?: string
+          citation_snippet_id?: string
           id?: string
-          node_id?: string
-          page?: number | null
-          report_url?: string
-          source_num?: number
-          text?: string
-          updated_at?: string
-          url?: string | null
+          used_json_data?: Json
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "public_demo_citations_report_url_fkey"
-            columns: ["report_url"]
+            foreignKeyName: "api_citations_cache_id_fkey"
+            columns: ["cache_id"]
             isOneToOne: false
-            referencedRelation: "demo_reports"
-            referencedColumns: ["url"]
-          },
-        ]
-      }
-      demo_documents_reports: {
-        Row: {
-          document_id: string | null
-          id: string
-          report_url: string | null
-        }
-        Insert: {
-          document_id?: string | null
-          id?: string
-          report_url?: string | null
-        }
-        Update: {
-          document_id?: string | null
-          id?: string
-          report_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "demo_documents_reports_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "documents"
+            referencedRelation: "api_cache"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "demo_documents_reports_report_url_fkey"
-            columns: ["report_url"]
+            foreignKeyName: "api_citations_citation_snippet_id_fkey"
+            columns: ["citation_snippet_id"]
             isOneToOne: false
-            referencedRelation: "demo_reports"
-            referencedColumns: ["url"]
+            referencedRelation: "citation_snippets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_citations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
-      demo_reports: {
+      citation_snippets: {
         Row: {
-          company_ticker: string
+          cited_document_id: string
           created_at: string
-          html_content: string | null
           id: string
-          json_content: Json | null
-          recommendation: string | null
-          status: string
-          target_price: number | null
+          last_refreshed: string
+          source_num: number
+          text_snippet: string
           title: string
-          type: string
           updated_at: string
-          url: string
+          user_id: string
         }
         Insert: {
-          company_ticker: string
+          cited_document_id: string
           created_at?: string
-          html_content?: string | null
           id?: string
-          json_content?: Json | null
-          recommendation?: string | null
-          status: string
-          target_price?: number | null
+          last_refreshed?: string
+          source_num: number
+          text_snippet: string
           title: string
-          type: string
           updated_at?: string
-          url: string
+          user_id: string
         }
         Update: {
-          company_ticker?: string
+          cited_document_id?: string
           created_at?: string
-          html_content?: string | null
           id?: string
-          json_content?: Json | null
-          recommendation?: string | null
-          status?: string
-          target_price?: number | null
+          last_refreshed?: string
+          source_num?: number
+          text_snippet?: string
           title?: string
-          type?: string
           updated_at?: string
-          url?: string
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "citation_snippets_cited_document_id_fkey"
+            columns: ["cited_document_id"]
+            isOneToOne: false
+            referencedRelation: "cited_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "citation_snippets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cited_documents: {
+        Row: {
+          bottom_title: string | null
+          citation_type: string
+          created_at: string
+          id: string
+          last_refreshed: string
+          report_id: string
+          source_num: number
+          top_title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bottom_title?: string | null
+          citation_type: string
+          created_at?: string
+          id?: string
+          last_refreshed?: string
+          report_id: string
+          source_num: number
+          top_title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bottom_title?: string | null
+          citation_type?: string
+          created_at?: string
+          id?: string
+          last_refreshed?: string
+          report_id?: string
+          source_num?: number
+          top_title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cited_documents_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cited_documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -271,6 +275,51 @@ export type Database = {
             columns: ["report_id"]
             isOneToOne: false
             referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pdf_citations: {
+        Row: {
+          citation_snippet_id: string
+          doc_id: string
+          id: string
+          node_id: string
+          page: number
+          text: string
+          user_id: string
+        }
+        Insert: {
+          citation_snippet_id: string
+          doc_id: string
+          id?: string
+          node_id: string
+          page: number
+          text: string
+          user_id: string
+        }
+        Update: {
+          citation_snippet_id?: string
+          doc_id?: string
+          id?: string
+          node_id?: string
+          page?: number
+          text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdf_citations_citation_snippet_id_fkey"
+            columns: ["citation_snippet_id"]
+            isOneToOne: false
+            referencedRelation: "citation_snippets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pdf_citations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -428,3 +477,4 @@ export type Enums<
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
     : never
+

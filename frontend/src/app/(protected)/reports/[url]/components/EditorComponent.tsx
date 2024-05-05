@@ -12,6 +12,7 @@ import TableColumnMenu from '@/extensions/Table/menus/TableColumn/TableColumn';
 
 export const EditorComponent = ({ editor }: { editor: Editor }) => {
   const menuContainerRef = useRef(null);
+
   return (
     <Card className="h-full overflow-hidden flex-1" ref={menuContainerRef}>
       <>

@@ -1,13 +1,13 @@
 'use client';
 
 import { useBoundStore } from '@/providers/store-provider';
-import { InspectCitation } from './components/InspectCitation';
+import { InspectCitation } from './components/citations/InspectCitation';
 import { Audit } from './components/Audit';
 import { ScrollArea } from '../ui/scroll-area';
 import { Card } from '../ui/card';
 import { TabsContent } from '../ui/tabs';
 
-export const Sidebar = () => {
+export const Sidebar = ({ reportId }: { reportId: string }) => {
   const { selectedTab, citation } = useBoundStore((state) => state);
 
   return (
@@ -20,7 +20,7 @@ export const Sidebar = () => {
         ) : (
           <Card className="w-[360px] flex flex-col overflow-hidden relative h-full">
             <ScrollArea className="h-full w-[360px]">
-              {selectedTab === 'Audit' && <Audit />}
+              {selectedTab === 'Audit' && <Audit reportId={reportId} />}
             </ScrollArea>
           </Card>
         )}

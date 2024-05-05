@@ -1,46 +1,74 @@
-import { CitationSnippet } from './CitationSnippet';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import {
-  fetchCitations,
+  fetchCitationSnippets,
+  fetchCitedDocuments,
   fetchDocuments,
-  getReportIdByUrl,
 } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
-import { usePathname } from 'next/navigation';
+import {
+  type CitationSnippet,
+  type CitationType,
+  type CitedDocument as CitedDocumentType,
+} from '@/types/citation';
+import { CitedDocument } from './citations/CitedDocument';
 
-export const Audit = () => {
+export const Audit = ({ reportId }: { reportId: string }) => {
   const supabase = createClient();
 
-  const pathname = usePathname();
-  const url = pathname.split('/').pop() as string;
+  const { data: fetchedCitedDocuments } = useQuery(
+    fetchCitedDocuments(supabase, reportId),
+  );
 
-  const { data: report, error: reportError } = useQuery(
-    getReportIdByUrl(supabase, url),
+  const { data: fetchedCitationSnippets } = useQuery(
+    fetchCitationSnippets(supabase, reportId),
   );
-  const { data: citations, error: citationsError } = useQuery(
-    fetchCitations(supabase, report?.id ?? ''),
-  );
+
   const { data: documents, error } = useQuery(
-    fetchDocuments(supabase, report?.id ?? ''),
+    fetchDocuments(supabase, reportId),
   );
 
-  if (!citations || !report) {
+  if (!fetchedCitedDocuments || !fetchedCitationSnippets) {
+    // console.log(fetchedCitedDocuments);
+    // return <p>No data found</p>;
     return;
   }
+
+  const citedDocuments: CitedDocumentType[] = fetchedCitedDocuments.map(
+    (doc) => ({
+      id: doc.id,
+      sourceNum: doc.source_num,
+      topTitle: doc.top_title,
+      bottomTitle: doc.bottom_title ?? '',
+      citationType: doc.citation_type as CitationType,
+      lastRefreshed: new Date(doc.last_refreshed),
+    }),
+  );
+
+  const citationSnippets: CitationSnippet[] = fetchedCitationSnippets.map(
+    (snippet) => ({
+      id: snippet.id,
+      citedDocumentId: snippet.cited_document_id,
+      sourceNum: snippet.source_num,
+      title: snippet.title,
+      textSnippet: snippet.text_snippet,
+    }),
+  );
 
   return (
     <>
       <p className="italic mt-3 font-semibold text-xs text-center text-zinc-500">
         {/* TODO: add filters and change to displaying num out of num citations when filtered */}
-        {citations.length === 0
+        {citedDocuments.length === 0
           ? 'No citations to display'
-          : `Displaying all ${citations.length} citations`}
+          : `Displaying all ${citationSnippets.length} citations`}
       </p>
-      {citations.map((citation) => (
-        <CitationSnippet
-          key={citation.node_id}
-          citation={citation}
-          documents={documents ?? []}
+      {citedDocuments.map((doc) => (
+        <CitedDocument
+          key={doc.id}
+          citedDocument={doc}
+          citationSnippets={citationSnippets.filter(
+            (citation) => citation.citedDocumentId === doc.id,
+          )}
         />
       ))}
     </>

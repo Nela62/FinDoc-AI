@@ -3,10 +3,6 @@ import { useMemo } from 'react';
 
 import { IconFileTypePdf } from '@tabler/icons-react';
 import { Expand } from 'lucide-react';
-import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
-import { fetchDocuments, getReportIdByUrl } from '@/lib/queries';
-import { createClient } from '@/lib/supabase/client';
-import { usePathname } from 'next/navigation';
 import { Citation } from '@/types/citation';
 import { type Document } from '@/types/document';
 

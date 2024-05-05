@@ -6,16 +6,11 @@ import { Icon } from '@/components/ui/Icon';
 import { markdownToHtml, markdownToJson } from '@/lib/utils/formatText';
 import { createClient } from '@/lib/supabase/client';
 import { TipTapButton } from '@/components/ui/TipTapButton/TipTapButton';
-import { Citation } from '@/types/citation';
 import {
   useInsertMutation,
   useQuery,
 } from '@supabase-cache-helpers/postgrest-react-query';
-import {
-  fetchCitations,
-  fetchDocuments,
-  getReportIdByUrl,
-} from '@/lib/queries';
+import { fetchDocuments, getReportIdByUrl } from '@/lib/queries';
 import { usePathname } from 'next/navigation';
 
 export interface DataProps {
@@ -51,31 +46,52 @@ export const AiGeneratorView = ({
   const { data: documents, error } = useQuery(
     fetchDocuments(supabase, report?.id ?? ''),
   );
-  const { data: existingCitations, error: citationsError } = useQuery(
-    fetchCitations(supabase, report?.id ?? ''),
-  );
-
-  const { mutateAsync: insertCitations } = useInsertMutation(
-    supabase.from('citations'),
-    ['id'],
-    null,
-  );
+  // const { mutateAsync: insertCitations } = useInsertMutation(
+  //   supabase.from('citations'),
+  //   ['id'],
+  //   null,
+  // );
   const { mutateAsync: insertDocuments } = useInsertMutation(
     supabase.from('documents_reports'),
     ['id'],
     null,
   );
 
+  const { mutateAsync: insertCitedDocuments } = useInsertMutation(
+    supabase.from('cited_documents'),
+    ['id'],
+    'id',
+  );
+
+  const { mutateAsync: insertCitationSnippets } = useInsertMutation(
+    supabase.from('citation_snippets'),
+    ['id'],
+    'id',
+  );
+
+  const { mutateAsync: insertPDFCitations } = useInsertMutation(
+    supabase.from('pdf_citations'),
+    ['id'],
+    null,
+  );
+
+const { mutateAsync: insertAPICitations } = useInsertMutation(
+  supabase.from('api_citations'),
+  ['id'],
+  null,
+);
+
   const textareaId = useMemo(() => uuid(), []);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  const tempCitations = useRef<Citation[]>([]);
+  const tempCitations = useRef([]);
 
   function streamContent(content: string, delay: number) {
     let index = 0;
+    const cleanedContent = content.replace(/\s?\[\d+\]/g, '');
 
     function type() {
-      if (index < content.length) {
-        setPreviewText(content.slice(0, index + 1));
+      if (index < cleanedContent.length) {
+        setPreviewText(cleanedContent.slice(0, index + 1));
         index++;
         setTimeout(type, delay);
       }
@@ -86,6 +102,7 @@ export const AiGeneratorView = ({
 
   const generateText = useCallback(async () => {
     setIsFetching(true);
+    if (!report) return;
 
     try {
       const {
@@ -98,12 +115,8 @@ export const AiGeneratorView = ({
         method: 'POST',
         body: JSON.stringify({
           prompt_type: promptType,
-          offset: existingCitations?.length ?? 0,
-          citations:
-            existingCitations?.map((c: Citation) => ({
-              source_id: c.source_num,
-              node_id: c.node_id,
-            })) ?? [],
+          report_id: report.id,
+          ticker: 'AMZN',
         }),
         headers: {
           'content-type': 'application/json',
@@ -112,8 +125,9 @@ export const AiGeneratorView = ({
       });
 
       const json = await response.json();
-      const text = json.response;
-      tempCitations.current = json.nodes;
+      const text = json.text;
+      console.log(text);
+      tempCitations.current = json.citations;
 
       if (!text.length) {
         setIsFetching(false);
@@ -136,7 +150,7 @@ export const AiGeneratorView = ({
       setIsFetching(false);
       toast.error(message);
     }
-  }, [baseUrl, promptType, existingCitations, supabase.auth]);
+  }, [baseUrl, promptType, report, supabase.auth]);
 
   useEffect(() => {
     generateText();
@@ -158,22 +172,22 @@ export const AiGeneratorView = ({
       .insertContentAt({ from, to }, markdownToJson(previewText))
       .run();
     setPreviewText('');
-    insertCitations(
-      tempCitations.current.map((c) => ({
-        ...c,
-        user_id: user,
-        report_id: report.id,
-      })),
-    );
-    const docs = tempCitations.current.reduce((acc: string[], c) => {
-      if (c.doc_id) {
-        acc.push(c.doc_id);
-      }
-      return acc;
-    }, []);
-    insertDocuments(
-      docs.map((doc) => ({ document_id: doc, report_id: report.id })),
-    );
+    // insertCitations(
+    //   tempCitations.current.map((c) => ({
+    //     ...c,
+    //     user_id: user,
+    //     report_id: report.id,
+    //   })),
+    // );
+    // const docs = tempCitations.current.reduce((acc: string[], c) => {
+    //   if (c.doc_id) {
+    //     acc.push(c.doc_id);
+    //   }
+    //   return acc;
+    // }, []);
+    // insertDocuments(
+    //   docs.map((doc) => ({ document_id: doc, report_id: report.id })),
+    // );
     // docs.length > 0 &&
     //   supabase
     //     .from('documents')
@@ -190,16 +204,7 @@ export const AiGeneratorView = ({
     //           },
     //         ]),
     //     );
-  }, [
-    editor,
-    from,
-    to,
-    previewText,
-    insertCitations,
-    user,
-    insertDocuments,
-    report,
-  ]);
+  }, [editor, from, to, previewText, user, report]);
 
   const discard = useCallback(() => {
     deleteNode();

@@ -11,7 +11,7 @@ import {
 } from '@supabase-cache-helpers/postgrest-react-query';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { fetchCitations, fetchReportById } from '@/lib/queries';
+import { fetchReportById } from '@/lib/queries';
 
 const debounce = require('lodash.debounce');
 
@@ -44,7 +44,7 @@ export const useBlockEditor = (reportId: string, content: Content) => {
 
   const supabase = createClient();
 
-  const { data: citations } = useQuery(fetchCitations(supabase, reportId));
+  // const { data: citations } = useQuery(fetchCitations(supabase, reportId));
 
   const { mutateAsync: update } = useUpdateMutation(
     supabase.from('reports'),
@@ -59,12 +59,12 @@ export const useBlockEditor = (reportId: string, content: Content) => {
     editorProps: {
       handleClickOn: (view, pos, node) => {
         if (node.type.name === 'citation') {
-          const doc_id = citations?.find(
-            (c) => c.source_num === node.attrs.sourceNum,
-          )?.doc_id;
-          console.log(doc_id);
-          if (!doc_id) return;
-          setCitation(node.attrs.sourceNum, doc_id);
+          // const doc_id = citations?.find(
+          //   (c) => c.source_num === node.attrs.sourceNum,
+          // )?.doc_id;
+          // console.log(doc_id);
+          // if (!doc_id) return;
+          // setCitation(node.attrs.sourceNum, doc_id);
         }
       },
       attributes: {

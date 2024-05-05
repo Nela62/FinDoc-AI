@@ -8,7 +8,8 @@ import { prefetchQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import '@/styles/index.css';
 import { createClient } from '@/lib/supabase/server';
 import {
-  fetchCitations,
+  fetchCitationSnippets,
+  fetchCitedDocuments,
   fetchDocuments,
   fetchReportById,
   getReportIdByUrl,
@@ -41,7 +42,8 @@ export default async function Report({ params }: { params: { url: string } }) {
   }
 
   await prefetchQuery(queryClient, fetchReportById(supabase, data.id));
-  await prefetchQuery(queryClient, fetchCitations(supabase, data.id));
+  await prefetchQuery(queryClient, fetchCitedDocuments(supabase, data.id));
+  await prefetchQuery(queryClient, fetchCitationSnippets(supabase, data.id));
   await prefetchQuery(queryClient, fetchDocuments(supabase, data.id));
   await prefetchQuery(queryClient, getReportIdByUrl(supabase, params.url));
 
