@@ -256,8 +256,8 @@ export const AiGeneratorView = ({
         </div>
       )}
       {isFetching && (
-        <div className="flex justify-center flex-col w-full mt-4 items-center">
-          <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+        <div className="flex justify-center flex-col w-full py-2 items-center">
+          <Loader2Icon className="mr-2 h-6 w-6 animate-spin" />
           <p>Generating text...</p>
         </div>
       )}
