@@ -140,10 +140,9 @@ export const AiGeneratorView = ({
       }
 
       setOriginalText(text);
+      setIsFetching(false);
       streamContent(text, 10);
       // setPreviewText(text.replace(/\s?\[\d+\]/g, ''));
-
-      setIsFetching(false);
     } catch (errPayload: any) {
       const errorMessage = errPayload?.response?.data?.error;
       const message =
@@ -214,6 +213,7 @@ export const AiGeneratorView = ({
 
   return (
     <NodeViewWrapper data-drag-handle>
+      {}
       {previewText && (
         <div
           className="bg-indigo-100 px-2 py-2 rounded-[5px]"

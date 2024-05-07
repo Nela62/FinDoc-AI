@@ -38,31 +38,34 @@ export const CitedDocument = ({
           <IconFileTypePdf stroke={1.5} className="w-6 h-6 text-zinc-600" />
         </div>
         <Card className="space-y-1.5 py-2">
-          {citationSnippets.map((citation, i) => (
-            <button
-              onClick={() => {
-                console.log(citation.id, citedDocument.docId);
-                setCitation(citation.id, citedDocument.docId ?? '');
-              }}
-              key={citation.id}
-              className={cn(
-                'text-xs text-foreground/90 px-2 space-y-1 cursor-pointer text-left',
-                i !== citationSnippets.length - 1 && 'border-b-[0.5px] pb-1.5',
-              )}
-            >
-              <div className="flex justify-between">
-                <p className="font-medium">
-                  [{citedDocument.sourceNum}.{citation.sourceNum}]{' '}
-                  {citation.title}
-                </p>
-                <Expand className="w-3.5 h-3.5 text-zinc-500" />
-              </div>
+          {citationSnippets
+            .sort((a, b) => a.sourceNum - b.sourceNum)
+            .map((citation, i) => (
+              <button
+                onClick={() => {
+                  console.log(citation.id, citedDocument.docId);
+                  setCitation(citation.id, citedDocument.docId ?? '');
+                }}
+                key={citation.id}
+                className={cn(
+                  'text-xs text-foreground/90 px-2 space-y-1 cursor-pointer text-left',
+                  i !== citationSnippets.length - 1 &&
+                    'border-b-[0.5px] pb-1.5',
+                )}
+              >
+                <div className="flex justify-between">
+                  <p className="font-medium">
+                    [{citedDocument.sourceNum}.{citation.sourceNum}]{' '}
+                    {citation.title}
+                  </p>
+                  <Expand className="w-3.5 h-3.5 text-zinc-500" />
+                </div>
 
-              <p className="text-muted-foreground italic">
-                {citation.textSnippet}
-              </p>
-            </button>
-          ))}
+                <p className="text-muted-foreground italic">
+                  {citation.textSnippet}
+                </p>
+              </button>
+            ))}
         </Card>
       </div>
     </div>

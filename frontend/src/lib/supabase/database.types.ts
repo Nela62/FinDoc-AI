@@ -16,6 +16,7 @@ export type Database = {
           endpoint: string
           id: string
           json_data: Json
+          report_id: string
           user_id: string
         }
         Insert: {
@@ -24,6 +25,7 @@ export type Database = {
           endpoint: string
           id?: string
           json_data: Json
+          report_id: string
           user_id: string
         }
         Update: {
@@ -32,9 +34,17 @@ export type Database = {
           endpoint?: string
           id?: string
           json_data?: Json
+          report_id?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "api_cache_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "api_cache_user_id_fkey"
             columns: ["user_id"]
@@ -49,6 +59,7 @@ export type Database = {
           cache_id: string
           citation_snippet_id: string
           id: string
+          report_id: string
           used_json_data: Json
           user_id: string
         }
@@ -56,6 +67,7 @@ export type Database = {
           cache_id: string
           citation_snippet_id: string
           id?: string
+          report_id: string
           used_json_data: Json
           user_id: string
         }
@@ -63,6 +75,7 @@ export type Database = {
           cache_id?: string
           citation_snippet_id?: string
           id?: string
+          report_id?: string
           used_json_data?: Json
           user_id?: string
         }
@@ -79,6 +92,13 @@ export type Database = {
             columns: ["citation_snippet_id"]
             isOneToOne: false
             referencedRelation: "citation_snippets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_citations_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
             referencedColumns: ["id"]
           },
           {
@@ -154,6 +174,7 @@ export type Database = {
       cited_documents: {
         Row: {
           bottom_title: string | null
+          cache_id: string | null
           citation_type: string
           created_at: string
           doc_id: string | null
@@ -167,6 +188,7 @@ export type Database = {
         }
         Insert: {
           bottom_title?: string | null
+          cache_id?: string | null
           citation_type: string
           created_at?: string
           doc_id?: string | null
@@ -180,6 +202,7 @@ export type Database = {
         }
         Update: {
           bottom_title?: string | null
+          cache_id?: string | null
           citation_type?: string
           created_at?: string
           doc_id?: string | null
@@ -192,6 +215,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cited_documents_cache_id_fkey"
+            columns: ["cache_id"]
+            isOneToOne: false
+            referencedRelation: "api_cache"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cited_documents_doc_id_fkey"
             columns: ["doc_id"]

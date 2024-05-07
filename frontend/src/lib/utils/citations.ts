@@ -1,5 +1,8 @@
+import { cache } from 'react';
 import {
+  fetchAPICacheById,
   fetchCitationSnippets,
+  fetchCitedDocumentByAPIId,
   fetchCitedDocumentByPDFId,
   fetchCitedDocuments,
   fetchDocumentById,
@@ -132,6 +135,90 @@ export const getCitationMapAndInsertNew = async (
         }
       }
     } else if (citation.citation_type === 'API') {
+      // apiCitation:
+      // "title": string
+      // "citation_type": "API",
+      // "used_json_data": used_json_data,
+      // "cache_id": cache_id,
+      // "source_num": citation_num,
+      const { data: citedDoc } = await fetchCitedDocumentByAPIId(
+        supabase,
+        reportId,
+        citation.cache_id,
+      );
+
+      if (!citedDoc) return;
+
+      if (citedDoc.length === 0) {
+        // If cited doc not in db
+        const { data: cacheDoc } = await fetchAPICacheById(
+          supabase,
+          citation.cache_id,
+        );
+
+        if (!cacheDoc) return;
+
+        const citedDocRes = await insertCitedDocuments({
+          user_id: userId,
+          report_id: reportId,
+          source_num: citedDocumentSourceNum,
+          top_title: `${
+            cacheDoc[0].api_provider === 'alpha_vantage'
+              ? 'Alpha Vantage'
+              : 'Other'
+          } API`,
+          bottom_title: `${cacheDoc[0].endpoint}`,
+          citation_type: 'API',
+          cache_id: citation.cache_id,
+        });
+
+        const citationSnippetRes = await insertCitationSnippets({
+          user_id: userId,
+          cited_document_id: citedDocRes[0].id,
+          report_id: reportId,
+          source_num: citationSnippetSourceNum,
+          title: citation.title,
+          text_snippet: `${citation.used_json_data.slice(0, 141)}...`,
+        });
+
+        await insertAPICitations({
+          user_id: userId,
+          report_id: reportId,
+          citation_snippet_id: citationSnippetRes[0].id,
+          cache_id: citation.cache_id,
+          used_json_data: citation.used_json_data,
+        });
+      } else {
+        // Cited doc already in db
+        citedDocumentSourceNum = citedDoc[0].source_num;
+        let snippetExists = false;
+
+        citedDoc[0].citation_snippets.forEach((snippet) => {
+          if (snippet.title === citation.title) {
+            snippetExists = true;
+            citationSnippetSourceNum = snippet.source_num;
+          }
+        });
+
+        if (!snippetExists) {
+          citationSnippetSourceNum = citedDoc[0].citation_snippets.length + 1;
+          const citationSnippetRes = await insertCitationSnippets({
+            user_id: userId,
+            report_id: reportId,
+            cited_document_id: citedDoc[0].id,
+            source_num: citationSnippetSourceNum,
+            title: citation.title,
+            text_snippet: `${citation.used_json_data.slice(0, 141)}...`,
+          });
+          await insertAPICitations({
+            user_id: userId,
+            report_id: reportId,
+            citation_snippet_id: citationSnippetRes[0].id,
+            cache_id: citation.cache_id,
+            used_json_data: citation.used_json_data,
+          });
+        }
+      }
     }
 
     mappedSourceNums[citation.source_num] = Number(

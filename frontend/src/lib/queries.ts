@@ -54,7 +54,7 @@ export function fetchCitedDocuments(
   return client
     .from('cited_documents')
     .select(
-      'id, source_num, top_title, bottom_title, citation_type, last_refreshed, doc_id',
+      'id, source_num, top_title, bottom_title, citation_type, last_refreshed, doc_id, cache_id, user_id, report_id, created_at, updated_at',
     )
     .eq('report_id', reportId)
     .throwOnError();
@@ -67,7 +67,7 @@ export function fetchCitationSnippets(
   return client
     .from('citation_snippets')
     .select(
-      'id, source_num, title, text_snippet, cited_documents (id, citation_type)',
+      'id, source_num, title, text_snippet, cited_document_id, user_id, report_id, created_at, updated_at, last_refreshed, cited_documents (id, citation_type)',
     )
     .eq('cited_documents.report_id', reportId)
     .throwOnError();
@@ -95,7 +95,7 @@ export function fetchPDFCitation(
     .throwOnError();
 }
 
-export function fetchAPICitation(
+export function fetchAPICitationById(
   client: TypedSupabaseClient,
   citationSnippetId: string,
 ) {
@@ -105,6 +105,17 @@ export function fetchAPICitation(
       'api_provider, used_json_data, api_cache (json_data, endpoint, api_provider, accessed_at)',
     )
     .eq('citation_snippet_id', citationSnippetId)
+    .throwOnError();
+}
+
+export function fetchAPICacheById(
+  client: TypedSupabaseClient,
+  cacheId: string,
+) {
+  return client
+    .from('api_cache')
+    .select('id, json_data, endpoint, api_provider, accessed_at')
+    .eq('id', cacheId)
     .throwOnError();
 }
 
@@ -159,6 +170,21 @@ export function fetchCitedDocumentByPDFId(
     )
     .eq('report_id', reportId)
     .eq('doc_id', docId)
+    .throwOnError();
+}
+
+export function fetchCitedDocumentByAPIId(
+  client: TypedSupabaseClient,
+  reportId: string,
+  cacheId: string,
+) {
+  return client
+    .from('cited_documents')
+    .select(
+      'id, source_num, doc_id, citation_snippets(id, source_num, title, api_citations (id, cache_id, used_json_data))',
+    )
+    .eq('report_id', reportId)
+    .eq('cache_id', cacheId)
     .throwOnError();
 }
 

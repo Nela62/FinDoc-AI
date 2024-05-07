@@ -163,16 +163,6 @@ export const GROUPS: Group[] = [
           editor.chain().focus().setAiGenerator('business_description').run(),
       },
       {
-        name: 'aiCompetitiveAdvantages',
-        label: 'Competitive Advantages',
-        iconName: 'Shield',
-        description: 'Generate competitive advantages for the selected company',
-        shouldBeHidden: (editor) => editor.isActive('columns'),
-        // action: (editor) => editor.chain().focus().setAiCompetitiveAdvantages().run(),
-        action: (editor) =>
-          editor.chain().focus().setAiGenerator('competitive_advantages').run(),
-      },
-      {
         name: 'aiInvestmentThesis',
         label: 'Investment Thesis',
         iconName: 'Banknote',
@@ -181,6 +171,64 @@ export const GROUPS: Group[] = [
         // action: (editor) => editor.chain().focus().setAiCompetitiveAdvantages().run(),
         action: (editor) =>
           editor.chain().focus().setAiGenerator('investment_thesis').run(),
+      },
+      {
+        name: 'aiManagementAndRisks',
+        label: 'Management and Risks',
+        iconName: 'Speech',
+        description:
+          'Generate a management and risks section for the selected company',
+        shouldBeHidden: (editor) => editor.isActive('columns'),
+        // action: (editor) => editor.chain().focus().setAiCompetitiveAdvantages().run(),
+        action: (editor) =>
+          editor.chain().focus().setAiGenerator('management_and_risks').run(),
+      },
+      {
+        name: 'aiRecentDevelopments',
+        label: 'Recent Developments',
+        iconName: 'Speech',
+        description:
+          'Generate a recent developments section for the selected company',
+        shouldBeHidden: (editor) => editor.isActive('columns'),
+        // action: (editor) => editor.chain().focus().setAiCompetitiveAdvantages().run(),
+        action: (editor) =>
+          editor.chain().focus().setAiGenerator('recent_developments').run(),
+      },
+      {
+        name: 'aiEarningsAndGrowthAnalysis',
+        label: 'Earnings and Growth Analysis',
+        iconName: 'Speech',
+        description:
+          'Generate an earnings and growth analysis section for the selected company',
+        shouldBeHidden: (editor) => editor.isActive('columns'),
+        // action: (editor) => editor.chain().focus().setAiCompetitiveAdvantages().run(),
+        action: (editor) =>
+          editor.chain().focus().setAiGenerator('management_and_risks').run(),
+      },
+      {
+        name: 'aiFinancialStrengthAndDividend',
+        label: 'Financial Strength and Dividend',
+        iconName: 'Speech',
+        description:
+          'Generate a financial strength and dividend section for the selected company',
+        shouldBeHidden: (editor) => editor.isActive('columns'),
+        // action: (editor) => editor.chain().focus().setAiCompetitiveAdvantages().run(),
+        action: (editor) =>
+          editor
+            .chain()
+            .focus()
+            .setAiGenerator('financial_strength_and_dividend')
+            .run(),
+      },
+      {
+        name: 'aiValuation',
+        label: 'Valuation',
+        iconName: 'Speech',
+        description: 'Generate a valuation section for the selected company',
+        shouldBeHidden: (editor) => editor.isActive('columns'),
+        // action: (editor) => editor.chain().focus().setAiCompetitiveAdvantages().run(),
+        action: (editor) =>
+          editor.chain().focus().setAiGenerator('valuation').run(),
       },
     ],
   },
