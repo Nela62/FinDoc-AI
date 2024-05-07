@@ -208,7 +208,7 @@ export const useBlockEditor = (reportId: string, content: Content) => {
           }
         });
         console.log(diff);
-      }, 2000);
+      }, 10000);
 
       adjustCitations();
 

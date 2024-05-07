@@ -16,6 +16,7 @@ import {
   getCitationMapAndInsertNew,
   getCleanText,
 } from '@/lib/utils/citations';
+import { Loader2Icon } from 'lucide-react';
 
 export interface DataProps {
   text: string;
@@ -35,6 +36,7 @@ export const AiGeneratorView = ({
   const [previewText, setPreviewText] = useState<string>('');
   const [originalText, setOriginalText] = useState<string>('');
   const [isFetching, setIsFetching] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<string | null>(null);
 
@@ -89,11 +91,12 @@ export const AiGeneratorView = ({
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const tempCitations = useRef<any[]>([]);
 
-  function streamContent(content: string, delay: number) {
+  async function streamContent(content: string, delay: number) {
+    setIsStreaming(true);
     let index = 0;
     const cleanedContent = content.replace(/\s?\[\d+\]/g, '');
 
-    function type() {
+    async function type() {
       if (index < cleanedContent.length) {
         setPreviewText(cleanedContent.slice(0, index + 1));
         index++;
@@ -101,7 +104,8 @@ export const AiGeneratorView = ({
       }
     }
 
-    type();
+    await type();
+    setIsStreaming(false);
   }
 
   const generateText = useCallback(async () => {
@@ -213,14 +217,13 @@ export const AiGeneratorView = ({
 
   return (
     <NodeViewWrapper data-drag-handle>
-      {}
       {previewText && (
         <div
           className="bg-indigo-100 px-2 py-2 rounded-[5px]"
           dangerouslySetInnerHTML={{ __html: formattedPreviewText }}
         ></div>
       )}
-      {!isFetching && (
+      {!isFetching && !isStreaming && (
         <div className={` flex justify-end w-auto gap-3 mt-4`}>
           {previewText && (
             <TipTapButton
@@ -253,8 +256,9 @@ export const AiGeneratorView = ({
         </div>
       )}
       {isFetching && (
-        <div className="flex justify-center w-fit mt-4">
-          <p>Generating...</p>
+        <div className="flex justify-center flex-col w-full mt-4 items-center">
+          <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+          <p>Generating text...</p>
         </div>
       )}
     </NodeViewWrapper>
