@@ -2,6 +2,7 @@ import {
   fetchCitationSnippets,
   fetchCitedDocumentByPDFId,
   fetchCitedDocuments,
+  fetchDocumentById,
 } from '../queries';
 import { createClient } from '../supabase/client';
 
@@ -9,152 +10,100 @@ const getUsedSourceNumsAndCitations = (text: string, citations: any[]) => {
   const numbers = text.match(/\[(\d+)\]/g);
   const usedNumbers = [...new Set(numbers)];
   const usedCitations = usedNumbers.map((num) => {
-    return citations.find((c) => c.source_num === num);
+    return citations.find((c) => '[' + c.source_num + ']' === num);
   });
   return { usedNumbers, usedCitations };
 };
 
 export const getCitationMapAndInsertNew = async (
+  text: string,
   citations: any[],
   reportId: any,
+  userId: string,
   insertCitedDocuments: any,
   insertCitationSnippets: any,
   insertPDFCitations: any,
   insertAPICitations: any,
 ) => {
+  const { usedCitations } = getUsedSourceNumsAndCitations(text, citations);
   const supabase = createClient();
 
   const mappedSourceNums: any = {};
 
-  const newCitations: any[] = [];
+  for (let i = 0; i < usedCitations.length; i++) {
+    const { data: citedDocuments } = await fetchCitedDocuments(
+      supabase,
+      reportId,
+    );
+    const { data: citationSnippets } = await fetchCitationSnippets(
+      supabase,
+      reportId,
+    );
 
-  const { data: citedDocuments } = await fetchCitedDocuments(
-    supabase,
-    reportId,
-  );
-  const { data: citationSnippets } = await fetchCitationSnippets(
-    supabase,
-    reportId,
-  );
+    if (!citedDocuments || !citationSnippets) {
+      console.log('no cited docs or citation snippets');
+      return;
+    }
 
-  if (!citedDocuments || !citationSnippets) {
-    return;
-  }
-  let newCitedDocuments = 0;
-
-  for (let i = 0; i < citations.length; i++) {
-    const citation = citations[i];
-    let citedDocumentSourceNum: Number =
-      citedDocuments.length + newCitedDocuments + 1;
+    const citation = usedCitations[i];
+    let citedDocumentSourceNum: Number = citedDocuments.length + 1;
     let citationSnippetSourceNum = 1;
 
     if (citation.citation_type === 'PDF') {
-      // Check if the pdf document is already in the cited or new cited documents
-      const { data: dbDoc } = await fetchCitedDocumentByPDFId(
+      // TODO: use tanstack query to fetch
+      const { data: citedDoc } = await fetchCitedDocumentByPDFId(
         supabase,
         reportId,
         citation.doc_id,
       );
 
-      console.log('fetched cited doc by pdf id', dbDoc, citation.doc_id);
+      if (!citedDoc) return;
 
-      if (!dbDoc) return;
-
-      if (dbDoc.length === 0) {
-        console.log('dbDoc not found');
-        // Check if the PDF document has already been added
-        const localDoc = newCitations.find(
-          (doc) => doc.docId === citation.doc_id,
+      if (citedDoc.length === 0) {
+        // If cited doc not in db
+        const { data: pdfDoc } = await fetchDocumentById(
+          supabase,
+          citation.doc_id,
         );
 
-        if (!localDoc) {
-          // Not in db and not locally
-          console.log('localDoc not found. inserting new cited doc');
+        if (!pdfDoc) return;
 
-          newCitedDocuments += 1;
-          console.log(mappedSourceNums);
-          const { id: citedDocId } = insertCitedDocuments({
-            report_id: reportId,
-            source_num: citedDocumentSourceNum,
-            top_title: '',
-            bottom_title: '',
-            citation_type: 'PDF',
-          });
-          console.log('citedDocId ', citedDocId);
-          const { id: citationSnippetId } = insertCitationSnippets({
-            cited_document_id: citedDocId,
-            source_num: citationSnippetSourceNum,
-            title: `Page ${citation.page}`,
-            text_snippet: '',
-          });
-          insertPDFCitations({
-            citation_snippet_id: citationSnippetId,
-            node_id: citation.node_id,
-            page: citation.page,
-            doc_id: citation.doc_id,
-            text: citation.text,
-          });
+        const citedDocRes = await insertCitedDocuments({
+          user_id: userId,
+          report_id: reportId,
+          source_num: citedDocumentSourceNum,
+          top_title: `${pdfDoc[0].company_name} (${pdfDoc[0].company_ticker})`,
+          bottom_title: `${pdfDoc[0].doc_type}${
+            pdfDoc[0].quarter ? ' ' + pdfDoc[0].quarter : ''
+          } ${pdfDoc[0].year}`,
+          citation_type: 'PDF',
+          doc_id: citation.doc_id,
+        });
 
-          newCitations.push({
-            citedDocId: citedDocId,
-            citedDocumentSourceNum: citedDocumentSourceNum,
-            citationSnippetId: citationSnippetId,
-            citationSnippetSourceNum: citationSnippetSourceNum,
-            nodeId: citation.node_id,
-            docId: citation.doc_id,
-          });
-        } else {
-          // Not in db but locally
-          console.log('localDoc found');
-          const { citedDocId, citedDocumentSourceNum: localCitedDocSourceNum } =
-            localDoc;
-          citedDocumentSourceNum = localCitedDocSourceNum;
+        const citationSnippetRes = await insertCitationSnippets({
+          user_id: userId,
+          cited_document_id: citedDocRes[0].id,
+          report_id: reportId,
+          source_num: citationSnippetSourceNum,
+          title: `Page ${citation.page}`,
+          text_snippet: `${citation.text.slice(0, 141)}...`,
+        });
 
-          const localSnippet = newCitations.find(
-            (newCitation) =>
-              newCitation.citedDocId === citedDocId &&
-              newCitation.nodeId === citation.node_id,
-          );
-
-          if (!localSnippet) {
-            console.log('localSnippet not found');
-            const snippets = newCitations.filter(
-              (citation) => citation.citedDocId === citedDocId,
-            );
-            citationSnippetSourceNum = snippets.length + 1;
-
-            const { id: citationSnippetId } = insertCitationSnippets({
-              cited_document_id: citedDocId,
-              source_num: citationSnippetSourceNum,
-              title: `Page ${citation.page}`,
-              text_snippet: '',
-            });
-            insertPDFCitations({
-              citation_snippet_id: citationSnippetId,
-              node_id: citation.node_id,
-              page: citation.page,
-              doc_id: citation.doc_id,
-              text: citation.text,
-            });
-
-            newCitations.push({
-              citedDocId: citedDocId,
-              citedDocumentSourceNum: citedDocumentSourceNum,
-              citationSnippetId: citationSnippetId,
-              citationSnippetSourceNum: citationSnippetSourceNum,
-              nodeId: citation.node_id,
-              docId: citation.doc_id,
-            });
-          } else {
-            console.log('localSnippet found, skipping');
-          }
-        }
+        await insertPDFCitations({
+          user_id: userId,
+          report_id: reportId,
+          citation_snippet_id: citationSnippetRes[0].id,
+          node_id: citation.node_id,
+          page: citation.page,
+          doc_id: citation.doc_id,
+          text: citation.text,
+        });
       } else {
         // Cited doc already in db
-        citedDocumentSourceNum = dbDoc[0].source_num;
+        citedDocumentSourceNum = citedDoc[0].source_num;
         let snippetExists = false;
 
-        dbDoc[0].citation_snippets.forEach((snippet) => {
+        citedDoc[0].citation_snippets.forEach((snippet) => {
           if (snippet.pdf_citations[0].node_id === citation.node_id) {
             snippetExists = true;
             citationSnippetSourceNum = snippet.source_num;
@@ -162,16 +111,19 @@ export const getCitationMapAndInsertNew = async (
         });
 
         if (!snippetExists) {
-          citationSnippetSourceNum = dbDoc[0].citation_snippets.length + 1;
-
-          const { id: citationSnippetId } = insertCitationSnippets({
-            cited_document_id: citedDocumentSourceNum,
+          citationSnippetSourceNum = citedDoc[0].citation_snippets.length + 1;
+          const citationSnippetRes = await insertCitationSnippets({
+            user_id: userId,
+            report_id: reportId,
+            cited_document_id: citedDoc[0].id,
             source_num: citationSnippetSourceNum,
             title: `Page ${citation.page}`,
-            text_snippet: '',
+            text_snippet: `${citation.text.slice(0, 141)}...`,
           });
-          insertPDFCitations({
-            citation_snippet_id: citationSnippetId,
+          await insertPDFCitations({
+            user_id: userId,
+            report_id: reportId,
+            citation_snippet_id: citationSnippetRes[0].id,
             node_id: citation.node_id,
             page: citation.page,
             doc_id: citation.doc_id,
@@ -186,15 +138,17 @@ export const getCitationMapAndInsertNew = async (
       citedDocumentSourceNum + '.' + citationSnippetSourceNum,
     );
   }
+  console.log('finished mapping and inserting');
+  return mappedSourceNums;
 };
 
-export const getCleanTextAndCitations = async (
-  text: string,
-  citations: any[],
-  reportId: string,
-) => {
-  const { usedNumbers, usedCitations } = getUsedSourceNumsAndCitations(
-    text,
-    citations,
+export const getCleanText = (text: string, replacementsMap: any[]) => {
+  const newText = text.replace(
+    /\[(\d+)\]/g,
+    (match, number) =>
+      `[${
+        replacementsMap[number] !== undefined ? replacementsMap[number] : number
+      }]`,
   );
+  return newText;
 };

@@ -1,8 +1,10 @@
-type PDFCitation = {
-  nodeId: string;
+export type PDFCitation = {
+  id: string;
+  node_id: string;
   text: string;
   page: number;
-  docId: string;
+  doc_id: string;
+  citation_snippet_id: string;
 };
 
 type apiProviders = 'Alpha Vantage';
@@ -45,6 +47,7 @@ export type CitedDocument = {
   bottomTitle: string;
   citationType: CitationType;
   lastRefreshed: Date;
+  docId: string | null;
 };
 
 export type CitationSnippet = {

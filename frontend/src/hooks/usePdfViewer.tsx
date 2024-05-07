@@ -5,7 +5,8 @@ import { type Document } from '@/types/document';
 import { createClient } from '@/lib/supabase/client';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
-import { fetchCitations, getReportIdByUrl } from '@/lib/queries';
+import { fetchPDFCitation, getReportIdByUrl } from '@/lib/queries';
+import { type PDFCitation } from '@/types/citation';
 
 export const zoomLevels = [
   '50%',
@@ -30,18 +31,19 @@ const usePDFViewer = (file: Document) => {
   const supabase = createClient();
 
   const pathname = usePathname();
+
+  const { citationSnippetId, documentId } = useBoundStore((s) => s);
+
   const { data: report } = useQuery(
     getReportIdByUrl(supabase, pathname.split('/').pop() as string),
   );
   const { data: citations, error: citationsError } = useQuery(
-    fetchCitations(supabase, report?.id ?? ''),
+    fetchPDFCitation(supabase, citationSnippetId ?? ''),
   );
 
-  const { citation, documentId } = useBoundStore((s) => s);
-
-  const selectedCitation = useMemo(
-    () => citations?.find((c) => c.source_num === citation),
-    [citations, citation],
+  const selectedCitation: PDFCitation | undefined = useMemo(
+    () => (citations ? citations[0] : undefined),
+    [citations],
   );
 
   const pdfFocusRef = useRef<PdfFocusHandler | null>(null);

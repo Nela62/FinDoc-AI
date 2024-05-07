@@ -1,15 +1,13 @@
-import { Citation } from '@/types/citation';
-
 export type PdfState = {
   documentId?: string;
   pageNumber?: number;
-  citation?: number;
+  citationSnippetId?: string;
 };
 
 export type PdfActions = {
   setDocumentId: (documentId: string) => void;
   setPageNumber: (pageNumber: number) => void;
-  setCitation: (citation: number, doc_id: string) => void;
+  setCitation: (citationSnippetId: string, doc_id: string) => void;
   clearCitation: () => void;
   clearDocument: () => void;
 };
@@ -18,17 +16,21 @@ export type PdfActions = {
 export const createPdfSlice = (set: any, get: any) => ({
   documentId: undefined,
   pageNumber: undefined,
-  citation: undefined,
+  citationSnippetId: undefined,
   setDocumentId: (documentId: string) => set({ documentId }),
   setPageNumber: (pageNumber: number) => set({ pageNumber }),
-  setCitation: (citation: number, doc_id: string) => {
+  setCitation: (citationSnippetId: string, doc_id: string) => {
     get().setSelectedTab('Audit');
     set({
-      citation: citation,
+      citationSnippetId: citationSnippetId,
       documentId: doc_id,
     });
   },
   clearDocument: () => set({ documentId: undefined }),
   clearCitation: () =>
-    set({ citation: undefined, pageNumber: undefined, documentId: undefined }),
+    set({
+      citationSnippetId: undefined,
+      pageNumber: undefined,
+      documentId: undefined,
+    }),
 });

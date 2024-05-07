@@ -11,7 +11,11 @@ import {
 } from '@supabase-cache-helpers/postgrest-react-query';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { fetchReportById } from '@/lib/queries';
+import {
+  fetchCitationSnippets,
+  fetchCitedDocuments,
+  fetchReportById,
+} from '@/lib/queries';
 
 const debounce = require('lodash.debounce');
 
@@ -44,7 +48,12 @@ export const useBlockEditor = (reportId: string, content: Content) => {
 
   const supabase = createClient();
 
-  // const { data: citations } = useQuery(fetchCitations(supabase, reportId));
+  const { data: citedDocuments } = useQuery(
+    fetchCitedDocuments(supabase, reportId),
+  );
+  const { data: citationSnippets } = useQuery(
+    fetchCitationSnippets(supabase, reportId),
+  );
 
   const { mutateAsync: update } = useUpdateMutation(
     supabase.from('reports'),
@@ -59,6 +68,25 @@ export const useBlockEditor = (reportId: string, content: Content) => {
     editorProps: {
       handleClickOn: (view, pos, node) => {
         if (node.type.name === 'citation') {
+          const sourceNum = node.attrs.sourceNum;
+          const [citedDocSourceNum, citationSnippetSourceNum] = sourceNum
+            .toString()
+            .split('.');
+
+          if (!citedDocSourceNum || !citationSnippetSourceNum) return;
+
+          const citedDoc = citedDocuments?.find(
+            (doc) => doc.source_num.toString() === citedDocSourceNum,
+          );
+          const citationSnippet = citationSnippets?.find(
+            (snippet) =>
+              snippet.source_num.toString() === citationSnippetSourceNum &&
+              snippet.cited_documents?.id === citedDoc?.id,
+          );
+
+          if (!citationSnippet || !citedDoc) return;
+
+          setCitation(citationSnippet?.id, citedDoc?.doc_id ?? '');
           // const doc_id = citations?.find(
           //   (c) => c.source_num === node.attrs.sourceNum,
           // )?.doc_id;
@@ -82,6 +110,7 @@ export const useBlockEditor = (reportId: string, content: Content) => {
       if (editor.isEmpty) {
         setIsEmpty(true);
       }
+      console.log();
       // TODO: update citations and sources
       const saveContent = debounce(() => {
         update({

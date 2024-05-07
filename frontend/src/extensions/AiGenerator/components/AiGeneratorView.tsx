@@ -12,6 +12,10 @@ import {
 } from '@supabase-cache-helpers/postgrest-react-query';
 import { fetchDocuments, getReportIdByUrl } from '@/lib/queries';
 import { usePathname } from 'next/navigation';
+import {
+  getCitationMapAndInsertNew,
+  getCleanText,
+} from '@/lib/utils/citations';
 
 export interface DataProps {
   text: string;
@@ -29,7 +33,9 @@ export const AiGeneratorView = ({
 }: NodeViewWrapperProps) => {
   const promptType: string = node.attrs.promptType;
   const [previewText, setPreviewText] = useState<string>('');
+  const [originalText, setOriginalText] = useState<string>('');
   const [isFetching, setIsFetching] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<string | null>(null);
 
   const supabase = createClient();
@@ -43,9 +49,7 @@ export const AiGeneratorView = ({
   }, [supabase.auth]);
 
   const { data: report } = useQuery(getReportIdByUrl(supabase, reportUrl));
-  const { data: documents, error } = useQuery(
-    fetchDocuments(supabase, report?.id ?? ''),
-  );
+
   // const { mutateAsync: insertCitations } = useInsertMutation(
   //   supabase.from('citations'),
   //   ['id'],
@@ -72,18 +76,18 @@ export const AiGeneratorView = ({
   const { mutateAsync: insertPDFCitations } = useInsertMutation(
     supabase.from('pdf_citations'),
     ['id'],
-    null,
+    'id',
   );
 
-const { mutateAsync: insertAPICitations } = useInsertMutation(
-  supabase.from('api_citations'),
-  ['id'],
-  null,
-);
+  const { mutateAsync: insertAPICitations } = useInsertMutation(
+    supabase.from('api_citations'),
+    ['id'],
+    'id',
+  );
 
   const textareaId = useMemo(() => uuid(), []);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  const tempCitations = useRef([]);
+  const tempCitations = useRef<any[]>([]);
 
   function streamContent(content: string, delay: number) {
     let index = 0;
@@ -135,9 +139,9 @@ const { mutateAsync: insertAPICitations } = useInsertMutation(
         return;
       }
 
+      setOriginalText(text);
       streamContent(text, 10);
-
-      // setPreviewText(text);
+      // setPreviewText(text.replace(/\s?\[\d+\]/g, ''));
 
       setIsFetching(false);
     } catch (errPayload: any) {
@@ -164,47 +168,45 @@ const { mutateAsync: insertAPICitations } = useInsertMutation(
   const from = getPos();
   const to = from + node.nodeSize;
 
-  const insertContent = useCallback(() => {
+  const insertContent = useCallback(async () => {
     if (!user || !report) return;
+    // Add loader when this is being inserted
+    // input.map is not an option error
+    setIsLoading(true);
+    const oldToNewCitationsMap = await getCitationMapAndInsertNew(
+      originalText,
+      tempCitations.current,
+      report.id,
+      user,
+      insertCitedDocuments,
+      insertCitationSnippets,
+      insertPDFCitations,
+      insertAPICitations,
+    );
+    console.log('now cleaning text');
+    // console.log('final citations map', oldToNewCitationsMap);
+
+    const cleanText = getCleanText(originalText, oldToNewCitationsMap);
+    // console.log(cleanText);
+    setIsLoading(false);
     editor
       .chain()
       .focus()
-      .insertContentAt({ from, to }, markdownToJson(previewText))
+      .insertContentAt({ from, to }, markdownToJson(cleanText))
       .run();
     setPreviewText('');
-    // insertCitations(
-    //   tempCitations.current.map((c) => ({
-    //     ...c,
-    //     user_id: user,
-    //     report_id: report.id,
-    //   })),
-    // );
-    // const docs = tempCitations.current.reduce((acc: string[], c) => {
-    //   if (c.doc_id) {
-    //     acc.push(c.doc_id);
-    //   }
-    //   return acc;
-    // }, []);
-    // insertDocuments(
-    //   docs.map((doc) => ({ document_id: doc, report_id: report.id })),
-    // );
-    // docs.length > 0 &&
-    //   supabase
-    //     .from('documents')
-    //     .select('*')
-    //     .eq('id', docs[0] ?? '1f9bc0e7-946d-4e94-b1f2-e8ebcc9098e4')
-    //     .single()
-    //     .then(
-    //       ({ data }) =>
-    //         data &&
-    //         addDocuments([
-    //           {
-    //             ...data,
-    //             quarter: data.quarter ? `Q${data.quarter}` : undefined,
-    //           },
-    //         ]),
-    //     );
-  }, [editor, from, to, previewText, user, report]);
+  }, [
+    editor,
+    from,
+    to,
+    user,
+    report,
+    insertAPICitations,
+    insertCitationSnippets,
+    insertCitedDocuments,
+    originalText,
+    insertPDFCitations,
+  ]);
 
   const discard = useCallback(() => {
     deleteNode();
@@ -234,7 +236,7 @@ const { mutateAsync: insertAPICitations } = useInsertMutation(
             <TipTapButton
               variant="ghost"
               onClick={insertContent}
-              disabled={!previewText}
+              disabled={!previewText || isLoading}
             >
               <Icon name="Check" />
               Insert

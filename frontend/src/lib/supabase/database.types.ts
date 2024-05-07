@@ -96,6 +96,7 @@ export type Database = {
           created_at: string
           id: string
           last_refreshed: string
+          report_id: string
           source_num: number
           text_snippet: string
           title: string
@@ -107,6 +108,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_refreshed?: string
+          report_id: string
           source_num: number
           text_snippet: string
           title: string
@@ -118,6 +120,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_refreshed?: string
+          report_id?: string
           source_num?: number
           text_snippet?: string
           title?: string
@@ -130,6 +133,13 @@ export type Database = {
             columns: ["cited_document_id"]
             isOneToOne: false
             referencedRelation: "cited_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "citation_snippets_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
             referencedColumns: ["id"]
           },
           {
@@ -146,6 +156,7 @@ export type Database = {
           bottom_title: string | null
           citation_type: string
           created_at: string
+          doc_id: string | null
           id: string
           last_refreshed: string
           report_id: string
@@ -158,6 +169,7 @@ export type Database = {
           bottom_title?: string | null
           citation_type: string
           created_at?: string
+          doc_id?: string | null
           id?: string
           last_refreshed?: string
           report_id: string
@@ -170,6 +182,7 @@ export type Database = {
           bottom_title?: string | null
           citation_type?: string
           created_at?: string
+          doc_id?: string | null
           id?: string
           last_refreshed?: string
           report_id?: string
@@ -179,6 +192,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cited_documents_doc_id_fkey"
+            columns: ["doc_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cited_documents_report_id_fkey"
             columns: ["report_id"]
@@ -286,6 +306,7 @@ export type Database = {
           id: string
           node_id: string
           page: number
+          report_id: string
           text: string
           user_id: string
         }
@@ -295,6 +316,7 @@ export type Database = {
           id?: string
           node_id: string
           page: number
+          report_id: string
           text: string
           user_id: string
         }
@@ -304,6 +326,7 @@ export type Database = {
           id?: string
           node_id?: string
           page?: number
+          report_id?: string
           text?: string
           user_id?: string
         }
@@ -313,6 +336,20 @@ export type Database = {
             columns: ["citation_snippet_id"]
             isOneToOne: false
             referencedRelation: "citation_snippets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pdf_citations_doc_id_fkey"
+            columns: ["doc_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pdf_citations_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
             referencedColumns: ["id"]
           },
           {

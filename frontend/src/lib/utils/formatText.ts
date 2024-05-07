@@ -18,17 +18,17 @@ function transformContent(obj) {
       const sentences = text.split(/(?<=[.!?])\s+/);
 
       const contentWithCitations = sentences.map((sentence: any) => {
-        const citations = sentence.match(/\[\d+\]/g) || [];
+        const citations = sentence.match(/\[\d+\.\d+\]/g) || [];
 
         if (citations.length === 0) return { type: 'text', text: sentence };
         else {
-          const textPart = sentence.split(/\[\d+\]/)[0];
+          const textPart = sentence.split(/\[\d+\.\d+\]/)[0];
           return [
             { type: 'text', text: textPart.trim() },
             ...citations.map((citation: any) => ({
               type: 'citation',
               attrs: {
-                sourceNum: parseInt(citation.slice(1, -1)),
+                sourceNum: parseFloat(citation.slice(1, -1)),
               },
             })),
             { type: 'text', text: '. ' },

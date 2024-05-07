@@ -9,11 +9,11 @@ export async function POST(req: Request) {
   // const { data, error } = await supabase.storage
   //   .from('sec-filings')
   //   .createSignedUrl(url, 36000);
+
   const { data, error } = await supabase.storage
     .from('sec-filings')
     .download(url);
   const headers = new Headers();
-  console.log(data);
 
   if (!data || error) {
     return new NextResponse(null, {

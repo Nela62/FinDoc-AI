@@ -41,10 +41,12 @@ export default async function Report({ params }: { params: { url: string } }) {
     return <div>No report found</div>;
   }
 
+  // TODO: setup library list of documents
+
   await prefetchQuery(queryClient, fetchReportById(supabase, data.id));
   await prefetchQuery(queryClient, fetchCitedDocuments(supabase, data.id));
   await prefetchQuery(queryClient, fetchCitationSnippets(supabase, data.id));
-  await prefetchQuery(queryClient, fetchDocuments(supabase, data.id));
+  await prefetchQuery(queryClient, fetchDocuments(supabase));
   await prefetchQuery(queryClient, getReportIdByUrl(supabase, params.url));
 
   return (

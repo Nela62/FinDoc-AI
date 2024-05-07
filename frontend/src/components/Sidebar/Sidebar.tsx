@@ -8,12 +8,12 @@ import { Card } from '../ui/card';
 import { TabsContent } from '../ui/tabs';
 
 export const Sidebar = ({ reportId }: { reportId: string }) => {
-  const { selectedTab, citation } = useBoundStore((state) => state);
+  const { selectedTab, citationSnippetId } = useBoundStore((state) => state);
 
   return (
     <>
       <TabsContent value="Audit" className="mt-0">
-        {citation ? (
+        {citationSnippetId ? (
           <Card className=" overflow-hidden">
             <InspectCitation />
           </Card>

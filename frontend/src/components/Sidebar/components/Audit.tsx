@@ -24,7 +24,7 @@ export const Audit = ({ reportId }: { reportId: string }) => {
   );
 
   const { data: documents, error } = useQuery(
-    fetchDocuments(supabase, reportId),
+    fetchDocuments(supabase),
   );
 
   if (!fetchedCitedDocuments || !fetchedCitationSnippets) {
@@ -41,13 +41,16 @@ export const Audit = ({ reportId }: { reportId: string }) => {
       bottomTitle: doc.bottom_title ?? '',
       citationType: doc.citation_type as CitationType,
       lastRefreshed: new Date(doc.last_refreshed),
+      docId: doc.doc_id,
     }),
   );
 
   const citationSnippets: CitationSnippet[] = fetchedCitationSnippets.map(
     (snippet) => ({
       id: snippet.id,
-      citedDocumentId: snippet.cited_document_id,
+      citedDocumentId: snippet.cited_documents
+        ? snippet.cited_documents.id
+        : '',
       sourceNum: snippet.source_num,
       title: snippet.title,
       textSnippet: snippet.text_snippet,
@@ -62,15 +65,17 @@ export const Audit = ({ reportId }: { reportId: string }) => {
           ? 'No citations to display'
           : `Displaying all ${citationSnippets.length} citations`}
       </p>
-      {citedDocuments.map((doc) => (
-        <CitedDocument
-          key={doc.id}
-          citedDocument={doc}
-          citationSnippets={citationSnippets.filter(
-            (citation) => citation.citedDocumentId === doc.id,
-          )}
-        />
-      ))}
+      {citedDocuments &&
+        citationSnippets &&
+        citedDocuments.map((doc) => (
+          <CitedDocument
+            key={doc.id}
+            citedDocument={doc}
+            citationSnippets={citationSnippets.filter(
+              (citation) => citation.citedDocumentId === doc.id,
+            )}
+          />
+        ))}
     </>
   );
 };

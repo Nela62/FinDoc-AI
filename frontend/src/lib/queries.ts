@@ -1,3 +1,4 @@
+import { typecast } from 'zod';
 import { TypedSupabaseClient } from '../types/supabase';
 
 export function fetchAllReports(client: TypedSupabaseClient) {
@@ -53,7 +54,7 @@ export function fetchCitedDocuments(
   return client
     .from('cited_documents')
     .select(
-      'id, source_num, top_title, bottom_title, citation_type, last_refreshed',
+      'id, source_num, top_title, bottom_title, citation_type, last_refreshed, doc_id',
     )
     .eq('report_id', reportId)
     .throwOnError();
@@ -72,13 +73,24 @@ export function fetchCitationSnippets(
     .throwOnError();
 }
 
+export function fetchCitationSnippetById(
+  client: TypedSupabaseClient,
+  citationSnippetId: string,
+) {
+  return client
+    .from('citation_snippets')
+    .select('id, source_num')
+    .eq('id', citationSnippetId)
+    .throwOnError();
+}
+
 export function fetchPDFCitation(
   client: TypedSupabaseClient,
   citationSnippetId: string,
 ) {
   return client
     .from('pdf_citations')
-    .select('node_id, text, page, doc_id')
+    .select('id, node_id, text, page, doc_id, citation_snippet_id')
     .eq('citation_snippet_id', citationSnippetId)
     .throwOnError();
 }
@@ -116,13 +128,22 @@ export function fetchFile(client: TypedSupabaseClient, url: string) {
 }
 
 // TODO: can I make it better?
-export function fetchDocuments(client: TypedSupabaseClient, reportId: string) {
+export function fetchDocuments(client: TypedSupabaseClient) {
   return client
     .from('documents')
     .select(
-      'id, url, company_name, company_ticker, accession_number, doc_type, year, quarter, created_at, updated_at, cik, period_of_report_date, filed_as_of_date, date_as_of_change, reports (id, url)',
+      'id, url, company_name, company_ticker, accession_number, doc_type, year, quarter, created_at, updated_at, cik, period_of_report_date, filed_as_of_date, date_as_of_change',
     )
-    .eq('reports.id', reportId)
+    .throwOnError();
+}
+
+export function fetchDocumentById(client: TypedSupabaseClient, docId: string) {
+  return client
+    .from('documents')
+    .select(
+      'id, url, company_name, company_ticker, accession_number, doc_type, year, quarter, created_at, updated_at, cik, period_of_report_date, filed_as_of_date, date_as_of_change',
+    )
+    .eq('id', docId)
     .throwOnError();
 }
 
@@ -134,9 +155,22 @@ export function fetchCitedDocumentByPDFId(
   return client
     .from('cited_documents')
     .select(
-      'id, source_num, citation_snippets (id, source_num, pdf_citations (id, doc_id, node_id))',
+      'id, source_num, doc_id, citation_snippets(id,  source_num, pdf_citations (id, node_id, doc_id))',
     )
     .eq('report_id', reportId)
-    .eq('pdf_citations.doc_id', docId)
+    .eq('doc_id', docId)
     .throwOnError();
 }
+
+// export function fetchCitationSnippetsByDocId(
+//   client: TypedSupabaseClient,
+//   reportId: string,
+//   docId: string,
+// ) {
+//   return client
+//     .from('citation_snippets')
+//     .select('id, source_num, ')
+//     .eq('report_id', reportId)
+//     .eq('doc_id', docId)
+//     .throwOnError();
+// }
