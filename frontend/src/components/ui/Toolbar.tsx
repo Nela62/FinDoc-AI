@@ -2,8 +2,11 @@ import React, { ButtonHTMLAttributes, HTMLProps, forwardRef } from 'react';
 
 import { cn } from '@/lib/utils';
 import { Surface } from './Surface';
-import { TipTapButton, TipTapButtonProps } from './TipTapButton/TipTapButton';
-import TipTapTooltip from './TipTapTooltip/TipTapTooltip';
+import {
+  TipTapButton,
+  TipTapButtonProps,
+} from './TipTap/TipTapButton/TipTapButton';
+import TipTapTooltip from './TipTap/TipTapTooltip/TipTapTooltip';
 
 export type ToolbarWrapperProps = {
   shouldShowContent?: boolean;

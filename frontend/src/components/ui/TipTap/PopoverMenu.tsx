@@ -1,12 +1,12 @@
-import * as Popover from '@radix-ui/react-popover';
+import * as TipTapPopover from '@radix-ui/react-popover';
 import { cn } from '@/lib/utils';
 import { icons } from 'lucide-react';
 import { forwardRef } from 'react';
-import { Surface } from './Surface';
-import { Toolbar } from './Toolbar';
+import { Surface } from '../Surface';
+import { Toolbar } from '../Toolbar';
 
-export const Trigger = Popover.Trigger;
-export const Portal = Popover.Portal;
+export const Trigger = TipTapPopover.Trigger;
+export const Portal = TipTapPopover.Portal;
 
 export type MenuProps = {
   children: React.ReactNode;
@@ -31,7 +31,7 @@ export const Menu = ({
   onOpenChange,
 }: MenuProps) => {
   return (
-    <Popover.Root onOpenChange={onOpenChange}>
+    <TipTapPopover.Root onOpenChange={onOpenChange}>
       {customTrigger ? (
         <Trigger asChild>{trigger}</Trigger>
       ) : (
@@ -46,21 +46,21 @@ export const Menu = ({
       )}
       {withPortal ? (
         // @ts-ignore
-        <Popover.Portal className="z-9999">
-          <Popover.Content asChild sideOffset={8}>
+        <TipTapPopover.Portal className="z-9999">
+          <TipTapPopover.Content asChild sideOffset={8}>
             <Surface className="min-w-[15rem] p-2 flex flex-col gap-0.5 max-h-80 overflow-auto z-[9999]">
               {children}
             </Surface>
-          </Popover.Content>
-        </Popover.Portal>
+          </TipTapPopover.Content>
+        </TipTapPopover.Portal>
       ) : (
-        <Popover.Content asChild sideOffset={8}>
+        <TipTapPopover.Content asChild sideOffset={8}>
           <Surface className="min-w-[15rem] p-2 flex flex-col gap-0.5 max-h-80 overflow-auto z-[9999]">
             {children}
           </Surface>
-        </Popover.Content>
+        </TipTapPopover.Content>
       )}
-    </Popover.Root>
+    </TipTapPopover.Root>
   );
 };
 
@@ -96,7 +96,7 @@ export const Item = ({
   const IconComponent = icon ? icons[icon] : null;
   const IconCustomComponent = iconComponent || null;
 
-  const ItemComponent = close ? Popover.Close : 'button';
+  const ItemComponent = close ? TipTapPopover.Close : 'button';
 
   return (
     <ItemComponent className={className} onClick={onClick} disabled={disabled}>

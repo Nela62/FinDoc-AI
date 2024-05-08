@@ -7,10 +7,6 @@
 //   });
 'use client';
 
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-
 //   const updateOption = (key: string, value: string) => {
 //     setOptions((prev) => ({ ...prev, [key]: value }));
 //   };
@@ -350,21 +346,69 @@ import { zodResolver } from '@hookform/resolvers/zod';
 //   title: 'Create a new report',
 // };
 
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandList,
+  CommandItem,
+} from '@/components/ui/command';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { CheckIcon, ChevronsUpDown } from 'lucide-react';
+// TODO: add a super refinement for companyTicker; it can be optional when reportType doesn't required it
+
+const tickers = [
+  { label: 'Amazon Inc.', value: 'AMZN' },
+  { label: 'Apple Inc.', value: 'AAPL' },
+  { label: 'Microsoft Corp.', value: 'MSFT' },
+] as const;
+
 const formSchema = z.object({
   reportType: z.string(),
   companyTicker: z.string(),
-  recommendation: z.string(),
-  targetPrice: z.number().optional(),
+  recommendation: z.string().optional(),
+  targetPrice: z.preprocess(
+    (a) => parseFloat(z.string().parse(a)),
+    z.number().optional(),
+  ),
+  rating: z.string().optional(),
+  templateId: z.string(),
 });
 
 export default function NewReport() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      reportType: '',
-      companyTicker: '',
-      recommendation: 'Auto',
-      targetPrice: undefined,
+      reportType: 'EQUITY',
+      recommendation: 'AUTO',
+      rating: 'AUTO',
     },
   });
 
@@ -373,8 +417,114 @@ export default function NewReport() {
   }
 
   return (
-    <div className="flex flex-col items-center h-full justify-center">
-      <h1 className="text-xl font-semibold">Create new report</h1>
+    <div className="flex flex-col items-center h-full w-full justify-center">
+      <Card className="">
+        <CardHeader className="font-semibold">Create New Report</CardHeader>
+        <CardContent className="w-full">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="flex">
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="reportType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Report Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {/* <SelectItem value="EARNINGS">
+                              Earnings Calls Notes
+                            </SelectItem> */}
+                            <SelectItem value="EQUITY">
+                              Equity Analyst Report
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="companyTicker"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Company</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  'w-[200px] justify-between',
+                                  !field.value && 'text-muted-foreground',
+                                )}
+                              >
+                                {field.value
+                                  ? tickers.find(
+                                      (ticker) => ticker.value === field.value,
+                                    )?.label
+                                  : 'Select ticker'}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[200px] p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search company..."
+                                className="h-9"
+                              />
+                              <CommandEmpty>No company found.</CommandEmpty>
+                              <CommandGroup>
+                                <CommandList>
+                                  {tickers.map((ticker) => (
+                                    <CommandItem
+                                      value={ticker.label}
+                                      key={ticker.value}
+                                      onSelect={() => {
+                                        form.setValue(
+                                          'companyTicker',
+                                          ticker.value,
+                                        );
+                                      }}
+                                    >
+                                      {ticker.label}
+                                      <CheckIcon
+                                        className={cn(
+                                          'ml-auto h-4 w-4',
+                                          ticker.value === field.value
+                                            ? 'opacity-100'
+                                            : 'opacity-0',
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))}
+                                </CommandList>
+                              </CommandGroup>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

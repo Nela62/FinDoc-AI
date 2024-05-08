@@ -8,7 +8,7 @@ import { AiGeneratorView } from './components/AiGeneratorView';
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     aiGenerator: {
-      setAiGenerator: (promptType: string) => ReturnType;
+      setAiGenerator: (promptType: string, label: string) => ReturnType;
     };
   }
 }
@@ -25,6 +25,7 @@ export const AiGenerator = Node.create({
       authorId: undefined,
       authorName: undefined,
       promptType: undefined,
+      label: undefined,
       HTMLAttributes: {
         class: `node-${this.name}`,
       },
@@ -36,9 +37,7 @@ export const AiGenerator = Node.create({
       id: {
         default: undefined,
         parseHTML: (element) => element.getAttribute('data-id'),
-        renderHTML: (attributes) => ({
-          'data-id': attributes.id,
-        }),
+        renderHTML: (attributes) => ({}),
       },
       authorId: {
         default: undefined,
@@ -59,6 +58,13 @@ export const AiGenerator = Node.create({
         parseHTML: (element) => element.getAttribute('data-prompt-type'),
         renderHTML: (attributes) => ({
           'data-prompt-type': attributes.promptType,
+        }),
+      },
+      label: {
+        default: undefined,
+        parseHTML: (element) => element.getAttribute('data-label'),
+        renderHTML: (attributes) => ({
+          'data-label': attributes.label,
         }),
       },
     };
@@ -82,7 +88,7 @@ export const AiGenerator = Node.create({
   addCommands() {
     return {
       setAiGenerator:
-        (promptType) =>
+        (promptType, label) =>
         ({ chain }) =>
           chain()
             .focus()
@@ -93,6 +99,7 @@ export const AiGenerator = Node.create({
                 authorId: this.options.authorId,
                 authorName: this.options.authorName,
                 promptType: promptType,
+                label: label,
               },
             })
             .run(),

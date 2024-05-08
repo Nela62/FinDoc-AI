@@ -23,9 +23,7 @@ export const Audit = ({ reportId }: { reportId: string }) => {
     fetchCitationSnippets(supabase, reportId),
   );
 
-  const { data: documents, error } = useQuery(
-    fetchDocuments(supabase),
-  );
+  const { data: documents, error } = useQuery(fetchDocuments(supabase));
 
   if (!fetchedCitedDocuments || !fetchedCitationSnippets) {
     // console.log(fetchedCitedDocuments);
@@ -67,15 +65,17 @@ export const Audit = ({ reportId }: { reportId: string }) => {
       </p>
       {citedDocuments &&
         citationSnippets &&
-        citedDocuments.map((doc) => (
-          <CitedDocument
-            key={doc.id}
-            citedDocument={doc}
-            citationSnippets={citationSnippets.filter(
-              (citation) => citation.citedDocumentId === doc.id,
-            )}
-          />
-        ))}
+        citedDocuments
+          .sort((a, b) => a.sourceNum - b.sourceNum)
+          .map((doc) => (
+            <CitedDocument
+              key={doc.id}
+              citedDocument={doc}
+              citationSnippets={citationSnippets.filter(
+                (citation) => citation.citedDocumentId === doc.id,
+              )}
+            />
+          ))}
     </>
   );
 };

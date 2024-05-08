@@ -1,6 +1,6 @@
 import { BubbleMenu as BaseBubbleMenu } from '@tiptap/react';
 import React, { useCallback } from 'react';
-import * as PopoverMenu from '@/components/ui/PopoverMenu';
+import * as PopoverMenu from '@/components/ui/TipTap/PopoverMenu';
 
 import { Toolbar } from '@/components/ui/Toolbar';
 import { isRowGripSelected } from './utils';

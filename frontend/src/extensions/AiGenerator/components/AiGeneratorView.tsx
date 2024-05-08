@@ -1,22 +1,44 @@
-import { NodeViewWrapper, NodeViewWrapperProps } from '@tiptap/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import toast from 'react-hot-toast';
+import { NodeViewWrapper, NodeViewWrapperProps } from '@tiptap/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { Loader2Icon } from 'lucide-react';
+import { z } from 'zod';
 import { v4 as uuid } from 'uuid';
-import { Icon } from '@/components/ui/Icon';
-import { markdownToHtml, markdownToJson } from '@/lib/utils/formatText';
-import { createClient } from '@/lib/supabase/client';
-import { TipTapButton } from '@/components/ui/TipTapButton/TipTapButton';
+import toast from 'react-hot-toast';
 import {
   useInsertMutation,
   useQuery,
 } from '@supabase-cache-helpers/postgrest-react-query';
-import { fetchDocuments, getReportIdByUrl } from '@/lib/queries';
+
+import { Icon } from '@/components/ui/Icon';
+import { markdownToHtml, markdownToJson } from '@/lib/utils/formatText';
+import { createClient } from '@/lib/supabase/client';
+import { getReportIdByUrl } from '@/lib/queries';
 import { usePathname } from 'next/navigation';
 import {
   getCitationMapAndInsertNew,
   getCleanText,
 } from '@/lib/utils/citations';
-import { Loader2Icon } from 'lucide-react';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 export interface DataProps {
   text: string;
@@ -33,16 +55,55 @@ export const AiGeneratorView = ({
   deleteNode,
 }: NodeViewWrapperProps) => {
   const promptType: string = node.attrs.promptType;
+  const label = node.attrs.label;
+
   const [previewText, setPreviewText] = useState<string>('');
   const [originalText, setOriginalText] = useState<string>('');
   const [isFetching, setIsFetching] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState('');
+
   const [user, setUser] = useState<string | null>(null);
 
   const supabase = createClient();
   const pathname = usePathname();
   const reportUrl = pathname.split('/').pop() as string;
+
+  const investmentThesisFormSchema = z.object({
+    recommendation: z.string(),
+    targetPrice: z.preprocess(
+      (a) => parseFloat(z.string().parse(a)),
+      z.number().optional(),
+    ),
+    customPrompt: z.string().optional(),
+  });
+
+  const valuationFormSchema = z.object({
+    rating: z.string().optional(),
+    customPrompt: z.string().optional(),
+  });
+
+  const blocksFormSchema = z.object({
+    customPrompt: z.string().optional(),
+  });
+
+  const investmentThesisForm = useForm<
+    z.infer<typeof investmentThesisFormSchema>
+  >({
+    resolver: zodResolver(investmentThesisFormSchema),
+    defaultValues: {
+      recommendation: 'AUTO',
+    },
+  });
+
+  const valuationForm = useForm<z.infer<typeof valuationFormSchema>>({
+    resolver: zodResolver(valuationFormSchema),
+    defaultValues: { rating: 'AUTO' },
+  });
+
+  const blocksForm = useForm<z.infer<typeof blocksFormSchema>>({
+    resolver: zodResolver(blocksFormSchema),
+  });
 
   useEffect(() => {
     supabase.auth.getUser().then((res) => {
@@ -52,11 +113,6 @@ export const AiGeneratorView = ({
 
   const { data: report } = useQuery(getReportIdByUrl(supabase, reportUrl));
 
-  // const { mutateAsync: insertCitations } = useInsertMutation(
-  //   supabase.from('citations'),
-  //   ['id'],
-  //   null,
-  // );
   const { mutateAsync: insertDocuments } = useInsertMutation(
     supabase.from('documents_reports'),
     ['id'],
@@ -92,7 +148,6 @@ export const AiGeneratorView = ({
   const tempCitations = useRef<any[]>([]);
 
   async function streamContent(content: string, delay: number) {
-    setIsStreaming(true);
     let index = 0;
     const cleanedContent = content.replace(/\s?\[\d+\]/g, '');
 
@@ -109,6 +164,7 @@ export const AiGeneratorView = ({
   }
 
   const generateText = useCallback(async () => {
+    setPreviewText('');
     setIsFetching(true);
     if (!report) return;
 
@@ -119,13 +175,16 @@ export const AiGeneratorView = ({
       } = await supabase.auth.getSession();
       if (!session) return;
       // TODO: fix citations and how text is parsed
+      const body: any = {
+        prompt_type: promptType,
+        report_id: report.id,
+        ticker: 'AMZN',
+      };
+      if (customPrompt) body['custom_prompt'] = customPrompt;
+
       const response = await fetch(`${baseUrl}/aigenerator/`, {
         method: 'POST',
-        body: JSON.stringify({
-          prompt_type: promptType,
-          report_id: report.id,
-          ticker: 'AMZN',
-        }),
+        body: JSON.stringify(body),
         headers: {
           'content-type': 'application/json',
           Authorization: session.access_token,
@@ -134,7 +193,6 @@ export const AiGeneratorView = ({
 
       const json = await response.json();
       const text = json.text;
-      console.log(text);
       tempCitations.current = json.citations;
 
       if (!text.length) {
@@ -143,8 +201,10 @@ export const AiGeneratorView = ({
         return;
       }
 
+      setCustomPrompt('');
       setOriginalText(text);
       setIsFetching(false);
+      setIsStreaming(true);
       streamContent(text, 10);
       // setPreviewText(text.replace(/\s?\[\d+\]/g, ''));
     } catch (errPayload: any) {
@@ -157,11 +217,61 @@ export const AiGeneratorView = ({
       setIsFetching(false);
       toast.error(message);
     }
-  }, [baseUrl, promptType, report, supabase.auth]);
+  }, [baseUrl, promptType, customPrompt, report, supabase.auth]);
+
+  const onInvestmentThesisSubmit = (
+    values: z.infer<typeof investmentThesisFormSchema>,
+  ) => {
+    let customPrompt = '';
+
+    if (values.recommendation !== 'AUTO') {
+      customPrompt =
+        'The recommendation for this stock must be ' +
+        values.recommendation +
+        '.';
+      if (values.targetPrice) {
+        customPrompt +=
+          ' The target price for this stock must be $' +
+          values.targetPrice +
+          '.';
+      }
+    }
+
+    if (values.customPrompt) {
+      customPrompt += ' ' + values.customPrompt;
+    }
+
+    setCustomPrompt(customPrompt);
+    generateText();
+  };
+
+  const onValuationSubmit = (values: z.infer<typeof valuationFormSchema>) => {
+    let customPrompt = '';
+
+    if (values.rating !== 'AUTO') {
+      customPrompt = 'The rating for this stock must be ' + values.rating + '.';
+    }
+
+    if (values.customPrompt) {
+      customPrompt += ' ' + values.customPrompt;
+    }
+
+    setCustomPrompt(customPrompt);
+    generateText();
+  };
+
+  const onBlockFormSubmit = (values: z.infer<typeof blocksFormSchema>) => {
+    if (values.customPrompt) {
+      setCustomPrompt(values.customPrompt);
+    }
+    generateText();
+  };
 
   useEffect(() => {
-    generateText();
-  }, [generateText]);
+    if (promptType === 'investment_thesis' || promptType === 'valuation')
+      return;
+    else generateText();
+  }, [generateText, promptType]);
 
   const formattedPreviewText = useMemo(
     () => markdownToHtml(previewText),
@@ -173,9 +283,6 @@ export const AiGeneratorView = ({
 
   const insertContent = useCallback(async () => {
     if (!user || !report) return;
-    // Add loader when this is being inserted
-    // input.map is not an option error
-    setIsLoading(true);
     const oldToNewCitationsMap = await getCitationMapAndInsertNew(
       originalText,
       tempCitations.current,
@@ -186,12 +293,8 @@ export const AiGeneratorView = ({
       insertPDFCitations,
       insertAPICitations,
     );
-    console.log('now cleaning text');
-    // console.log('final citations map', oldToNewCitationsMap);
 
     const cleanText = getCleanText(originalText, oldToNewCitationsMap);
-    // console.log(cleanText);
-    setIsLoading(false);
     editor
       .chain()
       .focus()
@@ -215,52 +318,213 @@ export const AiGeneratorView = ({
     deleteNode();
   }, [deleteNode]);
 
+  const formButtons = (
+    <div className="flex justify-end w-full pt-2 gap-2">
+      <Button
+        variant="ghost"
+        className="text-red-500 hover:bg-red-500/10 hover:text-red-500 flex gap-1"
+        onClick={discard}
+      >
+        <Icon name="Trash" />
+        Discard
+      </Button>
+      {previewText && (
+        <Button variant="ghost" onClick={insertContent}>
+          <Icon name="Check" />
+          Insert
+        </Button>
+      )}
+      <Button className="" onClick={generateText}>
+        {previewText ? <Icon name="Repeat" /> : <Icon name="Sparkles" />}
+        {previewText ? 'Regenerate' : 'Generate text'}
+      </Button>
+    </div>
+  );
+
+  const investmentThesisComponent = (
+    <Form {...investmentThesisForm}>
+      <form
+        onSubmit={investmentThesisForm.handleSubmit(onInvestmentThesisSubmit)}
+        className="space-y-2"
+      >
+        <div className="w-full flex gap-4">
+          <FormField
+            control={investmentThesisForm.control}
+            name="recommendation"
+            render={({ field }) => (
+              <FormItem className="w-1/2">
+                <FormLabel>Recommendation</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="AUTO">Auto</SelectItem>
+                    <SelectItem value="BUY">Buy</SelectItem>
+                    <SelectItem value="OVERWEIGHT">Overweight</SelectItem>
+                    <SelectItem value="HOLD">Hold</SelectItem>
+                    <SelectItem value="UNDERWEIGHT">Underweight</SelectItem>
+                    <SelectItem value="SELL">Sell</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={investmentThesisForm.control}
+            name="targetPrice"
+            disabled={investmentThesisForm.watch('recommendation') === 'AUTO'}
+            render={({ field }) => (
+              <FormItem className="w-1/2 relative">
+                <FormLabel>Target Price</FormLabel>
+                <div className="absolute l-0 ml-2 b-0 text-foreground/70">
+                  <p className="pt-1.5 text-sm">$</p>
+                </div>
+                <FormControl>
+                  <Input {...field} className="pl-6" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        {previewText && (
+          <FormField
+            control={investmentThesisForm.control}
+            name="customPrompt"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Custom Instructions</FormLabel>
+                <FormControl>
+                  <Textarea {...field}></Textarea>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        )}
+        {formButtons}
+      </form>
+    </Form>
+  );
+
+  const valuationComponent = (
+    <Form {...valuationForm}>
+      <form
+        onSubmit={valuationForm.handleSubmit(onValuationSubmit)}
+        className="space-y-2"
+      >
+        <div className="w-full flex gap-4">
+          <FormField
+            control={valuationForm.control}
+            name="rating"
+            render={({ field }) => (
+              <FormItem className="w-1/2">
+                <FormLabel>Analyst Rating</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="AUTO">AUTO</SelectItem>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="4">4</SelectItem>
+                    <SelectItem value="5">5</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        {previewText && (
+          <FormField
+            control={investmentThesisForm.control}
+            name="customPrompt"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Custom Instructions</FormLabel>
+                <FormControl>
+                  <Textarea {...field}></Textarea>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        )}
+        {formButtons}
+      </form>
+    </Form>
+  );
+
+  const allBlocksComponent = (
+    <Form {...blocksForm}>
+      <form
+        onSubmit={blocksForm.handleSubmit(onBlockFormSubmit)}
+        className="space-y-2"
+      >
+        {previewText && (
+          <FormField
+            control={blocksForm.control}
+            name="customPrompt"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Custom Instructions</FormLabel>
+                <FormControl>
+                  <Textarea {...field}></Textarea>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        )}
+        {formButtons}
+      </form>
+    </Form>
+  );
+
   return (
     <NodeViewWrapper data-drag-handle>
-      {previewText && (
-        <div
-          className="bg-indigo-100 px-2 py-2 rounded-[5px]"
-          dangerouslySetInnerHTML={{ __html: formattedPreviewText }}
-        ></div>
-      )}
-      {!isFetching && !isStreaming && (
-        <div className={` flex justify-end w-auto gap-3 mt-4`}>
-          {previewText && (
-            <TipTapButton
-              variant="ghost"
-              className="text-red-500 hover:bg-red-500/10 hover:text-red-500"
-              onClick={discard}
-            >
-              <Icon name="Trash" />
-              Discard
-            </TipTapButton>
+      <Card className="">
+        <CardHeader className="font-semibold">{label}</CardHeader>
+        <CardContent>
+          {/* Fetching view */}
+          {isFetching && (
+            <div className="flex justify-center flex-col w-full py-2 items-center">
+              <Loader2Icon className="mr-2 h-6 w-6 animate-spin" />
+              <p>Generating text...</p>
+            </div>
           )}
+          {/* Display preview text */}
           {previewText && (
-            <TipTapButton
-              variant="ghost"
-              onClick={insertContent}
-              disabled={!previewText || isLoading}
-            >
-              <Icon name="Check" />
-              Insert
-            </TipTapButton>
+            <div
+              className="bg-accent px-2 py-2 rounded-[5px] mb-3"
+              dangerouslySetInnerHTML={{ __html: formattedPreviewText }}
+            ></div>
           )}
-          <TipTapButton
-            variant="primary"
-            // onClick={generateText}
-            style={{ whiteSpace: 'nowrap' }}
-          >
-            {previewText ? <Icon name="Repeat" /> : <Icon name="Sparkles" />}
-            {previewText ? 'Regenerate' : 'Generate text'}
-          </TipTapButton>
-        </div>
-      )}
-      {isFetching && (
-        <div className="flex justify-center flex-col w-full py-2 items-center">
-          <Loader2Icon className="mr-2 h-6 w-6 animate-spin" />
-          <p>Generating text...</p>
-        </div>
-      )}
+          {promptType === 'investment_thesis' &&
+            !isFetching &&
+            !isStreaming &&
+            investmentThesisComponent}
+          {promptType === 'valuation' &&
+            !isFetching &&
+            !isStreaming &&
+            valuationComponent}
+          {promptType !== 'investment_thesis' &&
+            promptType !== 'valuation' &&
+            allBlocksComponent}
+        </CardContent>
+      </Card>
     </NodeViewWrapper>
   );
 };

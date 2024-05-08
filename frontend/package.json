@@ -84,6 +84,7 @@
     "cal-sans": "^1.0.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "cmdk": "^1.0.0",
     "docx": "^8.5.0",
     "fuse.js": "^7.0.0",
     "input-otp": "^1.2.4",
