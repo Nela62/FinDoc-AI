@@ -392,6 +392,12 @@ import { CheckIcon, SquarePen, Wand2Icon } from 'lucide-react';
 import { CaretSortIcon } from '@radix-ui/react-icons';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';
+import { createClient } from '@/lib/supabase/client';
+import { useInsertMutation } from '@supabase-cache-helpers/postgrest-react-query';
+import { getNanoId } from '@/lib/utils/nanoId';
+import { useEffect, useState } from 'react';
+import moment from 'moment';
+import { useRouter } from 'next/navigation';
 // TODO: add a super refinement for companyTicker; it can be optional when reportType doesn't required it
 
 const tickers = [
@@ -428,27 +434,63 @@ const formSchema = z.object({
   reportType: z.string(),
   companyTicker: z.string(),
   recommendation: z.string().optional(),
-  targetPrice: z.preprocess(
-    (a) => parseFloat(z.string().parse(a)),
-    z.number().optional(),
-  ),
+  targetPrice: z
+    .preprocess((a) => parseFloat(z.string().parse(a)), z.number())
+    .optional(),
   rating: z.string().optional(),
-  templateId: z.string(),
+  // templateId: z.string(),
 });
 
 export default function NewReport() {
+  const client = createClient();
+
+  const [user, setUser] = useState<string | null>(null);
+
+  const router = useRouter();
+  useEffect(() => {
+    client.auth.getUser().then((res) => {
+      if (res.data.user) setUser(res.data.user.id);
+    });
+  }, [client.auth]);
+
+  const { mutateAsync: insert } = useInsertMutation(
+    client.from('reports'),
+    ['id'],
+    'id, url',
+  );
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      reportType: 'EQUITY',
+      reportType: 'Equity Analyst Report',
       recommendation: 'AUTO',
       rating: 'AUTO',
-      templateId: '1',
+      // templateId: '1',
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onFormSubmit(values: z.infer<typeof formSchema>) {
+    const today = new Date();
+    // const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    // const formattedDate = today.toLocaleDateString('en-US', options);
+    const nanoId = getNanoId();
     console.log(values);
+    if (!user) return;
+    insert([
+      {
+        // user_id: user,
+        title: `${moment().format('MMMM DD, YYYY')} - ${values.reportType}`,
+        company_ticker: values.companyTicker,
+        url: nanoId,
+        type: values.reportType,
+        recommendation: values.recommendation,
+        targetprice: values.targetPrice,
+        status: 'Draft',
+        user_id: user,
+      },
+    ]).then((res) => {
+      router.push('/reports/' + nanoId);
+    });
   }
 
   return (
@@ -459,7 +501,7 @@ export default function NewReport() {
         </CardHeader>
         <CardContent className="w-full">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
+            <form onSubmit={form.handleSubmit(onFormSubmit)}>
               <div className="flex h-fit gap-20">
                 <div className="space-y-4">
                   {/* Report type */}
@@ -479,10 +521,10 @@ export default function NewReport() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="EQUITY">
+                            <SelectItem value="Equity Analyst Report">
                               Equity Analyst Report
                             </SelectItem>
-                            <SelectItem value="EARNINGS">
+                            <SelectItem value="Earnings Calls Notes">
                               Earnings Calls Notes
                             </SelectItem>
                           </SelectContent>

@@ -334,7 +334,7 @@ export const AiGeneratorView = ({
           Insert
         </Button>
       )}
-      <Button className="" onClick={generateText}>
+      <Button type="submit" className="" onClick={generateText}>
         {previewText ? <Icon name="Repeat" /> : <Icon name="Sparkles" />}
         {previewText ? 'Regenerate' : 'Generate text'}
       </Button>
