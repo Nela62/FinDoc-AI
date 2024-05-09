@@ -33,7 +33,7 @@ CREATE TABLE if not exists "public"."citation_snippets" (
   "id" "uuid" DEFAULT "gen_random_uuid"() PRIMARY KEY,
   "user_id" "uuid" NOT NULL REFERENCES "auth"."users" ("id"),
   "report_id" "uuid" NOT NULL REFERENCES "public"."reports" ("id"),
-  "cited_document_id" "uuid" NOT NULL REFERENCES "public"."cited_documents" ("id") ON DELETE CASCADE,
+  "cited_document_id" "uuid" NOT NULL REFERENCES "public"."cited_documents" ("id"),
   "source_num" integer NOT NULL,
   "title" text NOT NULL,
   "text_snippet" text NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE if not exists "public"."pdf_citations" (
   "id" "uuid" DEFAULT "gen_random_uuid"() PRIMARY KEY,
   "user_id" "uuid" NOT NULL REFERENCES "auth"."users" ("id"),
   "report_id" "uuid" NOT NULL REFERENCES "public"."reports" ("id"),
-  "citation_snippet_id" "uuid" NOT NULL REFERENCES "public"."citation_snippets" ("id") ON DELETE CASCADE,
+  "citation_snippet_id" "uuid" NOT NULL REFERENCES "public"."citation_snippets" ("id"),
   "node_id" text NOT NULL,
   "page" integer NOT NULL,
   "doc_id" "uuid" NOT NULL REFERENCES "public"."documents" ("id"),
@@ -58,7 +58,7 @@ CREATE TABLE if not exists "public"."api_citations" (
   "id" "uuid" DEFAULT "gen_random_uuid"() PRIMARY KEY,
   "user_id" "uuid" NOT NULL REFERENCES "auth"."users" ("id"),
   "report_id" "uuid" NOT NULL REFERENCES "public"."reports" ("id"),
-  "citation_snippet_id" "uuid" NOT NULL REFERENCES "public"."citation_snippets" ("id") ON DELETE CASCADE,
+  "citation_snippet_id" "uuid" NOT NULL REFERENCES "public"."citation_snippets" ("id"),
   "cache_id" "uuid" NOT NULL REFERENCES "public"."api_cache" ("id"),
   "used_json_data" jsonb NOT NULL
 );

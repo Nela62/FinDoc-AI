@@ -377,17 +377,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { CheckIcon, ChevronsUpDown } from 'lucide-react';
+import { CheckIcon, SquarePen, Wand2Icon } from 'lucide-react';
+import { CaretSortIcon } from '@radix-ui/react-icons';
+import Image from 'next/image';
+import { Label } from '@/components/ui/label';
 // TODO: add a super refinement for companyTicker; it can be optional when reportType doesn't required it
 
 const tickers = [
   { label: 'Amazon Inc.', value: 'AMZN' },
+  { label: 'Microsoft Corporation', value: 'MSFT' },
   { label: 'Apple Inc.', value: 'AAPL' },
-  { label: 'Microsoft Corp.', value: 'MSFT' },
+  { label: 'Alphabet Inc.', value: 'GOOGL' },
+  { label: 'Facebook Inc.', value: 'FB' },
+  { label: 'Berkshire Hathaway Inc.', value: 'BRK-A' },
+  { label: 'Tesla Inc.', value: 'TSLA' },
+  { label: 'JPMorgan Chase & Co.', value: 'JPM' },
+  { label: 'Johnson & Johnson', value: 'JNJ' },
+  { label: 'Visa Inc.', value: 'V' },
+  { label: 'Procter & Gamble Company', value: 'PG' },
+  { label: 'Walmart Inc.', value: 'WMT' },
+  { label: 'Mastercard Incorporated', value: 'MA' },
+  { label: 'UnitedHealth Group Incorporated', value: 'UNH' },
+  { label: 'The Home Depot Inc.', value: 'HD' },
+  { label: 'Intel Corporation', value: 'INTC' },
+  { label: 'The Coca-Cola Company', value: 'KO' },
+  { label: 'Verizon Communications Inc.', value: 'VZ' },
+  { label: 'Pfizer Inc.', value: 'PFE' },
+  { label: 'AT&T Inc.', value: 'T' },
+  { label: 'Merck & Co. Inc.', value: 'MRK' },
+  { label: 'Netflix Inc.', value: 'NFLX' },
+  { label: 'Cisco Systems Inc.', value: 'CSCO' },
+  { label: 'Abbott Laboratories', value: 'ABT' },
+  { label: 'AbbVie Inc.', value: 'ABBV' },
+  { label: 'The Walt Disney Company', value: 'DIS' },
+  { label: 'Salesforce.com Inc.', value: 'CRM' },
 ] as const;
 
 const formSchema = z.object({
@@ -409,6 +443,7 @@ export default function NewReport() {
       reportType: 'EQUITY',
       recommendation: 'AUTO',
       rating: 'AUTO',
+      templateId: '1',
     },
   });
 
@@ -417,14 +452,17 @@ export default function NewReport() {
   }
 
   return (
-    <div className="flex flex-col items-center h-full w-full justify-center">
-      <Card className="">
-        <CardHeader className="font-semibold">Create New Report</CardHeader>
+    <div className="flex flex-col items-center h-full w-full justify-center bg-muted/40">
+      <Card className="mb-10">
+        <CardHeader className="font-semibold text-xl text-foreground/80 text-center">
+          Create New Report
+        </CardHeader>
         <CardContent className="w-full">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="flex">
+              <div className="flex h-fit gap-20">
                 <div className="space-y-4">
+                  {/* Report type */}
                   <FormField
                     control={form.control}
                     name="reportType"
@@ -441,11 +479,11 @@ export default function NewReport() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {/* <SelectItem value="EARNINGS">
-                              Earnings Calls Notes
-                            </SelectItem> */}
                             <SelectItem value="EQUITY">
                               Equity Analyst Report
+                            </SelectItem>
+                            <SelectItem value="EARNINGS">
+                              Earnings Calls Notes
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -453,6 +491,7 @@ export default function NewReport() {
                       </FormItem>
                     )}
                   />
+                  {/* Company ticker */}
                   <FormField
                     control={form.control}
                     name="companyTicker"
@@ -466,7 +505,7 @@ export default function NewReport() {
                                 variant="outline"
                                 role="combobox"
                                 className={cn(
-                                  'w-[200px] justify-between',
+                                  'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 font-normal',
                                   !field.value && 'text-muted-foreground',
                                 )}
                               >
@@ -475,11 +514,18 @@ export default function NewReport() {
                                       (ticker) => ticker.value === field.value,
                                     )?.label
                                   : 'Select ticker'}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+
+                                <CaretSortIcon className="h-4 w-4 opacity-50" />
+                                {/* <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" /> */}
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent className="w-[200px] p-0">
+                          <PopoverContent
+                            className={cn(
+                              'p-1',
+                              'w-full min-w-[var(--radix-popover-trigger-width)]',
+                            )}
+                          >
                             <Command>
                               <CommandInput
                                 placeholder="Search company..."
@@ -499,7 +545,7 @@ export default function NewReport() {
                                         );
                                       }}
                                     >
-                                      {ticker.label}
+                                      {ticker.label} ({ticker.value})
                                       <CheckIcon
                                         className={cn(
                                           'ml-auto h-4 w-4',
@@ -519,7 +565,132 @@ export default function NewReport() {
                       </FormItem>
                     )}
                   />
+
+                  <div className="flex gap-4">
+                    <FormField
+                      control={form.control}
+                      name="recommendation"
+                      render={({ field }) => (
+                        <FormItem className="w-1/2">
+                          <FormLabel>Recommendation</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="AUTO">Auto</SelectItem>
+                              <SelectItem value="BUY">Buy</SelectItem>
+                              <SelectItem value="OVERWEIGHT">
+                                Overweight
+                              </SelectItem>
+                              <SelectItem value="HOLD">Hold</SelectItem>
+                              <SelectItem value="UNDERWEIGHT">
+                                Underweight
+                              </SelectItem>
+                              <SelectItem value="SELL">Sell</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="targetPrice"
+                      disabled={form.watch('recommendation') === 'AUTO'}
+                      render={({ field }) => (
+                        <FormItem className="w-1/2 relative">
+                          <FormLabel>Target Price</FormLabel>
+                          <div className="absolute l-0 ml-2 b-0 text-foreground/70">
+                            <p className="pt-1.5 text-sm">$</p>
+                          </div>
+                          <FormControl>
+                            <Input {...field} className="pl-6" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="rating"
+                    render={({ field }) => (
+                      <FormItem className="w-1/2 pr-2">
+                        <FormLabel>Analyst Rating</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="AUTO">Auto</SelectItem>
+                            <SelectItem value="1">1</SelectItem>
+                            <SelectItem value="2">2</SelectItem>
+                            <SelectItem value="3">3</SelectItem>
+                            <SelectItem value="4">4</SelectItem>
+                            <SelectItem value="5">5</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex flex-col space-y-3">
+                    <Label>Data Sources</Label>
+                    <Button variant="outline" className="w-1/2">
+                      Edit Sources
+                    </Button>
+                  </div>
                 </div>
+                <div className="w-fit pr-10 py-1">
+                  <Carousel>
+                    <CarouselContent className="pb-1">
+                      <CarouselItem>
+                        <Card className="overflow-hidden">
+                          <CardContent className="p-0">
+                            <Image
+                              src="/template.png"
+                              alt="Template 1"
+                              className="h-full w-80"
+                              width={0}
+                              height={0}
+                              sizes="100vw"
+                            />
+                          </CardContent>
+                        </Card>
+                      </CarouselItem>
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                  </Carousel>
+                </div>
+              </div>
+              <div className="flex gap-5 justify-center mt-6">
+                <Button type="submit" className="flex gap-2 h-11">
+                  <SquarePen className="h-5 w-5" />
+                  Start writing
+                </Button>
+                <Button
+                  variant="outline"
+                  type="submit"
+                  className="flex gap-2 h-11"
+                >
+                  <Wand2Icon className="h-5 w-5" />
+                  <div className="flex flex-col w-fit justify-start">
+                    <p>Generate Full</p>
+                    <p>Report</p>
+                  </div>
+                </Button>
               </div>
             </form>
           </Form>
