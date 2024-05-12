@@ -1,4 +1,5 @@
 import { JSONContent } from '@tiptap/core';
+import { Editor } from '@tiptap/react';
 import {
   Document,
   Packer,
@@ -19,7 +20,11 @@ import {
   TableRow,
   HeightRule,
   BorderStyle,
+  LevelFormat,
+  convertInchesToTwip,
+  LineRuleType,
 } from 'docx';
+import { FileChild } from 'docx/build/file/file-child';
 
 const getHeadingLevel = (level: number) => {
   switch (level) {
@@ -83,17 +88,220 @@ const TEST_COMPANY_DESCRIPTION = `Amazon.com is the leading U.S. e-commerce reta
 
 const TEST_RECOMMENDATION = 'BUY';
 
+type TestRatingsType = {
+  '12-month': string;
+  Sector: string;
+  Strength: string;
+};
+
+const testRatingsList = [
+  {
+    rowName: '12-month',
+    cells: ['SELL', 'UW', 'HOLD', 'OW', 'BUY'],
+  },
+  { rowName: 'Sector', cells: ['SELL', 'UW', 'HOLD', 'OW', 'BUY'] },
+  { rowName: 'Strength', cells: ['LOW', 'LM', 'MED', 'MH', 'HIGH'] },
+];
+
+const TEST_RATINGS: TestRatingsType = {
+  '12-month': 'BUY',
+  Sector: 'OW',
+  Strength: 'HIGH',
+};
+
 export const generateDocxFile = async (
   template: string = 'ARGUS',
-  json: JSONContent,
+  editor: Editor,
   metrics: any = TEST_METRICS,
   recommendation: string = TEST_RECOMMENDATION,
   companyDescription: string = TEST_COMPANY_DESCRIPTION,
 ) => {
   // TODO: use selectedCompany to fetch its full name
   const companyName = 'Amazon.com Inc';
+  const jsonContent = editor.getJSON();
 
-  const content = json.content ?? [];
+  const content = jsonContent.content ?? [];
+
+  // const processContent = (cell: JSONContent): TextRun => {
+  //   if (cell.type === 'text')
+  //     return new TextRun({
+  //       text: cell.text,
+  //       italics: cell.marks?.some((m) => m.type === 'italic'),
+  //       bold: cell.marks?.some((m) => m.type === 'bold'),
+  //     });
+  //   else return new TextRun({ text: '' });
+  // };
+
+  // const docxFormattedContent = content.map((cell) =>
+  //   cell.type === 'heading'
+  //     ? new Paragraph({
+  //         text: cell.content && cell.content[0].text,
+  //         heading: getHeadingLevel(cell.attrs?.level ?? 1),
+  //       })
+  //     : new Paragraph({
+  //         alignment: AlignmentType.JUSTIFIED,
+  //         children: cell.content?.map((c) => processContent(c)) ?? [],
+  //       }),
+  // );
+
+  const firstHalf: Paragraph[] = [];
+  const secondHalf: Paragraph[] = [];
+
+  function splitText(
+    content: JSONContent[],
+    width: number,
+    font: CanvasTextDrawingStyles['font'],
+    maxLines: number,
+  ) {
+    let canvas = document.createElement('canvas');
+    let context = canvas.getContext('2d');
+    if (!context) {
+      console.log('no context');
+      return [];
+    }
+    context.font = font;
+
+    let currentLine = '';
+    let lines = 0;
+    let firstHalfText = '';
+    let reachedMaxLines = false;
+
+    const processContent = (cell: JSONContent, last: boolean): TextRun => {
+      if (reachedMaxLines) {
+        return new TextRun({
+          text: cell.text!,
+          italics: cell.marks?.some((m) => m.type === 'italic'),
+          bold: cell.marks?.some((m) => m.type === 'bold'),
+          size: 18,
+          font: 'Times New Roman',
+        });
+      }
+
+      let curText = '';
+      const words = cell.text!.split(' ');
+
+      for (let word of words) {
+        let testLine = currentLine + word + ' ';
+        let metrics = context.measureText(testLine);
+        if (metrics.width > width && currentLine !== '') {
+          lines++;
+          if (lines === maxLines) {
+            firstHalfText += currentLine;
+            curText += currentLine;
+            reachedMaxLines = true;
+            currentLine = word + ' ';
+            break;
+          }
+          firstHalfText += currentLine;
+          curText += currentLine;
+          currentLine = word + ' ';
+        } else {
+          currentLine = testLine;
+        }
+      }
+
+      if (last && currentLine !== '') {
+        firstHalfText += currentLine;
+        curText += currentLine;
+        currentLine = '';
+        lines++;
+      }
+
+      // if (!reachedMaxLines && currentLine !== '') {
+      //   firstHalfText += currentLine;
+      //   curText += currentLine;
+      // }
+
+      let secondHalfText = cell.text!.substring(
+        curText.length + currentLine.length + 1,
+      );
+      if (secondHalfText) {
+        secondHalf.push(
+          new Paragraph({
+            alignment: AlignmentType.JUSTIFIED,
+            children: [
+              new TextRun({
+                text: secondHalfText.trim(),
+                italics: cell.marks?.some((m) => m.type === 'italic'),
+                bold: cell.marks?.some((m) => m.type === 'bold'),
+                size: 18,
+                font: 'Times New Roman',
+              }),
+            ],
+          }),
+        );
+      }
+
+      curText = curText.replaceAll(/\s\./g, '.');
+
+      return new TextRun({
+        text: curText,
+        italics: cell.marks?.some((m) => m.type === 'italic'),
+        bold: cell.marks?.some((m) => m.type === 'bold'),
+        size: 18,
+        font: 'Times New Roman',
+      });
+    };
+
+    content.forEach((cell) => {
+      const paragraphContent =
+        cell.type === 'heading'
+          ? new Paragraph({
+              children: [
+                new TextRun({
+                  text: cell.content && cell.content[0].text,
+                  size: 18,
+                  font: 'Arial Narrow',
+                }),
+              ],
+              heading: getHeadingLevel(cell.attrs?.level ?? 1),
+            })
+          : new Paragraph({
+              alignment: AlignmentType.JUSTIFIED,
+              spacing: { line: 80, lineRule: LineRuleType.AT_LEAST },
+              children:
+                cell.content
+                  ?.filter((c) => c.type === 'text' && c.text)
+                  .map((c, i, arr) =>
+                    processContent(c, i === arr.length - 1),
+                  ) ?? [],
+            });
+
+      reachedMaxLines
+        ? secondHalf.push(paragraphContent)
+        : firstHalf.push(paragraphContent);
+    });
+
+    return [];
+    // const words = text.split(' ');
+    // for (let word of words) {
+    //   let testLine = currentLine + word + ' ';
+    //   let metrics = context.measureText(testLine);
+    //   if (metrics.width > width && currentLine !== '') {
+    //     lines++;
+    //     if (lines === maxLines) {
+    //       firstHalf += currentLine;
+    //       reachedMaxLines = true;
+    //       currentLine = word + ' ';
+    //       break;
+    //     }
+    //     firstHalf += currentLine;
+    //     currentLine = word + ' ';
+    //   } else {
+    //     currentLine = testLine;
+    //   }
+    // }
+
+    // if (!reachedMaxLines && currentLine !== '') {
+    //   firstHalf += currentLine;
+    // }
+
+    // let secondHalf = text.substring(firstHalf.length);
+
+    // return [firstHalf.trim(), secondHalf.trim()];
+  }
+
+  splitText(jsonContent.content ?? [], 480, '9px Times New Roman', 15);
 
   const margins = {
     top: 1550.6,
@@ -119,7 +327,9 @@ export const generateDocxFile = async (
     },
   };
 
-  const headerImage = await fetch('/docx_header.png').then((r) => r.blob());
+  const headerImage = await fetch('/coreline_docx_header.png').then((r) =>
+    r.blob(),
+  );
 
   const headerComponent = (pageNum: boolean = true) => [
     new Paragraph({
@@ -247,7 +457,7 @@ export const generateDocxFile = async (
                     },
                   },
                   shading: { fill: 'f4e9d3' },
-                  width: { size: 54, type: WidthType.PERCENTAGE },
+                  width: { size: 50, type: WidthType.PERCENTAGE },
                   children: [
                     new Paragraph({
                       // spacing: { before: 40 },
@@ -294,9 +504,165 @@ export const generateDocxFile = async (
     }),
   ];
 
+  const ratingCell = (rowName: string, cellName: string) =>
+    new TableCell({
+      verticalAlign: 'center',
+      borders: {
+        top: { style: BorderStyle.SINGLE, size: 16, color: 'f4e9d3' },
+        bottom: {
+          style: BorderStyle.SINGLE,
+          size: 16,
+          color: 'f4e9d3',
+        },
+        left: { style: BorderStyle.SINGLE, size: 16, color: 'f4e9d3' },
+        right: {
+          style: BorderStyle.SINGLE,
+          size: 16,
+          color: 'f4e9d3',
+        },
+      },
+      shading: {
+        fill:
+          TEST_RATINGS[rowName as keyof TestRatingsType] === cellName
+            ? '006f3b'
+            : 'dbd9d9',
+      },
+      width: { size: 567, type: WidthType.DXA },
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          // spacing: { before: 40 },
+          children: [
+            new TextRun({
+              text: cellName,
+              size: 18,
+              font: 'Arial Narrow',
+              bold: true,
+              color: 'ffffff',
+            }),
+          ],
+        }),
+      ],
+    });
+
+  const corelineRatingsSidebar = [
+    new Paragraph({
+      spacing: { after: 100, before: 100 },
+      children: [
+        new TextRun({
+          text: 'Coreline Ratings',
+          bold: true,
+          color: '1c4587',
+          size: 24,
+          font: 'Arial Narrow',
+        }),
+      ],
+    }),
+    new Table({
+      borders: {
+        top: { style: 'none' },
+        bottom: { style: 'none' },
+        left: { style: 'none' },
+        right: { style: 'none' },
+      },
+      rows: testRatingsList.map(
+        (row) =>
+          new TableRow({
+            height: { value: '0.84cm', rule: HeightRule.EXACT },
+            children: [
+              new TableCell({
+                margins: { top: 20, bottom: 20 },
+                verticalAlign: 'center',
+                borders: {
+                  top: { style: BorderStyle.SINGLE, size: 16, color: 'f4e9d3' },
+                  bottom: {
+                    style: BorderStyle.SINGLE,
+                    size: 16,
+                    color: 'f4e9d3',
+                  },
+                  left: {
+                    style: BorderStyle.SINGLE,
+                    size: 16,
+                    color: 'f4e9d3',
+                  },
+                  right: {
+                    style: BorderStyle.SINGLE,
+                    size: 16,
+                    color: 'f4e9d3',
+                  },
+                },
+                shading: { fill: 'f4e9d3' },
+                width: { size: 30, type: WidthType.PERCENTAGE },
+                children: [
+                  new Paragraph({
+                    // spacing: { before: 40 },
+                    children: [
+                      new TextRun({
+                        text: row.rowName,
+                        size: 20,
+                        font: 'Arial Narrow',
+                        bold: true,
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              ...row.cells.map((cell) => ratingCell(row.rowName, cell)),
+            ],
+          }),
+      ),
+    }),
+    new Paragraph({
+      spacing: { before: 120, after: 50 },
+      children: [
+        new TextRun({
+          text: 'Coreline assigns a 12-month BUY, HOLD, or SELL rating to each stock under coverage.',
+          size: 16,
+          font: 'Arial Narrow',
+          color: '1c4587',
+        }),
+      ],
+    }),
+    new Paragraph({
+      numbering: { reference: 'sidebar-bullets', level: 0 },
+      children: [
+        new TextRun({
+          text: 'BUY-rated stocks are expected to outperform the market (the benchmark S&P 500 Index) on a risk-adjusted basis over the next year.',
+          size: 16,
+          font: 'Arial Narrow',
+          color: '1c4587',
+        }),
+      ],
+    }),
+    new Paragraph({
+      numbering: { reference: 'sidebar-bullets', level: 0 },
+      children: [
+        new TextRun({
+          text: 'HOLD-rated stocks are expected to perform in line with the market.',
+          size: 16,
+          font: 'Arial Narrow',
+          color: '1c4587',
+        }),
+      ],
+    }),
+    new Paragraph({
+      numbering: { reference: 'sidebar-bullets', level: 0 },
+      spacing: { after: 120 },
+      children: [
+        new TextRun({
+          text: 'SELL-rated stocks are expected to underperform the market on a risk-adjusted basis.',
+          size: 16,
+          font: 'Arial Narrow',
+          color: '1c4587',
+        }),
+      ],
+    }),
+  ];
+
   const keyStatisticsSidebar = [
     new Paragraph({
-      spacing: { after: 40 },
+      border: { top: { style: BorderStyle.SINGLE, size: 4, color: '000000' } },
+      spacing: { after: 40, before: 50 },
       children: [
         new TextRun({
           text: 'Key Statistics',
@@ -311,7 +677,7 @@ export const generateDocxFile = async (
       children: [
         new TextRun({
           text: "Key Statistics pricing data reflects previous trading day's closing price. Other applicable data are trailing 12-months unless otherwise specified.",
-          size: 14,
+          size: 16,
           font: 'Arial Narrow',
           color: '1c4587',
         }),
@@ -331,9 +697,44 @@ export const generateDocxFile = async (
   const firstPageSection = {
     properties: {
       page: {
-        margin: { ...margins, top: 288 },
+        margin: { ...margins, top: 290 },
       },
     },
+    footers: {
+      default: new Footer({
+        children: [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Coreline ',
+                size: 28,
+                color: '1c4587',
+                font: 'Arial Narrow',
+                bold: true,
+              }),
+              new TextRun({
+                text: 'Analyst Report',
+                size: 28,
+                color: '1c4587',
+                font: 'Arial Narrow',
+              }),
+            ],
+            alignment: AlignmentType.RIGHT,
+          }),
+          new Paragraph({
+            alignment: AlignmentType.LEFT,
+            children: [
+              new TextRun({
+                text: '\n\n©2024 Coreline Technologies Inc.',
+                size: 14,
+                color: '000000',
+              }),
+            ],
+          }),
+        ],
+      }),
+    },
+
     children: [
       ...headerComponent(false),
       new Table({
@@ -348,6 +749,7 @@ export const generateDocxFile = async (
           new TableRow({
             children: [
               new TableCell({
+                margins: { right: 120 },
                 children: [
                   new Paragraph({
                     children: [
@@ -406,12 +808,32 @@ export const generateDocxFile = async (
                       }),
                     ],
                   }),
+                  ...firstHalf,
+                  // new Paragraph({
+                  //   alignment: AlignmentType.JUSTIFIED,
+                  //   children: firstHalf,
+                  //   //   [
+                  //   //   new TextRun({
+                  //   //     text: '',
+                  //   //     size: 18,
+                  //   //     font: 'Times New Roman',
+                  //   //   }),
+                  //   // ],
+                  // }),
                 ],
               }),
               new TableCell({
-                margins: { left: 60, right: 60 },
+                borders: {
+                  bottom: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,
+                    color: '000000',
+                    space: 2,
+                  },
+                },
+                margins: { left: 120, right: 120, bottom: 300 },
                 shading: { fill: 'f4e9d3' },
-                children: keyStatisticsSidebar,
+                children: [...corelineRatingsSidebar, ...keyStatisticsSidebar],
                 width: { type: WidthType.DXA, size: 3528 },
               }),
             ],
@@ -428,6 +850,7 @@ export const generateDocxFile = async (
     // TODO: get description dynamically
     description: 'Equity Research Report on ' + companyName,
     title: 'Equity Research Report - ' + companyName,
+    compatibility: { doNotExpandShiftReturn: true },
     styles: {
       paragraphStyles: [
         {
@@ -447,6 +870,30 @@ export const generateDocxFile = async (
           quickFormat: true,
           run: { size: 20, bold: true, color: '000000', allCaps: true },
           paragraph: { spacing: { before: 60, after: 60 } },
+        },
+      ],
+    },
+    numbering: {
+      config: [
+        {
+          reference: 'sidebar-bullets',
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.BULLET,
+              text: '\u2022',
+              alignment: AlignmentType.LEFT,
+              style: {
+                paragraph: {
+                  indent: {
+                    left: convertInchesToTwip(0.2),
+                    hanging: convertInchesToTwip(0.1),
+                  },
+                },
+                run: { color: '1c4587' },
+              },
+            },
+          ],
         },
       ],
     },
@@ -472,7 +919,7 @@ export const generateDocxFile = async (
               new Paragraph({
                 children: [
                   new TextRun({
-                    text: 'Finpanel ',
+                    text: 'Coreline ',
                     size: 28,
                     color: '1c4587',
                     font: 'Arial Narrow',
@@ -491,7 +938,7 @@ export const generateDocxFile = async (
                 alignment: AlignmentType.LEFT,
                 children: [
                   new TextRun({
-                    text: '\n\n©2024 Finpanel Technologies Inc.',
+                    text: '\n\n©2024 Coreline Technologies Inc.',
                     size: 14,
                     color: '000000',
                   }),
@@ -500,35 +947,18 @@ export const generateDocxFile = async (
             ],
           }),
         },
-        children: [
-          ...content.map((cell, i) => {
-            if (cell.type === 'paragraph') {
-              // TODO: get all content rather than just the first one
-              return new Paragraph({
-                children: [
-                  new TextRun({
-                    text:
-                      (i !== 0 && i !== 1 ? '  ' : '') +
-                        (cell.content && cell.content[0]['text']) || '',
-                    italics:
-                      cell.content &&
-                      cell.content[0].marks &&
-                      cell.content[0].marks[0].type === 'italic',
-                    bold:
-                      cell.content &&
-                      cell.content[0].marks &&
-                      cell.content[0].marks[0].type === 'bold',
-                  }),
-                ],
-              });
-            } else if (cell.type === 'heading') {
-              return new Paragraph({
-                text: (cell.content && cell.content[0]['text']) || '',
-                heading: getHeadingLevel((cell.attrs && cell.attrs.level) || 1),
-              });
-            } else return new Paragraph({ text: 'Error' });
-          }),
-        ],
+        children: secondHalf,
+        //   content.map((cell) =>
+        //   cell.type === 'heading'
+        //     ? new Paragraph({
+        //         text: cell.content && cell.content[0].text,
+        //         heading: getHeadingLevel(cell.attrs?.level ?? 1),
+        //       })
+        //     : new Paragraph({
+        //         alignment: AlignmentType.JUSTIFIED,
+        //         children: cell.content?.map((c) => processContent(c)) ?? [],
+        //       }),
+        // ),
       },
     ],
   });

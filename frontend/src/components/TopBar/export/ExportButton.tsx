@@ -45,7 +45,7 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
         className="text-foreground/60"
         onClick={async () => {
           const json: JSONContent = editor.getJSON();
-          const blob = await generateDocxFile('ARGUS', json);
+          const blob = await generateDocxFile('ARGUS', editor);
           const url = URL.createObjectURL(blob);
 
           const link = document.createElement('a');

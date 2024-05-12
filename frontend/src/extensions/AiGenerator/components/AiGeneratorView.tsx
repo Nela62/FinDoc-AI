@@ -267,6 +267,7 @@ export const AiGeneratorView = ({
     generateText();
   };
 
+  // Note: Adding generateText as a dependency causes an infinite loop when inserting text due to custom prompt
   useEffect(() => {
     if (promptType === 'investment_thesis' || promptType === 'valuation')
       return;
