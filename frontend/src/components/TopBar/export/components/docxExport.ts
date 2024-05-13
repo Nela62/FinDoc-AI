@@ -292,7 +292,7 @@ export const generateDocxFile = async (
     // return [firstHalf.trim(), secondHalf.trim()];
   }
 
-  splitText(jsonContent.content ?? [], 480, '9px Times New Roman', 25);
+  splitText(jsonContent.content ?? [], 480, '9px Times New Roman', 23);
 
   const margins = {
     top: 1550.6,
