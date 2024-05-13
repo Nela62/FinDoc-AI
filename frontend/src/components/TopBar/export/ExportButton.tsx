@@ -1,13 +1,11 @@
 // TODO: add type
 
 import { Editor, EditorContent, JSONContent } from '@tiptap/react';
-import { generateDocxFile } from './components/docxExport';
-import ReactDOMServer from 'react-dom/server';
 import { Button } from '@/components/ui/button';
 import { Chart } from './components/Chart';
 import { useRef } from 'react';
-import { toPng } from 'html-to-image';
 import html2canvas from 'html2canvas';
+import { generateDocxFile } from './components/docxExport';
 
 // import domtoimage from 'dom-to-image-more';
 
@@ -60,30 +58,28 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
           if (!element) return;
           console.log(element);
           const canvas = await html2canvas(element, {
-            logging: true,
             onclone: (clonedDoc) => {
               if (!clonedDoc.getElementById('hidden-container')) return;
-              clonedDoc.getElementById('hidden-container').style.display =
+              clonedDoc.getElementById('hidden-container')!.style.display =
                 'block';
             },
           });
 
           const data = canvas.toDataURL('image/jpg');
-          const link = document.createElement('a');
-          console.log('data ', data);
+          // const link = document.createElement('a');
 
-          if (typeof link.download === 'string') {
-            console.log(data);
+          // if (typeof link.download === 'string') {
+          //   console.log(data);
 
-            link.href = data;
-            link.download = 'image.jpg';
+          //   link.href = data;
+          //   link.download = 'image.jpg';
 
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          } else {
-            window.open(data);
-          }
+          //   document.body.appendChild(link);
+          //   link.click();
+          //   document.body.removeChild(link);
+          // } else {
+          //   window.open(data);
+          // }
           // const node = ref.current;
           // const htmlString = ReactDOMServer.renderToString(<Chart />);
           // const res = await fetch('/api/export-image', {
@@ -111,14 +107,14 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
           //       console.error(error);
           //     });
           // }
-          // const json: JSONContent = editor.getJSON();
-          // const blob = await generateDocxFile('ARGUS', editor);
-          // const url = URL.createObjectURL(blob);
-          // const link = document.createElement('a');
-          // link.href = url;
-          // link.download = 'report.docx';
-          // link.click();
-          // URL.revokeObjectURL(url);
+          const json: JSONContent = editor.getJSON();
+          const blob = await generateDocxFile('ARGUS', editor, data);
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'report.docx';
+          link.click();
+          URL.revokeObjectURL(url);
         }}
       >
         Export

@@ -112,6 +112,7 @@ const TEST_RATINGS: TestRatingsType = {
 export const generateDocxFile = async (
   template: string = 'ARGUS',
   editor: Editor,
+  img: string,
   metrics: any = TEST_METRICS,
   recommendation: string = TEST_RECOMMENDATION,
   companyDescription: string = TEST_COMPANY_DESCRIPTION,
@@ -236,13 +237,25 @@ export const generateDocxFile = async (
             })
           : new Paragraph({
               alignment: AlignmentType.JUSTIFIED,
-              spacing: { line: 80, lineRule: LineRuleType.AT_LEAST },
-              children:
-                cell.content
+              spacing: {
+                line: 80,
+                lineRule: LineRuleType.AT_LEAST,
+                before: 60,
+              },
+              children: [
+                new TextRun({
+                  text: '    ',
+                  italics: cell.marks?.some((m) => m.type === 'italic'),
+                  bold: cell.marks?.some((m) => m.type === 'bold'),
+                  size: 18,
+                  font: 'Times New Roman',
+                }),
+                ...(cell.content
                   ?.filter((c) => c.type === 'text' && c.text)
                   .map((c, i, arr) =>
                     processContent(c, i === arr.length - 1),
-                  ) ?? [],
+                  ) ?? []),
+              ],
             });
 
       reachedMaxLines
@@ -279,7 +292,7 @@ export const generateDocxFile = async (
     // return [firstHalf.trim(), secondHalf.trim()];
   }
 
-  splitText(jsonContent.content ?? [], 480, '9px Times New Roman', 15);
+  splitText(jsonContent.content ?? [], 480, '9px Times New Roman', 25);
 
   const margins = {
     top: 1550.6,
@@ -719,7 +732,12 @@ export const generateDocxFile = async (
         margins: { top: 60 },
         borders: {
           top: { style: 'none' },
-          bottom: { style: 'none' },
+          bottom: {
+            style: BorderStyle.SINGLE,
+            size: 4,
+            color: '000000',
+            space: 2,
+          },
           left: { style: 'none' },
           right: { style: 'none' },
         },
@@ -787,6 +805,34 @@ export const generateDocxFile = async (
                     ],
                   }),
                   ...firstHalf,
+                  new Paragraph({
+                    children: [
+                      new ImageRun({
+                        data: img,
+                        transformation: { width: 484, height: 325 },
+                        floating: {
+                          horizontalPosition: {
+                            relative:
+                              HorizontalPositionRelativeFrom.LEFT_MARGIN,
+                            offset: 0,
+                          },
+                          // horizontalPosition: {
+                          //   relative:
+                          //     HorizontalPositionRelativeFrom.LEFT_MARGIN,
+                          //   offset: 787.2,
+                          // },
+                          // verticalPosition: {
+                          //   relative: VerticalPositionRelativeFrom.PAGE,
+                          //   offset: 11673.6,
+                          // },
+                          verticalPosition: {
+                            relative: VerticalPositionRelativeFrom.PAGE,
+                            offset: 5569000,
+                          },
+                        },
+                      }),
+                    ],
+                  }),
                   // new Paragraph({
                   //   alignment: AlignmentType.JUSTIFIED,
                   //   children: firstHalf,
