@@ -14,32 +14,32 @@ import {
   ReferenceLine,
 } from 'recharts';
 
-import { useEffect, useState } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
 import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 
 // const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 // TODO: generate quarters and columns automatically based on date
-export default function Chart({}) {
+export const Chart = forwardRef((props: any, ref: any) => {
   // Override console.error
   // This is a hack to suppress the warning about missing defaultProps in the recharts library
   // @link https://github.com/recharts/recharts/issues/3615
-  // const error = console.error;
+  const error = console.error;
 
-  // console.error = (...args: any) => {
-  //   if (/defaultProps/.test(args[0])) return;
-  //   error(...args);
-  // };
-  // const [hydrated, setHydrated] = useState(false);
+  console.error = (...args: any) => {
+    if (/defaultProps/.test(args[0])) return;
+    error(...args);
+  };
+  const [hydrated, setHydrated] = useState(false);
 
-  // useEffect(() => {
-  //   setHydrated(true);
-  // }, []);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
-  // if (!hydrated) {
-  //   // Returns null on first render, so the client and server match
-  //   return null;
-  // }
+  if (!hydrated) {
+    // Returns null on first render, so the client and server match
+    return null;
+  }
 
   const days = 4 * 365 + 1;
 
@@ -76,8 +76,9 @@ export default function Chart({}) {
   return (
     <>
       <div
-        className="mt-10 ml-10 grid grid-cols-[50px_2fr_4fr_4fr_4fr_2fr] divide-x divide-y w-[484px] h-[200px] divide-zinc-400"
+        className="grid grid-cols-[50px_2fr_4fr_4fr_4fr_2fr] divide-x divide-y w-[484px] divide-zinc-400"
         style={{ fontSize: '8px' }}
+        ref={ref}
       >
         <div className="border-t border-l border-zinc-400">
           <h2 style={{ fontSize: '9px' }} className="text-foreground font-bold">
@@ -89,7 +90,7 @@ export default function Chart({}) {
           >
             ($)
           </h2>
-          {/* <AreaChart
+          <AreaChart
             width={484}
             height={90}
             data={data}
@@ -122,6 +123,7 @@ export default function Chart({}) {
               stroke="#1f497d"
               fill="#f4e9d3"
               strokeWidth={1.5}
+              isAnimationActive={false}
             />
 
             <ReferenceLine
@@ -142,7 +144,7 @@ export default function Chart({}) {
               strokeDasharray="3 3"
               strokeWidth="0.7"
             />
-          </AreaChart> */}
+          </AreaChart>
         </div>
         <div></div>
         <div></div>
@@ -162,7 +164,7 @@ export default function Chart({}) {
           <div className="absolute bottom-0 left-0">
             <p className="font-semibold">Quarterly</p>
           </div>
-          {/* <BarChart
+          <BarChart
             width={484}
             height={44}
             data={earningsData}
@@ -175,8 +177,9 @@ export default function Chart({}) {
               dataKey="y"
               fill="#1f497d"
               label={{ fill: 'white', position: 'insideBottom', fontSize: 7 }}
+              isAnimationActive={false}
             />
-          </BarChart> */}
+          </BarChart>
         </div>
         <div></div>
         <div></div>
@@ -212,7 +215,7 @@ export default function Chart({}) {
             ($ in Bil.)
           </h2>
 
-          {/* <BarChart
+          <BarChart
             width={484}
             height={44}
             data={revenueData}
@@ -225,8 +228,9 @@ export default function Chart({}) {
               dataKey="y"
               fill="#1f497d"
               label={{ fill: 'white', position: 'insideBottom', fontSize: 7 }}
+              isAnimationActive={false}
             />
-          </BarChart> */}
+          </BarChart>
         </div>
         <div></div>
         <div></div>
@@ -299,4 +303,4 @@ export default function Chart({}) {
       </div>
     </>
   );
-}
+});

@@ -122,28 +122,6 @@ export const generateDocxFile = async (
 
   const content = jsonContent.content ?? [];
 
-  // const processContent = (cell: JSONContent): TextRun => {
-  //   if (cell.type === 'text')
-  //     return new TextRun({
-  //       text: cell.text,
-  //       italics: cell.marks?.some((m) => m.type === 'italic'),
-  //       bold: cell.marks?.some((m) => m.type === 'bold'),
-  //     });
-  //   else return new TextRun({ text: '' });
-  // };
-
-  // const docxFormattedContent = content.map((cell) =>
-  //   cell.type === 'heading'
-  //     ? new Paragraph({
-  //         text: cell.content && cell.content[0].text,
-  //         heading: getHeadingLevel(cell.attrs?.level ?? 1),
-  //       })
-  //     : new Paragraph({
-  //         alignment: AlignmentType.JUSTIFIED,
-  //         children: cell.content?.map((c) => processContent(c)) ?? [],
-  //       }),
-  // );
-
   const firstHalf: Paragraph[] = [];
   const secondHalf: Paragraph[] = [];
 

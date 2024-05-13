@@ -2,11 +2,23 @@
 
 import { Editor, EditorContent, JSONContent } from '@tiptap/react';
 import { generateDocxFile } from './components/docxExport';
+import ReactDOMServer from 'react-dom/server';
 import { Button } from '@/components/ui/button';
+import { Chart } from './components/Chart';
+import { useRef } from 'react';
+import { toPng } from 'html-to-image';
+import html2canvas from 'html2canvas';
+
+// import domtoimage from 'dom-to-image-more';
 
 export const ExportButton = ({ editor }: { editor: Editor }) => {
+  const ref = useRef<HTMLDivElement>(null);
+
   return (
     <div className="flex text-sm">
+      <div className="hidden" id="hidden-container" ref={ref}>
+        <Chart />
+      </div>
       {/* <button
         onClick={() => {
           const json = editor.getJSON();
@@ -42,18 +54,71 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
       </button> */}
       <Button
         variant="ghost"
-        className="text-foreground/60"
+        className="text-foreground/60 z-30"
         onClick={async () => {
-          const json: JSONContent = editor.getJSON();
-          const blob = await generateDocxFile('ARGUS', editor);
-          const url = URL.createObjectURL(blob);
+          const element = ref.current;
+          if (!element) return;
+          console.log(element);
+          const canvas = await html2canvas(element, {
+            logging: true,
+            onclone: (clonedDoc) => {
+              if (!clonedDoc.getElementById('hidden-container')) return;
+              clonedDoc.getElementById('hidden-container').style.display =
+                'block';
+            },
+          });
 
+          const data = canvas.toDataURL('image/jpg');
           const link = document.createElement('a');
-          link.href = url;
-          link.download = 'report.docx';
-          link.click();
+          console.log('data ', data);
 
-          URL.revokeObjectURL(url);
+          if (typeof link.download === 'string') {
+            console.log(data);
+
+            link.href = data;
+            link.download = 'image.jpg';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } else {
+            window.open(data);
+          }
+          // const node = ref.current;
+          // const htmlString = ReactDOMServer.renderToString(<Chart />);
+          // const res = await fetch('/api/export-image', {
+          //   method: 'POST',
+          //   headers: { 'Content-Type': 'application/json' },
+          //   body: JSON.stringify({ html: htmlString }),
+          // });
+          // const img = await res.blob();
+          // console.log(img);
+          // const link = document.createElement('a');
+          // link.download = 'my-image.png';
+          // link.href = URL.createObjectURL(img);
+          // link.click();
+          // if (node) {
+          //   console.log(typeof node);
+          //   toPng(node, { cacheBust: true })
+          //     .then((dataUrl) => {
+          //       console.log(dataUrl);
+          //       const link = document.createElement('a');
+          //       link.download = 'my-image.png';
+          //       link.href = dataUrl;
+          //       link.click();
+          //     })
+          //     .catch((error) => {
+          //       console.error(error);
+          //     });
+          // }
+          // const json: JSONContent = editor.getJSON();
+          // const blob = await generateDocxFile('ARGUS', editor);
+          // const url = URL.createObjectURL(blob);
+          // const link = document.createElement('a');
+          // link.href = url;
+          // link.download = 'report.docx';
+          // link.click();
+          // URL.revokeObjectURL(url);
         }}
       >
         Export
