@@ -71,8 +71,6 @@ export default function Chart({}) {
     }))
     .reverse();
 
-  console.log(revenueData);
-
   return (
     <>
       <div

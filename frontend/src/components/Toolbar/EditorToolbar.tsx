@@ -13,7 +13,7 @@ import { ContentTypePicker } from './components/ContentTypePicker';
 import { AIDropdown } from './components/AIDropdown';
 import { EditLinkPopover } from './components/EditLinkPopover';
 import { Card } from '../ui/card';
-import { ExportButton } from '../TopBar/export/ExportButton';
+import { ExportButton } from './components/export/ExportButton';
 import { ColorPicker } from '../panels/Colorpicker/Colorpicker';
 
 // We memorize the button so each button is not rerendered

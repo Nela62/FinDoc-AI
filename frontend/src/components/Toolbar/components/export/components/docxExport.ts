@@ -109,6 +109,15 @@ const TEST_RATINGS: TestRatingsType = {
   Strength: 'HIGH',
 };
 
+const SUMMARY = [
+  'EPS and sales beat, better outlook.',
+  'Amazon reported above-consensus revenue and EPS for 2Q23 and positive guidance for 3Q23. The stock rallied as operating profit far exceeded expectations.',
+  "Despite a softer post-pandemic environment for consumer online retail and global macro-economic softness, Amazon's revenue exceeded consensus by over $3 billion, while GAAP profits nearly doubled Street expectations.",
+  'The AWS business, which had shown signs of deceleration, may now be energized by the global push to generative AI.',
+  'Beyond current challenges, Amazon appears to have retained market-share gains that it built during the pandemic.',
+  'We believe that AMZN warrants long-term accumulation in most equity accounts.',
+];
+
 export const generateDocxFile = async (
   template: string = 'ARGUS',
   editor: Editor,
@@ -186,11 +195,6 @@ export const generateDocxFile = async (
         lines++;
       }
 
-      // if (!reachedMaxLines && currentLine !== '') {
-      //   firstHalfText += currentLine;
-      //   curText += currentLine;
-      // }
-
       let secondHalfText = cell.text!.substring(
         curText.length + currentLine.length + 1,
       );
@@ -264,35 +268,9 @@ export const generateDocxFile = async (
     });
 
     return [];
-    // const words = text.split(' ');
-    // for (let word of words) {
-    //   let testLine = currentLine + word + ' ';
-    //   let metrics = context.measureText(testLine);
-    //   if (metrics.width > width && currentLine !== '') {
-    //     lines++;
-    //     if (lines === maxLines) {
-    //       firstHalf += currentLine;
-    //       reachedMaxLines = true;
-    //       currentLine = word + ' ';
-    //       break;
-    //     }
-    //     firstHalf += currentLine;
-    //     currentLine = word + ' ';
-    //   } else {
-    //     currentLine = testLine;
-    //   }
-    // }
-
-    // if (!reachedMaxLines && currentLine !== '') {
-    //   firstHalf += currentLine;
-    // }
-
-    // let secondHalf = text.substring(firstHalf.length);
-
-    // return [firstHalf.trim(), secondHalf.trim()];
   }
 
-  splitText(jsonContent.content ?? [], 480, '9px Times New Roman', 23);
+  splitText(jsonContent.content ?? [], 480, '9px Times New Roman', 11);
 
   const margins = {
     top: 1550.6,
@@ -772,7 +750,7 @@ export const generateDocxFile = async (
                   new Paragraph({
                     children: [
                       new TextRun({
-                        text: 'Analysis by Helton Suzuki, CFA, April 11, 2024',
+                        text: 'Analysis by Helton Suzuki, CFA, May 11, 2024',
                         italics: true,
                         size: 18,
                       }),
@@ -804,6 +782,21 @@ export const generateDocxFile = async (
                       }),
                     ],
                   }),
+                  ...SUMMARY.map(
+                    (point) =>
+                      new Paragraph({
+                        bullet: { level: 0 },
+                        spacing: { before: 60 },
+                        children: [
+                          new TextRun({
+                            text: point,
+                            size: 20,
+                            font: 'Arial Narrow',
+                          }),
+                        ],
+                      }),
+                  ),
+
                   ...firstHalf,
                   new Paragraph({
                     children: [
@@ -816,20 +809,37 @@ export const generateDocxFile = async (
                               HorizontalPositionRelativeFrom.LEFT_MARGIN,
                             offset: 0,
                           },
-                          // horizontalPosition: {
-                          //   relative:
-                          //     HorizontalPositionRelativeFrom.LEFT_MARGIN,
-                          //   offset: 787.2,
-                          // },
-                          // verticalPosition: {
-                          //   relative: VerticalPositionRelativeFrom.PAGE,
-                          //   offset: 11673.6,
-                          // },
                           verticalPosition: {
                             relative: VerticalPositionRelativeFrom.PAGE,
-                            offset: 5569000,
+                            offset: 5565000,
                           },
                         },
+                      }),
+                    ],
+                  }),
+                  new Paragraph({
+                    border: {
+                      top: {
+                        style: BorderStyle.SINGLE,
+                        size: 4,
+                        color: 'a3a3a3',
+                        space: 1,
+                      },
+                    },
+                    spacing: { before: 120, after: 60 },
+                    children: [
+                      new TextRun({
+                        text: 'Market Data  ',
+                        color: '312e81',
+                        size: 24,
+                        font: 'Arial Narrow',
+                        bold: true,
+                      }),
+                      new TextRun({
+                        text: "Pricing reflects previous trading week's closing price",
+                        color: '000000',
+                        size: 14,
+                        font: 'Arial Narrow',
                       }),
                     ],
                   }),
@@ -889,6 +899,15 @@ export const generateDocxFile = async (
         {
           id: 'Heading2',
           name: 'Heading 2',
+          basedOn: 'Normal',
+          next: 'Normal',
+          quickFormat: true,
+          run: { size: 24, bold: true, color: '312e81', font: 'Arial Narrow' },
+          paragraph: { spacing: { before: 120, after: 60 } },
+        },
+        {
+          id: '3',
+          name: 'Heading 3',
           basedOn: 'Normal',
           next: 'Normal',
           quickFormat: true,

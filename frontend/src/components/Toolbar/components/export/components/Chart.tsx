@@ -70,11 +70,20 @@ export const Chart = forwardRef((props: any, ref: any) => {
       y: quarter.reportedEPS,
     }))
     .reverse();
-
-  console.log(revenueData);
-
   return (
     <>
+      <div
+        className="w-full justify-between flex text-foreground/60 pb-2 pr-2"
+        style={{ fontSize: '7px' }}
+      >
+        <p>200-Day Moving Average</p>
+        <div className="flex gap-2">
+          <p>Target Price: $165.00</p>
+          <p>52 Week High: $143.63</p>
+          <p>52 Week Low: $125.92</p>
+          <p>Closed at $132.21 on 7/28</p>
+        </div>
+      </div>
       <div
         className="grid grid-cols-[50px_2fr_4fr_4fr_4fr_2fr] divide-x divide-y w-[484px] divide-zinc-400"
         style={{ fontSize: '8px' }}

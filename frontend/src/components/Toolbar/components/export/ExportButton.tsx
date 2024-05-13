@@ -56,8 +56,8 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
         onClick={async () => {
           const element = ref.current;
           if (!element) return;
-          console.log(element);
           const canvas = await html2canvas(element, {
+            logging: false,
             onclone: (clonedDoc) => {
               if (!clonedDoc.getElementById('hidden-container')) return;
               clonedDoc.getElementById('hidden-container')!.style.display =
@@ -107,7 +107,6 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
           //       console.error(error);
           //     });
           // }
-          const json: JSONContent = editor.getJSON();
           const blob = await generateDocxFile('ARGUS', editor, data);
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');

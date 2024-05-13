@@ -1,5 +1,5 @@
 import { Editor } from '@tiptap/react';
-import { ExportButton } from './export/ExportButton';
+import { ExportButton } from '../Toolbar/components/export/ExportButton';
 import Image from 'next/image';
 import {
   ChevronRight,
