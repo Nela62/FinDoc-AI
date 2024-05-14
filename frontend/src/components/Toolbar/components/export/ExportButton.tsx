@@ -6,11 +6,16 @@ import { Chart } from './components/Chart';
 import { useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { generateDocxFile } from './components/docxExport';
+import { useInsertMutation } from '@supabase-cache-helpers/postgrest-react-query';
+import { createClient } from '@/lib/supabase/client';
 
 // import domtoimage from 'dom-to-image-more';
 
 export const ExportButton = ({ editor }: { editor: Editor }) => {
   const ref = useRef<HTMLDivElement>(null);
+
+  const client = createClient();
+  const {mutateAsync: insertCache} = useInsertMutation(client.from('api_cache'), ['id'], '*');
 
   return (
     <div className="flex text-sm">

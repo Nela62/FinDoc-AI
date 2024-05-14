@@ -442,6 +442,7 @@ const formSchema = z.object({
 });
 
 export default function NewReport() {
+  const [open, setOpen] = useState(false);
   const client = createClient();
 
   const [user, setUser] = useState<string | null>(null);
@@ -540,12 +541,13 @@ export default function NewReport() {
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel>Company</FormLabel>
-                        <Popover>
+                        <Popover open={open} onOpenChange={setOpen}>
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
                                 variant="outline"
                                 role="combobox"
+                                aria-expanded={open}
                                 className={cn(
                                   'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 font-normal',
                                   !field.value && 'text-muted-foreground',
@@ -585,6 +587,7 @@ export default function NewReport() {
                                           'companyTicker',
                                           ticker.value,
                                         );
+                                        setOpen(false);
                                       }}
                                     >
                                       {ticker.label} ({ticker.value})
@@ -652,7 +655,7 @@ export default function NewReport() {
                             <p className="pt-1.5 text-sm">$</p>
                           </div>
                           <FormControl>
-                            <Input {...field} className="pl-6" />
+                            <Input {...field} className="pl-6" type="number" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -687,12 +690,12 @@ export default function NewReport() {
                       </FormItem>
                     )}
                   />
-                  <div className="flex flex-col space-y-3">
+                  {/* <div className="flex flex-col space-y-3">
                     <Label>Data Sources</Label>
                     <Button variant="outline" className="w-1/2">
                       Edit Sources
                     </Button>
-                  </div>
+                  </div> */}
                 </div>
                 <div className="w-fit pr-10 py-1">
                   <Carousel>
