@@ -106,12 +106,12 @@ const tickers = [
 ] as const;
 
 const buildingBlocks = [
-  // 'business_description',
+  'business_description',
   'investment_thesis',
-  // 'earnings_and_growth_analysis',
-  // 'financial_strength_and_dividend',
-  // 'management_and_risks',
-  // 'valuation',
+  'earnings_and_growth_analysis',
+  'financial_strength_and_dividend',
+  'management_and_risks',
+  'valuation',
 ];
 
 const COLOR_SCHEMES = [
@@ -250,8 +250,26 @@ export default function NewReport() {
         if (key !== 'business_description') {
           // @ts-ignore
           const json = markdownToJson(value);
+          const heading = {
+            type: 'heading',
+            attrs: {
+              id: '220f43a9-c842-4178-b5b4-5ed8a33c6192',
+              level: 2,
+              'data-toc-id': '220f43a9-c842-4178-b5b4-5ed8a33c6192',
+            },
+            content: [
+              {
+                text: formatText(key),
+                type: 'text',
+              },
+            ],
+          };
           // @ts-ignore
-          curReportText.content.push(...json.content);
+          curReportText.content.push(
+            // @ts-ignore
+            heading,
+            ...json.content,
+          );
         }
       }
 
@@ -338,11 +356,9 @@ export default function NewReport() {
 
       const cleanText = getCleanText(text, oldToNewCitationsMap);
 
-      const getTitle =
-        block === 'business_description' ? '' : `##${formatText(block)}` + '\\';
       setGeneratedBlocks((state) => ({
         ...state,
-        [block]: getTitle + cleanText,
+        [block]: cleanText,
       }));
       setSectionsGenerated((state) => state + 1);
     });
