@@ -1,6 +1,6 @@
 // TODO: add type
 
-import { Editor,  } from '@tiptap/react';
+import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import { Chart } from './components/Chart';
 import { useRef } from 'react';
@@ -15,7 +15,11 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
   const ref = useRef<HTMLDivElement>(null);
 
   const client = createClient();
-  const {mutateAsync: insertCache} = useInsertMutation(client.from('api_cache'), ['id'], '*');
+  const { mutateAsync: insertCache } = useInsertMutation(
+    client.from('api_cache'),
+    ['id'],
+    '*',
+  );
 
   return (
     <div className="flex text-sm">
@@ -71,6 +75,14 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
           });
 
           const data = canvas.toDataURL('image/jpg');
+
+          const blob = await generateDocxFile(editor.getJSON(), data);
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'report.docx';
+          link.click();
+          URL.revokeObjectURL(url);
           // const link = document.createElement('a');
 
           // if (typeof link.download === 'string') {
@@ -112,13 +124,6 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
           //       console.error(error);
           //     });
           // }
-          const blob = await generateDocxFile('ARGUS', editor, data);
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = 'report.docx';
-          link.click();
-          URL.revokeObjectURL(url);
         }}
       >
         Export

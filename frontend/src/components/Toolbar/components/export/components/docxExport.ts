@@ -119,18 +119,15 @@ const SUMMARY = [
 ];
 
 export const generateDocxFile = async (
-  template: string = 'ARGUS',
-  editor: Editor,
+  content: JSONContent,
   img: string,
+  companyDescription: string = TEST_COMPANY_DESCRIPTION,
   metrics: any = TEST_METRICS,
   recommendation: string = TEST_RECOMMENDATION,
-  companyDescription: string = TEST_COMPANY_DESCRIPTION,
+  template: string = 'ARGUS',
 ) => {
   // TODO: use selectedCompany to fetch its full name
   const companyName = 'Amazon.com Inc';
-  const jsonContent = editor.getJSON();
-
-  const content = jsonContent.content ?? [];
 
   const firstHalf: Paragraph[] = [];
   const secondHalf: Paragraph[] = [];
@@ -270,7 +267,7 @@ export const generateDocxFile = async (
     return [];
   }
 
-  splitText(jsonContent.content ?? [], 480, '9px Times New Roman', 11);
+  splitText(content.content ?? [], 480, '9px Times New Roman', 11);
 
   const margins = {
     top: 1550.6,

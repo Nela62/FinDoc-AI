@@ -1,354 +1,20 @@
-// export default function NewReport() {
-//   const [options, setOptions] = useState<OptionsState>({
-//     type: '',
-//     companyTicker: '',
-//     recommendation: Recommendation.Auto,
-//     targetPrice: undefined,
-//   });
 'use client';
-
-//   const updateOption = (key: string, value: string) => {
-//     setOptions((prev) => ({ ...prev, [key]: value }));
-//   };
-
-//   const getDateName = () => {
-//     const currentDate = new Date();
-
-//     // Extract the month, day, and year from the current date
-//     const month = currentDate.toLocaleString('default', { month: 'short' });
-//     const day = currentDate.getDate();
-//     const year = currentDate.getFullYear();
-
-//     // Format the date as "MMM DD, YYYY"
-//     const formattedDate = `${month} ${day}, ${year}`;
-//     return formattedDate;
-//   };
-
-//   // TODO: IMPORTANT - add all tickers
-
-//   type Option = { label: string; value: string };
-
-//   interface OptionsState {
-//     type: string;
-//     companyTicker: string;
-//     recommendation: Recommendation;
-//     targetPrice?: string;
-//   }
-//   const generateReport = async (ticker: string, editor: Editor) => {
-//     const company = tickers.find((t) => t.value === ticker)?.label;
-
-//     if (!company) {
-//       return;
-//     }
-
-//     editor.commands.insertContent('<h1>' + company + '</h1>');
-
-//     const prompts = getPrompts(company);
-
-//     for (let i = 0; i < prompts.length; i++) {
-//       const res = await fetch('/api/generation', {
-//         method: 'POST',
-//         body: JSON.stringify({
-//           company,
-//           prompt: prompts[i].prompt,
-//         }),
-//       });
-//       const body = await res.json();
-//       editor.commands.insertContent('<h2>' + prompts[i].section + '</h2>');
-//       editor.commands.insertContent(
-//         '<p>' + body.response.replace(/\n/g, '') + '</p>',
-//       );
-//     }
-//   };
-
-//   function SelectorComponent({
-//     topLabel,
-//     label,
-//     options,
-//     value,
-//     setValue,
-//     search,
-//     halfWidth,
-//   }: {
-//     topLabel: string;
-//     label: string;
-//     options: Option[];
-//     value: string;
-//     setValue: (value: string) => void;
-//     search: boolean;
-//     halfWidth?: boolean;
-//   }) {
-//     return (
-//       <div
-//         className={`${halfWidth ? 'w-[156px]' : 'w-80'} flex flex-col gap-1`}
-//       >
-//         <p className="text-sm text-zinc-600 font-semibold">{topLabel}</p>
-//         <Combobox
-//           label={label}
-//           options={options}
-//           value={value}
-//           setValue={setValue}
-//           search={search}
-//         />
-//       </div>
-//     );
-//   }
-//   const report = reports.find((r) => r.id === reportId);
-
-//   function getDocType(docType: string) {
-//     switch (docType) {
-//       case '10-K':
-//         return DocumentType.TenK;
-//       case '10-Q':
-//         return DocumentType.TenQ;
-//       case 'Earnings Calls':
-//         return DocumentType.EarningsCalls;
-//       default:
-//         return DocumentType.News;
-//     }
-//   }
-
-//   const fetchDocuments = useCallback(async () => {
-//     const documents = await supabase
-//       .from('documents')
-//       .select('*')
-//       .eq('company_ticker', report?.companyTicker);
-
-//     if (!documents.data) return;
-
-//     addDocuments(
-//       documents.data.map((doc) => ({
-//         ...doc,
-//         doc_type: getDocType(doc.doc_type),
-//       })),
-//     );
-//   }, [report, supabase, addDocuments]);
-
-//   useEffect(() => {
-//     if (!report) return;
-//     fetchDocuments();
-//   }, []);
-
-//   const companies = useMemo(
-//     () =>
-//       tickers.map((t) => ({
-//         label: `${t.value} - ${t.label}`,
-//         value: t.value,
-//       })),
-//     [],
-//   );
-
-//   return (
-//     <div className="bg-white rounded-t-[10px] border-[0.5px] border-stone-300 w-full py-8">
-//       <div className="flex flex-col w-fit mx-auto">
-//         <p className="w-fit text-xl text-zinc-600 font-semibold font-sans mb-6">
-//           Create New Report
-//         </p>
-//         <div
-//           className="flex flex-col gap-4 rounded-lg px-10 py-6"
-//           style={{
-//             boxShadow: '0px 0px 4px 0px rgba(0,0,0,0.1) inset',
-//             backgroundColor: '#F0F2F5',
-//           }}
-//         >
-//           <SelectorComponent
-//             topLabel="Report Type"
-//             label="Select a report type"
-//             options={[
-//               {
-//                 label: 'Equity Analyst Report',
-//                 value: 'EquityAnalyst',
-//               },
-//               {
-//                 label: 'Earnings Call Note',
-//                 value: 'EarningsCallNote',
-//               },
-//               { label: 'Other', value: 'Other' },
-//             ]}
-//             value={options.type}
-//             setValue={(val) => updateOption('type', val)}
-//             search={false}
-//           />
-//           {options.type && (
-//             <SelectorComponent
-//               topLabel="Company"
-//               label="Select a company"
-//               value={options.companyTicker}
-//               options={companies}
-//               setValue={(val) => updateOption('companyTicker', val)}
-//               search={true}
-//             />
-//           )}
-//           {options.type === 'EquityAnalyst' && (
-//             <div className="flex gap-2">
-//               <SelectorComponent
-//                 topLabel="Recommendation"
-//                 label=""
-//                 options={[
-//                   { label: 'Auto', value: Recommendation.Auto },
-//                   { label: 'Buy', value: Recommendation.Buy },
-//                   {
-//                     label: 'Overweight',
-//                     value: Recommendation.Overweight,
-//                   },
-//                   { label: 'Hold', value: Recommendation.Hold },
-//                   {
-//                     label: 'Underweight',
-//                     value: Recommendation.Underweight,
-//                   },
-//                   { label: 'Sell', value: Recommendation.Sell },
-//                 ]}
-//                 value={options.recommendation}
-//                 setValue={(val) => updateOption('recommendation', val)}
-//                 search={false}
-//                 halfWidth
-//               />
-//               <div className={`w-[156px] flex flex-col gap-1 relative`}>
-//                 <p className="text-sm text-zinc-600 font-semibold">
-//                   Target Price
-//                 </p>
-//                 <input
-//                   disabled={options.recommendation === Recommendation.Auto}
-//                   style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
-//                   className={`${
-//                     options.recommendation === Recommendation.Auto &&
-//                     'bg-zinc-200 cursor-not-allowed'
-//                   } inline-flex h-10 items-center justify-between gap-1 rounded-md bg-white border-zinc-300 border-[0.5px] px-4 text-zinc-600 focus:border-zinc-400 pl-5 focus:outline-none appearance-none`}
-//                   value={
-//                     options.recommendation === Recommendation.Auto
-//                       ? ''
-//                       : options.targetPrice
-//                   }
-//                   onInput={(e) =>
-//                     updateOption('targetPrice', e.currentTarget.value)
-//                   }
-//                 />
-//                 <p className="absolute left-2 bottom-2.5 text-sm text-zinc-600">
-//                   $
-//                 </p>
-//               </div>
-//             </div>
-//           )}
-//           {/* TODO: add tooltip when disabled */}
-//           {options.type && options.companyTicker && (
-//             <div className="flex flex-col gap-1">
-//               <button className="mt-2 flex gap-1 items-center w-fit">
-//                 <p className="text-xs text-zinc-600 font-semibold">
-//                   Choose a template
-//                 </p>
-//                 <ChevronDown className="h-4 w-4 text-zinc-600" />
-//               </button>
-
-//               <button className="mt-2 flex gap-1 items-center w-fit">
-//                 <p className="text-xs text-zinc-600 font-semibold">
-//                   Edit sources
-//                 </p>
-//                 <ChevronDown className="h-4 w-4 text-zinc-600" />
-//               </button>
-//             </div>
-//           )}
-//           <div className="flex gap-4 w-full mt-2 mb-2">
-//             <button
-//               disabled={!options.companyTicker || !options.type}
-//               style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
-//               className={`${
-//                 !options.companyTicker || !options.type
-//                   ? 'cursor-not-allowed text-zinc-400 bg-zinc-200'
-//                   : 'hover:border-zinc-400'
-//               } flex gap-2 w-1/2 border-zinc-300  border text-zinc-600 bg-white py-2 items-center justify-center rounded-md px-[15px] font-medium leading-none focus:outline-none text-sm`}
-//               onClick={() => {
-//                 if (!options.companyTicker || !options.type) return;
-//                 // updateReport({
-//                 //   id: reportId,
-//                 //   title: `${getDateName()} - ${
-//                 //     ReportType[
-//                 //       (options.type as keyof typeof ReportType) ?? 'Other'
-//                 //     ]
-//                 //   }`,
-//                 //   ...options,
-//                 //   type: ReportType[
-//                 //     (options.type as keyof typeof ReportType) ?? 'Other'
-//                 //   ],
-//                 //   content: '',
-//                 //   lastUpdated: new Date(),
-//                 //   status:
-//                 // });
-//                 console.log(reports);
-//                 // generateReport(options.company, editor);
-//               }}
-//             >
-//               <SquarePen className="h-5 w-5" />
-//               Start writing
-//             </button>
-//             <button
-//               disabled={!options.companyTicker || !options.type}
-//               style={{ boxShadow: '0px 1px 2px 0px rgb(0,0,0,0.2)' }}
-//               className={`${
-//                 !options.companyTicker || !options.type
-//                   ? 'bg-indigo8 text-zinc-50 cursor-not-allowed'
-//                   : 'bg-accent text-white'
-//               } flex gap-2 items-center justify-center text-left w-1/2  rounded-md px-[15px] font-medium focus:shadow-[0_0_0_2px] focus:outline-none text-sm py-1`}
-//               onClick={() => {
-//                 // console.log('generation report');
-//                 // generateReport(options.companyTicker, editor);
-
-//                 if (!options.companyTicker || !options.type) return;
-
-//                 function typeContent(
-//                   editor: Editor,
-//                   content: any[],
-//                   delay: number,
-//                 ) {
-//                   let index = 0;
-
-//                   function type() {
-//                     if (index < content.length) {
-//                       editor.commands.insertContent(content[index]);
-//                       index++;
-//                       setTimeout(type, delay);
-//                     }
-//                   }
-
-//                   type();
-//                 }
-
-//                 // updateReport({
-//                 //   id: reportId,
-//                 //   title: `${getDateName()} - ${
-//                 //     ReportType[
-//                 //       (options.type as keyof typeof ReportType) ?? 'Other'
-//                 //     ]
-//                 //   }`,
-//                 //   ...options,
-//                 //   type: ReportType[
-//                 //     (options.type as keyof typeof ReportType) ?? 'Other'
-//                 //   ],
-//                 //   content: '',
-//                 // });
-
-//                 typeContent(editor, newAmazonReport.content, 600);
-//               }}
-//             >
-//               <Wand2Icon className="h-5 w-5" />
-//               <div className="flex flex-col w-fit justify-start">
-//                 <p>Generate Full</p>
-//                 <p>Report</p>
-//               </div>
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export const metadata: Metadata = {
-//   title: 'Create a new report',
-// };
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { Chart } from '@/components/Toolbar/components/export/components/Chart';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import {
   Command,
   CommandEmpty,
@@ -384,7 +50,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -396,9 +62,17 @@ import { Label } from '@/components/ui/label';
 import { createClient } from '@/lib/supabase/client';
 import { useInsertMutation } from '@supabase-cache-helpers/postgrest-react-query';
 import { getNanoId } from '@/lib/utils/nanoId';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import moment from 'moment';
 import { useRouter } from 'next/navigation';
+import {
+  getCitationMapAndInsertNew,
+  getCleanText,
+} from '@/lib/utils/citations';
+import { markdownToJson } from '@/lib/utils/formatText';
+import html2canvas from 'html2canvas';
+import { JSONContent } from '@tiptap/core';
+import { generateDocxFile } from '@/components/Toolbar/components/export/components/docxExport';
 // TODO: add a super refinement for companyTicker; it can be optional when reportType doesn't required it
 
 const tickers = [
@@ -431,6 +105,21 @@ const tickers = [
   { label: 'Salesforce.com Inc.', value: 'CRM' },
 ] as const;
 
+const buildingBlocks = [
+  // 'business_description',
+  'investment_thesis',
+  // 'earnings_and_growth_analysis',
+  // 'financial_strength_and_dividend',
+  // 'management_and_risks',
+  // 'valuation',
+];
+
+const COLOR_SCHEMES = [
+  { key: 'blue', colors: ['#1c4587', '#f4e9d3', '#006f3b'] },
+  { key: 'red', colors: ['#7d1f1f', '#f4e9d3', '#006f3b'] },
+  { key: 'white', colors: ['#787878', '#cce8fb', '#0061d9'] },
+];
+
 const formSchema = z.object({
   reportType: z.string(),
   companyTicker: z.string(),
@@ -438,34 +127,85 @@ const formSchema = z.object({
   targetPrice: z
     .preprocess((a) => parseFloat(z.string().parse(a)), z.number())
     .optional(),
-  financialStrength: z.string(),
-  sectorRating: z.string(),
+  financialStrength: z.string().optional(),
   analystName: z.string().optional(),
   companyName: z.string().optional(),
-  companyLogo: typeof window === 'undefined' ? z.any() : z.instanceof(FileList),
+  companyLogo: (typeof window === 'undefined'
+    ? z.any()
+    : z.instanceof(FileList)
+  ).optional(),
   colorSchemeId: z.string(),
   templateId: z.string(),
 });
 
+function formatText(text: string) {
+  // Replace underscores with spaces
+  let formattedText = text.replace(/_/g, ' ');
+
+  // Capitalize the first letter of each word
+  formattedText = formattedText
+    .split(' ')
+    .map((word) => {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+
+  return formattedText;
+}
+
 export default function NewReport() {
   const [open, setOpen] = useState(false);
   const [isWhitelabelSettings, setIsWhiteLabelSettings] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [reportId, setReportId] = useState<string | null>(null);
+  const [reportUrl, setReportUrl] = useState<string | null>(null);
+  const [reportText, setReportText] = useState<JSONContent | null>(null);
+  const [generatedBlocks, setGeneratedBlocks] = useState({});
+  const [sectionsGenerated, setSectionsGenerated] = useState(0);
 
-  const client = createClient();
+  const ref = useRef<HTMLDivElement>(null);
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  const supabase = createClient();
 
   const [user, setUser] = useState<string | null>(null);
 
   const router = useRouter();
   useEffect(() => {
-    client.auth.getUser().then((res) => {
+    supabase.auth.getUser().then((res) => {
       if (res.data.user) setUser(res.data.user.id);
     });
-  }, [client.auth]);
+  }, [supabase.auth]);
 
   const { mutateAsync: insert } = useInsertMutation(
-    client.from('reports'),
+    supabase.from('reports'),
     ['id'],
     'id, url',
+  );
+
+  const { mutateAsync: insertCitedDocuments } = useInsertMutation(
+    supabase.from('cited_documents'),
+    ['id'],
+    'id',
+  );
+
+  const { mutateAsync: insertCitationSnippets } = useInsertMutation(
+    supabase.from('citation_snippets'),
+    ['id'],
+    'id',
+  );
+
+  const { mutateAsync: insertPDFCitations } = useInsertMutation(
+    supabase.from('pdf_citations'),
+    ['id'],
+    'id',
+  );
+
+  const { mutateAsync: insertAPICitations } = useInsertMutation(
+    supabase.from('api_citations'),
+    ['id'],
+    'id',
   );
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -474,7 +214,8 @@ export default function NewReport() {
       reportType: 'Equity Analyst Report',
       recommendation: 'AUTO',
       financialStrength: 'AUTO',
-      // templateId: '1',
+      colorSchemeId: COLOR_SCHEMES[0].key,
+      templateId: '1',
     },
   });
 
@@ -483,11 +224,9 @@ export default function NewReport() {
     // const options = { year: 'numeric', month: 'short', day: 'numeric' };
     // const formattedDate = today.toLocaleDateString('en-US', options);
     const nanoId = getNanoId();
-    console.log(values);
     if (!user) return;
     insert([
       {
-        // user_id: user,
         title: `${moment().format('MMMM DD, YYYY')} - ${values.reportType}`,
         company_ticker: values.companyTicker,
         url: nanoId,
@@ -501,10 +240,115 @@ export default function NewReport() {
       router.push('/reports/' + nanoId);
     });
   }
+  useEffect(() => {
+    if (sectionsGenerated === buildingBlocks.length) {
+      setGenerating(false);
+
+      const curReportText = { type: 'doc', content: [] };
+
+      for (const [key, value] of Object.entries(generatedBlocks)) {
+        if (key !== 'business_description') {
+          // @ts-ignore
+          const json = markdownToJson(value);
+          // @ts-ignore
+          curReportText.content.push(...json.content);
+        }
+      }
+
+      setReportText(curReportText);
+
+      supabase
+        .from('reports')
+        .update({ json_content: curReportText })
+        .match({ id: reportId });
+    }
+  }, [sectionsGenerated, generatedBlocks, supabase, reportId]);
+  async function onGenerateAndFormSubmit(values: z.infer<typeof formSchema>) {
+    const today = new Date();
+    // const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    // const formattedDate = today.toLocaleDateString('en-US', options);
+    const nanoId = getNanoId();
+    setReportUrl(nanoId);
+    if (!user) return;
+    setGenerating(true);
+    const data = await insert([
+      {
+        title: `${moment().format('MMMM DD, YYYY')} - ${values.reportType}`,
+        company_ticker: values.companyTicker,
+        url: nanoId,
+        type: values.reportType,
+        recommendation: values.recommendation,
+        targetprice: values.targetPrice,
+        status: 'Draft',
+        user_id: user,
+      },
+    ]);
+
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const reportid = data[0].id;
+    setReportId(reportid);
+    setGenerating(true);
+
+    buildingBlocks.forEach(async (block) => {
+      // TODO: fix citations and how text is parsed
+      const body: any = {
+        prompt_type: block,
+        report_id: reportid,
+        ticker: values.companyTicker,
+        // model: 'claude-3-haiku-20240307',
+      };
+      // if (customPrompt) body['custom_prompt'] = customPrompt;
+
+      const res = await fetch(`${baseUrl}/aigenerator/`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: {
+          'content-type': 'application/json',
+          Authorization: session.access_token,
+        },
+      });
+
+      const json = await res.json();
+      const text = json.text;
+      // generatedBlocks[block] = text;
+      if (block === 'business_description') {
+        setGeneratedBlocks((state) => ({
+          ...state,
+          business_description: text,
+        }));
+      }
+
+      const oldToNewCitationsMap = await getCitationMapAndInsertNew(
+        text,
+        json.citations,
+        reportid,
+        user,
+        insertCitedDocuments,
+        insertCitationSnippets,
+        insertPDFCitations,
+        insertAPICitations,
+      );
+
+      const cleanText = getCleanText(text, oldToNewCitationsMap);
+
+      const getTitle =
+        block === 'business_description' ? '' : `##${formatText(block)}` + '\\';
+      setGeneratedBlocks((state) => ({
+        ...state,
+        [block]: getTitle + cleanText,
+      }));
+      setSectionsGenerated((state) => state + 1);
+    });
+  }
 
   const mainForm = (
     <>
-      <div className="">
+      <div className="w-[360px]">
         <div className="space-y-4">
           {/* Report type */}
           <FormField
@@ -518,7 +362,7 @@ export default function NewReport() {
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -550,7 +394,7 @@ export default function NewReport() {
                         role="combobox"
                         aria-expanded={open}
                         className={cn(
-                          'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 font-normal',
+                          'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 font-normal ',
                           !field.value && 'text-muted-foreground',
                         )}
                       >
@@ -574,7 +418,7 @@ export default function NewReport() {
                     <Command>
                       <CommandInput
                         placeholder="Search company..."
-                        className="h-9"
+                        className="h-9 w-full"
                       />
                       <CommandEmpty>No company found.</CommandEmpty>
                       <CommandGroup>
@@ -692,47 +536,117 @@ export default function NewReport() {
                   </div> */}
         </div>
       </div>
-      <div className="flex gap-4 mt-4 mb-2 items-center">
-        <div className="flex items-center gap-2 w-1/2">
-          <Checkbox id="download" />
-          <label htmlFor="download" className="text-xs">
-            Automatically download report
-          </label>
-        </div>
-        <Button
-          variant="ghost"
-          className="text-xs w-1/2 font-normal"
-          onClick={() => {
-            setIsWhiteLabelSettings(true);
-          }}
-        >
-          Whitelabel Settings -{'>'}
-        </Button>
-      </div>
+      <Button
+        variant="ghost"
+        className="text-xs mt-2 mb-1 font-normal px-2"
+        onClick={() => {
+          setIsWhiteLabelSettings(true);
+        }}
+      >
+        Customize Template -{'>'}
+      </Button>
 
-      <div className="flex gap-5 w-full">
+      <div className="flex gap-5 w-full mt-14">
         <Button
           variant="outline"
           type="submit"
+          name="start-writing"
           className="flex gap-2 w-1/2 h-11"
+          onClick={form.handleSubmit(onFormSubmit)}
         >
           <SquarePen className="h-5 w-5" />
           Start writing
         </Button>
-        <Button type="submit" className="flex gap-2 h-11 w-1/2">
-          <Wand2Icon className="h-5 w-5" />
-          <div className="flex flex-col w-fit justify-start">
-            <p>Generate Full</p>
-            <p>Report</p>
-          </div>
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              type="submit"
+              name="generate"
+              className="flex gap-2 h-11 w-1/2"
+            >
+              <Wand2Icon className="h-5 w-5" />
+              <div className="flex flex-col w-fit justify-start">
+                <p>Generate Full</p>
+                <p>Report</p>
+              </div>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Generating report...</AlertDialogTitle>
+            </AlertDialogHeader>
+            <p>
+              Generated {sectionsGenerated} sections out of{' '}
+              {buildingBlocks.length}
+            </p>
+            <Progress
+              value={(sectionsGenerated / buildingBlocks.length) * 100}
+              className=""
+            />
+            <AlertDialogFooter>
+              {generating ? (
+                <AlertDialogCancel onClick={() => setGenerating(false)}>
+                  Cancel
+                </AlertDialogCancel>
+              ) : (
+                <>
+                  <AlertDialogAction
+                    onClick={async () => {
+                      const element = ref.current;
+                      if (!element) return;
+                      const canvas = await html2canvas(element, {
+                        logging: false,
+                        onclone: (clonedDoc) => {
+                          if (!clonedDoc.getElementById('hidden-container'))
+                            return;
+                          clonedDoc.getElementById(
+                            'hidden-container',
+                          )!.style.display = 'block';
+                        },
+                      });
+
+                      const img = canvas.toDataURL('image/jpg');
+
+                      if (!reportText) return;
+                      const blob = await generateDocxFile(
+                        reportText,
+                        img,
+                        // @ts-ignore
+                        generatedBlocks['business_description'] ?? '',
+                      );
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = 'report.docx';
+                      link.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    <div className="hidden" id="hidden-container" ref={ref}>
+                      <Chart />
+                    </div>
+                    Download Report
+                  </AlertDialogAction>
+                  <AlertDialogAction
+                    onClick={() => {
+                      router.push('/reports/' + reportUrl);
+                      setReportUrl(null);
+                    }}
+                  >
+                    Edit Report
+                  </AlertDialogAction>
+                </>
+              )}
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </>
   );
 
   const whiteLabelSettings = (
-    <div className="space-y-4">
-      <div className="flex gap-2 w-[370px] items-center">
+    <div className="space-y-4 w-[360px]">
+      <div className="flex gap-2 items-center">
         <Button
           variant="ghost"
           size="icon"
@@ -794,12 +708,19 @@ export default function NewReport() {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="AUTO">Auto</SelectItem>
-                <SelectItem value="LOW">Low</SelectItem>
-                <SelectItem value="LM">Low-Medium</SelectItem>
-                <SelectItem value="MED">Medium</SelectItem>
-                <SelectItem value="MH">Medium-High</SelectItem>
-                <SelectItem value="HIGH">High</SelectItem>
+                {...COLOR_SCHEMES.map((color) => (
+                  <SelectItem key={color.key} value={color.key}>
+                    <div className="flex gap-1 w-[120px]">
+                      {...color.colors.map((c, i) => (
+                        <div
+                          key={c + i}
+                          style={{ backgroundColor: c }}
+                          className="h-5 w-1/3 rounded-sm"
+                        ></div>
+                      ))}
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <FormMessage />
@@ -811,11 +732,11 @@ export default function NewReport() {
 
   return (
     <div className="flex flex-col items-center h-full w-full justify-center bg-muted/40">
-      <Card className="mb-10">
+      <Card className="mb-10 pb-6  pl-2 pt-2">
         <CardHeader className="font-semibold text-xl text-foreground/80 text-center">
           Create New Report
         </CardHeader>
-        <CardContent className="w-full flex gap-20">
+        <CardContent className="w-full flex gap-20 pr-14">
           <div className="w-fit pl-10 py-1">
             <Carousel>
               <CarouselContent className="pb-1">
@@ -839,7 +760,7 @@ export default function NewReport() {
             </Carousel>
           </div>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onFormSubmit)}>
+            <form onSubmit={form.handleSubmit(onGenerateAndFormSubmit)}>
               {isWhitelabelSettings ? whiteLabelSettings : mainForm}
             </form>
           </Form>

@@ -1,4 +1,3 @@
-import { cache } from 'react';
 import {
   fetchAPICacheById,
   fetchCitationSnippets,
@@ -28,6 +27,7 @@ export const getCitationMapAndInsertNew = async (
   insertPDFCitations: any,
   insertAPICitations: any,
 ) => {
+  if (citations.length === 0) return;
   const { usedCitations } = getUsedSourceNumsAndCitations(text, citations);
   const supabase = createClient();
 
@@ -49,6 +49,7 @@ export const getCitationMapAndInsertNew = async (
     }
 
     const citation = usedCitations[i];
+    if (!citation) return;
     let citedDocumentSourceNum: Number = citedDocuments.length + 1;
     let citationSnippetSourceNum = 1;
 
@@ -107,7 +108,11 @@ export const getCitationMapAndInsertNew = async (
         let snippetExists = false;
 
         citedDoc[0].citation_snippets.forEach((snippet) => {
-          if (snippet.pdf_citations[0].node_id === citation.node_id) {
+          // console.log(snippet);
+          if (
+            snippet.pdf_citations.length > 0 &&
+            snippet.pdf_citations[0].node_id === citation.node_id
+          ) {
             snippetExists = true;
             citationSnippetSourceNum = snippet.source_num;
           }
