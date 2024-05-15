@@ -290,6 +290,8 @@ export default function NewReport() {
     } = await supabase.auth.getSession();
     if (!session) return;
 
+    if (!data) return;
+
     const reportid = data[0].id;
     setReportId(reportid);
     setGenerating(true);
