@@ -384,6 +384,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -437,12 +438,19 @@ const formSchema = z.object({
   targetPrice: z
     .preprocess((a) => parseFloat(z.string().parse(a)), z.number())
     .optional(),
-  rating: z.string().optional(),
-  // templateId: z.string(),
+  financialStrength: z.string(),
+  sectorRating: z.string(),
+  analystName: z.string().optional(),
+  companyName: z.string().optional(),
+  companyLogo: typeof window === 'undefined' ? z.any() : z.instanceof(FileList),
+  colorSchemeId: z.string(),
+  templateId: z.string(),
 });
 
 export default function NewReport() {
   const [open, setOpen] = useState(false);
+  const [isWhitelabelSettings, setIsWhiteLabelSettings] = useState(false);
+
   const client = createClient();
 
   const [user, setUser] = useState<string | null>(null);
@@ -465,7 +473,7 @@ export default function NewReport() {
     defaultValues: {
       reportType: 'Equity Analyst Report',
       recommendation: 'AUTO',
-      rating: 'AUTO',
+      financialStrength: 'AUTO',
       // templateId: '1',
     },
   });
@@ -489,10 +497,317 @@ export default function NewReport() {
         status: 'Draft',
         user_id: user,
       },
-    ]).then((res) => {
+    ]).then(() => {
       router.push('/reports/' + nanoId);
     });
   }
+
+  const mainForm = (
+    <>
+      <div className="">
+        <div className="space-y-4">
+          {/* Report type */}
+          <FormField
+            control={form.control}
+            name="reportType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Report Type</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Equity Analyst Report">
+                      Equity Analyst Report
+                    </SelectItem>
+                    <SelectItem value="Earnings Calls Notes">
+                      Earnings Calls Notes
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* Company ticker */}
+          <FormField
+            control={form.control}
+            name="companyTicker"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Company</FormLabel>
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={open}
+                        className={cn(
+                          'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 font-normal',
+                          !field.value && 'text-muted-foreground',
+                        )}
+                      >
+                        {field.value
+                          ? tickers.find(
+                              (ticker) => ticker.value === field.value,
+                            )?.label
+                          : 'Select ticker'}
+
+                        <CaretSortIcon className="h-4 w-4 opacity-50" />
+                        {/* <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" /> */}
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className={cn(
+                      'p-1',
+                      'w-full min-w-[var(--radix-popover-trigger-width)]',
+                    )}
+                  >
+                    <Command>
+                      <CommandInput
+                        placeholder="Search company..."
+                        className="h-9"
+                      />
+                      <CommandEmpty>No company found.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandList>
+                          {tickers.map((ticker) => (
+                            <CommandItem
+                              value={ticker.label}
+                              key={ticker.value}
+                              onSelect={() => {
+                                form.setValue('companyTicker', ticker.value);
+                                setOpen(false);
+                              }}
+                            >
+                              {ticker.label} ({ticker.value})
+                              <CheckIcon
+                                className={cn(
+                                  'ml-auto h-4 w-4',
+                                  ticker.value === field.value
+                                    ? 'opacity-100'
+                                    : 'opacity-0',
+                                )}
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandList>
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="flex gap-4">
+            <FormField
+              control={form.control}
+              name="recommendation"
+              render={({ field }) => (
+                <FormItem className="w-1/2">
+                  <FormLabel>Recommendation</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="AUTO">Auto</SelectItem>
+                      <SelectItem value="BUY">Buy</SelectItem>
+                      <SelectItem value="OVERWEIGHT">Overweight</SelectItem>
+                      <SelectItem value="HOLD">Hold</SelectItem>
+                      <SelectItem value="UNDERWEIGHT">Underweight</SelectItem>
+                      <SelectItem value="SELL">Sell</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="targetPrice"
+              disabled={form.watch('recommendation') === 'AUTO'}
+              render={({ field }) => (
+                <FormItem className="w-1/2 relative">
+                  <FormLabel>Target Price</FormLabel>
+                  <div className="absolute l-0 ml-2 b-0 text-foreground/70">
+                    <p className="pt-1.5 text-sm">$</p>
+                  </div>
+                  <FormControl>
+                    <Input {...field} className="pl-6" type="number" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="financialStrength"
+            render={({ field }) => (
+              <FormItem className="w-1/2 pr-2">
+                <FormLabel>Financial Strength</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="AUTO">Auto</SelectItem>
+                    <SelectItem value="LOW">Low</SelectItem>
+                    <SelectItem value="LM">Low-Medium</SelectItem>
+                    <SelectItem value="MED">Medium</SelectItem>
+                    <SelectItem value="MH">Medium-High</SelectItem>
+                    <SelectItem value="HIGH">High</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* <div className="flex flex-col space-y-3">
+                    <Label>Data Sources</Label>
+                    <Button variant="outline" className="w-1/2">
+                      Edit Sources
+                    </Button>
+                  </div> */}
+        </div>
+      </div>
+      <div className="flex gap-4 mt-4 mb-2 items-center">
+        <div className="flex items-center gap-2 w-1/2">
+          <Checkbox id="download" />
+          <label htmlFor="download" className="text-xs">
+            Automatically download report
+          </label>
+        </div>
+        <Button
+          variant="ghost"
+          className="text-xs w-1/2 font-normal"
+          onClick={() => {
+            setIsWhiteLabelSettings(true);
+          }}
+        >
+          Whitelabel Settings -{'>'}
+        </Button>
+      </div>
+
+      <div className="flex gap-5 w-full">
+        <Button
+          variant="outline"
+          type="submit"
+          className="flex gap-2 w-1/2 h-11"
+        >
+          <SquarePen className="h-5 w-5" />
+          Start writing
+        </Button>
+        <Button type="submit" className="flex gap-2 h-11 w-1/2">
+          <Wand2Icon className="h-5 w-5" />
+          <div className="flex flex-col w-fit justify-start">
+            <p>Generate Full</p>
+            <p>Report</p>
+          </div>
+        </Button>
+      </div>
+    </>
+  );
+
+  const whiteLabelSettings = (
+    <div className="space-y-4">
+      <div className="flex gap-2 w-[370px] items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsWhiteLabelSettings(false)}
+        >
+          {'<'}-
+        </Button>
+        <h2 className="text-foreground/90">White Label Settings</h2>
+      </div>
+      <FormField
+        control={form.control}
+        name="analystName"
+        render={({ field }) => (
+          <FormItem className="w-full relative">
+            <FormLabel>Analyst Name</FormLabel>
+            <FormControl>
+              <Input {...field} className="" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="companyName"
+        render={({ field }) => (
+          <FormItem className="w-full relative">
+            <FormLabel>Company Name</FormLabel>
+            <FormControl>
+              <Input {...field} className="" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="companyLogo"
+        render={({ field }) => (
+          <FormItem className="w-full relative">
+            <FormLabel>Company Logo</FormLabel>
+            <FormControl>
+              <Input {...field} className="" type="file" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="colorSchemeId"
+        render={({ field }) => (
+          <FormItem className="w-1/2 pr-2">
+            <FormLabel>Color Scheme</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="AUTO">Auto</SelectItem>
+                <SelectItem value="LOW">Low</SelectItem>
+                <SelectItem value="LM">Low-Medium</SelectItem>
+                <SelectItem value="MED">Medium</SelectItem>
+                <SelectItem value="MH">Medium-High</SelectItem>
+                <SelectItem value="HIGH">High</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
 
   return (
     <div className="flex flex-col items-center h-full w-full justify-center bg-muted/40">
@@ -500,243 +815,32 @@ export default function NewReport() {
         <CardHeader className="font-semibold text-xl text-foreground/80 text-center">
           Create New Report
         </CardHeader>
-        <CardContent className="w-full">
+        <CardContent className="w-full flex gap-20">
+          <div className="w-fit pl-10 py-1">
+            <Carousel>
+              <CarouselContent className="pb-1">
+                <CarouselItem>
+                  <Card className="overflow-hidden">
+                    <CardContent className="p-0">
+                      <Image
+                        src="/template.png"
+                        alt="Template 1"
+                        className="h-full w-80"
+                        width={0}
+                        height={0}
+                        sizes="100vw"
+                      />
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onFormSubmit)}>
-              <div className="flex h-fit gap-20">
-                <div className="space-y-4">
-                  {/* Report type */}
-                  <FormField
-                    control={form.control}
-                    name="reportType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Report Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Equity Analyst Report">
-                              Equity Analyst Report
-                            </SelectItem>
-                            <SelectItem value="Earnings Calls Notes">
-                              Earnings Calls Notes
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {/* Company ticker */}
-                  <FormField
-                    control={form.control}
-                    name="companyTicker"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Company</FormLabel>
-                        <Popover open={open} onOpenChange={setOpen}>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                aria-expanded={open}
-                                className={cn(
-                                  'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 font-normal',
-                                  !field.value && 'text-muted-foreground',
-                                )}
-                              >
-                                {field.value
-                                  ? tickers.find(
-                                      (ticker) => ticker.value === field.value,
-                                    )?.label
-                                  : 'Select ticker'}
-
-                                <CaretSortIcon className="h-4 w-4 opacity-50" />
-                                {/* <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" /> */}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className={cn(
-                              'p-1',
-                              'w-full min-w-[var(--radix-popover-trigger-width)]',
-                            )}
-                          >
-                            <Command>
-                              <CommandInput
-                                placeholder="Search company..."
-                                className="h-9"
-                              />
-                              <CommandEmpty>No company found.</CommandEmpty>
-                              <CommandGroup>
-                                <CommandList>
-                                  {tickers.map((ticker) => (
-                                    <CommandItem
-                                      value={ticker.label}
-                                      key={ticker.value}
-                                      onSelect={() => {
-                                        form.setValue(
-                                          'companyTicker',
-                                          ticker.value,
-                                        );
-                                        setOpen(false);
-                                      }}
-                                    >
-                                      {ticker.label} ({ticker.value})
-                                      <CheckIcon
-                                        className={cn(
-                                          'ml-auto h-4 w-4',
-                                          ticker.value === field.value
-                                            ? 'opacity-100'
-                                            : 'opacity-0',
-                                        )}
-                                      />
-                                    </CommandItem>
-                                  ))}
-                                </CommandList>
-                              </CommandGroup>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="flex gap-4">
-                    <FormField
-                      control={form.control}
-                      name="recommendation"
-                      render={({ field }) => (
-                        <FormItem className="w-1/2">
-                          <FormLabel>Recommendation</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="AUTO">Auto</SelectItem>
-                              <SelectItem value="BUY">Buy</SelectItem>
-                              <SelectItem value="OVERWEIGHT">
-                                Overweight
-                              </SelectItem>
-                              <SelectItem value="HOLD">Hold</SelectItem>
-                              <SelectItem value="UNDERWEIGHT">
-                                Underweight
-                              </SelectItem>
-                              <SelectItem value="SELL">Sell</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="targetPrice"
-                      disabled={form.watch('recommendation') === 'AUTO'}
-                      render={({ field }) => (
-                        <FormItem className="w-1/2 relative">
-                          <FormLabel>Target Price</FormLabel>
-                          <div className="absolute l-0 ml-2 b-0 text-foreground/70">
-                            <p className="pt-1.5 text-sm">$</p>
-                          </div>
-                          <FormControl>
-                            <Input {...field} className="pl-6" type="number" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={form.control}
-                    name="rating"
-                    render={({ field }) => (
-                      <FormItem className="w-1/2 pr-2">
-                        <FormLabel>Analyst Rating</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="AUTO">Auto</SelectItem>
-                            <SelectItem value="1">1</SelectItem>
-                            <SelectItem value="2">2</SelectItem>
-                            <SelectItem value="3">3</SelectItem>
-                            <SelectItem value="4">4</SelectItem>
-                            <SelectItem value="5">5</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {/* <div className="flex flex-col space-y-3">
-                    <Label>Data Sources</Label>
-                    <Button variant="outline" className="w-1/2">
-                      Edit Sources
-                    </Button>
-                  </div> */}
-                </div>
-                <div className="w-fit pr-10 py-1">
-                  <Carousel>
-                    <CarouselContent className="pb-1">
-                      <CarouselItem>
-                        <Card className="overflow-hidden">
-                          <CardContent className="p-0">
-                            <Image
-                              src="/template.png"
-                              alt="Template 1"
-                              className="h-full w-80"
-                              width={0}
-                              height={0}
-                              sizes="100vw"
-                            />
-                          </CardContent>
-                        </Card>
-                      </CarouselItem>
-                    </CarouselContent>
-                    <CarouselPrevious />
-                    <CarouselNext />
-                  </Carousel>
-                </div>
-              </div>
-              <div className="flex gap-5 justify-center mt-6">
-                <Button type="submit" className="flex gap-2 h-11">
-                  <SquarePen className="h-5 w-5" />
-                  Start writing
-                </Button>
-                <Button
-                  variant="outline"
-                  type="submit"
-                  className="flex gap-2 h-11"
-                >
-                  <Wand2Icon className="h-5 w-5" />
-                  <div className="flex flex-col w-fit justify-start">
-                    <p>Generate Full</p>
-                    <p>Report</p>
-                  </div>
-                </Button>
-              </div>
+              {isWhitelabelSettings ? whiteLabelSettings : mainForm}
             </form>
           </Form>
         </CardContent>

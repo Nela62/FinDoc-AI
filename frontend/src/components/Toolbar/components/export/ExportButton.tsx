@@ -1,6 +1,6 @@
 // TODO: add type
 
-import { Editor, EditorContent, JSONContent } from '@tiptap/react';
+import { Editor,  } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import { Chart } from './components/Chart';
 import { useRef } from 'react';

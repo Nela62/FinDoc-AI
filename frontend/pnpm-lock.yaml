@@ -26,6 +26,9 @@ importers:
       '@radix-ui/react-avatar':
         specifier: ^1.0.4
         version: 1.0.4(@types/react-dom@18.3.0)(@types/react@18.3.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-checkbox':
+        specifier: ^1.0.4
+        version: 1.0.4(@types/react-dom@18.3.0)(@types/react@18.3.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-dialog':
         specifier: ^1.0.5
         version: 1.0.5(@types/react-dom@18.3.0)(@types/react@18.3.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -91,7 +94,7 @@ importers:
         version: 1.3.5
       '@supabase-cache-helpers/postgrest-react-query':
         specifier: ^1.6.2
-        version: 1.6.3(@supabase/postgrest-js@1.15.2)(@supabase/supabase-js@2.43.1)(@tanstack/react-query@5.36.0(react@18.3.1))(react@18.3.1)
+        version: 1.6.4(@supabase/postgrest-js@1.15.2)(@supabase/supabase-js@2.43.1)(@tanstack/react-query@5.36.0(react@18.3.1))(react@18.3.1)
       '@supabase/ssr':
         specifier: ^0.1.0
         version: 0.1.0(@supabase/supabase-js@2.43.1)
@@ -123,7 +126,7 @@ importers:
         specifier: ^2.8.1
         version: 2.8.6(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)
       '@tiptap/core':
-        specifier: ^2.3.0
+        specifier: ^2.4.0
         version: 2.4.0(@tiptap/pm@2.4.0)
       '@tiptap/extension-character-count':
         specifier: ^2.3.0
@@ -917,6 +920,19 @@ packages:
       '@types/react-dom':
         optional: true
 
+  '@radix-ui/react-checkbox@1.0.4':
+    resolution: {integrity: sha512-CBuGQa52aAYnADZVt/KBQzXrwx6TqnlwtcIPGtVt5JkkzQwMOLJjPukimhfKEr4GQNd43C+djUh5Ikopj8pSLg==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
   '@radix-ui/react-collection@1.0.3':
     resolution: {integrity: sha512-3SzW+0PW7yBBoQlT8wNcGtaxaD0XSu0uLUFgrtHY08Acx05TaHaOmVLR73c0j/cqpDy53KBMO7s0dx2wmOIDIA==}
     peerDependencies:
@@ -1573,8 +1589,8 @@ packages:
       '@supabase/postgrest-js': ^1.9.0
       '@supabase/supabase-js': ^2.0.0
 
-  '@supabase-cache-helpers/postgrest-react-query@1.6.3':
-    resolution: {integrity: sha512-gCQG6lutwrOV+h/qyujqU+S4O8ILHy2zikF9JwVPV+mMlH3U/I2noxbquNOCstKzYDppVTRG4aj6/CVPI85xEA==}
+  '@supabase-cache-helpers/postgrest-react-query@1.6.4':
+    resolution: {integrity: sha512-S19/MtSYoYyHsHcnq1l8yR5sL6UwpFqKNGSLLddimCOUYIiuU/UlU6AmNpMflICJZKppTEnLNRQKuP+pU9D3DA==}
     peerDependencies:
       '@supabase/postgrest-js': ^1.9.0
       '@tanstack/react-query': ^4.0.0 || ^5.0.0
@@ -5127,6 +5143,23 @@ snapshots:
       '@types/react': 18.3.2
       '@types/react-dom': 18.3.0
 
+  '@radix-ui/react-checkbox@1.0.4(@types/react-dom@18.3.0)(@types/react@18.3.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@babel/runtime': 7.24.5
+      '@radix-ui/primitive': 1.0.1
+      '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.3.2)(react@18.3.1)
+      '@radix-ui/react-context': 1.0.1(@types/react@18.3.2)(react@18.3.1)
+      '@radix-ui/react-presence': 1.0.1(@types/react-dom@18.3.0)(@types/react@18.3.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.3.0)(@types/react@18.3.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-use-controllable-state': 1.0.1(@types/react@18.3.2)(react@18.3.1)
+      '@radix-ui/react-use-previous': 1.0.1(@types/react@18.3.2)(react@18.3.1)
+      '@radix-ui/react-use-size': 1.0.1(@types/react@18.3.2)(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    optionalDependencies:
+      '@types/react': 18.3.2
+      '@types/react-dom': 18.3.0
+
   '@radix-ui/react-collection@1.0.3(@types/react-dom@18.3.0)(@types/react@18.3.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@babel/runtime': 7.24.5
@@ -5874,7 +5907,7 @@ snapshots:
       merge-anything: 5.1.7
       xregexp: 5.1.1
 
-  '@supabase-cache-helpers/postgrest-react-query@1.6.3(@supabase/postgrest-js@1.15.2)(@supabase/supabase-js@2.43.1)(@tanstack/react-query@5.36.0(react@18.3.1))(react@18.3.1)':
+  '@supabase-cache-helpers/postgrest-react-query@1.6.4(@supabase/postgrest-js@1.15.2)(@supabase/supabase-js@2.43.1)(@tanstack/react-query@5.36.0(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@supabase-cache-helpers/postgrest-core': 0.5.0(@supabase/postgrest-js@1.15.2)(@supabase/supabase-js@2.43.1)
       '@supabase/postgrest-js': 1.15.2
