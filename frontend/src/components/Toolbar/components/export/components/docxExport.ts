@@ -267,7 +267,7 @@ export const generateDocxFile = async (
     return [];
   }
 
-  splitText(content.content ?? [], 480, '9px Times New Roman', 11);
+  splitText(content.content ?? [], 480, '9px Times New Roman', 12);
 
   const margins = {
     top: 1550.6,

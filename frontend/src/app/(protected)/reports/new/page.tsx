@@ -281,6 +281,7 @@ export default function NewReport() {
         .match({ id: reportId });
     }
   }, [sectionsGenerated, generatedBlocks, supabase, reportId]);
+
   async function onGenerateAndFormSubmit(values: z.infer<typeof formSchema>) {
     const today = new Date();
     // const options = { year: 'numeric', month: 'short', day: 'numeric' };
@@ -332,6 +333,7 @@ export default function NewReport() {
           Authorization: session.access_token,
         },
       });
+      console.log('generated section: ' + block);
 
       const json = await res.json();
       const text = json.text;
@@ -341,25 +343,25 @@ export default function NewReport() {
           ...state,
           business_description: text,
         }));
+      } else {
+        const oldToNewCitationsMap = await getCitationMapAndInsertNew(
+          text,
+          json.citations,
+          reportid,
+          user,
+          insertCitedDocuments,
+          insertCitationSnippets,
+          insertPDFCitations,
+          insertAPICitations,
+        );
+
+        const cleanText = getCleanText(text, oldToNewCitationsMap);
+
+        setGeneratedBlocks((state) => ({
+          ...state,
+          [block]: cleanText,
+        }));
       }
-
-      const oldToNewCitationsMap = await getCitationMapAndInsertNew(
-        text,
-        json.citations,
-        reportid,
-        user,
-        insertCitedDocuments,
-        insertCitationSnippets,
-        insertPDFCitations,
-        insertAPICitations,
-      );
-
-      const cleanText = getCleanText(text, oldToNewCitationsMap);
-
-      setGeneratedBlocks((state) => ({
-        ...state,
-        [block]: cleanText,
-      }));
       setSectionsGenerated((state) => state + 1);
     });
   }
