@@ -245,9 +245,8 @@ export default function NewReport() {
       setGenerating(false);
 
       const curReportText = { type: 'doc', content: [] };
-
-      for (const [key, value] of Object.entries(generatedBlocks)) {
-        if (key !== 'business_description') {
+      buildingBlocks.forEach((block) => {
+        if (block !== 'business_description') {
           // @ts-ignore
           const json = markdownToJson(value);
           const heading = {
@@ -259,7 +258,8 @@ export default function NewReport() {
             },
             content: [
               {
-                text: formatText(key),
+                // @ts-ignore
+                text: formatText(generatedBlocks[block]),
                 type: 'text',
               },
             ],
@@ -271,7 +271,7 @@ export default function NewReport() {
             ...json.content,
           );
         }
-      }
+      });
 
       setReportText(curReportText);
 
@@ -324,7 +324,7 @@ export default function NewReport() {
       };
       // if (customPrompt) body['custom_prompt'] = customPrompt;
 
-      const res = await fetch(`${baseUrl}/aigenerator/`, {
+      const res = await fetch(`${baseUrl}/report/`, {
         method: 'POST',
         body: JSON.stringify(body),
         headers: {
@@ -343,22 +343,22 @@ export default function NewReport() {
         }));
       }
 
-      const oldToNewCitationsMap = await getCitationMapAndInsertNew(
-        text,
-        json.citations,
-        reportid,
-        user,
-        insertCitedDocuments,
-        insertCitationSnippets,
-        insertPDFCitations,
-        insertAPICitations,
-      );
+      // const oldToNewCitationsMap = await getCitationMapAndInsertNew(
+      //   text,
+      //   json.citations,
+      //   reportid,
+      //   user,
+      //   insertCitedDocuments,
+      //   insertCitationSnippets,
+      //   insertPDFCitations,
+      //   insertAPICitations,
+      // );
 
-      const cleanText = getCleanText(text, oldToNewCitationsMap);
+      // const cleanText = getCleanText(text, oldToNewCitationsMap);
 
       setGeneratedBlocks((state) => ({
         ...state,
-        [block]: cleanText,
+        [block]: text,
       }));
       setSectionsGenerated((state) => state + 1);
     });
