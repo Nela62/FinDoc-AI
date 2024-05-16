@@ -3,6 +3,12 @@ import { withAxiom } from 'next-axiom';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  images: {
+    remotePatterns: [
+      { protocol: 'http', hostname: '127.0.0.1' },
+      { protocol: 'https', hostname: 'phpgxkcyjkioartrccio.supabase.com' },
+    ],
+  },
   webpack: (config) => {
     config.resolve.alias.canvas = false;
 

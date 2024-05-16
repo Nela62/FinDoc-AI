@@ -447,6 +447,35 @@ export type Database = {
           },
         ]
       }
+      settings: {
+        Row: {
+          author_name: string | null
+          company_name: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          author_name?: string | null
+          company_name?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          author_name?: string | null
+          company_name?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

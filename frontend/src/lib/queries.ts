@@ -215,3 +215,10 @@ export function fetchCitedDocumentByAPIId(
 //     .eq('doc_id', docId)
 //     .throwOnError();
 // }
+
+export function fetchSettings(client: TypedSupabaseClient) {
+  return client
+    .from('settings')
+    .select('id, author_name, company_name')
+    .throwOnError();
+}

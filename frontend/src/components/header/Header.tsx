@@ -62,6 +62,21 @@ export const Header = () => {
           };
         }
     }
+  } else if (section === 'settings') {
+    switch (subSection) {
+      case 'personal':
+      default:
+        subSectionObject = {
+          label: 'Personal Information',
+          href: '/settings/personal',
+        };
+        break;
+      case 'company':
+        subSectionObject = {
+          label: 'Company Information',
+          href: '/settings/company',
+        };
+    }
   }
 
   return (
@@ -70,7 +85,13 @@ export const Header = () => {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="/reports/all">Reports</Link>
+              <Link
+                href={
+                  section === 'reports' ? '/reports/all' : '/settings/personal'
+                }
+              >
+                {section.charAt(0).toUpperCase() + section.slice(1)}
+              </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />

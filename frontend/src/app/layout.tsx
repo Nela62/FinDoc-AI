@@ -7,6 +7,7 @@ import 'cal-sans';
 import { StoreProvider } from '@/providers/store-provider';
 import { ReactQueryClientProvider } from '@/providers/ReactQueryClientProvider';
 import { CSPostHogProvider } from '@/providers/PostHogClientProvider';
+import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -30,6 +31,7 @@ export default function RootLayout({
             <main className="h-full">
               <StoreProvider>{children}</StoreProvider>
             </main>
+            <Toaster />
           </body>
           <AxiomWebVitals />
         </html>

@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -13,9 +15,14 @@ import {
   Settings,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 // TODO: highlight the selected item and get the current route
 export const LeftSidebar = () => {
+  const pathname = usePathname();
+  const section = pathname.split('/')[1];
+
   return (
     <aside className="hidden w-14 flex-col border-r bg-background sm:flex">
       <nav className="flex flex-col items-center gap-4 px-2 py-4">
@@ -49,7 +56,12 @@ export const LeftSidebar = () => {
           <TooltipTrigger asChild>
             <Link
               href="/reports/all"
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+              className={cn(
+                'flex h-9 w-9 items-center justify-center rounded-lg   transition-colors hover:text-foreground md:h-8 md:w-8',
+                section === 'reports'
+                  ? 'text-accent-foreground bg-accent'
+                  : 'text-muted-foreground',
+              )}
             >
               <Files className="h-5 w-5" />
               <span className="sr-only">Reports</span>
@@ -100,14 +112,19 @@ export const LeftSidebar = () => {
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
-              href="#"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8 cursor-not-allowed"
+              href="/settings/personal"
+              className={cn(
+                'flex h-9 w-9 items-center justify-center rounded-lg   transition-colors hover:text-foreground md:h-8 md:w-8',
+                section === 'settings'
+                  ? 'text-accent-foreground bg-accent'
+                  : 'text-muted-foreground',
+              )}
             >
               <Settings className="h-5 w-5" />
               <span className="sr-only">Settings</span>
             </Link>
           </TooltipTrigger>
-          <TooltipContent side="right">Settings - coming soon!</TooltipContent>
+          <TooltipContent side="right">Settings</TooltipContent>
         </Tooltip>
       </nav>
     </aside>
