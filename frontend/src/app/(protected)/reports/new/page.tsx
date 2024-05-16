@@ -386,6 +386,9 @@ export default function NewReport() {
 
   const mainForm = (
     <>
+      <div className="hidden" id="hidden-container" ref={ref}>
+        <Chart />
+      </div>
       <div className="w-[360px]">
         <div className="space-y-4">
           {/* Report type */}
@@ -655,14 +658,14 @@ export default function NewReport() {
                       const url = URL.createObjectURL(blob);
                       const link = document.createElement('a');
                       link.href = url;
-                      link.download = 'report.docx';
+                      // TODO: Support other report types name
+                      link.download = `${moment().format(
+                        'MMMM DD, YYYY',
+                      )} - Equity Analyst Report`;
                       link.click();
                       URL.revokeObjectURL(url);
                     }}
                   >
-                    <div className="hidden" id="hidden-container" ref={ref}>
-                      <Chart />
-                    </div>
                     Download Report
                   </AlertDialogAction>
                   <AlertDialogAction
@@ -692,7 +695,7 @@ export default function NewReport() {
         >
           {'<'}-
         </Button>
-        <h2 className="text-foreground/90">White Label Settings</h2>
+        <h2 className="text-foreground/90">Template Customization</h2>
       </div>
       <FormField
         control={form.control}

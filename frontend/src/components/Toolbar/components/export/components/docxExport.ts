@@ -1,5 +1,5 @@
+import moment from 'moment';
 import { JSONContent } from '@tiptap/core';
-import { Editor } from '@tiptap/react';
 import {
   Document,
   Packer,
@@ -118,16 +118,37 @@ const SUMMARY = [
   'We believe that AMZN warrants long-term accumulation in most equity accounts.',
 ];
 
-export const generateDocxFile = async (
-  content: JSONContent,
-  img: string,
-  companyDescription: string = TEST_COMPANY_DESCRIPTION,
-  metrics: any = TEST_METRICS,
-  recommendation: string = TEST_RECOMMENDATION,
-  template: string = 'ARGUS',
-) => {
+const DEFAULT_COLORS = ['#1c4587', '#f4e9d3', '#006f3b'];
+
+type DocxFileProps = {
+  content: JSONContent;
+  img: string;
+  companyName: string;
+  companyTicker: string;
+  companyDescription: string;
+  recommendation: string;
+  metrics: any;
+  templateId: string;
+  colors: string[];
+  analystName: string;
+  analystCompanyName: string;
+};
+
+export const generateDocxFile = async ({
+  content,
+  img,
+  companyName,
+  companyTicker,
+  companyDescription = TEST_COMPANY_DESCRIPTION,
+  metrics = TEST_METRICS,
+  recommendation = TEST_RECOMMENDATION,
+  templateId = 'ARGUS',
+  colors = DEFAULT_COLORS,
+  analystName,
+  analystCompanyName,
+}: DocxFileProps) => {
   // TODO: use selectedCompany to fetch its full name
-  const companyName = 'Amazon.com Inc';
+  // const companyName = 'Amazon.com Inc';
 
   const firstHalf: Paragraph[] = [];
   const secondHalf: Paragraph[] = [];
