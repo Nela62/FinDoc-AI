@@ -88,26 +88,18 @@ const TEST_COMPANY_DESCRIPTION = `Amazon.com is the leading U.S. e-commerce reta
 
 const TEST_RECOMMENDATION = 'BUY';
 
-type TestRatingsType = {
+type RatingsType = {
   '12-month': string;
-  Sector: string;
   Strength: string;
 };
 
-const testRatingsList = [
+const ratingsList = [
   {
     rowName: '12-month',
     cells: ['SELL', 'UW', 'HOLD', 'OW', 'BUY'],
   },
-  { rowName: 'Sector', cells: ['SELL', 'UW', 'HOLD', 'OW', 'BUY'] },
   { rowName: 'Strength', cells: ['LOW', 'LM', 'MED', 'MH', 'HIGH'] },
 ];
-
-const TEST_RATINGS: TestRatingsType = {
-  '12-month': 'BUY',
-  Sector: 'OW',
-  Strength: 'HIGH',
-};
 
 const SUMMARY = [
   'EPS and sales beat, better outlook.',
@@ -126,12 +118,13 @@ type DocxFileProps = {
   companyName: string;
   companyTicker: string;
   companyDescription: string;
-  recommendation: string;
-  metrics: any;
-  templateId: string;
-  colors: string[];
-  analystName: string;
-  analystCompanyName: string;
+  recommendation?: string;
+  metrics?: any;
+  templateId?: string;
+  colors?: string[];
+  authorName: string;
+  authorCompanyName: string;
+  targetPrice?: number;
 };
 
 export const generateDocxFile = async ({
@@ -144,11 +137,14 @@ export const generateDocxFile = async ({
   recommendation = TEST_RECOMMENDATION,
   templateId = 'ARGUS',
   colors = DEFAULT_COLORS,
-  analystName,
-  analystCompanyName,
+  authorName,
+  authorCompanyName,
 }: DocxFileProps) => {
-  // TODO: use selectedCompany to fetch its full name
-  // const companyName = 'Amazon.com Inc';
+  const [primaryColor, secondaryColor, accentColor] = colors;
+  const ratings = {
+    '12-month': recommendation === 'AUTO' ? 'BUY' : recommendation,
+    Strength: 'High',
+  };
 
   const firstHalf: Paragraph[] = [];
   const secondHalf: Paragraph[] = [];
@@ -343,7 +339,7 @@ export const generateDocxFile = async ({
     new Paragraph({
       children: [
         new TextRun({
-          text: 'NASDAQ: AMZN',
+          text: `NASDAQ: ${companyTicker}`,
           size: 16,
           color: 'ffffff',
           font: 'Arial Narrow',
@@ -371,7 +367,7 @@ export const generateDocxFile = async ({
       children: pageNum
         ? [
             new TextRun({
-              text: 'Report created Apr 1, 2024',
+              text: `Report created ${moment().format('MMM DD, YYYY')}`,
               size: 16,
               color: 'ffffff',
               font: 'Arial Narrow',
@@ -408,7 +404,7 @@ export const generateDocxFile = async ({
           children: [
             new TableCell({
               borders: bordersNone,
-              shading: { fill: 'f4e9d3' },
+              shading: { fill: secondaryColor },
               children: [
                 new Paragraph({
                   spacing: { before: 80 },
@@ -416,7 +412,7 @@ export const generateDocxFile = async ({
                     new TextRun({
                       text: key,
                       bold: true,
-                      color: '1c4587',
+                      color: primaryColor,
                       size: 18,
                       font: 'Arial Narrow',
                     }),
@@ -443,7 +439,7 @@ export const generateDocxFile = async ({
                       color: 'a3a3a3',
                     },
                   },
-                  shading: { fill: 'f4e9d3' },
+                  shading: { fill: secondaryColor },
                   width: { size: 50, type: WidthType.PERCENTAGE },
                   children: [
                     new Paragraph({
@@ -468,7 +464,7 @@ export const generateDocxFile = async ({
                       color: 'a3a3a3',
                     },
                   },
-                  shading: { fill: 'f4e9d3' },
+                  shading: { fill: secondaryColor },
                   children: [
                     new Paragraph({
                       // spacing: { before: 40 },
@@ -495,23 +491,23 @@ export const generateDocxFile = async ({
     new TableCell({
       verticalAlign: 'center',
       borders: {
-        top: { style: BorderStyle.SINGLE, size: 16, color: 'f4e9d3' },
+        top: { style: BorderStyle.SINGLE, size: 16, color: secondaryColor },
         bottom: {
           style: BorderStyle.SINGLE,
           size: 16,
-          color: 'f4e9d3',
+          color: secondaryColor,
         },
-        left: { style: BorderStyle.SINGLE, size: 16, color: 'f4e9d3' },
+        left: { style: BorderStyle.SINGLE, size: 16, color: secondaryColor },
         right: {
           style: BorderStyle.SINGLE,
           size: 16,
-          color: 'f4e9d3',
+          color: secondaryColor,
         },
       },
       shading: {
         fill:
-          TEST_RATINGS[rowName as keyof TestRatingsType] === cellName
-            ? '006f3b'
+          ratings[rowName as keyof RatingsType] === cellName
+            ? accentColor
             : 'dbd9d9',
       },
       width: { size: 567, type: WidthType.DXA },
@@ -539,7 +535,7 @@ export const generateDocxFile = async ({
         new TextRun({
           text: 'Coreline Ratings',
           bold: true,
-          color: '1c4587',
+          color: primaryColor,
           size: 24,
           font: 'Arial Narrow',
         }),
@@ -552,7 +548,7 @@ export const generateDocxFile = async ({
         left: { style: 'none' },
         right: { style: 'none' },
       },
-      rows: testRatingsList.map(
+      rows: ratingsList.map(
         (row) =>
           new TableRow({
             height: { value: '0.84cm', rule: HeightRule.EXACT },
@@ -561,24 +557,28 @@ export const generateDocxFile = async ({
                 margins: { top: 20, bottom: 20 },
                 verticalAlign: 'center',
                 borders: {
-                  top: { style: BorderStyle.SINGLE, size: 16, color: 'f4e9d3' },
+                  top: {
+                    style: BorderStyle.SINGLE,
+                    size: 16,
+                    color: secondaryColor,
+                  },
                   bottom: {
                     style: BorderStyle.SINGLE,
                     size: 16,
-                    color: 'f4e9d3',
+                    color: secondaryColor,
                   },
                   left: {
                     style: BorderStyle.SINGLE,
                     size: 16,
-                    color: 'f4e9d3',
+                    color: secondaryColor,
                   },
                   right: {
                     style: BorderStyle.SINGLE,
                     size: 16,
-                    color: 'f4e9d3',
+                    color: secondaryColor,
                   },
                 },
-                shading: { fill: 'f4e9d3' },
+                shading: { fill: secondaryColor },
                 width: { size: 30, type: WidthType.PERCENTAGE },
                 children: [
                   new Paragraph({
@@ -606,7 +606,7 @@ export const generateDocxFile = async ({
           text: 'Coreline assigns a 12-month BUY, HOLD, or SELL rating to each stock under coverage.',
           size: 16,
           font: 'Arial Narrow',
-          color: '1c4587',
+          color: primaryColor,
         }),
       ],
     }),
@@ -617,7 +617,7 @@ export const generateDocxFile = async ({
           text: 'BUY-rated stocks are expected to outperform the market (the benchmark S&P 500 Index) on a risk-adjusted basis over the next year.',
           size: 16,
           font: 'Arial Narrow',
-          color: '1c4587',
+          color: primaryColor,
         }),
       ],
     }),
@@ -628,7 +628,7 @@ export const generateDocxFile = async ({
           text: 'HOLD-rated stocks are expected to perform in line with the market.',
           size: 16,
           font: 'Arial Narrow',
-          color: '1c4587',
+          color: primaryColor,
         }),
       ],
     }),
@@ -640,7 +640,7 @@ export const generateDocxFile = async ({
           text: 'SELL-rated stocks are expected to underperform the market on a risk-adjusted basis.',
           size: 16,
           font: 'Arial Narrow',
-          color: '1c4587',
+          color: primaryColor,
         }),
       ],
     }),
@@ -654,7 +654,7 @@ export const generateDocxFile = async ({
         new TextRun({
           text: 'Key Statistics',
           bold: true,
-          color: '1c4587',
+          color: primaryColor,
           size: 24,
           font: 'Arial Narrow',
         }),
@@ -666,7 +666,7 @@ export const generateDocxFile = async ({
           text: "Key Statistics pricing data reflects previous trading day's closing price. Other applicable data are trailing 12-months unless otherwise specified.",
           size: 16,
           font: 'Arial Narrow',
-          color: '1c4587',
+          color: primaryColor,
         }),
       ],
     }),
@@ -695,14 +695,14 @@ export const generateDocxFile = async ({
               new TextRun({
                 text: 'Coreline ',
                 size: 28,
-                color: '1c4587',
+                color: primaryColor,
                 font: 'Arial Narrow',
                 bold: true,
               }),
               new TextRun({
                 text: 'Analyst Report',
                 size: 28,
-                color: '1c4587',
+                color: primaryColor,
                 font: 'Arial Narrow',
               }),
             ],
@@ -768,7 +768,9 @@ export const generateDocxFile = async ({
                   new Paragraph({
                     children: [
                       new TextRun({
-                        text: 'Analysis by Helton Suzuki, CFA, May 11, 2024',
+                        text: `Analysis by ${authorName}, ${moment().format(
+                          'MMMM DD, YYYY',
+                        )}`,
                         italics: true,
                         size: 18,
                       }),
@@ -829,7 +831,7 @@ export const generateDocxFile = async ({
                           },
                           verticalPosition: {
                             relative: VerticalPositionRelativeFrom.PAGE,
-                            offset: 5565000,
+                            offset: 5550000,
                           },
                         },
                       }),
@@ -884,7 +886,7 @@ export const generateDocxFile = async ({
                   },
                 },
                 margins: { left: 120, right: 120, bottom: 300 },
-                shading: { fill: 'f4e9d3' },
+                shading: { fill: secondaryColor },
                 children: [...corelineRatingsSidebar, ...keyStatisticsSidebar],
                 width: { type: WidthType.DXA, size: 3528 },
               }),
@@ -951,7 +953,7 @@ export const generateDocxFile = async ({
                     hanging: convertInchesToTwip(0.1),
                   },
                 },
-                run: { color: '1c4587' },
+                run: { color: primaryColor },
               },
             },
           ],
@@ -980,16 +982,16 @@ export const generateDocxFile = async ({
               new Paragraph({
                 children: [
                   new TextRun({
-                    text: 'Coreline ',
+                    text: authorCompanyName,
                     size: 28,
-                    color: '1c4587',
+                    color: primaryColor,
                     font: 'Arial Narrow',
                     bold: true,
                   }),
                   new TextRun({
-                    text: 'Analyst Report',
+                    text: ' Analyst Report',
                     size: 28,
-                    color: '1c4587',
+                    color: primaryColor,
                     font: 'Arial Narrow',
                   }),
                 ],
@@ -999,7 +1001,7 @@ export const generateDocxFile = async ({
                 alignment: AlignmentType.LEFT,
                 children: [
                   new TextRun({
-                    text: '\n\n©2024 Coreline Technologies Inc.',
+                    text: `\n\n©2024 ${authorCompanyName}`,
                     size: 14,
                     color: '000000',
                   }),

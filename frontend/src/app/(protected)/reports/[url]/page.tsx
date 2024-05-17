@@ -37,7 +37,7 @@ export default async function Report({ params }: { params: { url: string } }) {
 
   const { data, error } = await getReportIdByUrl(supabase, params.url);
 
-  if (!data || error) {
+  if (!data || error || !data.id) {
     return <div>No report found</div>;
   }
 

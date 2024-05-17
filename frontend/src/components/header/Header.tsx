@@ -34,13 +34,14 @@ export const Header = () => {
   const supabase = createClient();
   const { data: report } = useQuery(getReportIdByUrl(supabase, subSection), {
     enabled:
-      section !== 'reports' || subSection === 'new' || subSection === 'all',
+      section === 'reports' && !(subSection === 'new' || subSection === 'all'),
   });
   const { data, error } = useQuery(
     fetchReportById(supabase, report?.id ?? ''),
     {
       enabled:
-        section !== 'reports' || subSection === 'new' || subSection === 'all',
+        section === 'reports' &&
+        !(subSection === 'new' || subSection === 'all'),
     },
   );
 
