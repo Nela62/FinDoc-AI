@@ -75,8 +75,19 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
           });
 
           const data = canvas.toDataURL('image/jpg');
-
-          const blob = await generateDocxFile(editor.getJSON(), data);
+          // TODO: get these dynamically
+          const blob = await generateDocxFile({
+            content: editor.getJSON(),
+            img: data,
+            companyName: 'Amazon Inc.',
+            companyTicker: 'AMZN',
+            companyDescription:
+              "Amazon Inc. is a multinational technology company primarily operating in the e-commerce, cloud computing, and digital media industries. The company's key products and services include online retail, Amazon Web Services (AWS), and digital streaming, with revenue breakdown of 50% from online stores, 33% from third-party seller services, 13% from AWS, and 4% from other sources, as of 2021. Amazon's major subsidiaries include Whole Foods Market, Ring, and Twitch, serving customers worldwide. In 2021, Amazon reported total net sales of $469.8 billion, a 22% increase from the previous year, solidifying its position as a global leader in the e-commerce industry.",
+            recommendation: 'BUY',
+            targetPrice: 168,
+            authorName: 'Coreline AI',
+            authorCompanyName: 'Coreline',
+          });
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;

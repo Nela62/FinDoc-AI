@@ -114,23 +114,24 @@ export default function PersonalInformationPage() {
     resolver: zodResolver(companyLogoFormSchema),
   });
 
+  if (!userId || !data || data.length === 0) {
+    return;
+  }
+
   async function onCompanyNameSubmit(
     values: z.infer<typeof companyNameFormSchema>,
   ) {
-    if (!userId || !data || data.length === 0) return;
-
-    await update({ id: data[0].id, company_name: values.companyName });
+    await update({ id: data![0].id, company_name: values.companyName });
 
     toast({ description: 'Successfully updated settings.' });
   }
 
   function onCompanyLogoSubmit(values: z.infer<typeof companyLogoFormSchema>) {
+    console.log('called');
     upload({ files: [values.companyLogo] });
 
     toast({ description: 'Successfully uploaded a new logo.' });
   }
-
-  if (!userId || !data || data.length === 0) return;
 
   return (
     <>
@@ -170,30 +171,30 @@ export default function PersonalInformationPage() {
           </Card>
         </form>
       </Form>
+      <Form {...companyLogoForm}>
+        <form onSubmit={companyLogoForm.handleSubmit(onCompanyLogoSubmit)}>
+          <Card x-chunk="dashboard-04-chunk-1">
+            <CardHeader>
+              <CardTitle>Company Logo</CardTitle>
+              <CardDescription>
+                Enter the company name you want to display in the report.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {logos && logos.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <h3>Uploaded Logos</h3>
+                  {...logos.map((logo) => (
+                    <DisplayLogo
+                      key={logo.id}
+                      client={supabase}
+                      userId={userId}
+                      fileName={logo.name}
+                    />
+                  ))}
+                </div>
+              )}
 
-      <Card x-chunk="dashboard-04-chunk-1">
-        <CardHeader>
-          <CardTitle>Company Logo</CardTitle>
-          <CardDescription>
-            Enter the company name you want to display in the report.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {logos && logos.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <h3>Uploaded Logos</h3>
-              {...logos.map((logo) => (
-                <DisplayLogo
-                  key={logo.id}
-                  client={supabase}
-                  userId={userId}
-                  fileName={logo.name}
-                />
-              ))}
-            </div>
-          )}
-          <Form {...companyLogoForm}>
-            <form onSubmit={companyLogoForm.handleSubmit(onCompanyLogoSubmit)}>
               <FormField
                 control={companyLogoForm.control}
                 name="companyLogo"
@@ -227,13 +228,13 @@ export default function PersonalInformationPage() {
                   />
                 </div>
               )}
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter className="border-t px-6 py-4">
-          <Button type="submit">Save</Button>
-        </CardFooter>
-      </Card>
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4">
+              <Button type="submit">Save</Button>
+            </CardFooter>
+          </Card>
+        </form>
+      </Form>
     </>
   );
 }

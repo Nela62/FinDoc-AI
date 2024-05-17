@@ -125,6 +125,7 @@ type DocxFileProps = {
   authorName: string;
   authorCompanyName: string;
   targetPrice?: number;
+  headerImageLink?: string;
 };
 
 export const generateDocxFile = async ({
@@ -139,6 +140,7 @@ export const generateDocxFile = async ({
   colors = DEFAULT_COLORS,
   authorName,
   authorCompanyName,
+  headerImageLink = '/white_coreline.png',
 }: DocxFileProps) => {
   const [primaryColor, secondaryColor, accentColor] = colors;
   const ratings = {
@@ -310,92 +312,123 @@ export const generateDocxFile = async ({
     },
   };
 
-  const headerImage = await fetch('/coreline_docx_header.png').then((r) =>
-    r.blob(),
-  );
+  const headerImage = await fetch(headerImageLink).then((r) => r.blob());
+  const bitmap: ImageBitmap = await createImageBitmap(headerImage);
+  const { width: headerImageWidth, height: headerImageHeight } = bitmap;
+  // console.log(width, height);
 
-  const headerComponent = (pageNum: boolean = true) => [
-    new Paragraph({
-      children: [
-        new ImageRun({
-          // @ts-ignore
-          data: headerImage,
-          // TODO: get more precise values
-          transformation: { width: 720.96, height: 64.32 },
-          floating: {
-            behindDocument: true,
-            horizontalPosition: {
-              relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-              offset: 384048,
-            },
-            verticalPosition: {
-              relative: VerticalPositionRelativeFrom.TOP_MARGIN,
-              offset: 301752,
-            },
-          },
-        }),
-      ],
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: `NASDAQ: ${companyTicker}`,
-          size: 16,
-          color: 'ffffff',
-          font: 'Arial Narrow',
-          bold: true,
-        }),
-      ],
-      alignment: AlignmentType.RIGHT,
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: companyName.toUpperCase(),
-          size: 46,
-          color: 'ffffff',
-          font: 'Arial Narrow',
-          bold: true,
-        }),
-      ],
-      alignment: AlignmentType.RIGHT,
-    }),
-    new Paragraph({
-      // spacing is used to ensure the table aligns properly with
-      // the header on the first page
-      spacing: { after: 18 },
-      children: pageNum
-        ? [
-            new TextRun({
-              text: `Report created ${moment().format('MMM DD, YYYY')}`,
-              size: 16,
-              color: 'ffffff',
-              font: 'Arial Narrow',
-            }),
-            new TextRun({
+  const headerComponent = (pageNum: boolean = true) =>
+    new Table({
+      borders: bordersNone,
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      margins: { bottom: 10, top: 10, left: 10, right: 10 },
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              borders: bordersNone,
+              width: { size: 50, type: WidthType.PERCENTAGE },
+              shading: { fill: primaryColor },
               children: [
-                '  Page ',
-                PageNumber.CURRENT,
-                ' OF ',
-                PageNumber.TOTAL_PAGES,
+                new Paragraph({
+                  children: [
+                    new ImageRun({
+                      // @ts-ignore
+                      data: headerImage,
+                      // TODO: get more precise values
+                      // transformation: { width: 720.96, height: 64.32 },
+                      transformation: {
+                        width: (50 / headerImageHeight) * headerImageWidth,
+                        height: 50,
+                      },
+                      // floating: {
+                      //   behindDocument: true,
+                      //   horizontalPosition: {
+                      //     relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
+                      //     offset: 384048,
+                      //   },
+                      //   verticalPosition: {
+                      //     relative: VerticalPositionRelativeFrom.TOP_MARGIN,
+                      //     offset: 301752,
+                      //   },
+                      // },
+                    }),
+                  ],
+                }),
               ],
-              bold: true,
-              size: 16,
-              color: 'ffffff',
-              font: 'Arial Narrow',
             }),
-          ]
-        : [
-            new TextRun({
-              text: 'Report created Apr 1, 2024',
-              size: 16,
-              color: 'ffffff',
-              font: 'Arial Narrow',
+            new TableCell({
+              borders: bordersNone,
+              width: { size: 50, type: WidthType.PERCENTAGE },
+              shading: { fill: primaryColor },
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `NASDAQ: ${companyTicker}`,
+                      size: 16,
+                      color: 'ffffff',
+                      font: 'Arial Narrow',
+                      bold: true,
+                    }),
+                  ],
+                  alignment: AlignmentType.RIGHT,
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: companyName.toUpperCase(),
+                      size: 46,
+                      color: 'ffffff',
+                      font: 'Arial Narrow',
+                      bold: true,
+                    }),
+                  ],
+                  alignment: AlignmentType.RIGHT,
+                }),
+                new Paragraph({
+                  // spacing is used to ensure the table aligns properly with
+                  // the header on the first page
+                  spacing: { after: 18 },
+                  children: pageNum
+                    ? [
+                        new TextRun({
+                          text: `Report created ${moment().format(
+                            'MMM DD, YYYY',
+                          )}`,
+                          size: 16,
+                          color: 'ffffff',
+                          font: 'Arial Narrow',
+                        }),
+                        new TextRun({
+                          children: [
+                            '  Page ',
+                            PageNumber.CURRENT,
+                            ' OF ',
+                            PageNumber.TOTAL_PAGES,
+                          ],
+                          bold: true,
+                          size: 16,
+                          color: 'ffffff',
+                          font: 'Arial Narrow',
+                        }),
+                      ]
+                    : [
+                        new TextRun({
+                          text: 'Report created Apr 1, 2024',
+                          size: 16,
+                          color: 'ffffff',
+                          font: 'Arial Narrow',
+                        }),
+                      ],
+                  alignment: AlignmentType.RIGHT,
+                }),
+              ],
             }),
           ],
-      alignment: AlignmentType.RIGHT,
-    }),
-  ];
+        }),
+      ],
+    });
 
   const metricsArr = [
     ...Object.keys(metrics).map((key) => {
@@ -723,7 +756,8 @@ export const generateDocxFile = async ({
     },
 
     children: [
-      ...headerComponent(false),
+      headerComponent(false),
+      new Paragraph({ text: '' }),
       new Table({
         margins: { top: 60 },
         borders: {
@@ -831,7 +865,7 @@ export const generateDocxFile = async ({
                           },
                           verticalPosition: {
                             relative: VerticalPositionRelativeFrom.PAGE,
-                            offset: 5550000,
+                            offset: 5555000,
                           },
                         },
                       }),
@@ -886,9 +920,9 @@ export const generateDocxFile = async ({
                   },
                 },
                 margins: { left: 120, right: 120, bottom: 300 },
+                width: { type: WidthType.DXA, size: 3528 },
                 shading: { fill: secondaryColor },
                 children: [...corelineRatingsSidebar, ...keyStatisticsSidebar],
-                width: { type: WidthType.DXA, size: 3528 },
               }),
             ],
           }),
@@ -972,7 +1006,7 @@ export const generateDocxFile = async ({
         },
         headers: {
           default: new Header({
-            children: headerComponent(),
+            children: [headerComponent()],
           }),
         },
         footers: {
