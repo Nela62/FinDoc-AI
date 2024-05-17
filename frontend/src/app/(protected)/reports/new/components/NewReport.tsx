@@ -113,9 +113,9 @@ const buildingBlocks = [
   'business_description',
   'investment_thesis',
   'earnings_and_growth_analysis',
-  // 'financial_strength_and_dividend',
-  // 'management_and_risks',
-  // 'valuation',
+  'financial_strength_and_dividend',
+  'management_and_risks',
+  'valuation',
 ];
 
 const progressDescriptions = [
@@ -278,7 +278,6 @@ export const NewReportComponent = () => {
       setProgressMessage(
         `Generating sections (${sectionsGenerated} out of ${buildingBlocks.length} done)...`,
       );
-      console.log('sections finished generating' + sectionsGenerated);
       setGenerating(false);
       setProgressMessage(progressDescriptions[4]);
       setProgress(80);
@@ -297,8 +296,7 @@ export const NewReportComponent = () => {
             },
             content: [
               {
-                // @ts-ignore
-                text: formatText(generatedBlocks[block]),
+                text: formatText(block),
                 type: 'text',
               },
             ],
@@ -320,7 +318,6 @@ export const NewReportComponent = () => {
         .update({ json_content: curReportText })
         .match({ id: reportData.id });
       const element = ref.current;
-      console.log('element');
 
       if (!element) return;
       html2canvas(element, {
@@ -332,6 +329,7 @@ export const NewReportComponent = () => {
       }).then((canvas) => {
         imgRef.current = canvas.toDataURL('image/jpg');
         setProgress(100);
+        setProgressMessage('');
       });
     } else {
       if (!progressDescriptions.slice(0, 2).includes(progressMessage))
@@ -704,7 +702,9 @@ export const NewReportComponent = () => {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Generating report...</AlertDialogTitle>
+              <AlertDialogTitle>
+                {progress === 100 ? 'Report Generated' : 'Generating report...'}
+              </AlertDialogTitle>
             </AlertDialogHeader>
             <p>{progressMessage}</p>
             <Progress
@@ -749,7 +749,7 @@ export const NewReportComponent = () => {
                             (t) => t.value === reportData.companyTicker,
                           )?.label ?? '',
                         recommendation: reportData.recommendation,
-                        targetPrice: reportData.targetPrice
+                        targetPrice: reportData.targetPrice,
                       });
                       const url = URL.createObjectURL(blob);
                       const link = document.createElement('a');
