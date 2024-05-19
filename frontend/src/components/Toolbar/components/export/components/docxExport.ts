@@ -24,6 +24,7 @@ import {
   convertInchesToTwip,
   LineRuleType,
   TextWrappingType,
+  VerticalAlign,
 } from 'docx';
 import { FileChild } from 'docx/build/file/file-child';
 import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
@@ -301,7 +302,8 @@ DocxFileProps) => {
     top: 1550.6,
     left: 604.8,
     right: 604.8,
-    bottom: 878.4,
+    // bottom: 878.4,
+    bottom: 1000,
     header: 288,
     footer: 691.2,
   };
@@ -716,6 +718,78 @@ DocxFileProps) => {
     }),
   ];
 
+  const footerComponent = new Footer({
+    children: [
+      new Table({
+        borders: bordersNone,
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                borders: bordersNone,
+                width: { size: 50, type: WidthType.PERCENTAGE },
+                verticalAlign: VerticalAlign.CENTER,
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.LEFT,
+                    children: [
+                      new TextRun({
+                        children: [
+                          'Please see important information about this report on page ',
+                          PageNumber.TOTAL_PAGES,
+                        ],
+                        bold: true,
+                        size: 14,
+                        color: '000000',
+                      }),
+                    ],
+                  }),
+                  new Paragraph({
+                    spacing: { before: 120 },
+                    alignment: AlignmentType.LEFT,
+                    children: [
+                      new TextRun({
+                        text: `©2024 ${authorCompanyName}`,
+                        size: 14,
+                        color: '000000',
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              new TableCell({
+                borders: bordersNone,
+                width: { size: 50, type: WidthType.PERCENTAGE },
+                verticalAlign: VerticalAlign.CENTER,
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: authorCompanyName,
+                        size: 28,
+                        color: primaryColor,
+                        font: 'Arial Narrow',
+                        bold: true,
+                      }),
+                      new TextRun({
+                        text: ' Analyst Report',
+                        size: 28,
+                        color: primaryColor,
+                        font: 'Arial Narrow',
+                      }),
+                    ],
+                    alignment: AlignmentType.RIGHT,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+
   const firstPageSection = {
     properties: {
       page: {
@@ -723,38 +797,7 @@ DocxFileProps) => {
       },
     },
     footers: {
-      default: new Footer({
-        children: [
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: authorCompanyName,
-                size: 28,
-                color: primaryColor,
-                font: 'Arial Narrow',
-                bold: true,
-              }),
-              new TextRun({
-                text: ' Analyst Report',
-                size: 28,
-                color: primaryColor,
-                font: 'Arial Narrow',
-              }),
-            ],
-            alignment: AlignmentType.RIGHT,
-          }),
-          new Paragraph({
-            alignment: AlignmentType.LEFT,
-            children: [
-              new TextRun({
-                text: `\n\n©2024 ${authorCompanyName}`,
-                size: 14,
-                color: '000000',
-              }),
-            ],
-          }),
-        ],
-      }),
+      default: footerComponent,
     },
 
     children: [
@@ -1029,38 +1072,7 @@ DocxFileProps) => {
         },
         footers: {
           // TODO: put the text in a table so that it's aligned
-          default: new Footer({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: authorCompanyName,
-                    size: 28,
-                    color: primaryColor,
-                    font: 'Arial Narrow',
-                    bold: true,
-                  }),
-                  new TextRun({
-                    text: ' Analyst Report',
-                    size: 28,
-                    color: primaryColor,
-                    font: 'Arial Narrow',
-                  }),
-                ],
-                alignment: AlignmentType.RIGHT,
-              }),
-              new Paragraph({
-                alignment: AlignmentType.LEFT,
-                children: [
-                  new TextRun({
-                    text: `\n\n©2024 ${authorCompanyName}`,
-                    size: 14,
-                    color: '000000',
-                  }),
-                ],
-              }),
-            ],
-          }),
+          default: footerComponent,
         },
         children: [
           new Paragraph({

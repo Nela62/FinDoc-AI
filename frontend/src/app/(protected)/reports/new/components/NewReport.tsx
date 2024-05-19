@@ -563,8 +563,8 @@ export const NewReportComponent = () => {
                       <SelectItem value="Equity Analyst Report">
                         Equity Analyst Report
                       </SelectItem>
-                      <SelectItem value="Earnings Calls Notes">
-                        Earnings Calls Notes
+                      <SelectItem value="Earnings Call Note">
+                        Earnings Call Note
                       </SelectItem>
                     </SelectContent>
                   </Select>
