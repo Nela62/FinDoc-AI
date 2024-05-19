@@ -6,7 +6,7 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'http', hostname: '127.0.0.1' },
-      { protocol: 'https', hostname: 'phpgxkcyjkioartrccio.supabase.com' },
+      { protocol: 'https', hostname: 'phpgxkcyjkioartrccio.supabase.co' },
     ],
   },
   webpack: (config) => {
