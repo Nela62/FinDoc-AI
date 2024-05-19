@@ -307,7 +307,7 @@ export const NewReportComponent = () => {
   });
 
   function onTemplateFormSubmit(values: z.infer<typeof templateFormSchema>) {
-    console.log(values);
+    // console.log(values);
     setTemplateSettings(values);
     setIsTemplateCustomization(false);
   }
@@ -370,18 +370,18 @@ export const NewReportComponent = () => {
           );
         }
       });
-      console.log('setting report data...');
+      // console.log('setting report data...');
 
       setReportData((state) => ({ ...state, reportText: curReportText }));
 
-      console.log(curReportText);
+      // console.log(curReportText);
 
       supabase
         .from('reports')
         .update({ json_content: curReportText })
         .match({ id: reportData.id })
         .then((res) => {
-          console.log(res);
+          // console.log(res);
         });
 
       const element = ref.current;
@@ -410,17 +410,19 @@ export const NewReportComponent = () => {
     setTimeout(() => {
       setProgress(20);
       setProgressMessage(progressDescriptions[1]);
-      setTimeout(() => {
-        setProgress(40);
-        setProgressMessage(progressDescriptions[2]);
-        setTimeout(() => {
-          setProgress(60);
-          setProgressMessage(
-            `Generating sections (0 out of ${buildingBlocks.length} done)...`,
-          );
-        }, 5000);
-      }, 10000);
     }, 10000);
+
+    setTimeout(() => {
+      setProgress(40);
+      setProgressMessage(progressDescriptions[2]);
+    }, 20000);
+
+    setTimeout(() => {
+      setProgress(60);
+      setProgressMessage(
+        `Generating sections (0 out of ${buildingBlocks.length} done)...`,
+      );
+    }, 25000);
   }
 
   async function onGenerateAndFormSubmit(values: z.infer<typeof formSchema>) {
@@ -482,7 +484,7 @@ export const NewReportComponent = () => {
           Authorization: session.access_token,
         },
       });
-      console.log('generated section: ' + block);
+      // console.log('generated section: ' + block);
 
       const json = await res.json();
       const text = json.text;
