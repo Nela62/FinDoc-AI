@@ -4,23 +4,27 @@ import { DAILY_IBM } from '@/lib/data/daily_ibm_full';
 import { WEEKLY_IBM } from '@/lib/data/weekly_ibm';
 import {
   AreaChart,
-  Line,
   XAxis,
   YAxis,
   Area,
   BarChart,
   Bar,
-  ComposedChart,
   ReferenceLine,
+  ReferenceDot,
 } from 'recharts';
 
 import { forwardRef, useEffect, useState } from 'react';
-import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
-import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
+
+type ChartProps = {
+  colors: string[];
+  targetPrice: number;
+  incomeStatement: any;
+  earnings: any;
+};
 
 // const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 // TODO: generate quarters and columns automatically based on date
-export const Chart = forwardRef((props: any, ref: any) => {
+export const Chart = forwardRef((props: ChartProps, ref: any) => {
   // Override console.error
   // This is a hack to suppress the warning about missing defaultProps in the recharts library
   // @link https://github.com/recharts/recharts/issues/3615
@@ -41,6 +45,8 @@ export const Chart = forwardRef((props: any, ref: any) => {
     return null;
   }
 
+  const [primaryColor, secondaryColor, accentColor] = props.colors;
+
   const days = 4 * 365 + 1;
 
   const data = Object.entries(DAILY_IBM['Time Series (Daily)'])
@@ -53,19 +59,16 @@ export const Chart = forwardRef((props: any, ref: any) => {
   const sum = data.reduce((sum, p) => sum + p.y, 0);
   const mean = sum / data.length;
 
-  const weeklyData = Object.entries(WEEKLY_IBM['Weekly Time Series']).map(
-    ([key, value]) => ({ x: key, y: Number(value['4. close']) }),
-  );
-  const revenueData = INCOME_STATEMENT_IBM['quarterlyReports']
+  const revenueData = props.incomeStatement['quarterlyReports']
     .slice(0, 16)
-    .map((quarter) => ({
+    .map((quarter: any) => ({
       x: quarter.fiscalDateEnding,
       y: (Number(quarter.totalRevenue) / 1000000000.0).toFixed(2),
     }))
     .reverse();
-  const earningsData = EARNINGS_IBM['quarterlyEarnings']
+  const earningsData = props.earnings['quarterlyEarnings']
     .slice(0, 16)
-    .map((quarter) => ({
+    .map((quarter: any) => ({
       x: quarter.fiscalDateEnding,
       y: quarter.reportedEPS,
     }))
@@ -85,7 +88,7 @@ export const Chart = forwardRef((props: any, ref: any) => {
         </div>
       </div>
       <div
-        className="grid grid-cols-[50px_2fr_4fr_4fr_4fr_2fr] divide-x divide-y w-[484px] divide-zinc-400"
+        className="grid grid-cols-[50px_2fr_4fr_4fr_4fr_2fr] divide-x divide-y w-[477px] divide-zinc-400"
         style={{ fontSize: '8px' }}
         ref={ref}
       >
@@ -100,7 +103,7 @@ export const Chart = forwardRef((props: any, ref: any) => {
             ($)
           </h2>
           <AreaChart
-            width={484}
+            width={477}
             height={90}
             data={data}
             margin={{ right: 0, bottom: 0 }}
@@ -129,8 +132,8 @@ export const Chart = forwardRef((props: any, ref: any) => {
             <Area
               type="monotone"
               dataKey="y"
-              stroke="#1f497d"
-              fill="#f4e9d3"
+              stroke={primaryColor}
+              fill={secondaryColor}
               strokeWidth={1.5}
               isAnimationActive={false}
             />
@@ -153,6 +156,12 @@ export const Chart = forwardRef((props: any, ref: any) => {
               strokeDasharray="3 3"
               strokeWidth="0.7"
             />
+            {/* <ReferenceDot
+              x={data[data.length - 1].x}
+              y={props.targetPrice}
+              label={props.targetPrice}
+              fill={accentColor}
+            /> */}
           </AreaChart>
         </div>
         <div></div>
@@ -174,7 +183,7 @@ export const Chart = forwardRef((props: any, ref: any) => {
             <p className="font-semibold">Quarterly</p>
           </div>
           <BarChart
-            width={484}
+            width={477}
             height={44}
             data={earningsData}
             barCategoryGap={0.3}
@@ -184,7 +193,7 @@ export const Chart = forwardRef((props: any, ref: any) => {
             <YAxis tickLine={false} axisLine={false} type="number" hide />
             <Bar
               dataKey="y"
-              fill="#1f497d"
+              fill={primaryColor}
               label={{ fill: 'white', position: 'insideBottom', fontSize: 7 }}
               isAnimationActive={false}
             />
@@ -225,7 +234,7 @@ export const Chart = forwardRef((props: any, ref: any) => {
           </h2>
 
           <BarChart
-            width={484}
+            width={477}
             height={44}
             data={revenueData}
             barCategoryGap={0.3}
@@ -235,7 +244,7 @@ export const Chart = forwardRef((props: any, ref: any) => {
             <YAxis tickLine={false} axisLine={false} type="number" hide />
             <Bar
               dataKey="y"
-              fill="#1f497d"
+              fill={primaryColor}
               label={{ fill: 'white', position: 'insideBottom', fontSize: 7 }}
               isAnimationActive={false}
             />

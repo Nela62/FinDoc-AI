@@ -8,6 +8,8 @@ import html2canvas from 'html2canvas';
 import { generateDocxFile } from './components/docxExport';
 import { useInsertMutation } from '@supabase-cache-helpers/postgrest-react-query';
 import { createClient } from '@/lib/supabase/client';
+import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
+import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
 
 // import domtoimage from 'dom-to-image-more';
 
@@ -24,7 +26,12 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
   return (
     <div className="flex text-sm">
       <div className="hidden" id="hidden-container" ref={ref}>
-        <Chart />
+        <Chart
+          colors={['#1c4587', '#f4e9d3', '#006f3b']}
+          earnings={EARNINGS_IBM}
+          incomeStatement={INCOME_STATEMENT_IBM}
+          targetPrice={168}
+        />
       </div>
       {/* <button
         onClick={() => {
@@ -87,6 +94,7 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
             targetPrice: 168,
             authorName: 'Coreline AI',
             authorCompanyName: 'Coreline',
+            financialStrength: 'HIGH',
           });
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');

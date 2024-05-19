@@ -23,8 +23,10 @@ import {
   LevelFormat,
   convertInchesToTwip,
   LineRuleType,
+  TextWrappingType,
 } from 'docx';
 import { FileChild } from 'docx/build/file/file-child';
+import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 
 const getHeadingLevel = (level: number) => {
   switch (level) {
@@ -90,7 +92,7 @@ const TEST_RECOMMENDATION = 'BUY';
 
 type RatingsType = {
   '12-month': string;
-  Strength: string;
+  'Financial Strength': string;
 };
 
 const ratingsList = [
@@ -98,7 +100,7 @@ const ratingsList = [
     rowName: '12-month',
     cells: ['SELL', 'UW', 'HOLD', 'OW', 'BUY'],
   },
-  { rowName: 'Strength', cells: ['LOW', 'LM', 'MED', 'MH', 'HIGH'] },
+  { rowName: 'Financial Strength', cells: ['LOW', 'LM', 'MED', 'MH', 'HIGH'] },
 ];
 
 const SUMMARY = [
@@ -126,6 +128,9 @@ type DocxFileProps = {
   authorCompanyName: string;
   targetPrice?: number;
   headerImageLink?: string;
+  financialStrength: string;
+  // daily_stock: any;
+  // earnings: any;
 };
 
 export const generateDocxFile = async ({
@@ -141,11 +146,13 @@ export const generateDocxFile = async ({
   authorName,
   authorCompanyName,
   headerImageLink = '/white_coreline_logo.png',
-}: DocxFileProps) => {
+  financialStrength,
+}: // earnings = EARNINGS_IBM,
+DocxFileProps) => {
   const [primaryColor, secondaryColor, accentColor] = colors;
   const ratings = {
     '12-month': recommendation === 'AUTO' ? 'BUY' : recommendation,
-    Strength: 'High',
+    'Financial Strength': financialStrength,
   };
 
   const firstHalf: Paragraph[] = [];
@@ -189,7 +196,8 @@ export const generateDocxFile = async ({
         let metrics = context.measureText(testLine);
         if (metrics.width > width && currentLine !== '') {
           lines++;
-          if (lines === maxLines) {
+          // BUG: skips over a line sometimes
+          if (lines >= maxLines) {
             firstHalfText += currentLine;
             curText += currentLine;
             reachedMaxLines = true;
@@ -243,6 +251,7 @@ export const generateDocxFile = async ({
     };
 
     content.forEach((cell) => {
+      console.log(secondHalf);
       const paragraphContent =
         cell.type === 'heading'
           ? new Paragraph({
@@ -312,10 +321,28 @@ export const generateDocxFile = async ({
     },
   };
 
+  async function getImageSize(imageBlob: Blob) {
+    const bitmap: ImageBitmap = await createImageBitmap(imageBlob);
+    const { width, height } = bitmap;
+    return { width, height };
+  }
+
   const headerImage = await fetch(headerImageLink).then((r) => r.blob());
-  const bitmap: ImageBitmap = await createImageBitmap(headerImage);
-  const { width: headerImageWidth, height: headerImageHeight } = bitmap;
-  // console.log(width, height);
+  const { width: headerImageWidth, height: headerImageHeight } =
+    await getImageSize(headerImage);
+
+  // TODO: fetch this dynamically
+  const reportCompanyLogo = await fetch('/amazon-logo.png').then((r) =>
+    r.blob(),
+  );
+  const { width: reportCompanyLogoWidth, height: reportCompanyLogoHeight } =
+    await getImageSize(reportCompanyLogo);
+
+  const tableImage = await fetch('/second_page_table.png').then((r) =>
+    r.blob(),
+  );
+  const { width: tableImageWidth, height: tableImageHeight } =
+    await getImageSize(headerImage);
 
   const headerComponent = (pageNum: boolean = true) => [
     new Paragraph({
@@ -329,10 +356,11 @@ export const generateDocxFile = async ({
             height: 50,
           },
           floating: {
-            // behindDocument: true,
+            zIndex: 10,
+            behindDocument: false,
             horizontalPosition: {
               relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-              offset: 384048,
+              offset: 385548,
             },
             verticalPosition: {
               relative: VerticalPositionRelativeFrom.TOP_MARGIN,
@@ -371,7 +399,6 @@ export const generateDocxFile = async ({
     }),
     new Paragraph({
       shading: { fill: primaryColor },
-      // spacing: { after: 18 },
       children: pageNum
         ? [
             new TextRun({
@@ -541,7 +568,7 @@ export const generateDocxFile = async ({
       spacing: { after: 100, before: 100 },
       children: [
         new TextRun({
-          text: 'Coreline Ratings',
+          text: `${authorCompanyName} Ratings`,
           bold: true,
           color: primaryColor,
           size: 24,
@@ -611,7 +638,7 @@ export const generateDocxFile = async ({
       spacing: { before: 120, after: 50 },
       children: [
         new TextRun({
-          text: 'Coreline assigns a 12-month BUY, HOLD, or SELL rating to each stock under coverage.',
+          text: `${authorCompanyName} assigns a 12-month BUY, OVERWEIGHT, HOLD, UNDERWEIGHT or SELL rating to each stock.`,
           size: 16,
           font: 'Arial Narrow',
           color: primaryColor,
@@ -701,14 +728,14 @@ export const generateDocxFile = async ({
           new Paragraph({
             children: [
               new TextRun({
-                text: 'Coreline ',
+                text: authorCompanyName,
                 size: 28,
                 color: primaryColor,
                 font: 'Arial Narrow',
                 bold: true,
               }),
               new TextRun({
-                text: 'Analyst Report',
+                text: ' Analyst Report',
                 size: 28,
                 color: primaryColor,
                 font: 'Arial Narrow',
@@ -720,7 +747,7 @@ export const generateDocxFile = async ({
             alignment: AlignmentType.LEFT,
             children: [
               new TextRun({
-                text: '\n\n©2024 Coreline Technologies Inc.',
+                text: `\n\n©2024 ${authorCompanyName}`,
                 size: 14,
                 color: '000000',
               }),
@@ -734,21 +761,20 @@ export const generateDocxFile = async ({
       ...headerComponent(false),
       new Table({
         margins: { top: 60 },
-        borders: {
-          top: { style: 'none' },
-          bottom: {
-            style: BorderStyle.SINGLE,
-            size: 4,
-            color: '000000',
-            space: 2,
-          },
-          left: { style: 'none' },
-          right: { style: 'none' },
-        },
+        borders: bordersNone,
         rows: [
           new TableRow({
             children: [
               new TableCell({
+                borders: {
+                  ...bordersNone,
+                  bottom: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,
+                    color: '000000',
+                    space: 2,
+                  },
+                },
                 margins: { right: 120 },
                 children: [
                   new Paragraph({
@@ -830,7 +856,7 @@ export const generateDocxFile = async ({
                     children: [
                       new ImageRun({
                         data: img,
-                        transformation: { width: 484, height: 325 },
+                        transformation: { width: 477, height: 325 },
                         floating: {
                           horizontalPosition: {
                             relative:
@@ -893,15 +919,33 @@ export const generateDocxFile = async ({
                     space: 2,
                   },
                 },
-                margins: { left: 120, right: 120, bottom: 300 },
+                margins: { left: 120, right: 120, bottom: 120 },
                 width: { type: WidthType.DXA, size: 3528 },
                 shading: { fill: secondaryColor },
-                children: [...corelineRatingsSidebar, ...keyStatisticsSidebar],
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new ImageRun({
+                        // @ts-ignore
+                        data: reportCompanyLogo,
+                        transformation: {
+                          height: 57.6,
+                          width:
+                            (57.6 / reportCompanyLogoHeight) *
+                            reportCompanyLogoWidth,
+                        },
+                      }),
+                    ],
+                  }),
+                  ...corelineRatingsSidebar,
+                  ...keyStatisticsSidebar,
+                ],
               }),
             ],
           }),
         ],
-        width: { size: 101, type: WidthType.PERCENTAGE },
+        width: { size: 100.5, type: WidthType.PERCENTAGE },
       }),
     ],
   };
@@ -1018,18 +1062,32 @@ export const generateDocxFile = async ({
             ],
           }),
         },
-        children: secondHalf,
-        //   content.map((cell) =>
-        //   cell.type === 'heading'
-        //     ? new Paragraph({
-        //         text: cell.content && cell.content[0].text,
-        //         heading: getHeadingLevel(cell.attrs?.level ?? 1),
-        //       })
-        //     : new Paragraph({
-        //         alignment: AlignmentType.JUSTIFIED,
-        //         children: cell.content?.map((c) => processContent(c)) ?? [],
-        //       }),
-        // ),
+        children: [
+          new Paragraph({
+            children: [
+              new ImageRun({
+                // @ts-ignore
+                data: tableImage,
+                transformation: {
+                  width: 710,
+                  height: (tableImageWidth / 710) * tableImageHeight,
+                },
+                floating: {
+                  wrap: { type: TextWrappingType.TOP_AND_BOTTOM },
+                  horizontalPosition: {
+                    relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
+                    offset: 385548,
+                  },
+                  verticalPosition: {
+                    relative: VerticalPositionRelativeFrom.PAGE,
+                    offset: 4155000,
+                  },
+                },
+              }),
+            ],
+          }),
+          ...secondHalf,
+        ],
       },
     ],
   });

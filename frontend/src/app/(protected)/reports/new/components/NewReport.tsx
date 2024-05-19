@@ -77,6 +77,13 @@ import html2canvas from 'html2canvas';
 import { JSONContent } from '@tiptap/core';
 import { generateDocxFile } from '@/components/Toolbar/components/export/components/docxExport';
 import { fetchSettings } from '@/lib/queries';
+import {
+  useDirectory,
+  useFileUrl,
+} from '@supabase-cache-helpers/storage-react-query';
+
+import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
+import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 // TODO: add a super refinement for companyTicker; it can be optional when reportType doesn't required it
 
 const tickers = [
@@ -142,12 +149,16 @@ const formSchema = z.object({
   financialStrength: z.string().optional(),
   analystName: z.string().optional(),
   companyName: z.string().optional(),
-  companyLogo: (typeof window === 'undefined'
-    ? z.any()
-    : z.instanceof(FileList)
-  ).optional(),
+  companyLogo: z.string().optional(),
   colorSchemeId: z.string(),
   templateId: z.string(),
+});
+
+const templateFormSchema = z.object({
+  authorName: z.string(),
+  companyName: z.string(),
+  companyLogo: z.string().optional(),
+  colorSchemeId: z.string(),
 });
 
 function formatText(text: string) {
@@ -174,6 +185,7 @@ type ReportData = {
   companyTicker?: string;
   recommendation?: string;
   targetPrice?: number;
+  financialStrength?: string;
 };
 
 export const NewReportComponent = () => {
@@ -210,6 +222,12 @@ export const NewReportComponent = () => {
 
   const { data: settingsData } = useQuery(fetchSettings(supabase));
 
+  const { data: logos } = useDirectory(
+    supabase.storage.from('company-logos'),
+    user ?? '',
+    { refetchOnWindowFocus: false },
+  );
+
   const { mutateAsync: insert } = useInsertMutation(
     supabase.from('reports'),
     ['id'],
@@ -240,6 +258,38 @@ export const NewReportComponent = () => {
     'id',
   );
 
+  type TemplateSettings = {
+    authorName: string | undefined;
+    companyName: string | undefined;
+    companyLogo?: string | undefined;
+    colorSchemeId: string;
+  };
+
+  const [templateSettings, setTemplateSettings] = useState<TemplateSettings>({
+    authorName: settingsData![0].author_name ?? '',
+    companyName: settingsData![0].company_name ?? '',
+    companyLogo: (logos && logos[0].name) ?? '/default_coreline_logo.png',
+    colorSchemeId: COLOR_SCHEMES[0].key,
+  });
+
+  useEffect(() => {
+    setTemplateSettings((state) => ({
+      ...state,
+      companyLogo: (logos && logos[0].name) ?? '/default_coreline_logo.png',
+    }));
+  }, [logos]);
+
+  const { data: headerUrl } = useFileUrl(
+    supabase.storage.from('company-logos'),
+    `${user}/${templateSettings.companyLogo}`,
+    'private',
+    {
+      ensureExistence: true,
+      refetchOnWindowFocus: false,
+      enabled: templateSettings.companyLogo !== '/default_coreline_logo.png',
+    },
+  );
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -250,6 +300,17 @@ export const NewReportComponent = () => {
       templateId: '1',
     },
   });
+
+  const templateForm = useForm<z.infer<typeof templateFormSchema>>({
+    resolver: zodResolver(templateFormSchema),
+    defaultValues: templateSettings,
+  });
+
+  function onTemplateFormSubmit(values: z.infer<typeof templateFormSchema>) {
+    console.log(values);
+    setTemplateSettings(values);
+    setIsTemplateCustomization(false);
+  }
 
   function onFormSubmit(values: z.infer<typeof formSchema>) {
     const today = new Date();
@@ -313,10 +374,16 @@ export const NewReportComponent = () => {
 
       setReportData((state) => ({ ...state, reportText: curReportText }));
 
+      console.log(curReportText);
+
       supabase
         .from('reports')
         .update({ json_content: curReportText })
-        .match({ id: reportData.id });
+        .match({ id: reportData.id })
+        .then((res) => {
+          console.log(res);
+        });
+
       const element = ref.current;
 
       if (!element) return;
@@ -393,6 +460,7 @@ export const NewReportComponent = () => {
       companyTicker: values.companyTicker,
       recommendation: values.recommendation,
       targetPrice: values.targetPrice,
+      financialStrength: values.financialStrength,
     }));
     setGenerating(true);
 
@@ -469,120 +537,167 @@ export const NewReportComponent = () => {
 
   const mainForm = (
     <>
-      <div className="hidden" id="hidden-container" ref={ref}>
-        <Chart />
-      </div>
       <div className="w-[360px]">
-        <div className="space-y-4">
-          {/* Report type */}
-          <FormField
-            control={form.control}
-            name="reportType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Report Type</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Equity Analyst Report">
-                      Equity Analyst Report
-                    </SelectItem>
-                    <SelectItem value="Earnings Calls Notes">
-                      Earnings Calls Notes
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {/* Company ticker */}
-          <FormField
-            control={form.control}
-            name="companyTicker"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Company</FormLabel>
-                <Popover open={open} onOpenChange={setOpen}>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={open}
-                        className={cn(
-                          'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 font-normal ',
-                          !field.value && 'text-muted-foreground',
-                        )}
-                      >
-                        {field.value
-                          ? tickers.find(
-                              (ticker) => ticker.value === field.value,
-                            )?.label
-                          : 'Select ticker'}
-
-                        <CaretSortIcon className="h-4 w-4 opacity-50" />
-                        {/* <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" /> */}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className={cn(
-                      'p-1',
-                      'w-full min-w-[var(--radix-popover-trigger-width)]',
-                    )}
-                  >
-                    <Command>
-                      <CommandInput
-                        placeholder="Search company..."
-                        className="h-9 w-full"
-                      />
-                      <CommandEmpty>No company found.</CommandEmpty>
-                      <CommandGroup>
-                        <CommandList>
-                          {tickers.map((ticker) => (
-                            <CommandItem
-                              value={ticker.label}
-                              key={ticker.value}
-                              onSelect={() => {
-                                form.setValue('companyTicker', ticker.value);
-                                setOpen(false);
-                              }}
-                            >
-                              {ticker.label} ({ticker.value})
-                              <CheckIcon
-                                className={cn(
-                                  'ml-auto h-4 w-4',
-                                  ticker.value === field.value
-                                    ? 'opacity-100'
-                                    : 'opacity-0',
-                                )}
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandList>
-                      </CommandGroup>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="flex gap-4">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onGenerateAndFormSubmit)}
+            className="space-y-4"
+          >
+            {/* Report type */}
             <FormField
               control={form.control}
-              name="recommendation"
+              name="reportType"
               render={({ field }) => (
-                <FormItem className="w-1/2">
-                  <FormLabel>Recommendation</FormLabel>
+                <FormItem>
+                  <FormLabel>Report Type</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Equity Analyst Report">
+                        Equity Analyst Report
+                      </SelectItem>
+                      <SelectItem value="Earnings Calls Notes">
+                        Earnings Calls Notes
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* Company ticker */}
+            <FormField
+              control={form.control}
+              name="companyTicker"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Company</FormLabel>
+                  <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={open}
+                          className={cn(
+                            'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 font-normal ',
+                            !field.value && 'text-muted-foreground',
+                          )}
+                        >
+                          {field.value
+                            ? tickers.find(
+                                (ticker) => ticker.value === field.value,
+                              )?.label
+                            : 'Select ticker'}
+
+                          <CaretSortIcon className="h-4 w-4 opacity-50" />
+                          {/* <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" /> */}
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className={cn(
+                        'p-1',
+                        'w-full min-w-[var(--radix-popover-trigger-width)]',
+                      )}
+                    >
+                      <Command>
+                        <CommandInput
+                          placeholder="Search company..."
+                          className="h-9 w-full"
+                        />
+                        <CommandEmpty>No company found.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandList>
+                            {tickers.map((ticker) => (
+                              <CommandItem
+                                value={ticker.label}
+                                key={ticker.value}
+                                onSelect={() => {
+                                  form.setValue('companyTicker', ticker.value);
+                                  setOpen(false);
+                                }}
+                              >
+                                {ticker.label} ({ticker.value})
+                                <CheckIcon
+                                  className={cn(
+                                    'ml-auto h-4 w-4',
+                                    ticker.value === field.value
+                                      ? 'opacity-100'
+                                      : 'opacity-0',
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandList>
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex gap-4">
+              <FormField
+                control={form.control}
+                name="recommendation"
+                render={({ field }) => (
+                  <FormItem className="w-1/2">
+                    <FormLabel>Recommendation</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="AUTO">Auto</SelectItem>
+                        <SelectItem value="BUY">Buy</SelectItem>
+                        <SelectItem value="OVERWEIGHT">Overweight</SelectItem>
+                        <SelectItem value="HOLD">Hold</SelectItem>
+                        <SelectItem value="UNDERWEIGHT">Underweight</SelectItem>
+                        <SelectItem value="SELL">Sell</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="targetPrice"
+                disabled={form.watch('recommendation') === 'AUTO'}
+                render={({ field }) => (
+                  <FormItem className="w-1/2 relative">
+                    <FormLabel>Target Price</FormLabel>
+                    <div className="absolute l-0 ml-2 b-0 text-foreground/70">
+                      <p className="pt-1.5 text-sm">$</p>
+                    </div>
+                    <FormControl>
+                      <Input {...field} className="pl-6" type="number" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name="financialStrength"
+              render={({ field }) => (
+                <FormItem className="w-1/2 pr-2">
+                  <FormLabel>Financial Strength</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -594,194 +709,163 @@ export const NewReportComponent = () => {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="AUTO">Auto</SelectItem>
-                      <SelectItem value="BUY">Buy</SelectItem>
-                      <SelectItem value="OVERWEIGHT">Overweight</SelectItem>
-                      <SelectItem value="HOLD">Hold</SelectItem>
-                      <SelectItem value="UNDERWEIGHT">Underweight</SelectItem>
-                      <SelectItem value="SELL">Sell</SelectItem>
+                      <SelectItem value="LOW">Low</SelectItem>
+                      <SelectItem value="LM">Low-Medium</SelectItem>
+                      <SelectItem value="MED">Medium</SelectItem>
+                      <SelectItem value="MH">Medium-High</SelectItem>
+                      <SelectItem value="HIGH">High</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="targetPrice"
-              disabled={form.watch('recommendation') === 'AUTO'}
-              render={({ field }) => (
-                <FormItem className="w-1/2 relative">
-                  <FormLabel>Target Price</FormLabel>
-                  <div className="absolute l-0 ml-2 b-0 text-foreground/70">
-                    <p className="pt-1.5 text-sm">$</p>
-                  </div>
-                  <FormControl>
-                    <Input {...field} className="pl-6" type="number" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <FormField
-            control={form.control}
-            name="financialStrength"
-            render={({ field }) => (
-              <FormItem className="w-1/2 pr-2">
-                <FormLabel>Financial Strength</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="AUTO">Auto</SelectItem>
-                    <SelectItem value="LOW">Low</SelectItem>
-                    <SelectItem value="LM">Low-Medium</SelectItem>
-                    <SelectItem value="MED">Medium</SelectItem>
-                    <SelectItem value="MH">Medium-High</SelectItem>
-                    <SelectItem value="HIGH">High</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
-          {/* <div className="flex flex-col space-y-3">
+            {/* <div className="flex flex-col space-y-3">
                     <Label>Data Sources</Label>
                     <Button variant="outline" className="w-1/2">
                       Edit Sources
                     </Button>
                   </div> */}
-        </div>
-      </div>
-      <Button
-        variant="ghost"
-        className="text-xs mt-2 mb-1 font-normal px-2"
-        onClick={() => {
-          setIsTemplateCustomization(true);
-        }}
-      >
-        Customize Template -{'>'}
-      </Button>
-
-      <div className="flex gap-5 w-full mt-14">
-        <Button
-          variant="outline"
-          type="submit"
-          name="start-writing"
-          className="flex gap-2 w-1/2 h-11"
-          onClick={form.handleSubmit(onFormSubmit)}
-        >
-          <SquarePen className="h-5 w-5" />
-          Start writing
-        </Button>
-        <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <AlertDialogTrigger asChild>
             <Button
-              type="submit"
-              onClick={(e) => {
-                e.preventDefault();
-                setIsDialogOpen(true);
-                form.handleSubmit(onGenerateAndFormSubmit)(e);
+              variant="ghost"
+              className="text-xs mt-2 mb-4 font-normal px-2"
+              onClick={() => {
+                setIsTemplateCustomization(true);
               }}
-              name="generate"
-              className="flex gap-2 h-11 w-1/2"
             >
-              <Wand2Icon className="h-5 w-5" />
-              <div className="flex flex-col w-fit justify-start">
-                <p>Generate Full</p>
-                <p>Report</p>
-              </div>
+              Customize Template -{'>'}
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {progress === 100 ? 'Report Generated' : 'Generating report...'}
-              </AlertDialogTitle>
-            </AlertDialogHeader>
-            <p>{progressMessage}</p>
-            <Progress
-              value={
-                progress + (sectionsGenerated / buildingBlocks.length) * 20
-              }
-              className=""
-            />
-            <AlertDialogFooter>
-              {generating ? (
-                <AlertDialogCancel onClick={() => setGenerating(false)}>
-                  Cancel
-                </AlertDialogCancel>
-              ) : (
-                <>
-                  <AlertDialogAction
-                    onClick={async () => {
-                      if (
-                        !reportData.reportText ||
-                        !imgRef.current ||
-                        !reportData.companyTicker
-                      )
-                        return;
-                      // @ts-ignore
-                      const companyDescription: string =
-                        // @ts-ignore
-                        generatedBlocks['business_description'] ?? '';
 
-                      if (!settingsData || settingsData.length === 0) return;
+            <div className="flex gap-5 w-full mt-14">
+              <Button
+                variant="outline"
+                type="submit"
+                name="start-writing"
+                className="flex gap-2 w-1/2 h-11"
+                onClick={form.handleSubmit(onFormSubmit)}
+              >
+                <SquarePen className="h-5 w-5" />
+                Start writing
+              </Button>
+              <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    type="submit"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsDialogOpen(true);
+                      form.handleSubmit(onGenerateAndFormSubmit)(e);
+                    }}
+                    name="generate"
+                    className="flex gap-2 h-11 w-1/2"
+                  >
+                    <Wand2Icon className="h-5 w-5" />
+                    <div className="flex flex-col w-fit justify-start">
+                      <p>Generate Full</p>
+                      <p>Report</p>
+                    </div>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      {progress === 100
+                        ? 'Report Generated'
+                        : 'Generating report...'}
+                    </AlertDialogTitle>
+                  </AlertDialogHeader>
+                  <p>{progressMessage}</p>
+                  <Progress
+                    value={
+                      progress +
+                      (sectionsGenerated / buildingBlocks.length) * 20
+                    }
+                    className=""
+                  />
+                  <AlertDialogFooter>
+                    {generating ? (
+                      <AlertDialogCancel onClick={() => setGenerating(false)}>
+                        Cancel
+                      </AlertDialogCancel>
+                    ) : (
+                      <>
+                        <AlertDialogAction
+                          onClick={async () => {
+                            if (
+                              !reportData.reportText ||
+                              !imgRef.current ||
+                              !reportData.companyTicker
+                            )
+                              return;
+                            // @ts-ignore
+                            const companyDescription: string =
+                              // @ts-ignore
+                              generatedBlocks['business_description'] ?? '';
 
-                      const blob = await generateDocxFile({
-                        content: reportData.reportText,
-                        img: imgRef.current,
-                        companyTicker: reportData.companyTicker,
-                        companyDescription: companyDescription,
-                        authorName:
-                          settingsData[0].author_name ?? 'Coreline AI',
-                        authorCompanyName:
-                          settingsData[0].company_name ?? 'Coreline',
-                        companyName:
-                          tickers.find(
-                            (t) => t.value === reportData.companyTicker,
-                          )?.label ?? '',
-                        recommendation: reportData.recommendation,
-                        targetPrice: reportData.targetPrice,
-                      });
-                      const url = URL.createObjectURL(blob);
-                      const link = document.createElement('a');
-                      link.href = url;
-                      // TODO: Support other report types name
-                      link.download = `${moment().format(
-                        'MMMM DD, YYYY',
-                      )} - Equity Analyst Report`;
-                      link.click();
-                      URL.revokeObjectURL(url);
-                    }}
-                  >
-                    Download Report
-                  </AlertDialogAction>
-                  <AlertDialogAction
-                    onClick={() => {
-                      router.push('/reports/' + reportData.url);
-                      setReportData({});
-                    }}
-                  >
-                    Edit Report
-                  </AlertDialogAction>
-                </>
-              )}
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+                            if (!settingsData || settingsData.length === 0)
+                              return;
+
+                            const blob = await generateDocxFile({
+                              content: reportData.reportText,
+                              img: imgRef.current,
+                              companyTicker: reportData.companyTicker,
+                              companyDescription: companyDescription,
+                              authorName:
+                                templateSettings.authorName ?? 'Coreline AI',
+                              authorCompanyName:
+                                templateSettings.companyName ?? 'Coreline',
+                              companyName:
+                                tickers.find(
+                                  (t) => t.value === reportData.companyTicker,
+                                )?.label ?? '',
+                              recommendation: reportData.recommendation,
+                              targetPrice: reportData.targetPrice,
+                              headerImageLink:
+                                headerUrl ?? '/default_coreline_logo.png',
+                              financialStrength:
+                                reportData.financialStrength ?? 'HIGH',
+                              colors:
+                                COLOR_SCHEMES.find(
+                                  (scheme) =>
+                                    scheme.key ===
+                                    templateSettings.colorSchemeId,
+                                )?.colors ?? COLOR_SCHEMES[0].colors,
+                            });
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            // TODO: Support other report types name
+                            link.download = `${moment().format(
+                              'MMMM DD, YYYY',
+                            )} - Equity Analyst Report`;
+                            link.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                        >
+                          Download Report
+                        </AlertDialogAction>
+                        <AlertDialogAction
+                          onClick={() => {
+                            router.push('/reports/' + reportData.url);
+                            setReportData({});
+                          }}
+                        >
+                          Edit Report
+                        </AlertDialogAction>
+                      </>
+                    )}
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </form>
+        </Form>
       </div>
     </>
   );
 
-  const whiteLabelSettings = (
+  const templateCustomizationForm = (
     <div className="space-y-4 w-[360px]">
       <div className="flex gap-2 items-center">
         <Button
@@ -793,116 +877,174 @@ export const NewReportComponent = () => {
         </Button>
         <h2 className="text-foreground/90">Template Customization</h2>
       </div>
-      <FormField
-        control={form.control}
-        name="analystName"
-        render={({ field }) => (
-          <FormItem className="w-full relative">
-            <FormLabel>Analyst Name</FormLabel>
-            <FormControl>
-              <Input {...field} className="" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="companyName"
-        render={({ field }) => (
-          <FormItem className="w-full relative">
-            <FormLabel>Company Name</FormLabel>
-            <FormControl>
-              <Input {...field} className="" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="companyLogo"
-        render={({ field }) => (
-          <FormItem className="w-full relative">
-            <FormLabel>Company Logo</FormLabel>
-            <FormControl>
-              <Input {...field} className="" type="file" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="colorSchemeId"
-        render={({ field }) => (
-          <FormItem className="w-1/2 pr-2">
-            <FormLabel>Color Scheme</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {...COLOR_SCHEMES.map((color) => (
-                  <SelectItem key={color.key} value={color.key}>
-                    <div className="flex gap-1 w-[120px]">
-                      {...color.colors.map((c, i) => (
-                        <div
-                          key={c + i}
-                          style={{ backgroundColor: c }}
-                          className="h-5 w-1/3 rounded-sm"
-                        ></div>
-                      ))}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <Form {...templateForm}>
+        <form
+          onSubmit={templateForm.handleSubmit(onTemplateFormSubmit)}
+          className="space-y-4"
+        >
+          <FormField
+            control={templateForm.control}
+            name="authorName"
+            render={({ field }) => (
+              <FormItem className="w-full relative">
+                <FormLabel>Author Name</FormLabel>
+                <FormControl>
+                  <Input {...field} className="" defaultValue={field.value} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={templateForm.control}
+            name="companyName"
+            render={({ field }) => (
+              <FormItem className="w-full relative">
+                <FormLabel>Company Name</FormLabel>
+                <FormControl>
+                  <Input {...field} className="" defaultValue={field.value} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={templateForm.control}
+            name="companyLogo"
+            render={({ field }) => (
+              <FormItem className="w-full relative">
+                <FormLabel>Company Logo</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {logos ? (
+                      logos.map((logo) => (
+                        <SelectItem value={logo.name} key={logo.id}>
+                          {logo.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="/default_coreline_logo.png">
+                        default_coreline_logo.png
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={templateForm.control}
+            name="colorSchemeId"
+            render={({ field }) => (
+              <FormItem className="w-1/2 pr-2">
+                <FormLabel>Color Scheme</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {...COLOR_SCHEMES.map((color) => (
+                      <SelectItem key={color.key} value={color.key}>
+                        <div className="flex gap-1 w-[120px]">
+                          {...color.colors.map((c, i) => (
+                            <div
+                              key={c + i}
+                              style={{ backgroundColor: c }}
+                              className="h-5 w-1/3 rounded-sm"
+                            ></div>
+                          ))}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="w-full gap-4 flex">
+            <Button
+              className="w-1/2"
+              variant="outline"
+              onClick={() => {
+                templateForm.reset();
+              }}
+            >
+              Reset
+            </Button>
+            <Button className="w-1/2" type="submit">
+              Apply
+            </Button>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 
   return (
-    <div className="flex flex-col items-center h-full w-full justify-center bg-muted/40">
-      <Card className="mb-10 pb-6  pl-2 pt-2">
-        <CardHeader className="font-semibold text-xl text-foreground/80 text-center">
-          Create New Report
-        </CardHeader>
-        <CardContent className="w-full flex gap-20 pr-14">
-          <div className="w-fit pl-10 py-1">
-            <Carousel>
-              <CarouselContent className="pb-1">
-                <CarouselItem>
-                  <Card className="overflow-hidden">
-                    <CardContent className="p-0">
-                      <Image
-                        src="/template.png"
-                        alt="Template 1"
-                        className="h-full w-80"
-                        width={0}
-                        height={0}
-                        sizes="100vw"
-                      />
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              </CarouselContent>
-              <CarouselPrevious />
-              <CarouselNext />
-            </Carousel>
-          </div>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onGenerateAndFormSubmit)}>
-              {isTemplateCustomization ? whiteLabelSettings : mainForm}
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
+    <>
+      <div className="flex flex-col items-center h-full w-full justify-center bg-muted/40">
+        <div
+          className="m-0 p-0 w-[477px] z-50 absolute h-[325px] hidden"
+          id="hidden-container"
+          ref={ref}
+        >
+          <Chart
+            colors={
+              COLOR_SCHEMES.find(
+                (scheme) => scheme.key === templateSettings.colorSchemeId,
+              )?.colors ?? COLOR_SCHEMES[0].colors
+            }
+            incomeStatement={INCOME_STATEMENT_IBM}
+            earnings={EARNINGS_IBM}
+            targetPrice={reportData.targetPrice ?? 168}
+          />
+        </div>
+        <Card className="mb-10 pb-6  pl-2 pt-2">
+          <CardHeader className="font-semibold text-xl text-foreground/80 text-center">
+            Create New Report
+          </CardHeader>
+          <CardContent className="w-full flex gap-20 pr-14">
+            <div className="w-fit pl-10 py-1">
+              <Carousel>
+                <CarouselContent className="pb-1">
+                  <CarouselItem>
+                    <Card className="overflow-hidden">
+                      <CardContent className="p-0">
+                        <Image
+                          src="/template.png"
+                          alt="Template 1"
+                          className="h-[416px] w-[300px]"
+                          width={0}
+                          height={0}
+                          sizes="100vw"
+                        />
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
+            </div>
+
+            {isTemplateCustomization ? templateCustomizationForm : mainForm}
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 };
