@@ -200,6 +200,7 @@ export const NewReportComponent = () => {
   const [user, setUser] = useState<string | null>(null);
 
   const router = useRouter();
+
   useEffect(() => {
     supabase.auth.getUser().then((res) => {
       if (res.data.user) setUser(res.data.user.id);
@@ -208,11 +209,15 @@ export const NewReportComponent = () => {
 
   const { data: settingsData } = useQuery(fetchSettings(supabase));
 
-  const { data: logos } = useDirectory(
-    supabase.storage.from('company-logos'),
-    user ?? '',
-    { refetchOnWindowFocus: false },
-  );
+  // const { data: logos } = useDirectory(
+  //   supabase.storage.from('company-logos'),
+  //   user ?? '',
+  //   {
+  //     refetchOnWindowFocus: false,
+  //     enabled: user !== 'undefined' && user !== null,
+  //   },
+  // );
+  const logos = undefined;
 
   const { mutateAsync: insert } = useInsertMutation(
     supabase.from('reports'),
@@ -254,14 +259,16 @@ export const NewReportComponent = () => {
   const [templateSettings, setTemplateSettings] = useState<TemplateSettings>({
     authorName: settingsData![0].author_name ?? '',
     companyName: settingsData![0].company_name ?? '',
-    companyLogo: (logos && logos[0].name) ?? '/default_coreline_logo.png',
+    // companyLogo: (logos && logos[0].name) ?? '/default_coreline_logo.png',
+    companyLogo: '/default_coreline_logo.png',
     colorSchemeId: COLOR_SCHEMES[0].key,
   });
 
   useEffect(() => {
     setTemplateSettings((state) => ({
       ...state,
-      companyLogo: (logos && logos[0].name) ?? '/default_coreline_logo.png',
+      // companyLogo: (logos && logos[0].name) ?? '/default_coreline_logo.png',
+      companyLogo: '/default_coreline_logo.png',
     }));
   }, [logos]);
 
@@ -839,17 +846,17 @@ export const NewReportComponent = () => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {logos ? (
+                    {/* {logos ? (
                       logos.map((logo) => (
                         <SelectItem value={logo.name} key={logo.id}>
                           {logo.name}
                         </SelectItem>
                       ))
-                    ) : (
-                      <SelectItem value="/default_coreline_logo.png">
-                        default_coreline_logo.png
-                      </SelectItem>
-                    )}
+                    ) : ( */}
+                    <SelectItem value="/default_coreline_logo.png">
+                      default_coreline_logo.png
+                    </SelectItem>
+                    {/* )} */}
                   </SelectContent>
                 </Select>
               </FormItem>
