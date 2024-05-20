@@ -1,5 +1,6 @@
 'use client';
 
+import { useLogger } from 'next-axiom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -181,6 +182,8 @@ export const NewReportComponent = () => {
     progress,
     sectionsGenerated,
   } = useBoundStore((state) => state);
+
+  const log = useLogger();
 
   const [open, setOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -490,18 +493,29 @@ export const NewReportComponent = () => {
       };
       // if (customPrompt) body['custom_prompt'] = customPrompt;
 
-      const res = await fetch(`${baseUrl}/report/`, {
-        method: 'POST',
-        body: JSON.stringify(body),
-        headers: {
-          'content-type': 'application/json',
-          Authorization: session.access_token,
-        },
-      });
-      console.log('generated section: ' + block);
+      log.info('Generating a building block', body);
+      try {
+        const res = await fetch(`${baseUrl}/report/`, {
+          method: 'POST',
+          body: JSON.stringify(body),
+          headers: {
+            'content-type': 'application/json',
+            Authorization: session.access_token,
+          },
+        });
+        log.info('Generated a building block', res);
+        console.log('generated section: ' + block);
 
-      const json = await res.json();
-      const text = json.text;
+        const json = await res.json();
+        const text = json.text;
+        setGeneratedBlocks((state) => ({
+          ...state,
+          [block]: text,
+        }));
+      } catch (err) {
+        console.log(err);
+      }
+
       // generatedBlocks[block] = text;
       // if (block === 'business_description') {
       //   setGeneratedBlocks((state) => ({
@@ -541,10 +555,6 @@ export const NewReportComponent = () => {
 
       // const cleanText = getCleanText(text, oldToNewCitationsMap);
 
-      setGeneratedBlocks((state) => ({
-        ...state,
-        [block]: text,
-      }));
       increaseSectionsGenerated();
     });
   }
