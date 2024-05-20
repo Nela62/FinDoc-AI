@@ -535,7 +535,7 @@ export const NewReportComponent = () => {
 
     processBuildingBlocks(
       buildingBlocks,
-      3,
+      2,
       session,
       reportid,
       values.companyTicker,
