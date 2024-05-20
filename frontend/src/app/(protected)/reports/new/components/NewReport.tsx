@@ -4,17 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Chart } from '@/components/Toolbar/components/export/components/Chart';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+
 import {
   Command,
   CommandEmpty,
@@ -84,6 +74,8 @@ import {
 
 import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
 import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
+import { ReportGenerationDialog } from './ReportGenerationDialog';
+import { useBoundStore } from '@/providers/store-provider';
 // TODO: add a super refinement for companyTicker; it can be optional when reportType doesn't required it
 
 const tickers = [
@@ -123,14 +115,6 @@ const buildingBlocks = [
   'financial_strength_and_dividend',
   'management_and_risks',
   'valuation',
-];
-
-const progressDescriptions = [
-  'Retrieving context from SEC filings...',
-  'Fetching data from financial APIs...',
-  'Searching the web for financial news...',
-  'Generating sections ',
-  'Generating charts and tables...',
 ];
 
 const COLOR_SCHEMES = [
@@ -189,20 +173,22 @@ type ReportData = {
 };
 
 export const NewReportComponent = () => {
+  const {
+    startGeneration,
+    increaseSectionsGenerated,
+    completeChartStage,
+    resetState,
+    progress,
+    sectionsGenerated,
+  } = useBoundStore((state) => state);
+
   const [open, setOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [isTemplateCustomization, setIsTemplateCustomization] = useState(false);
 
-  const [generating, setGenerating] = useState(false);
   const [reportData, setReportData] = useState<ReportData>({});
   const [generatedBlocks, setGeneratedBlocks] = useState({});
-
-  const [progress, setProgress] = useState(0);
-  const [progressMessage, setProgressMessage] = useState(
-    progressDescriptions[0],
-  );
-  const [sectionsGenerated, setSectionsGenerated] = useState(0);
 
   const ref = useRef<HTMLDivElement>(null);
   const imgRef = useRef<string | null>(null);
@@ -334,15 +320,60 @@ export const NewReportComponent = () => {
     });
   }
 
+  const downloadReportFn = async () => {
+    if (!reportData.reportText || !imgRef.current || !reportData.companyTicker)
+      return;
+    // @ts-ignore
+    const companyDescription: string =
+      // @ts-ignore
+      generatedBlocks['business_description'] ?? '';
+
+    if (!settingsData || settingsData.length === 0) return;
+
+    const blob = await generateDocxFile({
+      content: reportData.reportText,
+      img: imgRef.current,
+      companyTicker: reportData.companyTicker,
+      companyDescription: companyDescription,
+      authorName: templateSettings.authorName ?? 'Coreline AI',
+      authorCompanyName: templateSettings.companyName ?? 'Coreline',
+      companyName:
+        tickers.find((t) => t.value === reportData.companyTicker)?.label ?? '',
+      recommendation: reportData.recommendation,
+      targetPrice: reportData.targetPrice,
+      headerImageLink: headerUrl ?? '/default_coreline_logo.png',
+      financialStrength: reportData.financialStrength ?? 'HIGH',
+      colors:
+        COLOR_SCHEMES.find(
+          (scheme) => scheme.key === templateSettings.colorSchemeId,
+        )?.colors ?? COLOR_SCHEMES[0].colors,
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    // TODO: Support other report types name
+    link.download = `${moment().format(
+      'MMMM DD, YYYY',
+    )} - Equity Analyst Report`;
+    link.click();
+    URL.revokeObjectURL(url);
+    resetState();
+    setIsDialogOpen(false);
+  };
+
+  const editReportFn = () => {
+    resetState();
+    setIsDialogOpen(false);
+    router.push('/reports/' + reportData.url);
+  };
+
+  const cancelReportFn = () => {
+    resetState();
+    setIsDialogOpen(false);
+  };
+
   useEffect(() => {
     if (sectionsGenerated === buildingBlocks.length) {
-      setProgressMessage(
-        `Generating sections (${sectionsGenerated} out of ${buildingBlocks.length} done)...`,
-      );
-      setGenerating(false);
-      setProgressMessage(progressDescriptions[4]);
-      setProgress(80);
-
       const curReportText = { type: 'doc', content: [] };
       buildingBlocks.forEach((block) => {
         if (block !== 'business_description') {
@@ -370,19 +401,14 @@ export const NewReportComponent = () => {
           );
         }
       });
-      // console.log('setting report data...');
 
       setReportData((state) => ({ ...state, reportText: curReportText }));
 
-      // console.log(curReportText);
-
+      if (!reportData.id) return;
       supabase
         .from('reports')
         .update({ json_content: curReportText })
-        .match({ id: reportData.id })
-        .then((res) => {
-          // console.log(res);
-        });
+        .eq('id', reportData.id);
 
       const element = ref.current;
 
@@ -395,35 +421,16 @@ export const NewReportComponent = () => {
         },
       }).then((canvas) => {
         imgRef.current = canvas.toDataURL('image/jpg');
-        setProgress(100);
-        setProgressMessage('');
+        completeChartStage();
       });
-    } else {
-      if (!progressDescriptions.slice(0, 2).includes(progressMessage))
-        setProgressMessage(
-          `Generating sections (${sectionsGenerated} out of ${buildingBlocks.length} done)...`,
-        );
     }
-  }, [sectionsGenerated, generatedBlocks, supabase, reportData.id]);
-
-  async function changeProgressBar() {
-    setTimeout(() => {
-      setProgress(20);
-      setProgressMessage(progressDescriptions[1]);
-    }, 10000);
-
-    setTimeout(() => {
-      setProgress(40);
-      setProgressMessage(progressDescriptions[2]);
-    }, 20000);
-
-    setTimeout(() => {
-      setProgress(60);
-      setProgressMessage(
-        `Generating sections (0 out of ${buildingBlocks.length} done)...`,
-      );
-    }, 25000);
-  }
+  }, [
+    sectionsGenerated,
+    generatedBlocks,
+    supabase,
+    reportData.id,
+    completeChartStage,
+  ]);
 
   async function onGenerateAndFormSubmit(values: z.infer<typeof formSchema>) {
     const today = new Date();
@@ -432,7 +439,6 @@ export const NewReportComponent = () => {
     const nanoId = getNanoId();
     setReportData((state) => ({ ...state, url: nanoId }));
     if (!user) return;
-    setGenerating(true);
     const data = await insert([
       {
         title: `${moment().format('MMMM DD, YYYY')} - ${values.reportType}`,
@@ -464,7 +470,8 @@ export const NewReportComponent = () => {
       targetPrice: values.targetPrice,
       financialStrength: values.financialStrength,
     }));
-    setGenerating(true);
+    setIsDialogOpen(true);
+    startGeneration(buildingBlocks.length);
 
     buildingBlocks.forEach(async (block) => {
       // TODO: fix citations and how text is parsed
@@ -484,7 +491,7 @@ export const NewReportComponent = () => {
           Authorization: session.access_token,
         },
       });
-      // console.log('generated section: ' + block);
+      console.log('generated section: ' + block);
 
       const json = await res.json();
       const text = json.text;
@@ -531,14 +538,18 @@ export const NewReportComponent = () => {
         ...state,
         [block]: text,
       }));
-      setSectionsGenerated((state) => state + 1);
+      increaseSectionsGenerated();
     });
-
-    changeProgressBar();
   }
 
   const mainForm = (
     <>
+      <ReportGenerationDialog
+        cancelReportFn={cancelReportFn}
+        editReportFn={editReportFn}
+        downloadReportFn={downloadReportFn}
+        isOpen={isDialogOpen}
+      />
       <div className="w-[360px]">
         <Form {...form}>
           <form
@@ -750,116 +761,18 @@ export const NewReportComponent = () => {
                 <SquarePen className="h-5 w-5" />
                 Start writing
               </Button>
-              <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    type="submit"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setIsDialogOpen(true);
-                      form.handleSubmit(onGenerateAndFormSubmit)(e);
-                    }}
-                    name="generate"
-                    className="flex gap-2 h-11 w-1/2"
-                  >
-                    <Wand2Icon className="h-5 w-5" />
-                    <div className="flex flex-col w-fit justify-start">
-                      <p>Generate Full</p>
-                      <p>Report</p>
-                    </div>
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      {progress === 100
-                        ? 'Report Generated'
-                        : 'Generating report...'}
-                    </AlertDialogTitle>
-                  </AlertDialogHeader>
-                  <p>{progressMessage}</p>
-                  <Progress
-                    value={
-                      progress +
-                      (sectionsGenerated / buildingBlocks.length) * 20
-                    }
-                    className=""
-                  />
-                  <AlertDialogFooter>
-                    {generating ? (
-                      <AlertDialogCancel onClick={() => setGenerating(false)}>
-                        Cancel
-                      </AlertDialogCancel>
-                    ) : (
-                      <>
-                        <AlertDialogAction
-                          onClick={async () => {
-                            if (
-                              !reportData.reportText ||
-                              !imgRef.current ||
-                              !reportData.companyTicker
-                            )
-                              return;
-                            // @ts-ignore
-                            const companyDescription: string =
-                              // @ts-ignore
-                              generatedBlocks['business_description'] ?? '';
-
-                            if (!settingsData || settingsData.length === 0)
-                              return;
-
-                            const blob = await generateDocxFile({
-                              content: reportData.reportText,
-                              img: imgRef.current,
-                              companyTicker: reportData.companyTicker,
-                              companyDescription: companyDescription,
-                              authorName:
-                                templateSettings.authorName ?? 'Coreline AI',
-                              authorCompanyName:
-                                templateSettings.companyName ?? 'Coreline',
-                              companyName:
-                                tickers.find(
-                                  (t) => t.value === reportData.companyTicker,
-                                )?.label ?? '',
-                              recommendation: reportData.recommendation,
-                              targetPrice: reportData.targetPrice,
-                              headerImageLink:
-                                headerUrl ?? '/default_coreline_logo.png',
-                              financialStrength:
-                                reportData.financialStrength ?? 'HIGH',
-                              colors:
-                                COLOR_SCHEMES.find(
-                                  (scheme) =>
-                                    scheme.key ===
-                                    templateSettings.colorSchemeId,
-                                )?.colors ?? COLOR_SCHEMES[0].colors,
-                            });
-                            const url = URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = url;
-                            // TODO: Support other report types name
-                            link.download = `${moment().format(
-                              'MMMM DD, YYYY',
-                            )} - Equity Analyst Report`;
-                            link.click();
-                            URL.revokeObjectURL(url);
-                          }}
-                        >
-                          Download Report
-                        </AlertDialogAction>
-                        <AlertDialogAction
-                          onClick={() => {
-                            router.push('/reports/' + reportData.url);
-                            setReportData({});
-                          }}
-                        >
-                          Edit Report
-                        </AlertDialogAction>
-                      </>
-                    )}
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button
+                type="submit"
+                onClick={form.handleSubmit(onGenerateAndFormSubmit)}
+                name="generate"
+                className="flex gap-2 h-11 w-1/2"
+              >
+                <Wand2Icon className="h-5 w-5" />
+                <div className="flex flex-col w-fit justify-start">
+                  <p>Generate Full</p>
+                  <p>Report</p>
+                </div>
+              </Button>
             </div>
           </form>
         </Form>
@@ -998,23 +911,23 @@ export const NewReportComponent = () => {
 
   return (
     <>
+      <div
+        className="w-[477px] z-50 absolute h-fit hidden"
+        id="hidden-container"
+        ref={ref}
+      >
+        <Chart
+          colors={
+            COLOR_SCHEMES.find(
+              (scheme) => scheme.key === templateSettings.colorSchemeId,
+            )?.colors ?? COLOR_SCHEMES[0].colors
+          }
+          incomeStatement={INCOME_STATEMENT_IBM}
+          earnings={EARNINGS_IBM}
+          targetPrice={reportData.targetPrice ?? 168}
+        />
+      </div>
       <div className="flex flex-col items-center h-full w-full justify-center bg-muted/40">
-        <div
-          className="m-0 p-0 w-[477px] z-50 absolute h-[325px] hidden"
-          id="hidden-container"
-          ref={ref}
-        >
-          <Chart
-            colors={
-              COLOR_SCHEMES.find(
-                (scheme) => scheme.key === templateSettings.colorSchemeId,
-              )?.colors ?? COLOR_SCHEMES[0].colors
-            }
-            incomeStatement={INCOME_STATEMENT_IBM}
-            earnings={EARNINGS_IBM}
-            targetPrice={reportData.targetPrice ?? 168}
-          />
-        </div>
         <Card className="mb-10 pb-6  pl-2 pt-2">
           <CardHeader className="font-semibold text-xl text-foreground/80 text-center">
             Create New Report
