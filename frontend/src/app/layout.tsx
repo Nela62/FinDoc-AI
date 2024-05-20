@@ -33,7 +33,7 @@ export default function RootLayout({
             </main>
             <Toaster />
           </body>
-          <AxiomWebVitals />
+          {/* <AxiomWebVitals /> */}
         </html>
       </ReactQueryClientProvider>
     </CSPostHogProvider>
