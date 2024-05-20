@@ -77,6 +77,7 @@ import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
 import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 import { ReportGenerationDialog } from './ReportGenerationDialog';
 import { useBoundStore } from '@/providers/store-provider';
+import { Session } from '@supabase/supabase-js';
 // TODO: add a super refinement for companyTicker; it can be optional when reportType doesn't required it
 
 const tickers = [
@@ -442,6 +443,55 @@ export const NewReportComponent = () => {
     completeChartStage,
   ]);
 
+  const processBuildingBlocks = async (
+    blocks: string[],
+    batchSize: number,
+    session: Session,
+    reportId: string,
+    ticker: string,
+  ) => {
+    for (let i = 0; i < blocks.length; i += batchSize) {
+      const batch = blocks.slice(i, i + batchSize);
+
+      // Process each block in the batch concurrently
+      await Promise.all(
+        batch.map(async (block) => {
+          const body = {
+            prompt_type: block,
+            report_id: reportId,
+            ticker: ticker,
+            model: 'claude-3-haiku-20240307',
+          };
+
+          log.info('Generating a building block', body);
+          try {
+            const res = await fetch(`${baseUrl}/report/`, {
+              method: 'POST',
+              body: JSON.stringify(body),
+              headers: {
+                'content-type': 'application/json',
+                Authorization: session.access_token,
+              },
+            });
+            log.info('Generated a building block', { res: res });
+            console.log('generated section: ' + block);
+
+            const json = await res.json();
+            const text = json.text;
+            setGeneratedBlocks((state) => ({
+              ...state,
+              [block]: text,
+            }));
+            increaseSectionsGenerated();
+          } catch (err) {
+            console.log(err);
+            log.error('Error during building block generation', { error: err });
+          }
+        }),
+      );
+    }
+  };
+
   async function onGenerateAndFormSubmit(values: z.infer<typeof formSchema>) {
     const today = new Date();
     // const options = { year: 'numeric', month: 'short', day: 'numeric' };
@@ -483,81 +533,89 @@ export const NewReportComponent = () => {
     setIsDialogOpen(true);
     startGeneration(buildingBlocks.length);
 
-    buildingBlocks.forEach(async (block) => {
-      // TODO: fix citations and how text is parsed
-      const body: any = {
-        prompt_type: block,
-        report_id: reportid,
-        ticker: values.companyTicker,
-        model: 'claude-3-haiku-20240307',
-      };
-      // if (customPrompt) body['custom_prompt'] = customPrompt;
+    processBuildingBlocks(
+      buildingBlocks,
+      3,
+      session,
+      reportid,
+      values.companyTicker,
+    );
 
-      log.info('Generating a building block', body);
-      try {
-        const res = await fetch(`${baseUrl}/report/`, {
-          method: 'POST',
-          body: JSON.stringify(body),
-          headers: {
-            'content-type': 'application/json',
-            Authorization: session.access_token,
-          },
-        });
-        log.info('Generated a building block', { res: res });
-        console.log('generated section: ' + block);
+    // buildingBlocks.forEach(async (block) => {
+    //   // TODO: fix citations and how text is parsed
+    //   const body: any = {
+    //     prompt_type: block,
+    //     report_id: reportid,
+    //     ticker: values.companyTicker,
+    //     model: 'claude-3-haiku-20240307',
+    //   };
+    //   // if (customPrompt) body['custom_prompt'] = customPrompt;
 
-        const json = await res.json();
-        const text = json.text;
-        setGeneratedBlocks((state) => ({
-          ...state,
-          [block]: text,
-        }));
-      } catch (err) {
-        console.log(err);
-        log.error('Error during building block generation', { error: err });
-      }
+    //   log.info('Generating a building block', body);
+    //   try {
+    //     const res = await fetch(`${baseUrl}/report/`, {
+    //       method: 'POST',
+    //       body: JSON.stringify(body),
+    //       headers: {
+    //         'content-type': 'application/json',
+    //         Authorization: session.access_token,
+    //       },
+    //     });
+    //     log.info('Generated a building block', { res: res });
+    //     console.log('generated section: ' + block);
 
-      // generatedBlocks[block] = text;
-      // if (block === 'business_description') {
-      //   setGeneratedBlocks((state) => ({
-      //     ...state,
-      //     business_description: text,
-      //   }));
-      // } else {
-      //   const oldToNewCitationsMap = await getCitationMapAndInsertNew(
-      //     text,
-      //     json.citations,
-      //     reportid,
-      //     user,
-      //     insertCitedDocuments,
-      //     insertCitationSnippets,
-      //     insertPDFCitations,
-      //     insertAPICitations,
-      //   );
+    //     const json = await res.json();
+    //     const text = json.text;
+    //     setGeneratedBlocks((state) => ({
+    //       ...state,
+    //       [block]: text,
+    //     }));
+    //   } catch (err) {
+    //     console.log(err);
+    //     log.error('Error during building block generation', { error: err });
+    //   }
 
-      //   const cleanText = getCleanText(text, oldToNewCitationsMap);
+    //   // generatedBlocks[block] = text;
+    //   // if (block === 'business_description') {
+    //   //   setGeneratedBlocks((state) => ({
+    //   //     ...state,
+    //   //     business_description: text,
+    //   //   }));
+    //   // } else {
+    //   //   const oldToNewCitationsMap = await getCitationMapAndInsertNew(
+    //   //     text,
+    //   //     json.citations,
+    //   //     reportid,
+    //   //     user,
+    //   //     insertCitedDocuments,
+    //   //     insertCitationSnippets,
+    //   //     insertPDFCitations,
+    //   //     insertAPICitations,
+    //   //   );
 
-      //   setGeneratedBlocks((state) => ({
-      //     ...state,
-      //     [block]: cleanText,
-      //   }));
-      // }
+    //   //   const cleanText = getCleanText(text, oldToNewCitationsMap);
 
-      // const oldToNewCitationsMap = await getCitationMapAndInsertNew(
-      //   text,
-      //   json.citations,
-      //   reportid,
-      //   user,
-      //   insertCitedDocuments,
-      //   insertCitationSnippets,
-      //   insertPDFCitations,
-      //   insertAPICitations,
-      // );
+    //   //   setGeneratedBlocks((state) => ({
+    //   //     ...state,
+    //   //     [block]: cleanText,
+    //   //   }));
+    //   // }
 
-      // const cleanText = getCleanText(text, oldToNewCitationsMap);
+    //   // const oldToNewCitationsMap = await getCitationMapAndInsertNew(
+    //   //   text,
+    //   //   json.citations,
+    //   //   reportid,
+    //   //   user,
+    //   //   insertCitedDocuments,
+    //   //   insertCitationSnippets,
+    //   //   insertPDFCitations,
+    //   //   insertAPICitations,
+    //   // );
 
-      increaseSectionsGenerated();
-    });
+    //   // const cleanText = getCleanText(text, oldToNewCitationsMap);
+
+    //   increaseSectionsGenerated();
+    // });
   }
 
   const mainForm = (
