@@ -503,7 +503,7 @@ export const NewReportComponent = () => {
             Authorization: session.access_token,
           },
         });
-        log.info('Generated a building block', res);
+        log.info('Generated a building block', { res: res });
         console.log('generated section: ' + block);
 
         const json = await res.json();
@@ -514,6 +514,7 @@ export const NewReportComponent = () => {
         }));
       } catch (err) {
         console.log(err);
+        log.error('Error during building block generation', { error: err });
       }
 
       // generatedBlocks[block] = text;
