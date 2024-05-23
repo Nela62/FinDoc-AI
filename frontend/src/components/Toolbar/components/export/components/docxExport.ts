@@ -1,5 +1,5 @@
-import moment from 'moment';
 import { JSONContent } from '@tiptap/core';
+import { format } from 'date-fns';
 import {
   Document,
   Packer,
@@ -26,8 +26,6 @@ import {
   TextWrappingType,
   VerticalAlign,
 } from 'docx';
-import { FileChild } from 'docx/build/file/file-child';
-import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 
 const getHeadingLevel = (level: number) => {
   switch (level) {
@@ -92,13 +90,13 @@ const TEST_COMPANY_DESCRIPTION = `Amazon.com is the leading U.S. e-commerce reta
 const TEST_RECOMMENDATION = 'BUY';
 
 type RatingsType = {
-  '12-month': string;
+  '12-month rating': string;
   'Financial Strength': string;
 };
 
 const ratingsList = [
   {
-    rowName: '12-month',
+    rowName: '12-month rating',
     cells: ['SELL', 'UW', 'HOLD', 'OW', 'BUY'],
   },
   { rowName: 'Financial Strength', cells: ['LOW', 'LM', 'MED', 'MH', 'HIGH'] },
@@ -130,6 +128,7 @@ type DocxFileProps = {
   targetPrice?: number;
   headerImageLink?: string;
   financialStrength: string;
+  summary?: string[];
   // daily_stock: any;
   // earnings: any;
 };
@@ -148,11 +147,13 @@ export const generateDocxFile = async ({
   authorCompanyName,
   headerImageLink = '/white_coreline_logo.png',
   financialStrength,
+  summary = SUMMARY,
 }: // earnings = EARNINGS_IBM,
 DocxFileProps) => {
+  console.log(img);
   const [primaryColor, secondaryColor, accentColor] = colors;
   const ratings = {
-    '12-month': recommendation === 'AUTO' ? 'BUY' : recommendation,
+    '12-month rating': recommendation === 'AUTO' ? 'BUY' : recommendation,
     'Financial Strength': financialStrength,
   };
 
@@ -240,7 +241,7 @@ DocxFileProps) => {
         );
       }
 
-      curText = curText.replaceAll(/\s\./g, '.');
+      curText = curText.replaceAll(/\s\./g, '. ');
 
       return new TextRun({
         text: curText,
@@ -252,7 +253,6 @@ DocxFileProps) => {
     };
 
     content.forEach((cell) => {
-      console.log(secondHalf);
       const paragraphContent =
         cell.type === 'heading'
           ? new Paragraph({
@@ -337,6 +337,7 @@ DocxFileProps) => {
   const reportCompanyLogo = await fetch('/amazon-logo.png').then((r) =>
     r.blob(),
   );
+
   const { width: reportCompanyLogoWidth, height: reportCompanyLogoHeight } =
     await getImageSize(reportCompanyLogo);
 
@@ -404,7 +405,7 @@ DocxFileProps) => {
       children: pageNum
         ? [
             new TextRun({
-              text: `Report created ${moment().format('MMM DD, YYYY')}`,
+              text: `Report created ${format(new Date(), 'MMM d, yyyy')}`,
               size: 16,
               color: 'ffffff',
               font: 'Arial Narrow',
@@ -424,7 +425,7 @@ DocxFileProps) => {
           ]
         : [
             new TextRun({
-              text: `Report created ${moment().format('MMM DD, YYYY')}`,
+              text: `Report created ${format(new Date(), 'MMM d, yyyy')}`,
               size: 16,
               color: 'ffffff',
               font: 'Arial Narrow',
@@ -465,6 +466,7 @@ DocxFileProps) => {
         ...Object.entries(metrics[key]).map(
           ([key, value], i) =>
             new TableRow({
+              height: { value: '0.15in', rule: 'exact' },
               children: [
                 new TableCell({
                   margins: { top: 20, bottom: 20 },
@@ -477,7 +479,7 @@ DocxFileProps) => {
                     },
                   },
                   shading: { fill: secondaryColor },
-                  width: { size: 50, type: WidthType.PERCENTAGE },
+                  width: { size: 60, type: WidthType.PERCENTAGE },
                   children: [
                     new Paragraph({
                       // spacing: { before: 40 },
@@ -623,7 +625,7 @@ DocxFileProps) => {
                     children: [
                       new TextRun({
                         text: row.rowName,
-                        size: 20,
+                        size: 16,
                         font: 'Arial Narrow',
                         bold: true,
                       }),
@@ -803,7 +805,7 @@ DocxFileProps) => {
     children: [
       ...headerComponent(false),
       new Table({
-        margins: { top: 60 },
+        margins: { top: 30 },
         borders: bordersNone,
         rows: [
           new TableRow({
@@ -845,8 +847,9 @@ DocxFileProps) => {
                   new Paragraph({
                     children: [
                       new TextRun({
-                        text: `Analysis by ${authorName}, ${moment().format(
-                          'MMMM DD, YYYY',
+                        text: `Analysis by ${authorName}, ${format(
+                          new Date(),
+                          'MMMM d, yyyy',
                         )}`,
                         italics: true,
                         size: 18,
@@ -879,7 +882,7 @@ DocxFileProps) => {
                       }),
                     ],
                   }),
-                  ...SUMMARY.map(
+                  ...summary.map(
                     (point) =>
                       new Paragraph({
                         bullet: { level: 0 },
@@ -962,7 +965,7 @@ DocxFileProps) => {
                     space: 2,
                   },
                 },
-                margins: { left: 120, right: 120, bottom: 120 },
+                margins: { left: 120, right: 120, bottom: 120, top: 200 },
                 width: { type: WidthType.DXA, size: 3528 },
                 shading: { fill: secondaryColor },
                 children: [

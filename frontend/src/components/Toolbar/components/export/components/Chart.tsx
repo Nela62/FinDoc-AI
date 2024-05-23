@@ -1,7 +1,6 @@
 'use client';
 
-import { DAILY_IBM } from '@/lib/data/daily_ibm_full';
-import { WEEKLY_IBM } from '@/lib/data/weekly_ibm';
+import root from 'react-shadow';
 import {
   AreaChart,
   XAxis,
@@ -14,12 +13,26 @@ import {
 } from 'recharts';
 
 import { forwardRef, useEffect, useState } from 'react';
+import {
+  DailyStockData,
+  Earnings,
+  IncomeStatement,
+} from '@/types/alphaVantageApi';
+import {
+  getHighestClosingStockPrice,
+  getLatestStockDataPoint,
+  getLowestClosingStockPrice,
+  getMeanClosingStockPrice,
+  getNWeeksStock,
+} from '@/lib/utils/financialAPI';
+import { format } from 'date-fns';
 
 type ChartProps = {
   colors: string[];
   targetPrice: number;
-  incomeStatement: any;
-  earnings: any;
+  incomeStatement: IncomeStatement;
+  earnings: Earnings;
+  dailyStock: DailyStockData;
 };
 
 // const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
@@ -47,69 +60,78 @@ export const Chart = forwardRef((props: ChartProps, ref: any) => {
 
   const [primaryColor, secondaryColor, accentColor] = props.colors;
 
-  const days = 4 * 365 + 1;
+  const stockData = getNWeeksStock(props.dailyStock);
+  const chartStockData = stockData.map((dataPoint) => ({
+    day: dataPoint.day,
+    data: dataPoint.data['4. close'],
+  }));
+  const stockMin = getLowestClosingStockPrice(stockData);
+  const stockMax = getHighestClosingStockPrice(stockData);
+  const stockMean = getMeanClosingStockPrice(stockData);
 
-  const data = Object.entries(DAILY_IBM['Time Series (Daily)'])
-    .map(([key, value]) => ({ x: key, y: Number(value['4. close']) }))
-    .slice(0, days)
-    .reverse();
-
-  const min = data.reduce((min, p) => (p.y < min ? p.y : min), data[0].y);
-  const max = data.reduce((max, p) => (p.y > max ? p.y : max), data[0].y);
-  const sum = data.reduce((sum, p) => sum + p.y, 0);
-  const mean = sum / data.length;
-
+  // TODO: add ability to handle revenue in millions
   const revenueData = props.incomeStatement['quarterlyReports']
     .slice(0, 16)
     .map((quarter: any) => ({
-      x: quarter.fiscalDateEnding,
+      x: quarter.fiscalDateEnding as string,
       y: (Number(quarter.totalRevenue) / 1000000000.0).toFixed(2),
     }))
     .reverse();
-  const earningsData = props.earnings['quarterlyEarnings']
+
+  const earningsData = props.earnings.quarterlyEarnings
     .slice(0, 16)
     .map((quarter: any) => ({
       x: quarter.fiscalDateEnding,
       y: quarter.reportedEPS,
     }))
     .reverse();
+
   return (
-    <>
+    <div className="bg-background w-[477px] h-fit" ref={ref}>
       <div
-        className="w-full justify-between flex text-foreground/60 pb-2 pr-2"
+        className="w-[477px] justify-between flex text-foreground/60 pb-2 pr-2"
         style={{ fontSize: '7px' }}
       >
         <p>200-Day Moving Average</p>
         <div className="flex gap-2">
           <p>Target Price: $165.00</p>
-          <p>52 Week High: $143.63</p>
-          <p>52 Week Low: $125.92</p>
-          <p>Closed at $132.21 on 7/28</p>
+          <p>52 Week High: ${stockMax}</p>
+          <p>52 Week Low: ${stockMin}</p>
+          <p>
+            Closed at{' '}
+            {Number(
+              getLatestStockDataPoint(stockData)?.data['4. close'],
+            ).toFixed(2)}{' '}
+            on {format(new Date(), 'M/d')}
+          </p>
         </div>
       </div>
       <div
         className="grid grid-cols-[50px_2fr_4fr_4fr_4fr_2fr] divide-x divide-y w-[477px] divide-zinc-400"
         style={{ fontSize: '8px' }}
-        ref={ref}
       >
         <div className="border-t border-l border-zinc-400">
-          <h2 style={{ fontSize: '9px' }} className="text-foreground font-bold">
+          <h2
+            style={{ fontSize: '9px' }}
+            className="text-foreground font-bold pl-1"
+          >
             Price
           </h2>
           <h2
             style={{ fontSize: '7px' }}
-            className="text-foreground font-semibold"
+            className="text-foreground font-semibold pl-1"
           >
             ($)
           </h2>
           <AreaChart
             width={477}
             height={90}
-            data={data}
+            data={chartStockData}
             margin={{ right: 0, bottom: 0 }}
+            className="mt-[-14px]"
           >
             <XAxis
-              dataKey="x"
+              dataKey="day"
               tickLine={false}
               tick={false}
               axisLine
@@ -119,19 +141,19 @@ export const Chart = forwardRef((props: ChartProps, ref: any) => {
             <YAxis
               tickLine={false}
               axisLine={false}
+              dataKey="data"
               type="number"
               width={50}
-              ticks={[min, mean.toFixed(2), max]}
+              ticks={[stockMin, stockMean, stockMax]}
               // domain={['dataMin', 'dataMax']}
               domain={[
                 (dataMin: number) => dataMin - 20,
                 (dataMax: number) => dataMax + 10,
               ]}
             />
-
             <Area
               type="monotone"
-              dataKey="y"
+              dataKey="data"
               stroke={primaryColor}
               fill={secondaryColor}
               strokeWidth={1.5}
@@ -139,19 +161,19 @@ export const Chart = forwardRef((props: ChartProps, ref: any) => {
             />
 
             <ReferenceLine
-              y={min}
+              y={stockMin}
               stroke="#3f3f46"
               strokeDasharray="3 3"
               strokeWidth="0.7"
             />
             <ReferenceLine
-              y={mean}
+              y={stockMean}
               stroke="#3f3f46"
               strokeDasharray="3 3"
               strokeWidth="0.7"
             />
             <ReferenceLine
-              y={max}
+              y={stockMax}
               stroke="#3f3f46"
               strokeDasharray="3 3"
               strokeWidth="0.7"
@@ -169,28 +191,40 @@ export const Chart = forwardRef((props: ChartProps, ref: any) => {
         <div></div>
         <div></div>
         <div></div>
-        <div className="relative border-l-none">
-          <h2 style={{ fontSize: '9px' }} className="text-foreground font-bold">
-            EPS
-          </h2>
-          <h2
-            style={{ fontSize: '7px' }}
-            className="text-foreground font-semibold"
-          >
-            ($)
-          </h2>
-          <div className="absolute bottom-0 left-0">
+        <div className="relative border-l-none flex h-[44px] w-[477px]">
+          <div className="w-[50px] h-[44px] flex flex-col justify-between pl-1">
+            <div>
+              <h2
+                style={{ fontSize: '9px' }}
+                className="text-foreground font-bold"
+              >
+                EPS
+              </h2>
+              <h2
+                style={{ fontSize: '7px' }}
+                className="text-foreground font-semibold"
+              >
+                ($)
+              </h2>
+            </div>
+
             <p className="font-semibold">Quarterly</p>
           </div>
           <BarChart
-            width={477}
+            width={427}
             height={44}
             data={earningsData}
             barCategoryGap={0.3}
-            margin={{ left: 50 }}
-            className="mt-[-18px]"
+            margin={{ bottom: 0, left: 0, top: 4, right: 0 }}
           >
-            <YAxis tickLine={false} axisLine={false} type="number" hide />
+            <YAxis
+              width={0}
+              tickLine={false}
+              axisLine={false}
+              type="number"
+              domain={['dataMin', 'dataMax']}
+              hide
+            />
             <Bar
               dataKey="y"
               fill={primaryColor}
@@ -204,42 +238,58 @@ export const Chart = forwardRef((props: ChartProps, ref: any) => {
         <div></div>
         <div></div>
         <div></div>
-        <div className="">
+        <div className="flex items-center pl-1">
           <p className="font-semibold">Annual</p>
         </div>
-        <div className="text-center">
-          <p className="font-semibold">3.24</p>
+        <div className="flex items-center w-full justify-center">
+          <p className="font-semibold">
+            {props.earnings.annualEarnings[4].reportedEPS}
+          </p>
         </div>
-        <div className="text-center">
-          <p className="font-semibold">1.22</p>
+        <div className="flex items-center w-full justify-center">
+          <p className="font-semibold">
+            {props.earnings.annualEarnings[3].reportedEPS}
+          </p>
         </div>
-        <div className="text-center">
-          <p className="font-semibold">5.22</p>
+        <div className="flex items-center w-full justify-center">
+          <p className="font-semibold">
+            {props.earnings.annualEarnings[2].reportedEPS}
+          </p>
         </div>
-        <div className="text-center">
-          <p className="font-semibold">4.22</p>
+        <div className="flex items-center w-full justify-center">
+          <p className="font-semibold">
+            {props.earnings.annualEarnings[1].reportedEPS}
+          </p>
         </div>
-        <div className="text-center">
-          <p className="font-semibold">4.22</p>
+        <div className="flex items-center w-full justify-center">
+          <p className="font-semibold">
+            {props.earnings.annualEarnings[0].reportedEPS}
+          </p>
         </div>
-        <div className="relative">
-          <h2 style={{ fontSize: '9px' }} className="text-foreground font-bold">
-            Revenue
-          </h2>
-          <h2
-            style={{ fontSize: '7px' }}
-            className="text-foreground font-semibold"
-          >
-            ($ in Bil.)
-          </h2>
-
+        <div className="relative border-l-none flex h-[44px] w-[477px]">
+          <div className="w-[50px] h-[44px] flex flex-col justify-between pl-1">
+            <div>
+              <h2
+                style={{ fontSize: '9px' }}
+                className="text-foreground font-bold"
+              >
+                Revenue
+              </h2>
+              <h2
+                style={{ fontSize: '7px' }}
+                className="text-foreground font-semibold"
+              >
+                ($ in Bil.)
+              </h2>
+            </div>
+            <p className="font-semibold">Quarterly</p>
+          </div>
           <BarChart
-            width={477}
+            width={427}
             height={44}
             data={revenueData}
             barCategoryGap={0.3}
-            margin={{ left: 50 }}
-            className="mt-[-18px]"
+            margin={{ bottom: 0, left: 0, top: 4, right: 0 }}
           >
             <YAxis tickLine={false} axisLine={false} type="number" hide />
             <Bar
@@ -255,27 +305,52 @@ export const Chart = forwardRef((props: ChartProps, ref: any) => {
         <div></div>
         <div></div>
         <div></div>
-        <div className="">
+        <div className="flex items-center pl-1">
           <p className="font-semibold">Annual</p>
         </div>
-        <div className="text-center">
-          <p className="font-semibold">3.24</p>
+        <div className="flex items-center w-full justify-center">
+          <p className="font-semibold">
+            {(
+              Number(props.incomeStatement.annualReports[4].totalRevenue) /
+              1.0e9
+            ).toFixed(2)}
+          </p>
         </div>
-        <div className="text-center">
-          <p className="font-semibold">1.22</p>
+        <div className="flex items-center w-full justify-center">
+          <p className="font-semibold">
+            {(
+              Number(props.incomeStatement.annualReports[3].totalRevenue) /
+              1.0e9
+            ).toFixed(2)}
+          </p>
         </div>
-        <div className="text-center">
-          <p className="font-semibold">5.22</p>
+        <div className="flex items-center w-full justify-center">
+          <p className="font-semibold">
+            {(
+              Number(props.incomeStatement.annualReports[2].totalRevenue) /
+              1.0e9
+            ).toFixed(2)}
+          </p>
         </div>
-        <div className="text-center">
-          <p className="font-semibold">4.22</p>
+        <div className="flex items-center w-full justify-center">
+          <p className="font-semibold">
+            {(
+              Number(props.incomeStatement.annualReports[1].totalRevenue) /
+              1.0e9
+            ).toFixed(2)}
+          </p>
         </div>
-        <div className="text-center">
-          <p className="font-semibold">4.22</p>
+        <div className="flex items-center w-full justify-center">
+          <p className="font-semibold">
+            {(
+              Number(props.incomeStatement.annualReports[0].totalRevenue) /
+              1.0e9
+            ).toFixed(2)}
+          </p>
         </div>
         <div className="">
-          <p className="font-semibold">FY ends</p>
-          <p className="font-semibold">Dec 31</p>
+          <p className="font-semibold pl-1">FY ends</p>
+          <p className="font-semibold pl-1">Dec 31</p>
         </div>
         <div className="text-center">
           <div className="grid grid-cols-2 divide-x divide-zinc-400">
@@ -319,6 +394,6 @@ export const Chart = forwardRef((props: ChartProps, ref: any) => {
           <div className="text-center font-semibold">2024</div>
         </div>
       </div>
-    </>
+    </div>
   );
 });

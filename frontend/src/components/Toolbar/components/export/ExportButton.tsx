@@ -5,32 +5,75 @@ import { Button } from '@/components/ui/button';
 import { Chart } from './components/Chart';
 import { useRef } from 'react';
 import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import { generateDocxFile } from './components/docxExport';
-import { useInsertMutation } from '@supabase-cache-helpers/postgrest-react-query';
+import {
+  useInsertMutation,
+  useQuery,
+} from '@supabase-cache-helpers/postgrest-react-query';
 import { createClient } from '@/lib/supabase/client';
-import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
-import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
+import { fetchAPICacheByReportId } from '@/lib/queries';
+import {
+  BalanceSheet,
+  DailyStockData,
+  DailyStockDataPoint,
+  Earnings,
+  IncomeStatement,
+  Overview,
+} from '@/types/alphaVantageApi';
+import { getNWeeksStock, getSidebarMetrics } from '@/lib/utils/financialAPI';
 
-// import domtoimage from 'dom-to-image-more';
-
-export const ExportButton = ({ editor }: { editor: Editor }) => {
+export const ExportButton = ({
+  editor,
+  reportId,
+}: {
+  editor: Editor;
+  reportId: string;
+}) => {
   const ref = useRef<HTMLDivElement>(null);
 
-  const client = createClient();
+  const supabase = createClient();
+
+  const { data: cacheData } = useQuery(
+    fetchAPICacheByReportId(supabase, reportId),
+  );
+
   const { mutateAsync: insertCache } = useInsertMutation(
-    client.from('api_cache'),
+    supabase.from('api_cache'),
     ['id'],
     '*',
   );
 
+  if (!cacheData) return;
+
+  const earnings = cacheData.find((cache) =>
+    cache.endpoint.includes('EARNINGS'),
+  )?.json_data;
+  const incomeStatement = cacheData.find((cache) =>
+    cache.endpoint.includes('INCOME_STATEMENT'),
+  )?.json_data;
+  const dailyStock = cacheData.find((cache) =>
+    cache.endpoint.includes('TIME_SERIES_DAILY'),
+  )?.json_data;
+  const overview = cacheData.find((cache) =>
+    cache.endpoint.includes('OVERVIEW'),
+  )?.json_data;
+  const balanceSheet = cacheData.find((cache) =>
+    cache.endpoint.includes('BALANCE_SHEET'),
+  )?.json_data;
+
+  if (!earnings || !incomeStatement || !dailyStock || !overview) return;
+
   return (
     <div className="flex text-sm">
-      <div className="hidden" id="hidden-container" ref={ref}>
+      <div className="sr-only">
         <Chart
           colors={['#1c4587', '#f4e9d3', '#006f3b']}
-          earnings={EARNINGS_IBM}
-          incomeStatement={INCOME_STATEMENT_IBM}
+          earnings={earnings as Earnings}
+          incomeStatement={incomeStatement as IncomeStatement}
+          dailyStock={dailyStock as DailyStockData}
           targetPrice={168}
+          ref={ref}
         />
       </div>
       {/* <button
@@ -72,20 +115,21 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
         onClick={async () => {
           const element = ref.current;
           if (!element) return;
-          const canvas = await html2canvas(element, {
-            logging: false,
-            onclone: (clonedDoc) => {
-              if (!clonedDoc.getElementById('hidden-container')) return;
-              clonedDoc.getElementById('hidden-container')!.style.display =
-                'block';
-            },
-          });
+          const dataUrl = await toPng(element);
+          // const canvas = await html2canvas(element, {
+          //   logging: false,
+          //   onclone: (clonedDoc) => {
+          //     if (!clonedDoc.getElementById('hidden-container')) return;
+          //     clonedDoc.getElementById('hidden-container')!.style.display =
+          //       'block';
+          //   },
+          // });
 
-          const data = canvas.toDataURL('image/jpg');
+          // const data = canvas.toDataURL('image/jpg');
           // TODO: get these dynamically
           const blob = await generateDocxFile({
             content: editor.getJSON(),
-            img: data,
+            img: dataUrl,
             companyName: 'Amazon Inc.',
             companyTicker: 'AMZN',
             companyDescription:
@@ -95,6 +139,14 @@ export const ExportButton = ({ editor }: { editor: Editor }) => {
             authorName: 'Coreline AI',
             authorCompanyName: 'Coreline',
             financialStrength: 'HIGH',
+            metrics: getSidebarMetrics(
+              overview as Overview,
+              balanceSheet as BalanceSheet,
+              incomeStatement as IncomeStatement,
+              getNWeeksStock(dailyStock as DailyStockData),
+              168,
+              'HIGH',
+            ),
           });
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');

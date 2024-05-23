@@ -26,9 +26,10 @@ const MemoContentTypePicker = memo(ContentTypePicker);
 
 export type TextMenuProps = {
   editor: Editor;
+  reportId: string;
 };
 
-export const EditorToolbar = ({ editor }: TextMenuProps) => {
+export const EditorToolbar = ({ editor, reportId }: TextMenuProps) => {
   const commands = useTextmenuCommands(editor);
   const states = useTextmenuStates(editor);
   const blockOptions = useTextmenuContentTypes(editor);
@@ -186,7 +187,7 @@ export const EditorToolbar = ({ editor }: TextMenuProps) => {
         <Icon name="AlignJustify" />
       </MemoButton>
       <Toolbar.Divider />
-      <ExportButton editor={editor} />
+      <ExportButton editor={editor} reportId={reportId} />
     </div>
   );
 };

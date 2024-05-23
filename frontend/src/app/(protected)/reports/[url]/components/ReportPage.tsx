@@ -38,7 +38,7 @@ export const ReportPage = ({ reportId }: { reportId: string }) => {
       className="px-4 flex flex-col gap-1"
     >
       <Card className="h-[40px] w-full mb-2 flex justify-between overflow-hidden">
-        <EditorToolbar editor={editor} />
+        <EditorToolbar editor={editor} reportId={reportId} />
         <TabsList className="h-full bg-white">
           <TabsTrigger
             value="Audit"

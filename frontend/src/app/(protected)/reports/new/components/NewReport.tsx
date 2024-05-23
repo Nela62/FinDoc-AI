@@ -56,8 +56,7 @@ import {
   useQuery,
 } from '@supabase-cache-helpers/postgrest-react-query';
 import { getNanoId } from '@/lib/utils/nanoId';
-import { useEffect, useRef, useState } from 'react';
-import moment from 'moment';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   getCitationMapAndInsertNew,
@@ -73,11 +72,26 @@ import {
   useFileUrl,
 } from '@supabase-cache-helpers/storage-react-query';
 
-import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
-import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 import { ReportGenerationDialog } from './ReportGenerationDialog';
 import { useBoundStore } from '@/providers/store-provider';
 import { Session } from '@supabase/supabase-js';
+import {
+  fetchAVEndpoint,
+  fetchDailyStock,
+  getNWeeksStock,
+  getSidebarMetrics,
+} from '@/lib/utils/financialAPI';
+import {
+  BalanceSheet,
+  DailyStockData,
+  DailyStockDataPoint,
+  DailyTimeSeries,
+  Earnings,
+  IncomeStatement,
+  Overview,
+} from '@/types/alphaVantageApi';
+import { toPng } from 'html-to-image';
+import { format } from 'date-fns';
 // TODO: add a super refinement for companyTicker; it can be optional when reportType doesn't required it
 
 const tickers = [
@@ -85,7 +99,7 @@ const tickers = [
   { label: 'Microsoft Corporation', value: 'MSFT' },
   { label: 'Apple Inc.', value: 'AAPL' },
   { label: 'Alphabet Inc.', value: 'GOOGL' },
-  { label: 'Facebook Inc.', value: 'FB' },
+  { label: 'Facebook Inc.', value: 'META' },
   { label: 'Berkshire Hathaway Inc.', value: 'BRK-A' },
   { label: 'Tesla Inc.', value: 'TSLA' },
   { label: 'JPMorgan Chase & Co.', value: 'JPM' },
@@ -113,10 +127,10 @@ const tickers = [
 const buildingBlocks = [
   'business_description',
   'investment_thesis',
-  'earnings_and_growth_analysis',
-  'financial_strength_and_dividend',
-  'management_and_risks',
-  'valuation',
+  // 'earnings_and_growth_analysis',
+  // 'financial_strength_and_dividend',
+  // 'management_and_risks',
+  // 'valuation',
 ];
 
 const COLOR_SCHEMES = [
@@ -172,6 +186,12 @@ type ReportData = {
   recommendation?: string;
   targetPrice?: number;
   financialStrength?: string;
+  overview?: Overview;
+  balanceSheet?: BalanceSheet;
+  incomeStatement?: IncomeStatement;
+  dailyStock?: DailyStockData;
+  earnings?: Earnings;
+  summary?: string[];
 };
 
 export const NewReportComponent = () => {
@@ -189,12 +209,17 @@ export const NewReportComponent = () => {
   const [open, setOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const [chart, setChart] = useState<HTMLDivElement | null>(null);
+
   const [isTemplateCustomization, setIsTemplateCustomization] = useState(false);
 
   const [reportData, setReportData] = useState<ReportData>({});
   const [generatedBlocks, setGeneratedBlocks] = useState({});
 
-  const ref = useRef<HTMLDivElement>(null);
+  // const ref = useRef<HTMLDivElement>(null);
+  const onRefChange = useCallback((node: HTMLDivElement) => {
+    setChart(node);
+  }, []);
   const imgRef = useRef<string | null>(null);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -222,6 +247,12 @@ export const NewReportComponent = () => {
   //   },
   // );
   const logos = undefined;
+
+  const { mutateAsync: insertCache } = useInsertMutation(
+    supabase.from('api_cache'),
+    ['id'],
+    'id',
+  );
 
   const { mutateAsync: insert } = useInsertMutation(
     supabase.from('reports'),
@@ -317,7 +348,7 @@ export const NewReportComponent = () => {
     if (!user) return;
     insert([
       {
-        title: `${moment().format('MMMM DD, YYYY')} - ${values.reportType}`,
+        title: `${format(new Date(), 'MMM d, yyyy')} - ${values.reportType}`,
         company_ticker: values.companyTicker,
         url: nanoId,
         type: values.reportType,
@@ -331,8 +362,42 @@ export const NewReportComponent = () => {
     });
   }
 
+  useEffect(() => {
+    if (
+      reportData.earnings &&
+      reportData.dailyStock &&
+      reportData.incomeStatement
+    ) {
+      console.log('checking if chart exists...');
+      const element = chart;
+
+      if (!element) {
+        console.log('chart not found');
+        return;
+      }
+
+      toPng(element)
+        .then((dataUrl) => {
+          console.log('got image link');
+          imgRef.current = dataUrl;
+          completeChartStage();
+        })
+        .catch((err) => console.error(err));
+    }
+  }, [reportData, completeChartStage, chart]);
+
   const downloadReportFn = async () => {
-    if (!reportData.reportText || !imgRef.current || !reportData.companyTicker)
+    if (
+      !reportData.reportText ||
+      !imgRef.current ||
+      !reportData.companyTicker ||
+      !reportData.overview ||
+      !reportData.balanceSheet ||
+      !reportData.incomeStatement ||
+      !reportData.dailyStock
+      // !reportData.targetPrice,
+      //   !reportData.financialStrength
+    )
       return;
     // @ts-ignore
     const companyDescription: string =
@@ -354,6 +419,15 @@ export const NewReportComponent = () => {
       targetPrice: reportData.targetPrice,
       headerImageLink: headerUrl ?? '/default_coreline_logo.png',
       financialStrength: reportData.financialStrength ?? 'HIGH',
+      metrics: getSidebarMetrics(
+        reportData.overview,
+        reportData.balanceSheet,
+        reportData.incomeStatement,
+        getNWeeksStock(reportData.dailyStock),
+        reportData.targetPrice ?? 187,
+        reportData.financialStrength ?? 'HIGH',
+      ),
+      summary: reportData.summary,
       colors:
         COLOR_SCHEMES.find(
           (scheme) => scheme.key === templateSettings.colorSchemeId,
@@ -363,9 +437,9 @@ export const NewReportComponent = () => {
     const link = document.createElement('a');
     link.href = url;
     // TODO: Support other report types name
-    link.download = `${moment().format(
-      'MMMM DD, YYYY',
-    )} - Equity Analyst Report`;
+    link.download = `${format(new Date(), 'MMM d, yyyy')} - ${
+      reportData.companyTicker
+    } ${reportData.reportType}`;
     link.click();
     URL.revokeObjectURL(url);
     resetState();
@@ -383,10 +457,70 @@ export const NewReportComponent = () => {
     setIsDialogOpen(false);
   };
 
+  const fetchAPIData = useCallback(async () => {
+    if (!reportData.id || !user || !reportData.companyTicker) return {};
+    // TODO: once we have a premium api key, change it to Promise.all
+    const overview = await fetchAVEndpoint(
+      supabase,
+      insertCache,
+      reportData.id,
+      user,
+      'OVERVIEW',
+      reportData.companyTicker,
+    );
+
+    const incomeStatement = await fetchAVEndpoint(
+      supabase,
+      insertCache,
+      reportData.id,
+      user,
+      'INCOME_STATEMENT',
+      reportData.companyTicker,
+    );
+
+    const balanceSheet = await fetchAVEndpoint(
+      supabase,
+      insertCache,
+      reportData.id,
+      user,
+      'BALANCE_SHEET',
+      reportData.companyTicker,
+    );
+
+    const earnings = await fetchAVEndpoint(
+      supabase,
+      insertCache,
+      reportData.id,
+      user,
+      'EARNINGS',
+      reportData.companyTicker,
+    );
+
+    const dailyStock = await fetchDailyStock(
+      supabase,
+      insertCache,
+      reportData.id,
+      user,
+      reportData.companyTicker,
+    );
+
+    return { overview, incomeStatement, balanceSheet, earnings, dailyStock };
+  }, [insertCache, reportData.id, reportData.companyTicker, user, supabase]);
+
   useEffect(() => {
-    if (sectionsGenerated === buildingBlocks.length) {
+    console.log('attempted to call useEffect');
+    console.log(sectionsGenerated === buildingBlocks.length);
+    console.log(reportData.reportText);
+
+    if (sectionsGenerated === buildingBlocks.length && !reportData.reportText) {
+      console.log('called sections generated');
       const curReportText = { type: 'doc', content: [] };
+      let totalText = '';
       buildingBlocks.forEach((block) => {
+        totalText += '##' + formatText(block);
+        // @ts-ignore
+        totalText += generatedBlocks[block];
+
         if (block !== 'business_description') {
           // @ts-ignore
           const json = markdownToJson(generatedBlocks[block]);
@@ -413,26 +547,53 @@ export const NewReportComponent = () => {
         }
       });
 
-      setReportData((state) => ({ ...state, reportText: curReportText }));
+      const body = {
+        report: totalText,
+        model: 'claude-3-haiku-20240307',
+      };
 
-      if (!reportData.id) return;
-      supabase
-        .from('reports')
-        .update({ json_content: curReportText })
-        .eq('id', reportData.id);
+      supabase.auth.getSession().then((data) => {
+        if (!data) return;
+        const session = data.data.session;
+        if (!session) return;
 
-      const element = ref.current;
+        fetch(`${baseUrl}/summary/report/`, {
+          method: 'POST',
+          body: JSON.stringify(body),
+          headers: {
+            'content-type': 'application/json',
+            Authorization: session.access_token,
+          },
+        })
+          .then((res) => res.json())
+          .then((json) =>
+            setReportData((state) => ({
+              ...state,
+              summary: json.summary
+                .split('-')
+                .map((point: string) => point.trim()),
+            })),
+          );
+        setReportData((state) => ({ ...state, reportText: curReportText }));
 
-      if (!element) return;
-      html2canvas(element, {
-        logging: false,
-        onclone: (clonedDoc) => {
-          if (!clonedDoc.getElementById('hidden-container')) return;
-          clonedDoc.getElementById('hidden-container')!.style.display = 'block';
-        },
-      }).then((canvas) => {
-        imgRef.current = canvas.toDataURL('image/jpg');
-        completeChartStage();
+        if (!reportData.id) return;
+
+        fetchAPIData().then((res) => {
+          setReportData((state) => ({
+            ...state,
+            overview: res.overview,
+            balanceSheet: res.balanceSheet,
+            incomeStatement: res.incomeStatement,
+            earnings: res.earnings,
+            dailyStock: res.dailyStock,
+          }));
+        });
+
+        supabase
+          .from('reports')
+          .update({ json_content: curReportText })
+          .eq('id', reportData.id)
+          .then((res) => {});
       });
     }
   }, [
@@ -441,6 +602,8 @@ export const NewReportComponent = () => {
     supabase,
     reportData.id,
     completeChartStage,
+    fetchAPIData,
+    baseUrl,
   ]);
 
   const processBuildingBlocks = async (
@@ -460,6 +623,7 @@ export const NewReportComponent = () => {
             prompt_type: block,
             report_id: reportId,
             ticker: ticker,
+            company_name: tickers.find((c) => c.value === ticker)?.label,
             model: 'claude-3-haiku-20240307',
           };
 
@@ -501,7 +665,7 @@ export const NewReportComponent = () => {
     if (!user) return;
     const data = await insert([
       {
-        title: `${moment().format('MMMM DD, YYYY')} - ${values.reportType}`,
+        title: `${format(new Date(), 'MMM d, yyyy')} - ${values.reportType}`,
         company_ticker: values.companyTicker,
         url: nanoId,
         type: values.reportType,
@@ -524,11 +688,12 @@ export const NewReportComponent = () => {
     setReportData((state) => ({
       ...state,
       id: reportid,
-      title: `${moment().format('MMMM DD, YYYY')} - ${values.reportType}`,
+      title: `${format(new Date(), 'MMM d, yyyy')} - ${values.reportType}`,
       companyTicker: values.companyTicker,
       recommendation: values.recommendation,
       targetPrice: values.targetPrice,
       financialStrength: values.financialStrength,
+      reportType: values.reportType,
     }));
     setIsDialogOpen(true);
     startGeneration(buildingBlocks.length);
@@ -987,21 +1152,23 @@ export const NewReportComponent = () => {
 
   return (
     <>
-      <div
-        className="w-[477px] z-50 absolute h-fit hidden"
-        id="hidden-container"
-        ref={ref}
-      >
-        <Chart
-          colors={
-            COLOR_SCHEMES.find(
-              (scheme) => scheme.key === templateSettings.colorSchemeId,
-            )?.colors ?? COLOR_SCHEMES[0].colors
-          }
-          incomeStatement={INCOME_STATEMENT_IBM}
-          earnings={EARNINGS_IBM}
-          targetPrice={reportData.targetPrice ?? 168}
-        />
+      <div className="sr-only" id="hidden-container">
+        {reportData.incomeStatement &&
+          reportData.earnings &&
+          reportData.dailyStock && (
+            <Chart
+              colors={
+                COLOR_SCHEMES.find(
+                  (scheme) => scheme.key === templateSettings.colorSchemeId,
+                )?.colors ?? COLOR_SCHEMES[0].colors
+              }
+              dailyStock={reportData.dailyStock}
+              incomeStatement={reportData.incomeStatement}
+              earnings={reportData.earnings}
+              targetPrice={reportData.targetPrice ?? 168}
+              ref={onRefChange}
+            />
+          )}
       </div>
       <div className="flex flex-col items-center h-full w-full justify-center bg-muted/40">
         <Card className="mb-10 pb-6  pl-2 pt-2">

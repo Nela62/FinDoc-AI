@@ -134,6 +134,17 @@ export function fetchAPICacheByEndpoint(
     .throwOnError();
 }
 
+export function fetchAPICacheByReportId(
+  client: TypedSupabaseClient,
+  reportId: string,
+) {
+  return client
+    .from('api_cache')
+    .select('id, json_data, endpoint, api_provider, accessed_at')
+    .eq('report_id', reportId)
+    .throwOnError();
+}
+
 // export function fetchNewsCitation(client: TypedSupabaseClient, citationSnippetId: string) {
 //   return client
 //     .from('news_citations')

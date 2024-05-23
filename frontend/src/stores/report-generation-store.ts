@@ -45,11 +45,11 @@ export const createReportGenerationSlice = (set: any, get: any) => ({
 
     setTimeout(() => {
       set({ progress: 20, message: progressMessages[1] });
-    }, 10000);
+    }, 2000);
 
     setTimeout(() => {
       set({ progress: 40, message: progressMessages[2] });
-    }, 20000);
+    }, 3000);
 
     setTimeout(() => {
       set((state: any) => ({
@@ -57,7 +57,7 @@ export const createReportGenerationSlice = (set: any, get: any) => ({
         message: `Generating sections (${state.sectionsGenerated} out of ${state.totalSections} done)...`,
         firstStageCompleted: true,
       }));
-    }, 25000);
+    }, 4000);
   },
   increaseSectionsGenerated: () => {
     if (!get().firstStageStarted) {

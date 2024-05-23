@@ -1,4 +1,6 @@
-export const BALANCE_SHEET_IBM = {
+import { BalanceSheet } from '@/types/alphaVantageApi';
+
+export const BALANCE_SHEET_IBM: BalanceSheet = {
   symbol: 'IBM',
   annualReports: [
     {
