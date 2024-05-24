@@ -7,14 +7,6 @@ import { z } from 'zod';
 import { Chart } from '@/components/Toolbar/components/export/components/Chart';
 
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandList,
-  CommandItem,
-} from '@/components/ui/command';
-import {
   Form,
   FormControl,
   FormField,
@@ -22,11 +14,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -41,15 +28,12 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { Progress } from '@/components/ui/progress';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { CheckIcon, SquarePen, Wand2Icon } from 'lucide-react';
-import { CaretSortIcon } from '@radix-ui/react-icons';
+import { SquarePen, Wand2Icon } from 'lucide-react';
 import Image from 'next/image';
-import { Label } from '@/components/ui/label';
 import { createClient } from '@/lib/supabase/client';
 import {
   useInsertMutation,
@@ -63,7 +47,6 @@ import {
   getCleanText,
 } from '@/lib/utils/citations';
 import { markdownToJson } from '@/lib/utils/formatText';
-import html2canvas from 'html2canvas';
 import { JSONContent } from '@tiptap/core';
 import { generateDocxFile } from '@/components/Toolbar/components/export/components/docxExport';
 import { fetchSettings } from '@/lib/queries';
@@ -92,9 +75,10 @@ import {
 } from '@/types/alphaVantageApi';
 import { toPng } from 'html-to-image';
 import { format } from 'date-fns';
+import { Combobox, type ComboboxOption } from '@/components/ui/combobox';
 // TODO: add a super refinement for companyTicker; it can be optional when reportType doesn't required it
 
-const tickers = [
+const tickers: ComboboxOption[] = [
   { label: 'Amazon Inc.', value: 'AMZN' },
   { label: 'Microsoft Corporation', value: 'MSFT' },
   { label: 'Apple Inc.', value: 'AAPL' },
@@ -141,7 +125,7 @@ const COLOR_SCHEMES = [
 
 const formSchema = z.object({
   reportType: z.string(),
-  companyTicker: z.string(),
+  companyTicker: z.object({ value: z.string(), label: z.string() }),
   recommendation: z.string().optional(),
   targetPrice: z
     .preprocess((a) => parseFloat(z.string().parse(a)), z.number())
@@ -206,7 +190,6 @@ export const NewReportComponent = () => {
 
   const log = useLogger();
 
-  const [open, setOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [chart, setChart] = useState<HTMLDivElement | null>(null);
@@ -349,7 +332,7 @@ export const NewReportComponent = () => {
     insert([
       {
         title: `${format(new Date(), 'MMM d, yyyy')} - ${values.reportType}`,
-        company_ticker: values.companyTicker,
+        company_ticker: values.companyTicker.value,
         url: nanoId,
         type: values.reportType,
         recommendation: values.recommendation,
@@ -604,6 +587,7 @@ export const NewReportComponent = () => {
     completeChartStage,
     fetchAPIData,
     baseUrl,
+    reportData.reportText,
   ]);
 
   const processBuildingBlocks = async (
@@ -666,7 +650,7 @@ export const NewReportComponent = () => {
     const data = await insert([
       {
         title: `${format(new Date(), 'MMM d, yyyy')} - ${values.reportType}`,
-        company_ticker: values.companyTicker,
+        company_ticker: values.companyTicker.value,
         url: nanoId,
         type: values.reportType,
         recommendation: values.recommendation,
@@ -689,7 +673,7 @@ export const NewReportComponent = () => {
       ...state,
       id: reportid,
       title: `${format(new Date(), 'MMM d, yyyy')} - ${values.reportType}`,
-      companyTicker: values.companyTicker,
+      companyTicker: values.companyTicker.value,
       recommendation: values.recommendation,
       targetPrice: values.targetPrice,
       financialStrength: values.financialStrength,
@@ -703,7 +687,7 @@ export const NewReportComponent = () => {
       2,
       session,
       reportid,
-      values.companyTicker,
+      values.companyTicker.value,
     );
 
     // buildingBlocks.forEach(async (block) => {
@@ -826,75 +810,19 @@ export const NewReportComponent = () => {
                 </FormItem>
               )}
             />
-            {/* Company ticker */}
             <FormField
               control={form.control}
               name="companyTicker"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
+                <FormItem className="">
                   <FormLabel>Company</FormLabel>
-                  <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={open}
-                          className={cn(
-                            'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 font-normal ',
-                            !field.value && 'text-muted-foreground',
-                          )}
-                        >
-                          {field.value
-                            ? tickers.find(
-                                (ticker) => ticker.value === field.value,
-                              )?.label
-                            : 'Select ticker'}
-
-                          <CaretSortIcon className="h-4 w-4 opacity-50" />
-                          {/* <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" /> */}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className={cn(
-                        'p-1',
-                        'w-full min-w-[var(--radix-popover-trigger-width)]',
-                      )}
-                    >
-                      <Command>
-                        <CommandInput
-                          placeholder="Search company..."
-                          className="h-9 w-full"
-                        />
-                        <CommandEmpty>No company found.</CommandEmpty>
-                        <CommandGroup>
-                          <CommandList>
-                            {tickers.map((ticker) => (
-                              <CommandItem
-                                value={ticker.label}
-                                key={ticker.value}
-                                onSelect={() => {
-                                  form.setValue('companyTicker', ticker.value);
-                                  setOpen(false);
-                                }}
-                              >
-                                {ticker.label} ({ticker.value})
-                                <CheckIcon
-                                  className={cn(
-                                    'ml-auto h-4 w-4',
-                                    ticker.value === field.value
-                                      ? 'opacity-100'
-                                      : 'opacity-0',
-                                  )}
-                                />
-                              </CommandItem>
-                            ))}
-                          </CommandList>
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <FormControl>
+                    <Combobox
+                      options={tickers}
+                      emptyMessage="Search equity..."
+                      onValueChange={field.onChange}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
