@@ -87,10 +87,10 @@ export const Combobox = ({
       >
         <CommandPrimitive>
           <CommandInput placeholder={emptyMessage} className="h-9 w-full" />
-          {/* <ScrollArea className="h-72 overflow-auto"> */}
           <CommandEmpty>No company found.</CommandEmpty>
           <CommandGroup className="">
-            <CommandList className="">
+            <ScrollArea className="h-72 overflow-auto">
+              {/* <CommandList className=""> */}
               {options.map((option) => (
                 <CommandItem
                   value={option.label}
@@ -112,9 +112,9 @@ export const Combobox = ({
                   />
                 </CommandItem>
               ))}
-            </CommandList>
+              {/* </CommandList> */}
+            </ScrollArea>
           </CommandGroup>
-          {/* </ScrollArea> */}
         </CommandPrimitive>
       </PopoverContent>
     </Popover>
