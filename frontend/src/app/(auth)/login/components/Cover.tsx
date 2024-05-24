@@ -20,7 +20,7 @@ export const Cover = () => {
         <p className="text-4xl">Supercharge your</p>
         <p className="text-4xl">financial reporting</p>
       </div>
-      <div className="grow">
+      <div className="">
         <Spline scene="https://prod.spline.design/BYb72iMN6Osp-Civ/scene.splinecode" />
       </div>
     </div>
