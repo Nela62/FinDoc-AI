@@ -1,6 +1,5 @@
 'use client';
 
-import root from 'react-shadow';
 import {
   AreaChart,
   XAxis,
