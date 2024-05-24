@@ -7,7 +7,7 @@ import { prefetchQuery } from '@supabase-cache-helpers/postgrest-react-query';
 
 import '@/styles/index.css';
 import { createClient } from '@/lib/supabase/server';
-import { fetchSettings } from '@/lib/queries';
+import { fetchSettings, fetchTickers } from '@/lib/queries';
 import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
 import { NewReportComponent } from './components/NewReport';
@@ -30,6 +30,7 @@ export default async function NewReportPage() {
   }
 
   await prefetchQuery(queryClient, fetchSettings(supabase));
+  await prefetchQuery(queryClient, fetchTickers(supabase));
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

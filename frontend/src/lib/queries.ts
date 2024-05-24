@@ -233,3 +233,11 @@ export function fetchSettings(client: TypedSupabaseClient) {
     .select('id, author_name, company_name')
     .throwOnError();
 }
+
+export function fetchTickers(client: TypedSupabaseClient) {
+  return client
+    .from('companies')
+    .select('id, name, label, symbol, website, logo_link')
+    .limit(20000)
+    .throwOnError();
+}

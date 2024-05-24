@@ -245,6 +245,54 @@ export type Database = {
           },
         ]
       }
+      companies: {
+        Row: {
+          country: string | null
+          exchange: string | null
+          id: string
+          industry_group: string | null
+          isin: string | null
+          label: string
+          logo_link: string | null
+          market: string | null
+          market_cap: string | null
+          name: string
+          sector: string | null
+          symbol: string
+          website: string | null
+        }
+        Insert: {
+          country?: string | null
+          exchange?: string | null
+          id?: string
+          industry_group?: string | null
+          isin?: string | null
+          label?: string
+          logo_link?: string | null
+          market?: string | null
+          market_cap?: string | null
+          name: string
+          sector?: string | null
+          symbol: string
+          website?: string | null
+        }
+        Update: {
+          country?: string | null
+          exchange?: string | null
+          id?: string
+          industry_group?: string | null
+          isin?: string | null
+          label?: string
+          logo_link?: string | null
+          market?: string | null
+          market_cap?: string | null
+          name?: string
+          sector?: string | null
+          symbol?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           accession_number: string | null

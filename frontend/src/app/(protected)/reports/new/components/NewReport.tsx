@@ -49,7 +49,7 @@ import {
 import { markdownToJson } from '@/lib/utils/formatText';
 import { JSONContent } from '@tiptap/core';
 import { generateDocxFile } from '@/components/Toolbar/components/export/components/docxExport';
-import { fetchSettings } from '@/lib/queries';
+import { fetchSettings, fetchTickers } from '@/lib/queries';
 import {
   useDirectory,
   useFileUrl,
@@ -76,37 +76,41 @@ import {
 import { toPng } from 'html-to-image';
 import { format } from 'date-fns';
 import { Combobox, type ComboboxOption } from '@/components/ui/combobox';
+import {
+  Option,
+  VirtualizedCombobox,
+} from '@/components/ui/virtualized-combobox';
 // TODO: add a super refinement for companyTicker; it can be optional when reportType doesn't required it
 
-const tickers: ComboboxOption[] = [
-  { label: 'Amazon Inc.', value: 'AMZN' },
-  { label: 'Microsoft Corporation', value: 'MSFT' },
-  { label: 'Apple Inc.', value: 'AAPL' },
-  { label: 'Alphabet Inc.', value: 'GOOGL' },
-  { label: 'Facebook Inc.', value: 'META' },
-  { label: 'Berkshire Hathaway Inc.', value: 'BRK-A' },
-  { label: 'Tesla Inc.', value: 'TSLA' },
-  { label: 'JPMorgan Chase & Co.', value: 'JPM' },
-  { label: 'Johnson & Johnson', value: 'JNJ' },
-  { label: 'Visa Inc.', value: 'V' },
-  { label: 'Procter & Gamble Company', value: 'PG' },
-  { label: 'Walmart Inc.', value: 'WMT' },
-  { label: 'Mastercard Incorporated', value: 'MA' },
-  { label: 'UnitedHealth Group Incorporated', value: 'UNH' },
-  { label: 'The Home Depot Inc.', value: 'HD' },
-  { label: 'Intel Corporation', value: 'INTC' },
-  { label: 'The Coca-Cola Company', value: 'KO' },
-  { label: 'Verizon Communications Inc.', value: 'VZ' },
-  { label: 'Pfizer Inc.', value: 'PFE' },
-  { label: 'AT&T Inc.', value: 'T' },
-  { label: 'Merck & Co. Inc.', value: 'MRK' },
-  { label: 'Netflix Inc.', value: 'NFLX' },
-  { label: 'Cisco Systems Inc.', value: 'CSCO' },
-  { label: 'Abbott Laboratories', value: 'ABT' },
-  { label: 'AbbVie Inc.', value: 'ABBV' },
-  { label: 'The Walt Disney Company', value: 'DIS' },
-  { label: 'Salesforce.com Inc.', value: 'CRM' },
-] as const;
+// const tickers: ComboboxOption[] = [
+//   { label: 'Amazon Inc.', value: 'AMZN' },
+//   { label: 'Microsoft Corporation', value: 'MSFT' },
+//   { label: 'Apple Inc.', value: 'AAPL' },
+//   { label: 'Alphabet Inc.', value: 'GOOGL' },
+//   { label: 'Facebook Inc.', value: 'META' },
+//   { label: 'Berkshire Hathaway Inc.', value: 'BRK-A' },
+//   { label: 'Tesla Inc.', value: 'TSLA' },
+//   { label: 'JPMorgan Chase & Co.', value: 'JPM' },
+//   { label: 'Johnson & Johnson', value: 'JNJ' },
+//   { label: 'Visa Inc.', value: 'V' },
+//   { label: 'Procter & Gamble Company', value: 'PG' },
+//   { label: 'Walmart Inc.', value: 'WMT' },
+//   { label: 'Mastercard Incorporated', value: 'MA' },
+//   { label: 'UnitedHealth Group Incorporated', value: 'UNH' },
+//   { label: 'The Home Depot Inc.', value: 'HD' },
+//   { label: 'Intel Corporation', value: 'INTC' },
+//   { label: 'The Coca-Cola Company', value: 'KO' },
+//   { label: 'Verizon Communications Inc.', value: 'VZ' },
+//   { label: 'Pfizer Inc.', value: 'PFE' },
+//   { label: 'AT&T Inc.', value: 'T' },
+//   { label: 'Merck & Co. Inc.', value: 'MRK' },
+//   { label: 'Netflix Inc.', value: 'NFLX' },
+//   { label: 'Cisco Systems Inc.', value: 'CSCO' },
+//   { label: 'Abbott Laboratories', value: 'ABT' },
+//   { label: 'AbbVie Inc.', value: 'ABBV' },
+//   { label: 'The Walt Disney Company', value: 'DIS' },
+//   { label: 'Salesforce.com Inc.', value: 'CRM' },
+// ] as const;
 
 const buildingBlocks = [
   'business_description',
@@ -220,6 +224,17 @@ export const NewReportComponent = () => {
   }, [supabase.auth]);
 
   const { data: settingsData } = useQuery(fetchSettings(supabase));
+  const { data: tickersData } = useQuery(fetchTickers(supabase));
+
+  // TODO: sort by cap instead
+  const tickers: Option[] =
+    tickersData
+      ?.map((ticker) => ({
+        value: ticker.symbol,
+        label: ticker.label,
+      }))
+      .sort((a, b) => (a.label > b.label ? 1 : b.label > a.label ? -1 : 0)) ??
+    [];
 
   // const { data: logos } = useDirectory(
   //   supabase.storage.from('company-logos'),
@@ -810,7 +825,7 @@ export const NewReportComponent = () => {
                 </FormItem>
               )}
             />
-            <FormField
+            {/* <FormField
               control={form.control}
               name="companyTicker"
               render={({ field }) => (
@@ -821,6 +836,23 @@ export const NewReportComponent = () => {
                       options={tickers}
                       emptyMessage="Search equity..."
                       onValueChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            /> */}
+            <FormField
+              control={form.control}
+              name="companyTicker"
+              render={({ field }) => (
+                <FormItem className="">
+                  <FormLabel>Company</FormLabel>
+                  <FormControl>
+                    <VirtualizedCombobox
+                      options={tickers}
+                      onValueChange={field.onChange}
+                      searchPlaceholder="Select ticker..."
                     />
                   </FormControl>
                   <FormMessage />

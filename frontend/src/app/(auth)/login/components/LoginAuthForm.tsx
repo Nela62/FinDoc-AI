@@ -49,8 +49,9 @@ export const LoginAuthForm = ({
     const { error } = await formAction(values);
     setIsLoading(false);
     if (error) {
-      // setError('Could not authenticate user');
-      setError(error);
+      console.log(error);
+      setError('Could not authenticate user');
+      // setError(error);
     } else {
       router.push('/reports/all');
     }

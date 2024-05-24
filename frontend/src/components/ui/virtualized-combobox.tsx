@@ -5,6 +5,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from '@/components/ui/command';
 import {
   Popover,
@@ -12,11 +13,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { CaretSortIcon } from '@radix-ui/react-icons';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import * as React from 'react';
 
-type Option = {
+export type Option = {
   value: string;
   label: string;
 };
@@ -25,8 +27,8 @@ interface VirtualizedCommandProps {
   height: string;
   options: Option[];
   placeholder: string;
-  selectedOption: string;
-  onSelectOption?: (option: string) => void;
+  selectedOption?: Option;
+  onSelectOption?: (optionValue: string) => void;
 }
 
 const VirtualizedCommand = ({
@@ -36,6 +38,7 @@ const VirtualizedCommand = ({
   selectedOption,
   onSelectOption,
 }: VirtualizedCommandProps) => {
+  console.log(options.length);
   const [filteredOptions, setFilteredOptions] =
     React.useState<Option[]>(options);
   const parentRef = React.useRef(null);
@@ -48,11 +51,12 @@ const VirtualizedCommand = ({
   });
 
   const virtualOptions = virtualizer.getVirtualItems();
+  console.log(virtualOptions.length);
 
   const handleSearch = (search: string) => {
     setFilteredOptions(
       options.filter((option) =>
-        option.value.toLowerCase().includes(search.toLowerCase() ?? []),
+        option.label.toLowerCase().includes(search.toLowerCase() ?? []),
       ),
     );
   };
@@ -67,21 +71,17 @@ const VirtualizedCommand = ({
     <Command shouldFilter={false} onKeyDown={handleKeyDown}>
       <CommandInput onValueChange={handleSearch} placeholder={placeholder} />
       <CommandEmpty>No item found.</CommandEmpty>
-      <CommandGroup
-        ref={parentRef}
-        style={{
-          height: height,
-          width: '100%',
-          overflow: 'auto',
-        }}
-      >
-        <div
+      <CommandGroup>
+        <CommandList
+          ref={parentRef}
           style={{
             height: `${virtualizer.getTotalSize()}px`,
             width: '100%',
             position: 'relative',
+            overflow: 'auto',
           }}
         >
+          {/* <div> */}
           {virtualOptions.map((virtualOption) => (
             <CommandItem
               style={{
@@ -99,7 +99,8 @@ const VirtualizedCommand = ({
               <Check
                 className={cn(
                   'mr-2 h-4 w-4',
-                  selectedOption === filteredOptions[virtualOption.index].value
+                  selectedOption?.value ===
+                    filteredOptions[virtualOption.index].value
                     ? 'opacity-100'
                     : 'opacity-0',
                 )}
@@ -107,27 +108,42 @@ const VirtualizedCommand = ({
               {filteredOptions[virtualOption.index].label}
             </CommandItem>
           ))}
-        </div>
+          {/* </div> */}
+        </CommandList>
       </CommandGroup>
     </Command>
   );
 };
 
 interface VirtualizedComboboxProps {
-  options: string[];
+  options: Option[];
   searchPlaceholder?: string;
   width?: string;
   height?: string;
+  value?: Option;
+  onValueChange?: (value: Option) => void;
 }
 
 export function VirtualizedCombobox({
   options,
   searchPlaceholder = 'Search items...',
   width = '400px',
-  height = '400px',
+  height = '200px',
+  value,
+  onValueChange,
 }: VirtualizedComboboxProps) {
   const [open, setOpen] = React.useState<boolean>(false);
-  const [selectedOption, setSelectedOption] = React.useState<string>('');
+  const [selectedOption, setSelectedOption] = React.useState<Option>(
+    value as Option,
+  );
+
+  const handleSelectOption = React.useCallback(
+    (option: Option) => {
+      setSelectedOption(option);
+      onValueChange?.(option);
+    },
+    [onValueChange],
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -136,27 +152,38 @@ export function VirtualizedCombobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="justify-between"
-          style={{
-            width: width,
-          }}
+          className={cn(
+            'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 font-normal ',
+            !selectedOption && 'text-muted-foreground',
+          )}
+          // style={{
+          //   width: width,
+          // }}
         >
-          {selectedOption
-            ? options.find((option) => option === selectedOption)
+          {selectedOption?.value
+            ? options.find((option) => option.value === selectedOption.value)
+                ?.label
             : searchPlaceholder}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <CaretSortIcon className="h-4 w-4 opacity-50" />
+          {/* <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" /> */}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0" style={{ width: width }}>
+      <PopoverContent
+        className={cn(
+          'p-1',
+          'w-full min-w-[var(--radix-popover-trigger-width)]',
+        )}
+      >
         <VirtualizedCommand
           height={height}
-          options={options.map((option) => ({ value: option, label: option }))}
+          options={options}
           placeholder={searchPlaceholder}
           selectedOption={selectedOption}
           onSelectOption={(currentValue) => {
-            setSelectedOption(
-              currentValue === selectedOption ? '' : currentValue,
+            const option = options.find(
+              (option) => option.value === currentValue,
             );
+            option && handleSelectOption(option);
             setOpen(false);
           }}
         />
