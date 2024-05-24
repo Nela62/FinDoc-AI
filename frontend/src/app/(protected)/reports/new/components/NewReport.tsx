@@ -111,10 +111,10 @@ const tickers: ComboboxOption[] = [
 const buildingBlocks = [
   'business_description',
   'investment_thesis',
-  // 'earnings_and_growth_analysis',
-  // 'financial_strength_and_dividend',
-  // 'management_and_risks',
-  // 'valuation',
+  'earnings_and_growth_analysis',
+  'financial_strength_and_dividend',
+  'management_and_risks',
+  'valuation',
 ];
 
 const COLOR_SCHEMES = [
