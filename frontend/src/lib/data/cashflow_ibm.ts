@@ -1,4 +1,6 @@
-export const CASHFLOW_IBM = {
+import { Cashflow } from '@/types/alphaVantageApi';
+
+export const CASHFLOW_IBM: Cashflow = {
   symbol: 'IBM',
   annualReports: [
     {

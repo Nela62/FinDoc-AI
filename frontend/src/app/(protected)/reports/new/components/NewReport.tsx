@@ -66,6 +66,7 @@ import {
 } from '@/lib/utils/financialAPI';
 import {
   BalanceSheet,
+  Cashflow,
   DailyStockData,
   DailyStockDataPoint,
   DailyTimeSeries,
@@ -80,7 +81,6 @@ import {
   Option,
   VirtualizedCombobox,
 } from '@/components/ui/virtualized-combobox';
-// TODO: add a super refinement for companyTicker; it can be optional when reportType doesn't required it
 
 // const tickers: ComboboxOption[] = [
 //   { label: 'Amazon Inc.', value: 'AMZN' },
@@ -168,6 +168,7 @@ type ReportData = {
   id?: string;
   url?: string;
   title?: string;
+  companyName?: string;
   reportType?: string;
   reportText?: JSONContent;
   companyTicker?: string;
@@ -176,6 +177,7 @@ type ReportData = {
   financialStrength?: string;
   overview?: Overview;
   balanceSheet?: BalanceSheet;
+  cashflow?: Cashflow;
   incomeStatement?: IncomeStatement;
   dailyStock?: DailyStockData;
   earnings?: Earnings;
@@ -248,6 +250,12 @@ export const NewReportComponent = () => {
 
   const { mutateAsync: insertCache } = useInsertMutation(
     supabase.from('api_cache'),
+    ['id'],
+    'id',
+  );
+
+  const { mutateAsync: insertTemplate } = useInsertMutation(
+    supabase.from('report_template'),
     ['id'],
     'id',
   );
@@ -455,60 +463,77 @@ export const NewReportComponent = () => {
     setIsDialogOpen(false);
   };
 
-  const fetchAPIData = useCallback(async () => {
-    if (!reportData.id || !user || !reportData.companyTicker) return {};
-    // TODO: once we have a premium api key, change it to Promise.all
-    const overview = await fetchAVEndpoint(
-      supabase,
-      insertCache,
-      reportData.id,
-      user,
-      'OVERVIEW',
-      reportData.companyTicker,
-    );
+  const fetchAPIData = useCallback(
+    async (reportId: string, ticker: string) => {
+      if (!user) return {};
+      // TODO: once we have a premium api key, change it to Promise.all
+      const overview = await fetchAVEndpoint(
+        supabase,
+        insertCache,
+        reportId,
+        user,
+        'OVERVIEW',
+        ticker,
+      );
 
-    const incomeStatement = await fetchAVEndpoint(
-      supabase,
-      insertCache,
-      reportData.id,
-      user,
-      'INCOME_STATEMENT',
-      reportData.companyTicker,
-    );
+      const incomeStatement = await fetchAVEndpoint(
+        supabase,
+        insertCache,
+        reportId,
+        user,
+        'INCOME_STATEMENT',
+        ticker,
+      );
 
-    const balanceSheet = await fetchAVEndpoint(
-      supabase,
-      insertCache,
-      reportData.id,
-      user,
-      'BALANCE_SHEET',
-      reportData.companyTicker,
-    );
+      const cashflow = await fetchAVEndpoint(
+        supabase,
+        insertCache,
+        reportId,
+        user,
+        'CASH_FLOW',
+        ticker,
+      );
 
-    const earnings = await fetchAVEndpoint(
-      supabase,
-      insertCache,
-      reportData.id,
-      user,
-      'EARNINGS',
-      reportData.companyTicker,
-    );
+      const balanceSheet = await fetchAVEndpoint(
+        supabase,
+        insertCache,
+        reportId,
+        user,
+        'BALANCE_SHEET',
+        ticker,
+      );
 
-    const dailyStock = await fetchDailyStock(
-      supabase,
-      insertCache,
-      reportData.id,
-      user,
-      reportData.companyTicker,
-    );
+      const earnings = await fetchAVEndpoint(
+        supabase,
+        insertCache,
+        reportId,
+        user,
+        'EARNINGS',
+        ticker,
+      );
 
-    return { overview, incomeStatement, balanceSheet, earnings, dailyStock };
-  }, [insertCache, reportData.id, reportData.companyTicker, user, supabase]);
+      const dailyStock = await fetchDailyStock(
+        supabase,
+        insertCache,
+        reportId,
+        user,
+        ticker,
+      );
+
+      return {
+        overview,
+        incomeStatement,
+        balanceSheet,
+        earnings,
+        dailyStock,
+        cashflow,
+      };
+    },
+    [insertCache, user, supabase],
+  );
 
   useEffect(() => {
     console.log('attempted to call useEffect');
-    console.log(sectionsGenerated === buildingBlocks.length);
-    console.log(reportData.reportText);
 
     if (sectionsGenerated === buildingBlocks.length && !reportData.reportText) {
       console.log('called sections generated');
@@ -564,28 +589,41 @@ export const NewReportComponent = () => {
           },
         })
           .then((res) => res.json())
-          .then((json) =>
+          .then((json) => {
             setReportData((state) => ({
               ...state,
               summary: json.summary
-                .split('-')
-                .map((point: string) => point.trim()),
-            })),
-          );
+                .split('- ')
+                .map((point: string) => point.trim())
+                .slice(1),
+            }));
+
+            if (!reportData.id || !user) return;
+            insertTemplate([
+              {
+                report_id: reportData.id,
+                user_id: user,
+                author_name: templateSettings.authorName,
+                // @ts-ignore
+                business_description: generatedBlocks['business_description'],
+                summary: json.summary
+                  .split('- ')
+                  .map((point: string) => point.trim())
+                  .slice(1),
+                color_scheme: COLOR_SCHEMES.find(
+                  (scheme) => scheme.key === templateSettings.colorSchemeId,
+                )?.colors,
+                template_type: 'ARGUS',
+                company_name:
+                  tickersData?.find(
+                    (company) => company.symbol === reportData.companyTicker,
+                  )?.name ?? '',
+              },
+            ]);
+          });
         setReportData((state) => ({ ...state, reportText: curReportText }));
 
-        if (!reportData.id) return;
-
-        fetchAPIData().then((res) => {
-          setReportData((state) => ({
-            ...state,
-            overview: res.overview,
-            balanceSheet: res.balanceSheet,
-            incomeStatement: res.incomeStatement,
-            earnings: res.earnings,
-            dailyStock: res.dailyStock,
-          }));
-        });
+        if (!reportData.id || !user) return;
 
         supabase
           .from('reports')
@@ -603,6 +641,11 @@ export const NewReportComponent = () => {
     fetchAPIData,
     baseUrl,
     reportData.reportText,
+    insertTemplate,
+    reportData.summary,
+    templateSettings.colorSchemeId,
+    templateSettings.authorName,
+    user,
   ]);
 
   const processBuildingBlocks = async (
@@ -611,6 +654,7 @@ export const NewReportComponent = () => {
     session: Session,
     reportId: string,
     ticker: string,
+    apiObjects: any,
   ) => {
     for (let i = 0; i < blocks.length; i += batchSize) {
       const batch = blocks.slice(i, i + batchSize);
@@ -624,9 +668,16 @@ export const NewReportComponent = () => {
             ticker: ticker,
             company_name: tickers.find((c) => c.value === ticker)?.label,
             model: 'claude-3-haiku-20240307',
+            api_objects: apiObjects,
           };
 
-          log.info('Generating a building block', body);
+          log.info('Generating a building block', {
+            prompt_type: block,
+            report_id: reportId,
+            ticker: ticker,
+            company_name: tickers.find((c) => c.value === ticker)?.label,
+            model: 'claude-3-haiku-20240307',
+          });
           try {
             const res = await fetch(`${baseUrl}/report/`, {
               method: 'POST',
@@ -693,17 +744,42 @@ export const NewReportComponent = () => {
       targetPrice: values.targetPrice,
       financialStrength: values.financialStrength,
       reportType: values.reportType,
+      companyName:
+        tickersData?.find(
+          (company) => company.symbol === reportData.companyTicker,
+        )?.name ?? '',
     }));
     setIsDialogOpen(true);
     startGeneration(buildingBlocks.length);
 
-    processBuildingBlocks(
-      buildingBlocks,
-      2,
-      session,
-      reportid,
-      values.companyTicker.value,
-    );
+    fetchAPIData(reportid, values.companyTicker.value).then((res) => {
+      console.log('fetched api data');
+      setReportData((state) => ({
+        ...state,
+        overview: res.overview,
+        balanceSheet: res.balanceSheet,
+        incomeStatement: res.incomeStatement,
+        earnings: res.earnings,
+        dailyStock: res.dailyStock,
+        cashflow: res.cashflow,
+      }));
+
+      processBuildingBlocks(
+        buildingBlocks,
+        2,
+        session,
+        reportid,
+        values.companyTicker.value,
+        {
+          overview: res.overview,
+          balanceSheet: res.balanceSheet,
+          incomeStatement: res.incomeStatement,
+          earnings: res.earnings,
+          dailyStock: res.dailyStock,
+          cashflow: res.cashflow,
+        },
+      );
+    });
 
     // buildingBlocks.forEach(async (block) => {
     //   // TODO: fix citations and how text is parsed

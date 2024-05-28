@@ -890,7 +890,7 @@ DocxFileProps) => {
                         children: [
                           new TextRun({
                             text: point,
-                            size: 20,
+                            size: 18,
                             font: 'Arial Narrow',
                           }),
                         ],

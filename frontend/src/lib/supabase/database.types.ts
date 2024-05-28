@@ -439,10 +439,68 @@ export type Database = {
           },
         ]
       }
+      report_template: {
+        Row: {
+          author_name: string | null
+          business_description: string | null
+          color_scheme: string[] | null
+          company_logo: string | null
+          company_name: string | null
+          id: string
+          metrics: Json | null
+          report_id: string
+          summary: string[] | null
+          template_type: string
+          user_id: string
+        }
+        Insert: {
+          author_name?: string | null
+          business_description?: string | null
+          color_scheme?: string[] | null
+          company_logo?: string | null
+          company_name?: string | null
+          id?: string
+          metrics?: Json | null
+          report_id: string
+          summary?: string[] | null
+          template_type: string
+          user_id: string
+        }
+        Update: {
+          author_name?: string | null
+          business_description?: string | null
+          color_scheme?: string[] | null
+          company_logo?: string | null
+          company_name?: string | null
+          id?: string
+          metrics?: Json | null
+          report_id?: string
+          summary?: string[] | null
+          template_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_template_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_template_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           company_ticker: string
           created_at: string
+          financial_strength: string | null
           html_content: string | null
           id: string
           json_content: Json | null
@@ -458,6 +516,7 @@ export type Database = {
         Insert: {
           company_ticker: string
           created_at?: string
+          financial_strength?: string | null
           html_content?: string | null
           id?: string
           json_content?: Json | null
@@ -473,6 +532,7 @@ export type Database = {
         Update: {
           company_ticker?: string
           created_at?: string
+          financial_strength?: string | null
           html_content?: string | null
           id?: string
           json_content?: Json | null
