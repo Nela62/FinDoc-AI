@@ -10,7 +10,7 @@ import { createClient } from '@/lib/supabase/server';
 import { fetchSettings, fetchTickers } from '@/lib/queries';
 import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
-import { NewReportComponent } from './components/NewReport';
+import { NewReportComponent } from './NewReport';
 
 export const metadata: Metadata = {
   title: 'Coreline - Create New Report',

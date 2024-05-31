@@ -1,31 +1,42 @@
 import { Content } from '@tiptap/react';
 
-export type ReportType =
-  | 'Equity Analyst Report'
-  | 'Earnings Call Note'
-  | 'Other';
-
 export type Recommendation =
-  | 'Auto'
   | 'Buy'
-  | 'Hold'
-  | 'Sell'
   | 'Overweight'
-  | 'Underweight';
+  | 'Hold'
+  | 'Underweight'
+  | 'Sell';
+
+export type FinancialStrength =
+  | 'Low'
+  | 'Low-Medium'
+  | 'Medium'
+  | 'Medium-High'
+  | 'High';
+// TODO: add financial strength type
 
 export type ReportStatus = 'Draft' | 'In Review' | 'Approved' | 'Published';
+
+type EquityAnalystReport = {
+  type: 'Equity Analyst Report';
+  recommendation: Recommendation;
+  targetPrice: number;
+  financialStrength: FinancialStrength;
+};
+
+type EarningsCallNote = {
+  type: 'Earnings Call Note';
+};
 
 export type Report = {
   id: string;
   url: string;
   title: string;
-  company_ticker: string;
-  type: ReportType;
-  recommendation?: Recommendation;
-  targetPrice?: string;
-  html_content: Content;
-  json_content: Content;
+  companyTicker: string;
+  companyName: string;
+  htmlContent: Content;
+  jsonContent: Content;
   status: ReportStatus;
-  created_at: string;
-  updated_at: string;
-};
+  createdAt: string;
+  updatedAt: string;
+} & (EquityAnalystReport | EarningsCallNote);

@@ -27,25 +27,6 @@ import {
   VerticalAlign,
 } from 'docx';
 
-const getHeadingLevel = (level: number) => {
-  switch (level) {
-    case 1:
-      return HeadingLevel.HEADING_1;
-    case 2:
-      return HeadingLevel.HEADING_2;
-    case 3:
-      return HeadingLevel.HEADING_3;
-    case 4:
-      return HeadingLevel.HEADING_4;
-    case 5:
-      return HeadingLevel.HEADING_5;
-    case 6:
-      return HeadingLevel.HEADING_6;
-    default:
-      return HeadingLevel.HEADING_1;
-  }
-};
-
 const TEST_METRICS = {
   'Market Overview': {
     Price: '$128.91',
@@ -157,178 +138,6 @@ DocxFileProps) => {
     'Financial Strength': financialStrength,
   };
 
-  const firstHalf: Paragraph[] = [];
-  const secondHalf: Paragraph[] = [];
-
-  function splitText(
-    content: JSONContent[],
-    width: number,
-    font: CanvasTextDrawingStyles['font'],
-    maxLines: number,
-  ) {
-    let canvas = document.createElement('canvas');
-    let context = canvas.getContext('2d');
-    if (!context) {
-      console.log('no context');
-      return [];
-    }
-    context.font = font;
-
-    let currentLine = '';
-    let lines = 0;
-    let firstHalfText = '';
-    let reachedMaxLines = false;
-
-    const processContent = (cell: JSONContent, last: boolean): TextRun => {
-      if (reachedMaxLines) {
-        return new TextRun({
-          text: cell.text!,
-          italics: cell.marks?.some((m) => m.type === 'italic'),
-          bold: cell.marks?.some((m) => m.type === 'bold'),
-          size: 18,
-          font: 'Times New Roman',
-        });
-      }
-
-      let curText = '';
-      const words = cell.text!.split(' ');
-
-      for (let word of words) {
-        let testLine = currentLine + word + ' ';
-        let metrics = context.measureText(testLine);
-        if (metrics.width > width && currentLine !== '') {
-          lines++;
-          // BUG: skips over a line sometimes
-          if (lines >= maxLines) {
-            firstHalfText += currentLine;
-            curText += currentLine;
-            reachedMaxLines = true;
-            currentLine = word + ' ';
-            break;
-          }
-          firstHalfText += currentLine;
-          curText += currentLine;
-          currentLine = word + ' ';
-        } else {
-          currentLine = testLine;
-        }
-      }
-
-      if (last && currentLine !== '') {
-        firstHalfText += currentLine;
-        curText += currentLine;
-        currentLine = '';
-        lines++;
-      }
-
-      let secondHalfText = cell.text!.substring(
-        curText.length + currentLine.length + 1,
-      );
-      if (secondHalfText) {
-        secondHalf.push(
-          new Paragraph({
-            alignment: AlignmentType.JUSTIFIED,
-            children: [
-              new TextRun({
-                text: secondHalfText.trim(),
-                italics: cell.marks?.some((m) => m.type === 'italic'),
-                bold: cell.marks?.some((m) => m.type === 'bold'),
-                size: 18,
-                font: 'Times New Roman',
-              }),
-            ],
-          }),
-        );
-      }
-
-      curText = curText.replaceAll(/\s\./g, '. ');
-
-      return new TextRun({
-        text: curText,
-        italics: cell.marks?.some((m) => m.type === 'italic'),
-        bold: cell.marks?.some((m) => m.type === 'bold'),
-        size: 18,
-        font: 'Times New Roman',
-      });
-    };
-
-    content.forEach((cell) => {
-      const paragraphContent =
-        cell.type === 'heading'
-          ? new Paragraph({
-              children: [
-                new TextRun({
-                  text: cell.content && cell.content[0].text,
-                  size: 18,
-                  font: 'Arial Narrow',
-                }),
-              ],
-              heading: getHeadingLevel(cell.attrs?.level ?? 1),
-            })
-          : new Paragraph({
-              alignment: AlignmentType.JUSTIFIED,
-              spacing: {
-                line: 80,
-                lineRule: LineRuleType.AT_LEAST,
-                before: 60,
-              },
-              children: [
-                new TextRun({
-                  text: '    ',
-                  italics: cell.marks?.some((m) => m.type === 'italic'),
-                  bold: cell.marks?.some((m) => m.type === 'bold'),
-                  size: 18,
-                  font: 'Times New Roman',
-                }),
-                ...(cell.content
-                  ?.filter((c) => c.type === 'text' && c.text)
-                  .map((c, i, arr) =>
-                    processContent(c, i === arr.length - 1),
-                  ) ?? []),
-              ],
-            });
-
-      reachedMaxLines
-        ? secondHalf.push(paragraphContent)
-        : firstHalf.push(paragraphContent);
-    });
-
-    return [];
-  }
-
-  splitText(content.content ?? [], 480, '9px Times New Roman', 9);
-
-  const margins = {
-    top: 1550.6,
-    left: 604.8,
-    right: 604.8,
-    // bottom: 878.4,
-    bottom: 1000,
-    header: 288,
-    footer: 691.2,
-  };
-
-  const bordersNone = {
-    top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-    bottom: {
-      style: BorderStyle.NONE,
-      size: 0,
-      color: 'FFFFFF',
-    },
-    left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-    right: {
-      style: BorderStyle.NONE,
-      size: 0,
-      color: 'FFFFFF',
-    },
-  };
-
-  async function getImageSize(imageBlob: Blob) {
-    const bitmap: ImageBitmap = await createImageBitmap(imageBlob);
-    const { width, height } = bitmap;
-    return { width, height };
-  }
-
   const headerImage = await fetch(headerImageLink).then((r) => r.blob());
   const { width: headerImageWidth, height: headerImageHeight } =
     await getImageSize(headerImage);
@@ -346,94 +155,6 @@ DocxFileProps) => {
   );
   const { width: tableImageWidth, height: tableImageHeight } =
     await getImageSize(headerImage);
-
-  const headerComponent = (pageNum: boolean = true) => [
-    new Paragraph({
-      children: [
-        new ImageRun({
-          // @ts-ignore
-          data: headerImage,
-          // TODO: get more precise values
-          transformation: {
-            width: (50 / headerImageHeight) * headerImageWidth,
-            height: 50,
-          },
-          floating: {
-            zIndex: 10,
-            behindDocument: false,
-            horizontalPosition: {
-              relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-              offset: 385548,
-            },
-            verticalPosition: {
-              relative: VerticalPositionRelativeFrom.TOP_MARGIN,
-              // offset: 301752,
-              offset: 351752,
-            },
-          },
-        }),
-      ],
-    }),
-    new Paragraph({
-      shading: { fill: primaryColor },
-      children: [
-        new TextRun({
-          text: `NASDAQ: ${companyTicker}`,
-          size: 16,
-          color: 'ffffff',
-          font: 'Arial Narrow',
-          bold: true,
-        }),
-      ],
-      alignment: AlignmentType.RIGHT,
-    }),
-    new Paragraph({
-      shading: { fill: primaryColor },
-      children: [
-        new TextRun({
-          text: companyName.toUpperCase(),
-          size: 46,
-          color: 'ffffff',
-          font: 'Arial Narrow',
-          bold: true,
-        }),
-      ],
-      alignment: AlignmentType.RIGHT,
-    }),
-    new Paragraph({
-      shading: { fill: primaryColor },
-      children: pageNum
-        ? [
-            new TextRun({
-              text: `Report created ${format(new Date(), 'MMM d, yyyy')}`,
-              size: 16,
-              color: 'ffffff',
-              font: 'Arial Narrow',
-            }),
-            new TextRun({
-              children: [
-                '  Page ',
-                PageNumber.CURRENT,
-                ' OF ',
-                PageNumber.TOTAL_PAGES,
-              ],
-              bold: true,
-              size: 16,
-              color: 'ffffff',
-              font: 'Arial Narrow',
-            }),
-          ]
-        : [
-            new TextRun({
-              text: `Report created ${format(new Date(), 'MMM d, yyyy')}`,
-              size: 16,
-              color: 'ffffff',
-              font: 'Arial Narrow',
-            }),
-          ],
-      alignment: AlignmentType.RIGHT,
-    }),
-  ];
 
   const metricsArr = [
     ...Object.keys(metrics).map((key) => {
@@ -460,9 +181,6 @@ DocxFileProps) => {
             }),
           ],
         }),
-        // using spacing instead of margins causes white lines between the rows
-        // both cells have the same font size to ensure alignment but
-        // it would be good to make the right cell of size 14
         ...Object.entries(metrics[key]).map(
           ([key, value], i) =>
             new TableRow({
@@ -621,7 +339,6 @@ DocxFileProps) => {
                 width: { size: 30, type: WidthType.PERCENTAGE },
                 children: [
                   new Paragraph({
-                    // spacing: { before: 40 },
                     children: [
                       new TextRun({
                         text: row.rowName,
@@ -943,17 +660,6 @@ DocxFileProps) => {
                       }),
                     ],
                   }),
-                  // new Paragraph({
-                  //   alignment: AlignmentType.JUSTIFIED,
-                  //   children: firstHalf,
-                  //   //   [
-                  //   //   new TextRun({
-                  //   //     text: '',
-                  //   //     size: 18,
-                  //   //     font: 'Times New Roman',
-                  //   //   }),
-                  //   // ],
-                  // }),
                 ],
               }),
               new TableCell({

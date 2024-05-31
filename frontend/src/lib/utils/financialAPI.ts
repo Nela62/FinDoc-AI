@@ -3,11 +3,15 @@ import { TypedSupabaseClient } from '@/types/supabase';
 import { fetchAPICacheByEndpoint } from '../queries';
 import {
   BalanceSheet,
+  Cashflow,
   DailyStockData,
   DailyStockDataPoint,
+  Earnings,
   IncomeStatement,
   Overview,
 } from '@/types/alphaVantageApi';
+import { SidebarMetrics } from '../templates/metrics/components/statistics';
+import { AnalysisMetrics } from '../templates/docxTables/financialAnalysisTable';
 
 function removeApiKey(url: string) {
   const parsedUrl = new URL(url);
@@ -93,9 +97,10 @@ export async function fetchAVEndpoint(
 export const getNWeeksStock = (
   dailyStock: DailyStockData,
   weeks: number = 52,
+  start: Date = new Date(),
 ) => {
   const data = dailyStock['Time Series (Daily)'];
-  const nWeeksAgo = sub(new Date(), { weeks: weeks });
+  const nWeeksAgo = sub(start, { weeks: weeks });
   const days = eachDayOfInterval({ start: nWeeksAgo, end: new Date() });
   const stockData: DailyStockDataPoint[] = [];
 
@@ -209,7 +214,7 @@ export const getSidebarMetrics = (
   stockData: DailyStockDataPoint[],
   targetPrice: number,
   financialStrengthRating: string,
-) => {
+): SidebarMetrics => {
   const marketOverview = {
     Price: '$' + getLatestStockDataPoint(stockData)?.data['4. close'],
     'Target Price': '$' + targetPrice,
@@ -279,5 +284,424 @@ export const getSidebarMetrics = (
     Valuation: valuation,
     'Forecasted Growth': forecastedGrowth,
     Risk: risk,
+  };
+};
+
+const divideByMillion = (num: number | string) =>
+  num === 'None' ? '--' : (Number(num) / 1.0e6).toFixed(2);
+
+export const getGrowthAndValuationAnalysisMetrics = (
+  overview: Overview,
+  balanceSheet: BalanceSheet,
+  cashflow: Cashflow,
+  incomeStatement: IncomeStatement,
+  earnings: Earnings,
+  stockData: DailyStockData,
+): AnalysisMetrics => {
+  const curY = new Date().getFullYear();
+  const years =
+    incomeStatement.annualReports.length > 5
+      ? 5
+      : incomeStatement.annualReports.length;
+
+  return {
+    years: [...Array(years).keys()].map((_, i) => curY - i).reverse(),
+    categories: [
+      {
+        name: 'Growth Analysis',
+        statistics: [
+          {
+            name: 'Revenue',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) => divideByMillion(y.totalRevenue)),
+          },
+          {
+            name: 'COGS',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) => divideByMillion(y.costofGoodsAndServicesSold)),
+          },
+          {
+            name: 'Gross Profit',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) => divideByMillion(y.grossProfit)),
+          },
+          {
+            name: 'SG&A',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) => divideByMillion(y.sellingGeneralAndAdministrative)),
+          },
+          {
+            name: 'R&D',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) => divideByMillion(y.researchAndDevelopment)),
+          },
+          {
+            name: 'Operating Income',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) => divideByMillion(y.operatingIncome)),
+          },
+          {
+            name: 'Interest Expense',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) => divideByMillion(y.interestExpense)),
+          },
+          {
+            name: 'Pretax Income',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) => divideByMillion(y.incomeBeforeTax)),
+          },
+          {
+            name: 'Income Taxes',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) => divideByMillion(y.incomeTaxExpense)),
+          },
+          {
+            name: 'Tax Rate (%)',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) =>
+                (
+                  Number(y.incomeTaxExpense) / Number(y.incomeBeforeTax)
+                ).toFixed(2),
+              ),
+          },
+          {
+            name: 'Net Income',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) => divideByMillion(y.netIncome)),
+          },
+          {
+            name: 'Common Stock Shares Outstanding',
+            numbers: [overview.SharesOutstanding],
+          },
+          {
+            name: 'EPS',
+            numbers: earnings.annualEarnings
+              .slice(0, years)
+              .map((y) => y.reportedEPS),
+          },
+          { name: 'Dividend', numbers: [overview.DividendPerShare] },
+        ],
+      },
+      {
+        name: 'Growth Rates (%)',
+        statistics: [
+          {
+            name: 'Revenue',
+            numbers: incomeStatement.annualReports
+              .slice(0, years > 5 ? years : years - 1)
+              .map(
+                (_, i, arr) =>
+                  (Number(arr[i].totalRevenue) -
+                    Number(arr[i + 1].totalRevenue)) /
+                  Number(arr[i].totalRevenue),
+              ),
+          },
+          {
+            name: 'Operating Income',
+            numbers: incomeStatement.annualReports
+              .slice(0, years > 5 ? years : years - 1)
+              .map(
+                (_, i, arr) =>
+                  (Number(arr[i].operatingIncome) -
+                    Number(arr[i + 1].operatingIncome)) /
+                  Number(arr[i].operatingIncome),
+              ),
+          },
+          {
+            name: 'Net Income',
+            numbers: incomeStatement.annualReports
+              .slice(0, years > 5 ? years : years - 1)
+              .map(
+                (_, i, arr) =>
+                  (Number(arr[i].netIncome) - Number(arr[i + 1].netIncome)) /
+                  Number(arr[i].netIncome),
+              ),
+          },
+          {
+            name: 'EPS',
+            numbers: earnings.annualEarnings
+              .slice(0, years > 5 ? years : years - 1)
+              .map(
+                (_, i, arr) =>
+                  (Number(arr[i].reportedEPS) -
+                    Number(arr[i + 1].reportedEPS)) /
+                  Number(arr[i].reportedEPS),
+              ),
+          },
+          {
+            name: 'Dividend',
+            numbers: cashflow.annualReports
+              .slice(0, years > 5 ? years : years - 1)
+              .map(
+                (_, i, arr) =>
+                  (Number(arr[i].dividendPayout) -
+                    Number(arr[i + 1].dividendPayout)) /
+                  Number(arr[i].dividendPayout),
+              ),
+          },
+          {
+            name: 'Sustainable Growth Rate',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y, i) =>
+                (
+                  (Number(y.incomeTaxExpense) /
+                    Number(
+                      balanceSheet.annualReports[i].totalShareholderEquity,
+                    )) *
+                  (1 -
+                    Number(cashflow.annualReports[i].dividendPayout) /
+                      Number(y.netIncome))
+                ).toFixed(1),
+              ),
+          },
+        ],
+      },
+      {
+        name: 'Valuation Analysis',
+        statistics: [
+          {
+            name: 'Price: High',
+            numbers: [...Array(years).keys()]
+              .map(
+                (_, i) =>
+                  '$' +
+                  getHighestClosingStockPrice(
+                    getNWeeksStock(
+                      stockData,
+                      52,
+                      sub(new Date(), { years: i }),
+                    ),
+                  ),
+              )
+              .reverse(),
+          },
+          {
+            name: 'Price: Low',
+            numbers: [...Array(years).keys()]
+              .map(
+                (_, i) =>
+                  '$' +
+                  getLowestClosingStockPrice(
+                    getNWeeksStock(
+                      stockData,
+                      52,
+                      sub(new Date(), { years: i }),
+                    ),
+                  ),
+              )
+              .reverse(),
+          },
+          { name: 'Price/Sales: High-Low', numbers: [] },
+          { name: 'P/E: High-Low', numbers: [] },
+          { name: 'Price/Cash Flow: High-Low', numbers: [] },
+        ],
+      },
+    ],
+  };
+};
+
+export const getFinancialAndRiskAnalysisMetrics = (
+  overview: Overview,
+  balanceSheet: BalanceSheet,
+  cashflow: Cashflow,
+  incomeStatement: IncomeStatement,
+  earnings: Earnings,
+  stockData: DailyStockData,
+): AnalysisMetrics => {
+  const curY = new Date().getFullYear();
+  const years =
+    incomeStatement.annualReports.length > 3
+      ? 3
+      : incomeStatement.annualReports.length;
+
+  return {
+    years: [...Array(years).keys()].map((_, i) => curY - i).reverse(),
+    categories: [
+      {
+        name: 'Cash',
+        statistics: [
+          {
+            name: 'Cash ($ in Millions)',
+            numbers: balanceSheet.annualReports
+              .slice(0, years)
+              .map((y) =>
+                divideByMillion(y.cashAndCashEquivalentsAtCarryingValue),
+              ),
+          },
+          {
+            name: 'Working Capital ($ in Millions)',
+            numbers: balanceSheet.annualReports
+              .slice(0, years)
+              .map((y) =>
+                divideByMillion(
+                  Number(y.totalCurrentAssets) -
+                    Number(y.totalCurrentLiabilities),
+                ),
+              ),
+          },
+          {
+            name: 'Current Ratio',
+            numbers: balanceSheet.annualReports
+              .slice(0, years)
+              .map((y) =>
+                (
+                  Number(y.totalCurrentAssets) /
+                  Number(y.totalCurrentLiabilities)
+                ).toFixed(2),
+              ),
+          },
+          {
+            name: 'LT Debt/Equity Ratio (%)',
+            numbers: balanceSheet.annualReports
+              .slice(0, years)
+              .map((y) =>
+                !y.longTermDebt || !y.totalShareholderEquity
+                  ? '--'
+                  : (
+                      (Number(y.longTermDebt) /
+                        Number(y.totalShareholderEquity)) *
+                      100
+                    ).toFixed(1),
+              ),
+          },
+          {
+            name: 'Total Debt/Equity Ratio (%)',
+            numbers: balanceSheet.annualReports
+              .slice(0, years)
+              .map((y) =>
+                !y.totalLiabilities || !y.totalShareholderEquity
+                  ? '--'
+                  : (
+                      (Number(y.totalLiabilities) /
+                        Number(y.totalShareholderEquity)) *
+                      100
+                    ).toFixed(1),
+              ),
+          },
+        ],
+      },
+      {
+        name: 'Ratios (%)',
+        statistics: [
+          {
+            name: 'Gross Profit Margin',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) =>
+                (
+                  (Number(y.grossProfit) / Number(y.totalRevenue)) *
+                  100
+                ).toFixed(1),
+              ),
+          },
+          {
+            name: 'Operating Margin',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) =>
+                (
+                  (Number(y.operatingIncome) / Number(y.totalRevenue)) *
+                  100
+                ).toFixed(1),
+              ),
+          },
+          {
+            name: 'Net Margin',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y) =>
+                ((Number(y.netIncome) / Number(y.totalRevenue)) * 100).toFixed(
+                  1,
+                ),
+              ),
+          },
+          {
+            name: 'Return on Assets',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y, i) =>
+                (
+                  (Number(y.netIncome) /
+                    Number(balanceSheet.annualReports[i].totalAssets)) *
+                  100
+                ).toFixed(1),
+              ),
+          },
+          {
+            name: 'Return on Equity',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y, i) =>
+                (
+                  (Number(y.netIncome) /
+                    Number(
+                      balanceSheet.annualReports[i].totalShareholderEquity,
+                    )) *
+                  100
+                ).toFixed(1),
+              ),
+          },
+        ],
+      },
+      {
+        name: 'Risk Analysis',
+        statistics: [
+          { name: 'Cash Cycle (days)', numbers: [] },
+          {
+            name: 'Cash Flow/Cap Ex',
+            numbers: cashflow.annualReports
+              .slice(0, years)
+              .map((y, i) =>
+                !y.operatingCashflow || !y.capitalExpenditures
+                  ? '--'
+                  : (
+                      (Number(y.operatingCashflow) /
+                        Number(y.capitalExpenditures)) *
+                      100
+                    ).toFixed(1),
+              ),
+          },
+          {
+            name: 'Oper. Income/Int. Exp. (ratio)',
+            numbers: incomeStatement.annualReports
+              .slice(0, years)
+              .map((y, i) =>
+                !y.interestExpense
+                  ? '--'
+                  : (
+                      (Number(y.operatingIncome) / Number(y.interestExpense)) *
+                      100
+                    ).toFixed(1),
+              ),
+          },
+          {
+            name: 'Payout Ratio',
+            numbers: cashflow.annualReports
+              .slice(0, years)
+              .map((y, i) =>
+                !y.dividendPayout
+                  ? '--'
+                  : (
+                      (Number(y.dividendPayout) /
+                        Number(incomeStatement.annualReports[i].netIncome)) *
+                      100
+                    ).toFixed(1),
+              ),
+          },
+        ],
+      },
+    ],
   };
 };
