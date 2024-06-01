@@ -7,10 +7,11 @@ import { prefetchQuery } from '@supabase-cache-helpers/postgrest-react-query';
 
 import '@/styles/index.css';
 import { createClient } from '@/lib/supabase/server';
-import { fetchSettings, fetchTickers } from '@/lib/queries';
+import { fetchSettings, fetchTemplates, fetchTickers } from '@/lib/queries';
 import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
 import { NewReportComponent } from './NewReport';
+import { NewReport } from './Component';
 
 export const metadata: Metadata = {
   title: 'Coreline - Create New Report',
@@ -31,10 +32,11 @@ export default async function NewReportPage() {
 
   await prefetchQuery(queryClient, fetchSettings(supabase));
   await prefetchQuery(queryClient, fetchTickers(supabase));
+  await prefetchQuery(queryClient, fetchTemplates(supabase));
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <NewReportComponent />
+      <NewReport userId={user.id} />
     </HydrationBoundary>
   );
 }

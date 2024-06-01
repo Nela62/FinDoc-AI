@@ -26,7 +26,7 @@ export const ViewPdf: React.FC<ViewPdfProps> = ({ file }) => {
     setZoomLevel,
     zoomInEnabled,
     zoomOutEnabled,
-  } = usePDFViewer(file);
+  } = usePDFViewer(file.id);
 
   return (
     <div

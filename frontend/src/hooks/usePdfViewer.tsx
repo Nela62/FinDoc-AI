@@ -20,7 +20,7 @@ export const zoomLevels = [
 ];
 const startZoomLevelIdx = 2;
 
-const usePDFViewer = (file: Document) => {
+const usePDFViewer = (fileId: string) => {
   const [scrolledIndex, setScrolledIndex] = useState(1);
   const [scale, setScale] = useState(1.0);
   const [scaleFit, setScaleFit] = useState(1.0);
@@ -58,12 +58,12 @@ const usePDFViewer = (file: Document) => {
     if (!selectedCitation || !documentId) return;
 
     const activeDocumentId = documentId;
-    if (activeDocumentId === file.id) {
+    if (activeDocumentId === fileId) {
       if (selectedCitation && selectedCitation.page) {
         goToPage(selectedCitation.page - 1);
       }
     }
-  }, [file, documentId, selectedCitation]);
+  }, [fileId, documentId, selectedCitation]);
 
   const setCurrentPageNumber = useCallback((n: number) => {
     setScrolledIndex(n);

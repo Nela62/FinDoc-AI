@@ -241,3 +241,12 @@ export function fetchTickers(client: TypedSupabaseClient) {
     .limit(20000)
     .throwOnError();
 }
+
+export function fetchTemplates(client: TypedSupabaseClient) {
+  return client
+    .from('templates')
+    .select(
+      'id, name, report_type, sample_text, section_ids, components_config',
+    )
+    .throwOnError();
+}
