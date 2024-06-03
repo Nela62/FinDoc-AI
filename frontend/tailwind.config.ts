@@ -20,8 +20,12 @@ const config = {
     extend: {
       colors: {
         sidebar: {
-          top: '#4785D4',
-          bottom: '#002F6E',
+          light: '#4785D4',
+          dark: '#002F6E',
+          // bottom: '#5D9BD3',
+          // top: '#4785D4',
+          // bottom: '#4785D4',
+          // bottom: '#002F6E',
         },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',

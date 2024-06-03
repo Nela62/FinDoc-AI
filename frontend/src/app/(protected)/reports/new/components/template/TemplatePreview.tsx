@@ -142,10 +142,10 @@ export const TemplatePreview = ({
         />
       </div>
       <div
-        className="flex-col rounded-md overflow-hidden bg-white border hidden md:flex bg-muted/90"
+        className="flex-col rounded-md overflow-hidden bg-white border hidden md:flex"
         ref={setContainerRef}
       >
-        <div className="w-full flex justify-center items-center h-10 border-b">
+        <div className="w-full bg-muted/90 flex justify-center items-center h-10 border-b">
           <h2 className="font-semibold">{templateData.name}</h2>
         </div>
         {file && (
