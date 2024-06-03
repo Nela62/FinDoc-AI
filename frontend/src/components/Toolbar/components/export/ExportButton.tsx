@@ -6,7 +6,6 @@ import { Chart } from './components/Chart';
 import { useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { toPng } from 'html-to-image';
-import { generateDocxFile } from './components/docxExport';
 import {
   useInsertMutation,
   useQuery,
@@ -22,6 +21,10 @@ import {
   Overview,
 } from '@/types/alphaVantageApi';
 import { getNWeeksStock, getSidebarMetrics } from '@/lib/utils/financialAPI';
+import { generateDocxFile } from './components/docxExport';
+import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
+import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
+import { DAILY_STOCK_IBM } from '@/lib/data/daily_stock_ibm';
 
 export const ExportButton = ({
   editor,
@@ -34,167 +37,75 @@ export const ExportButton = ({
 
   const supabase = createClient();
 
-  const { data: cacheData } = useQuery(
-    fetchAPICacheByReportId(supabase, reportId),
-  );
+  // const { data: cacheData } = useQuery(
+  //   fetchAPICacheByReportId(supabase, reportId),
+  // );
 
-  const { mutateAsync: insertCache } = useInsertMutation(
-    supabase.from('api_cache'),
-    ['id'],
-    '*',
-  );
+  // const { mutateAsync: insertCache } = useInsertMutation(
+  //   supabase.from('api_cache'),
+  //   ['id'],
+  //   '*',
+  // );
 
-  if (!cacheData) return;
+  // if (!cacheData) return;
 
-  const earnings = cacheData.find((cache) =>
-    cache.endpoint.includes('EARNINGS'),
-  )?.json_data;
-  const incomeStatement = cacheData.find((cache) =>
-    cache.endpoint.includes('INCOME_STATEMENT'),
-  )?.json_data;
-  const dailyStock = cacheData.find((cache) =>
-    cache.endpoint.includes('TIME_SERIES_DAILY'),
-  )?.json_data;
-  const overview = cacheData.find((cache) =>
-    cache.endpoint.includes('OVERVIEW'),
-  )?.json_data;
-  const balanceSheet = cacheData.find((cache) =>
-    cache.endpoint.includes('BALANCE_SHEET'),
-  )?.json_data;
+  // const earnings = cacheData.find((cache) =>
+  //   cache.endpoint.includes('EARNINGS'),
+  // )?.json_data;
+  // const incomeStatement = cacheData.find((cache) =>
+  //   cache.endpoint.includes('INCOME_STATEMENT'),
+  // )?.json_data;
+  // const dailyStock = cacheData.find((cache) =>
+  //   cache.endpoint.includes('TIME_SERIES_DAILY'),
+  // )?.json_data;
+  // const overview = cacheData.find((cache) =>
+  //   cache.endpoint.includes('OVERVIEW'),
+  // )?.json_data;
+  // const balanceSheet = cacheData.find((cache) =>
+  //   cache.endpoint.includes('BALANCE_SHEET'),
+  // )?.json_data;
+  // console.log('export button');
 
-  if (!earnings || !incomeStatement || !dailyStock || !overview) return;
+  // if (!earnings || !incomeStatement || !dailyStock || !overview) return;
 
   return (
-    <div className="flex text-sm">
+    <div className="text-sm">
       <div className="sr-only">
-        <Chart
+        {/* <Chart
           colors={['#1c4587', '#f4e9d3', '#006f3b']}
           earnings={earnings as Earnings}
           incomeStatement={incomeStatement as IncomeStatement}
           dailyStock={dailyStock as DailyStockData}
           targetPrice={168}
           ref={ref}
+        /> */}
+        <Chart
+          colors={['#1c4587', '#f4e9d3', '#006f3b']}
+          earnings={EARNINGS_IBM}
+          incomeStatement={INCOME_STATEMENT_IBM}
+          dailyStock={DAILY_STOCK_IBM}
+          targetPrice={168}
+          ref={ref}
         />
       </div>
-      {/* <button
-        onClick={() => {
-          const json = editor.getJSON();
-          const jsonString = JSON.stringify(json, null, 2);
-          const blob = new Blob([jsonString], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = 'data.json';
-          link.click();
-
-          URL.revokeObjectURL(url);
-        }}
-      >
-        Export to JSON
-      </button>
-      <button
-        onClick={() => {
-          const html = editor.getHTML();
-          const blob = new Blob([html], { type: 'text/html' });
-          const url = URL.createObjectURL(blob);
-
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = 'data.html';
-          link.click();
-
-          URL.revokeObjectURL(url);
-        }}
-      >
-        Export to HTML
-      </button> */}
       <Button
-        variant="ghost"
-        className="text-foreground/60 z-30"
+        // variant="ghost"
+        className="text-foreground/60 z-30 bg-red-600"
         onClick={async () => {
           const element = ref.current;
           if (!element) return;
-          const dataUrl = await toPng(element);
-          // const canvas = await html2canvas(element, {
-          //   logging: false,
-          //   onclone: (clonedDoc) => {
-          //     if (!clonedDoc.getElementById('hidden-container')) return;
-          //     clonedDoc.getElementById('hidden-container')!.style.display =
-          //       'block';
-          //   },
-          // });
+          const dataUrl = await toPng(element)
+            .then((url) => fetch(url))
+            .then((res) => res.blob());
 
-          // const data = canvas.toDataURL('image/jpg');
           // TODO: get these dynamically
-          const blob = await generateDocxFile({
-            content: editor.getJSON(),
-            img: dataUrl,
-            companyName: 'Amazon Inc.',
-            companyTicker: 'AMZN',
-            companyDescription:
-              "Amazon Inc. is a multinational technology company primarily operating in the e-commerce, cloud computing, and digital media industries. The company's key products and services include online retail, Amazon Web Services (AWS), and digital streaming, with revenue breakdown of 50% from online stores, 33% from third-party seller services, 13% from AWS, and 4% from other sources, as of 2021. Amazon's major subsidiaries include Whole Foods Market, Ring, and Twitch, serving customers worldwide. In 2021, Amazon reported total net sales of $469.8 billion, a 22% increase from the previous year, solidifying its position as a global leader in the e-commerce industry.",
-            recommendation: 'BUY',
-            targetPrice: 168,
-            authorName: 'Coreline AI',
-            authorCompanyName: 'Coreline',
-            financialStrength: 'HIGH',
-            metrics: getSidebarMetrics(
-              overview as Overview,
-              balanceSheet as BalanceSheet,
-              incomeStatement as IncomeStatement,
-              getNWeeksStock(dailyStock as DailyStockData),
-              168,
-              'HIGH',
-            ),
-          });
+          const blob = await generateDocxFile(dataUrl);
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
           link.download = 'report.docx';
           link.click();
           URL.revokeObjectURL(url);
-          // const link = document.createElement('a');
-
-          // if (typeof link.download === 'string') {
-          //   console.log(data);
-
-          //   link.href = data;
-          //   link.download = 'image.jpg';
-
-          //   document.body.appendChild(link);
-          //   link.click();
-          //   document.body.removeChild(link);
-          // } else {
-          //   window.open(data);
-          // }
-          // const node = ref.current;
-          // const htmlString = ReactDOMServer.renderToString(<Chart />);
-          // const res = await fetch('/api/export-image', {
-          //   method: 'POST',
-          //   headers: { 'Content-Type': 'application/json' },
-          //   body: JSON.stringify({ html: htmlString }),
-          // });
-          // const img = await res.blob();
-          // console.log(img);
-          // const link = document.createElement('a');
-          // link.download = 'my-image.png';
-          // link.href = URL.createObjectURL(img);
-          // link.click();
-          // if (node) {
-          //   console.log(typeof node);
-          //   toPng(node, { cacheBust: true })
-          //     .then((dataUrl) => {
-          //       console.log(dataUrl);
-          //       const link = document.createElement('a');
-          //       link.download = 'my-image.png';
-          //       link.href = dataUrl;
-          //       link.click();
-          //     })
-          //     .catch((error) => {
-          //       console.error(error);
-          //     });
-          // }
         }}
       >
         Export

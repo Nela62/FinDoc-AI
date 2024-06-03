@@ -121,7 +121,7 @@ export const EditorToolbar = ({ editor, reportId }: TextMenuProps) => {
           </Surface>
         </Popover.Content>
       </Popover.Root>
-      <Popover.Root>
+      {/* <Popover.Root>
         <Popover.Trigger asChild>
           <MemoButton active={!!states.currentColor} tooltip="Text color">
             <Icon name="Palette" />
@@ -186,7 +186,7 @@ export const EditorToolbar = ({ editor, reportId }: TextMenuProps) => {
       >
         <Icon name="AlignJustify" />
       </MemoButton>
-      <Toolbar.Divider />
+      <Toolbar.Divider /> */}
       <ExportButton editor={editor} reportId={reportId} />
     </div>
   );

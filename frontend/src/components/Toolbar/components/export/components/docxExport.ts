@@ -1,816 +1,604 @@
-import { JSONContent } from '@tiptap/core';
-import { format } from 'date-fns';
+import { BALANCE_SHEET_IBM } from '@/lib/data/balance_sheet_ibm';
+import { CASHFLOW_IBM } from '@/lib/data/cashflow_ibm';
+import { DAILY_STOCK_IBM } from '@/lib/data/daily_stock_ibm';
+import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
+import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
+import { OVERVIEW } from '@/lib/data/overview_ibm';
+import { TEMPLATES } from '@/lib/templates';
 import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  HeadingLevel,
-  Header,
-  Footer,
-  AlignmentType,
-  ImageRun,
-  HorizontalPositionRelativeFrom,
-  VerticalPositionRelativeFrom,
-  PageNumber,
-  SectionType,
-  Table,
-  WidthType,
-  TableCell,
-  TableRow,
-  HeightRule,
-  BorderStyle,
-  LevelFormat,
-  convertInchesToTwip,
-  LineRuleType,
-  TextWrappingType,
-  VerticalAlign,
-} from 'docx';
+  getFinancialAndRiskAnalysisMetrics,
+  getGrowthAndValuationAnalysisMetrics,
+  getNWeeksStock,
+  getSidebarMetrics,
+} from '@/lib/utils/financialAPI';
 
-const TEST_METRICS = {
-  'Market Overview': {
-    Price: '$128.91',
-    'Target Price': '$165.00',
-    '52 Week Price Range': '$81.43 to $146.57',
-    'Shares Outstanding': '10.26 Billion',
-    Dividend: '$0.00',
-  },
-  'Sector Overview': {
-    Sector: 'Consumer Discretionary',
-    'Sector Rating': 'OVER WEIGHT',
-    '% of S&P 500 Market Cap.': '10.00%',
-  },
-  'Financial Strength': {
-    'Financial Strength Rating': 'MEDIUM-HIGH',
-    'Debt/Capital Ratio': '51.5%',
-    'Return on Equity': '13.0%',
-    'Net Margin': '2.4%',
-    'Payout Ratio': '--',
-    'Current Ratio': '0.94',
-    Revenue: '$538.05 Billion',
-    'After-Tax Income': '$13.07 Billion',
-  },
-  Valuation: {
-    'Current FY P/E': '57.81',
-    'Prior FY P/E': '105.66',
-    'Price/Sales': '2.46',
-    'Price/Book': '8.56',
-    'Book Value/Share': '$15.06',
-    'Market Capitalization': '$1.32 Trillion',
-  },
-  'Forecasted Growth': {
-    '1 Year EPS Growth Forecast': '82.79%',
-    '5 Year EPS Growth Forecast': '11.00%',
-    '1 Year Dividend Growth Forecast': 'N/A',
-  },
-  Risk: { Beta: '1.32', 'Institutional Ownership': '58.43%' },
-};
-
-const TEST_COMPANY_DESCRIPTION = `Amazon.com is the leading U.S. e-commerce retailer and among the top e-commerce sites globally. Amazon.com also provides Amazon Web Services (AWS), which is the global leader in cloud-based Infrastructure-as-a-Service (IaaS) platforms. The company's Prime membership platform is a key online retail differentiator, providing customers with free shipping (after an annual fee) along with exclusive media content (music, video, audible books, etc.). The company's Kindle reader and Alexa-based Echo and Dot digital voice assistants are category leaders.`;
-
-const TEST_RECOMMENDATION = 'BUY';
-
-type RatingsType = {
-  '12-month rating': string;
-  'Financial Strength': string;
-};
-
-const ratingsList = [
-  {
-    rowName: '12-month rating',
-    cells: ['SELL', 'UW', 'HOLD', 'OW', 'BUY'],
-  },
-  { rowName: 'Financial Strength', cells: ['LOW', 'LM', 'MED', 'MH', 'HIGH'] },
-];
-
-const SUMMARY = [
-  'EPS and sales beat, better outlook.',
-  'Amazon reported above-consensus revenue and EPS for 2Q23 and positive guidance for 3Q23. The stock rallied as operating profit far exceeded expectations.',
-  "Despite a softer post-pandemic environment for consumer online retail and global macro-economic softness, Amazon's revenue exceeded consensus by over $3 billion, while GAAP profits nearly doubled Street expectations.",
-  'The AWS business, which had shown signs of deceleration, may now be energized by the global push to generative AI.',
-  'Beyond current challenges, Amazon appears to have retained market-share gains that it built during the pandemic.',
-  'We believe that AMZN warrants long-term accumulation in most equity accounts.',
-];
-
-const DEFAULT_COLORS = ['#1c4587', '#f4e9d3', '#006f3b'];
-
-type DocxFileProps = {
-  content: JSONContent;
-  img: string;
-  companyName: string;
-  companyTicker: string;
-  companyDescription: string;
-  recommendation?: string;
-  metrics?: any;
-  templateId?: string;
-  colors?: string[];
-  authorName: string;
-  authorCompanyName: string;
-  targetPrice?: number;
-  headerImageLink?: string;
-  financialStrength: string;
-  summary?: string[];
-  // daily_stock: any;
-  // earnings: any;
-};
-
-export const generateDocxFile = async ({
-  content,
-  img,
-  companyName,
-  companyTicker,
-  companyDescription = TEST_COMPANY_DESCRIPTION,
-  metrics = TEST_METRICS,
-  recommendation = TEST_RECOMMENDATION,
-  templateId = 'ARGUS',
-  colors = DEFAULT_COLORS,
-  authorName,
-  authorCompanyName,
-  headerImageLink = '/white_coreline_logo.png',
-  financialStrength,
-  summary = SUMMARY,
-}: // earnings = EARNINGS_IBM,
-DocxFileProps) => {
-  console.log(img);
-  const [primaryColor, secondaryColor, accentColor] = colors;
-  const ratings = {
-    '12-month rating': recommendation === 'AUTO' ? 'BUY' : recommendation,
-    'Financial Strength': financialStrength,
+export const generateDocxFile = async (firstPageVisual: Blob) => {
+  const templateConfig = {
+    authorName: 'Finpanel AI',
+    authorCompanyName: 'Finpanel Inc.',
+    colorScheme: {
+      id: 'blue',
+      colors: ['#1c4587', '#f4e9d3', '#006f3b'],
+    },
+    colorSchemesList: [
+      {
+        id: 'blue',
+        colors: ['#1c4587', '#f4e9d3', '#006f3b'],
+      },
+      {
+        id: 'red',
+        colors: ['#7d1f1f', '#f4e9d3', '#006f3b'],
+      },
+      {
+        id: 'white',
+        colors: ['#787878', '#cce8fb', '#0061d9'],
+      },
+    ],
+    authorCompanyLogosList: [],
   };
 
-  const headerImage = await fetch(headerImageLink).then((r) => r.blob());
-  const { width: headerImageWidth, height: headerImageHeight } =
-    await getImageSize(headerImage);
-
-  // TODO: fetch this dynamically
-  const reportCompanyLogo = await fetch('/amazon-logo.png').then((r) =>
-    r.blob(),
-  );
-
-  const { width: reportCompanyLogoWidth, height: reportCompanyLogoHeight } =
-    await getImageSize(reportCompanyLogo);
-
-  const tableImage = await fetch('/second_page_table.png').then((r) =>
-    r.blob(),
-  );
-  const { width: tableImageWidth, height: tableImageHeight } =
-    await getImageSize(headerImage);
-
-  const metricsArr = [
-    ...Object.keys(metrics).map((key) => {
-      return [
-        new TableRow({
-          children: [
-            new TableCell({
-              borders: bordersNone,
-              shading: { fill: secondaryColor },
-              children: [
-                new Paragraph({
-                  spacing: { before: 80 },
-                  children: [
-                    new TextRun({
-                      text: key,
-                      bold: true,
-                      color: primaryColor,
-                      size: 18,
-                      font: 'Arial Narrow',
-                    }),
-                  ],
-                }),
-              ],
-            }),
-          ],
-        }),
-        ...Object.entries(metrics[key]).map(
-          ([key, value], i) =>
-            new TableRow({
-              height: { value: '0.15in', rule: 'exact' },
-              children: [
-                new TableCell({
-                  margins: { top: 20, bottom: 20 },
-                  borders: {
-                    ...bordersNone,
-                    top: {
-                      style: i === 0 ? BorderStyle.SINGLE : BorderStyle.NONE,
-                      size: i === 0 ? 4 : 0,
-                      color: 'a3a3a3',
-                    },
-                  },
-                  shading: { fill: secondaryColor },
-                  width: { size: 60, type: WidthType.PERCENTAGE },
-                  children: [
-                    new Paragraph({
-                      // spacing: { before: 40 },
-                      children: [
-                        new TextRun({
-                          text: key,
-                          size: 16,
-                          font: 'Arial Narrow',
-                        }),
-                      ],
-                    }),
-                  ],
-                }),
-                new TableCell({
-                  margins: { top: 20, bottom: 20 },
-                  borders: {
-                    ...bordersNone,
-                    top: {
-                      style: i === 0 ? BorderStyle.SINGLE : BorderStyle.NONE,
-                      size: i === 0 ? 4 : 0,
-                      color: 'a3a3a3',
-                    },
-                  },
-                  shading: { fill: secondaryColor },
-                  children: [
-                    new Paragraph({
-                      // spacing: { before: 40 },
-                      alignment: AlignmentType.RIGHT,
-                      children: [
-                        new TextRun({
-                          text: String(value),
-                          size: 16,
-                          bold: true,
-                          font: 'Arial Narrow',
-                        }),
-                      ],
-                    }),
-                  ],
-                }),
-              ],
-            }),
-        ),
-      ];
-    }),
-  ];
-
-  const ratingCell = (rowName: string, cellName: string) =>
-    new TableCell({
-      verticalAlign: 'center',
-      borders: {
-        top: { style: BorderStyle.SINGLE, size: 16, color: secondaryColor },
-        bottom: {
-          style: BorderStyle.SINGLE,
-          size: 16,
-          color: secondaryColor,
-        },
-        left: { style: BorderStyle.SINGLE, size: 16, color: secondaryColor },
-        right: {
-          style: BorderStyle.SINGLE,
-          size: 16,
-          color: secondaryColor,
-        },
-      },
-      shading: {
-        fill:
-          ratings[rowName as keyof RatingsType] === cellName
-            ? accentColor
-            : 'dbd9d9',
-      },
-      width: { size: 567, type: WidthType.DXA },
-      children: [
-        new Paragraph({
-          alignment: AlignmentType.CENTER,
-          // spacing: { before: 40 },
-          children: [
-            new TextRun({
-              text: cellName,
-              size: 18,
-              font: 'Arial Narrow',
-              bold: true,
-              color: 'ffffff',
-            }),
-          ],
-        }),
-      ],
-    });
-
-  const corelineRatingsSidebar = [
-    new Paragraph({
-      spacing: { after: 100, before: 100 },
-      children: [
-        new TextRun({
-          text: `${authorCompanyName} Ratings`,
-          bold: true,
-          color: primaryColor,
-          size: 24,
-          font: 'Arial Narrow',
-        }),
-      ],
-    }),
-    new Table({
-      borders: {
-        top: { style: 'none' },
-        bottom: { style: 'none' },
-        left: { style: 'none' },
-        right: { style: 'none' },
-      },
-      rows: ratingsList.map(
-        (row) =>
-          new TableRow({
-            height: { value: '0.84cm', rule: HeightRule.EXACT },
-            children: [
-              new TableCell({
-                margins: { top: 20, bottom: 20 },
-                verticalAlign: 'center',
-                borders: {
-                  top: {
-                    style: BorderStyle.SINGLE,
-                    size: 16,
-                    color: secondaryColor,
-                  },
-                  bottom: {
-                    style: BorderStyle.SINGLE,
-                    size: 16,
-                    color: secondaryColor,
-                  },
-                  left: {
-                    style: BorderStyle.SINGLE,
-                    size: 16,
-                    color: secondaryColor,
-                  },
-                  right: {
-                    style: BorderStyle.SINGLE,
-                    size: 16,
-                    color: secondaryColor,
-                  },
-                },
-                shading: { fill: secondaryColor },
-                width: { size: 30, type: WidthType.PERCENTAGE },
-                children: [
-                  new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: row.rowName,
-                        size: 16,
-                        font: 'Arial Narrow',
-                        bold: true,
-                      }),
-                    ],
-                  }),
-                ],
-              }),
-              ...row.cells.map((cell) => ratingCell(row.rowName, cell)),
-            ],
-          }),
-      ),
-    }),
-    new Paragraph({
-      spacing: { before: 120, after: 50 },
-      children: [
-        new TextRun({
-          text: `${authorCompanyName} assigns a 12-month BUY, OVERWEIGHT, HOLD, UNDERWEIGHT or SELL rating to each stock.`,
-          size: 16,
-          font: 'Arial Narrow',
-          color: primaryColor,
-        }),
-      ],
-    }),
-    new Paragraph({
-      numbering: { reference: 'sidebar-bullets', level: 0 },
-      children: [
-        new TextRun({
-          text: 'BUY-rated stocks are expected to outperform the market (the benchmark S&P 500 Index) on a risk-adjusted basis over the next year.',
-          size: 16,
-          font: 'Arial Narrow',
-          color: primaryColor,
-        }),
-      ],
-    }),
-    new Paragraph({
-      numbering: { reference: 'sidebar-bullets', level: 0 },
-      children: [
-        new TextRun({
-          text: 'HOLD-rated stocks are expected to perform in line with the market.',
-          size: 16,
-          font: 'Arial Narrow',
-          color: primaryColor,
-        }),
-      ],
-    }),
-    new Paragraph({
-      numbering: { reference: 'sidebar-bullets', level: 0 },
-      spacing: { after: 120 },
-      children: [
-        new TextRun({
-          text: 'SELL-rated stocks are expected to underperform the market on a risk-adjusted basis.',
-          size: 16,
-          font: 'Arial Narrow',
-          color: primaryColor,
-        }),
-      ],
-    }),
-  ];
-
-  const keyStatisticsSidebar = [
-    new Paragraph({
-      border: { top: { style: BorderStyle.SINGLE, size: 4, color: '000000' } },
-      spacing: { after: 40, before: 50 },
-      children: [
-        new TextRun({
-          text: 'Key Statistics',
-          bold: true,
-          color: primaryColor,
-          size: 24,
-          font: 'Arial Narrow',
-        }),
-      ],
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({
-          text: "Key Statistics pricing data reflects previous trading day's closing price. Other applicable data are trailing 12-months unless otherwise specified.",
-          size: 16,
-          font: 'Arial Narrow',
-          color: primaryColor,
-        }),
-      ],
-    }),
-    new Table({
-      borders: {
-        top: { style: 'none' },
-        bottom: { style: 'none' },
-        left: { style: 'none' },
-        right: { style: 'none' },
-      },
-      rows: metricsArr.flat(),
-    }),
-  ];
-
-  const footerComponent = new Footer({
-    children: [
-      new Table({
-        borders: bordersNone,
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        rows: [
-          new TableRow({
-            children: [
-              new TableCell({
-                borders: bordersNone,
-                width: { size: 50, type: WidthType.PERCENTAGE },
-                verticalAlign: VerticalAlign.CENTER,
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.LEFT,
-                    children: [
-                      new TextRun({
-                        children: [
-                          'Please see important information about this report on page ',
-                          PageNumber.TOTAL_PAGES,
-                        ],
-                        bold: true,
-                        size: 14,
-                        color: '000000',
-                      }),
-                    ],
-                  }),
-                  new Paragraph({
-                    spacing: { before: 120 },
-                    alignment: AlignmentType.LEFT,
-                    children: [
-                      new TextRun({
-                        text: `©2024 ${authorCompanyName}`,
-                        size: 14,
-                        color: '000000',
-                      }),
-                    ],
-                  }),
-                ],
-              }),
-              new TableCell({
-                borders: bordersNone,
-                width: { size: 50, type: WidthType.PERCENTAGE },
-                verticalAlign: VerticalAlign.CENTER,
-                children: [
-                  new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: authorCompanyName,
-                        size: 28,
-                        color: primaryColor,
-                        font: 'Arial Narrow',
-                        bold: true,
-                      }),
-                      new TextRun({
-                        text: ' Analyst Report',
-                        size: 28,
-                        color: primaryColor,
-                        font: 'Arial Narrow',
-                      }),
-                    ],
-                    alignment: AlignmentType.RIGHT,
-                  }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      }),
+  const templateData = {
+    id: 'a6703012-d732-474f-977b-2a86e152ce7f',
+    name: 'Sidebar Layout',
+    reportType: 'Equity Analyst Report',
+    businessDescription:
+      "Acme Industries, Inc. is a prominent U.S. e-commerce retailer and among the top e-commerce sites worldwide. Acme Industries also encompasses Acme Cloud Solutions (ACS), a global leader in cloud-based Infrastructure-as-a-Service (IaaS) platforms. The company's Prime membership platform is a key online retail differentiator, offering customers free shipping (after an annual fee) along with exclusive media content (music, video, audible books, etc.). Acme's flagship products, such as the Acme Reader and the VoiceBox digital voice assistants, are leaders in their categories.",
+    summary: [
+      'EPS and sales beat, cautious but positive outlook.',
+      'Acme reported above-consensus revenue and EPS for 2Q23 and positive guidance for 3Q23. The stock rallied as operating profit far exceeded expectations.',
+      "Despite global macro-economic softness and a weaker environment for consumer online retail, Acme's revenue exceeded consensus by over $1.5 billion, while GAAP profits topped Street expectations by about 50%.",
+      'The ACS business, which had shown signs of deceleration, may now be energized by the global push to generative AI.',
+      'Acme appears to have retained market-share gains that it built during the pandemic. We believe that ACME warrants long-term accumulation in most equity accounts.',
     ],
-  });
-
-  const firstPageSection = {
-    properties: {
-      page: {
-        margin: { ...margins, top: 290 },
-      },
-    },
-    footers: {
-      default: footerComponent,
-    },
-
-    children: [
-      ...headerComponent(false),
-      new Table({
-        margins: { top: 30 },
-        borders: bordersNone,
-        rows: [
-          new TableRow({
-            children: [
-              new TableCell({
-                borders: {
-                  ...bordersNone,
-                  bottom: {
-                    style: BorderStyle.SINGLE,
-                    size: 4,
-                    color: '000000',
-                    space: 2,
-                  },
-                },
-                margins: { right: 120 },
-                children: [
-                  new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: companyDescription,
-                        font: 'Arial Narrow',
-                        size: 18,
-                      }),
-                    ],
-                    spacing: { after: 80, before: 40 },
-                    border: {
-                      bottom: {
-                        style: BorderStyle.SINGLE,
-                        size: 4,
-                        color: '000000',
-                        space: 2,
-                      },
-                    },
-                  }),
-                  new Paragraph({
-                    text: "Analyst's Notes",
-                    heading: HeadingLevel.HEADING_1,
-                  }),
-                  new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: `Analysis by ${authorName}, ${format(
-                          new Date(),
-                          'MMMM d, yyyy',
-                        )}`,
-                        italics: true,
-                        size: 18,
-                      }),
-                    ],
-                  }),
-                  new Paragraph({
-                    spacing: { after: 80, before: 40 },
-                    border: {
-                      bottom: {
-                        style: BorderStyle.SINGLE,
-                        size: 4,
-                        color: 'a3a3a3',
-                        space: 1,
-                      },
-                    },
-                    children: [
-                      new TextRun({
-                        text: 'OUR RATING:  ',
-                        size: 18,
-                        bold: true,
-                        font: 'Arial Narrow',
-                      }),
-                      new TextRun({
-                        text: recommendation,
-                        size: 18,
-                        bold: true,
-                        color: '166534',
-                        font: 'Arial Narrow',
-                      }),
-                    ],
-                  }),
-                  ...summary.map(
-                    (point) =>
-                      new Paragraph({
-                        bullet: { level: 0 },
-                        spacing: { before: 60 },
-                        children: [
-                          new TextRun({
-                            text: point,
-                            size: 18,
-                            font: 'Arial Narrow',
-                          }),
-                        ],
-                      }),
-                  ),
-
-                  ...firstHalf,
-                  new Paragraph({
-                    children: [
-                      new ImageRun({
-                        data: img,
-                        transformation: { width: 477, height: 325 },
-                        floating: {
-                          horizontalPosition: {
-                            relative:
-                              HorizontalPositionRelativeFrom.LEFT_MARGIN,
-                            offset: 0,
-                          },
-                          verticalPosition: {
-                            relative: VerticalPositionRelativeFrom.PAGE,
-                            offset: 5555000,
-                          },
-                        },
-                      }),
-                    ],
-                  }),
-                  new Paragraph({
-                    border: {
-                      top: {
-                        style: BorderStyle.SINGLE,
-                        size: 4,
-                        color: 'a3a3a3',
-                        space: 1,
-                      },
-                    },
-                    spacing: { before: 120, after: 60 },
-                    children: [
-                      new TextRun({
-                        text: 'Market Data  ',
-                        color: '312e81',
-                        size: 24,
-                        font: 'Arial Narrow',
-                        bold: true,
-                      }),
-                      new TextRun({
-                        text: "Pricing reflects previous trading week's closing price",
-                        color: '000000',
-                        size: 14,
-                        font: 'Arial Narrow',
-                      }),
-                    ],
-                  }),
-                ],
-              }),
-              new TableCell({
-                borders: {
-                  bottom: {
-                    style: BorderStyle.SINGLE,
-                    size: 4,
-                    color: '000000',
-                    space: 2,
-                  },
-                },
-                margins: { left: 120, right: 120, bottom: 120, top: 200 },
-                width: { type: WidthType.DXA, size: 3528 },
-                shading: { fill: secondaryColor },
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    children: [
-                      new ImageRun({
-                        // @ts-ignore
-                        data: reportCompanyLogo,
-                        transformation: {
-                          height: 57.6,
-                          width:
-                            (57.6 / reportCompanyLogoHeight) *
-                            reportCompanyLogoWidth,
-                        },
-                      }),
-                    ],
-                  }),
-                  ...corelineRatingsSidebar,
-                  ...keyStatisticsSidebar,
-                ],
-              }),
-            ],
-          }),
-        ],
-        width: { size: 100.5, type: WidthType.PERCENTAGE },
-      }),
-    ],
-  };
-
-  const doc = new Document({
-    // TODO: add user name
-    creator: 'Helton Suzuki',
-    // TODO: get description dynamically
-    description: 'Equity Research Report on ' + companyName,
-    title: 'Equity Research Report - ' + companyName,
-    compatibility: { doNotExpandShiftReturn: true },
-    styles: {
-      paragraphStyles: [
+    sampleText: {
+      type: 'doc',
+      content: [
         {
-          id: 'Heading1',
-          name: 'Heading 1',
-          basedOn: 'Normal',
-          next: 'Normal',
-          quickFormat: true,
-          run: { size: 32, bold: true, color: '312e81', font: 'Arial Narrow' },
-          paragraph: { spacing: { before: 120, after: 120 } },
-        },
-        {
-          id: 'Heading2',
-          name: 'Heading 2',
-          basedOn: 'Normal',
-          next: 'Normal',
-          quickFormat: true,
-          run: { size: 24, bold: true, color: '312e81', font: 'Arial Narrow' },
-          paragraph: { spacing: { before: 120, after: 60 } },
-        },
-        {
-          id: '3',
-          name: 'Heading 3',
-          basedOn: 'Normal',
-          next: 'Normal',
-          quickFormat: true,
-          run: { size: 20, bold: true, color: '000000', allCaps: true },
-          paragraph: { spacing: { before: 60, after: 60 } },
-        },
-      ],
-    },
-    numbering: {
-      config: [
-        {
-          reference: 'sidebar-bullets',
-          levels: [
+          type: 'heading',
+          attrs: {
+            id: '5fce9c93-fa52-4ac4-bfb6-33cc09a2598c',
+            level: 2,
+            'data-toc-id': '5fce9c93-fa52-4ac4-bfb6-33cc09a2598c',
+          },
+          content: [
             {
-              level: 0,
-              format: LevelFormat.BULLET,
-              text: '\u2022',
-              alignment: AlignmentType.LEFT,
-              style: {
-                paragraph: {
-                  indent: {
-                    left: convertInchesToTwip(0.2),
-                    hanging: convertInchesToTwip(0.1),
-                  },
-                },
-                run: { color: primaryColor },
-              },
+              text: 'INVESTMENT THESIS',
+              type: 'text',
             },
           ],
         },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'BUY-rated Acme Industries, Inc. (NGS: ACME) rose 5% in the after-market on 10/26/23 on above-consensus revenue and GAAP EPS for 3Q23, as well as cautious but positive current-quarter guidance. Management reiterated its upbeat outlook for both retail operations and ACS. Non-retail businesses such as subscriptions and advertising extended resurgent growth from 2Q23, after slowing late in 2022 into 1Q23.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'Late in 3Q23, Acme announced plans to invest up to $4 billion in Anthropic, a leading provider of AI foundation models and an advocate for the responsible deployment of generative AI. Anthropic has selected ACS as its primary cloud provider for mission-critical workloads, and will train and deploy its future foundation models on ACS Trainium and ACS Interfentia chips. It will also provide ACS customers worldwide with access to its foundation models via Acme Bedrock.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'During 3Q23, total sales rose 13% annually. North American operations (excluding ACS) posted their highest operating profit ever, exceeding the peak pandemic quarter of 1Q21. International cuts its operating loss significantly year over year, while ACS grew its operating profit in mid-double-digits.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'ACS out-performed expectations in 3Q23 on still-solid but slowing revenue growth. ACS remains Acme’s key profit center, and is benefiting from ongoing cloud momentum and global digital transformation with AI as the latest driver. As the leading provider of Infrastructure-as-a-Service and other cloud services, ACS is uniquely positioned in the burgeoning AI-as-a-service market, and the Anthropic partnership meaningfully strengthens ACS at a key time in the AI gold rush.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'heading',
+          attrs: {
+            id: 'c0ba8716-5cb1-4ac9-bb07-9d6a47db93fa',
+            level: 2,
+            'data-toc-id': 'c0ba8716-5cb1-4ac9-bb07-9d6a47db93fa',
+          },
+          content: [
+            {
+              text: 'RECENT DEVELOPMENTS',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'Acme likely faces a few challenging quarters, but continues to have a strong portfolio of assets. ACS is a growth driver and profit center for the company, even in a more challenging revenue and margin environment. In retail, the increasing contribution from third-party merchants should lessen Acme’s need to continue investing aggressively in its fulfillment network. And the strong base of Prime customers who prize convenience and free shipping should enable a steadying in Acme’s own retail trends over time.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'In contrast with most recent years, ACME was a market and peer laggard in 2021 and 2022. Even after rising in 2023, ACME’s multi-year lagging performance provides an opportunity to establish or dollar-average into undisputed category leader Acme. We are reiterating our BUY rating with a 12-month target price of $165.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'ACME is up 48% year-to-date in 2023, while immediate peers are up 23%. ACME fell 50% in 2022, while the peer group of Argus-covered internet, social media & cloud company stocks dropped 43%. ACME inched up 2% in 2021, while peers rose 21%; advanced 76% in 2020, while peers surged 89%; and rose 23% in 2019, while the peer group advanced 51%.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: "For 3Q23, Acme posted revenue of $143.1 billion, which was up 13% year-over-year and 6% sequentially. Revenue was just above the high end of management's $138-$143 billion guidance range and easily exceeded the $141.5 billion consensus estimate. Acme posted GAAP EPS of $0.94 per diluted share for 3Q23, compared with $0.28",
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: ' a year earlier. The consensus GAAP EPS estimate was $0.60. For 3Q23, management forecast operating profit of $5.5 billion-$8.5 billion; GAAP operating profit was $11.2 billion for the quarter. At the sales and operating profit guidance midpoints, Argus modeled EPS in the $0.60-$0.70 range.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'Andy Jassy, Acme CEO who has had an embattled first few years on the job, was ready to celebrate a positive quarter that featured substantial sales and profits growth at a time when many technology and tech-exposed companies posted annual declines. According to the CEO, highlights included improved cost to serve and speed of delivery in retail operations, continued stabilization in ACS growth, and robust growth in advertising revenue (which we see as significant heading into the holiday quarter).',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: "Acme has transitioned from a single national fulfillment network in the U.S. to eight regionally based operations. The transition is ahead of schedule and puts Acme on pace to reach the fastest delivery speeds ever for Prime in the service's 29-year history. The tie-up with Anthropic should accelerate ACS in building generative AI foundations.",
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'Early in 3Q23, Acme on July 11-12 held its largest Prime day event ever. Prime members purchased more than 375 million items over that timeframe and saved $2.5 billion-plus against listed prices. Early in 4Q23, Acme hosted Prime Big Deal Days across 19 global markets.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'Acme has announced that it will hire 250,000 full-time, part-time, and seasonal workers in the U.S. for the holiday season. Stronger margins in its three major businesses (North American retail, International retail, and ACS), accelerating advertising spending, and the major personnel commitment should in our view tee up a successful holiday quarter for Acme.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'For 3Q23, total product and services sales excluding ACS were $120.0 billion, up 13% annually and 7% sequentially. The total product and services (ex ACS) operating profit was $4.40 billion, compared with an operating loss of $2.88 billion a year earlier in 3Q22; product and services (ex ACS) operating profit for 3Q23 also soared 90% sequentially. Operating margin for all operations excluding ACS was 3.7%, improved from 2.1% in 2Q23 and negative 2.7% a year earlier.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'North American retail revenue of $87.9 billion (61% of total revenue) was up 11% year-over-year. North American (NA) retail generated an operating profit of $4.3 billion, vs. a year-earlier loss of $412 million. The NA retail operating margin was 4.9% in 3Q23, up 100 bps sequentially and up from -0.5% a year earlier. North American operations ex ACS posted their highest operating profit ever, exceeding the prior peak in the pandemic quarter of 1Q21, when online sales were a necessary lifeline in a locked-down nation.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'International retail revenue of $32.1 billion (22% of total) increased 16% annually. The International segment margin was negative 0.3% on a loss of $95 million; the international margin was negative 8.9% a year earlier on a $2.5 billion loss. International retail had a stretch of profitability from 2Q20 through 2Q21; prior to that, international had not been profitable since 2016. The third quarter marked the closest International has been to profitable in four quarters.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'ACS remains fast growing and high margined. Although sales growth and margin levels have been easing, ACS has regained vigor as AI mania grips the market. For 3Q23, Acme Cloud Solutions (ACS) revenue of $23.1 billion (16% of total) rose 12% year-over-year and was up 4% sequentially. ACS operating profit was $7.0 billion, increasing 29% from $5.4 billion a year earlier. ACS operating margin was 30.3% in 3Q23, versus 24.1% in 2Q23 and 26.3% a year earlier.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: "ACS is now comfortably at a $90 billion-plus revenue annual run rate. For over a year, cloud customers were 'optimizing' their spending in response to tough economic conditions. Customers have started shifting from cost optimization to new workload deployment, reflecting urgency to position for the generative AI opportunity in its nascent stage. We believe ACS, which is globally No. 1 in cloud services, is positioned for long-term growth as the era of AI gets underway.",
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'On 9/25/23, Acme and Anthropic announced a strategic collaboration. Acme will invest up to $4 billion in Anthropic and take a minority ownership position in the company. The deal includes $1.25 billion in initial funding with up to $2.75 billion in additional funding as the collaboration continues.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: "Anthropic was founded by siblings Dario and Daniela Amodei, who both formerly worked at OpenAI and left that organization late in 2020. Anthropic has its own chatbot, Claude, and recently introduced Claude 2. Also like OpenAI, Anthropic provides 'freemium' access to an AI chatbot with limited skills, along with a pay service for access to its most advanced generative AI application.",
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: "ACS will become Anthropic's primary cloud provider for mission-critical workloads, safety research, and further foundation model development. ACS customers will gain access to future generations of Anthropic foundation models via Acme Bedrock. First launched in limited preview in April 2023, Acme Bedrock is a fully automated service that enables the building and scaling of enterprise-specific generative AI applications. Users can draw on Acme's Titan foundation model library, which includes several ACS-developed large language models (LLMs) along with LLMs from A121 Labs, Stability AI, and Anthropic.",
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'Anthropic will use ACS Trainium (for model training) and ACS Inferentia (for inference) chips to build, train, and deploy its future foundation models. ACS continues to expand its offerings at all layers of the generative AI stack, which contains three layers: an infrastructure layer, where CSPs and hardware providers supply infrastructure to train and develop inference workloads for generative AI; the model layer, where proprietary models and APIs power AI products and hosting solutions; and the application layer, where APIs turn generative AI models into user-facing products.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'The greater availability of Anthropic on ACS means that customers will have early access to features for customizing generative AI models. Customers will be able to use their proprietary data to create enterprise-specific models and utilize fine-tuning capabilities via the self-service feature within Bedrock. As part of that deeper collaboration, ACS and Anthropic are committing resources to help customers get started with Claude and Claude 2. By aligning with Anthropic, which has its own AI-infused chat bots in Claude and Claude 2, Acme has strengthened its ability to furnish company-specific generative AI models to ACS customers.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'Digging deeper into the number, Online store sales - representing wholly owned products retailed by Acme - were $57.3 billion in 3Q23, up 7% from 3Q22; the wholly owned retail category was negative or flat year-over-year in four of the past six quarters. Online stores represented 40% of revenue, down from 42% a year earlier and more than 50% in 2020 as Acme continues to diversify its revenue streams.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'Within retail, the best growth continues to come from third-party merchants. Sales from this category of $34.3 billion (24% of total revenue) grew 20% year-over-year. Sales at physical stores (3% of total) were up 6% year-over-year in 3Q23, as Whole Foods stores and Acme retail stores generated more foot traffic. This formerly slow-growing category is seeing an upward trend; Acme is also directing some Prime returns to Whole Foods sites.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'Acme is first and foremost a retailer, and total goods retail revenue (online stores, physical stores, and third-party merchants) grew 11% in 2Q23, up from 4% growth for all of 2022. This category represented 67% of revenue in 3Q23, vs. 68% a year earlier.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'In most quarters, nonretail businesses grow faster than merchandising operations. In 3Q23, non-goods services - including subscription services, ACS, advertising & other - generated revenue of $46.5 billion (33% of total) and grew 16% year-over-year. Subscription services (7% of total) grew 14%, while advertising (8% of total) grew 26%.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'Although the online retail-spending surge related to the pandemic has ended, online commerce is embedded in the retail environment. The ongoing shift to online was likely accelerated by COVID-19 lockdowns but would have happened anyway due to secular forces in the economy. On a sustained basis, we expect online retail to grow faster than in pre-pandemic times, but slower than during the pandemic period.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: "A related issue for investors is how well Acme is positioned to defend its leading role in the online ecosystem as the retail economy normalizes. Acme has historically grown faster than the overall online retail ecosystem. According to our model, and counting Acme's retail sales only, Acme grew its sales at a 20% CAGR between 2017 and 2022. That was faster than U.S. online retail growth overall in that period.",
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: "Over that period, Acme grew to be as much as half of all U.S. online retail sales. That dominant position alone influenced the overall growth rate. With companies such as Shopify 'democratizing' the online retail ecosystem, and with B2B online likely growing faster than consumer online retail, the overall growth rate for eCommerce could exceed Acme’s eCommerce growth in the next several years.",
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: "Given these factors, as well as the law of large numbers and Acme's massive existing sales base, Acme's overall retail sales growth could lag the industry average in coming years. The slowing in overall business activity and consumer spending is also impacting retail activity worldwide.",
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: "As Acme adjusts to the post-pandemic period, we expect the company's online retail growth to slow in 2023 and 2024. We note that Acme has surprised investors in the past with the strength of its business model. We also look for ACS to continue to furnish the bulk of profits as generative AI moves past the novelty phase and becomes integral to business processes worldwide.",
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'heading',
+          attrs: {
+            id: 'ec7163eb-162f-4b33-a4c0-709f9e5e55e2',
+            level: 2,
+            'data-toc-id': 'ec7163eb-162f-4b33-a4c0-709f9e5e55e2',
+          },
+          content: [
+            {
+              text: 'EARNINGS & GROWTH ANALYSIS',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: "For 3Q23, Acme posted revenue of $143.1 billion, which was up 13% year-over-year and 6% sequentially. Revenue was just above the high end of management's $138-$143 billion guidance range and easily exceeded the $141.5 billion consensus estimate.",
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'The GAAP gross margin tightened to 47.6% in 3Q23 from 48.4% in 2Q23 and expanded from 44.7% a year earlier. The GAAP operating margin was 7.8% in 2Q23, compared to 5.7% in 2Q23 and 2.0% a year earlier.',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+          content: [
+            {
+              text: 'Acme posted GAAP EPS of $0.94 per diluted share for 3Q23, compared with $0.28 a year earlier. The consensus GAAP EPS estimate was $0.60. For 3Q23, management forecast operating profit of $5.5 billion',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          attrs: {
+            class: null,
+          },
+        },
       ],
     },
-    sections: [
-      firstPageSection,
-      {
-        properties: {
-          page: {
-            margin: margins,
-          },
-          type: SectionType.NEXT_PAGE,
-          column: { count: 2, space: 300 },
+    sectionIds: ['investment_thesis'],
+    componentId: 'equity-analyst-sidebar',
+  };
+
+  const defaultCompanyLogo = '/default_finpanel_logo.png';
+
+  const templateFn = TEMPLATES[templateData.componentId];
+
+  const authorCompanyLogo = await fetch(defaultCompanyLogo).then((res) =>
+    res.blob(),
+  );
+  const companyLogo = await fetch('/acme_logo.jpg').then((res) => res.blob());
+
+  try {
+    console.log('docxBlob');
+    const docxBlob = await templateFn({
+      content: templateData.sampleText,
+      colors: templateConfig.colorScheme.colors,
+      twoColumn: true,
+      authors: [templateConfig.authorName],
+      authorCompanyName: templateConfig.authorCompanyName,
+      authorCompanyLogo: authorCompanyLogo,
+      createdAt: new Date(),
+      companyName: 'Acme Industries, Inc.',
+      companyTicker: 'ACME',
+      companyLogo: companyLogo,
+      summary: templateData.summary ?? [],
+      businessDescription: templateData.businessDescription ?? '',
+      sidebarMetrics: getSidebarMetrics(
+        OVERVIEW,
+        BALANCE_SHEET_IBM,
+        INCOME_STATEMENT_IBM,
+        getNWeeksStock(DAILY_STOCK_IBM),
+        182,
+        'HIGH',
+      ),
+      growthAndValuationAnalysisMetrics: getGrowthAndValuationAnalysisMetrics(
+        OVERVIEW,
+        BALANCE_SHEET_IBM,
+        CASHFLOW_IBM,
+        INCOME_STATEMENT_IBM,
+        EARNINGS_IBM,
+        DAILY_STOCK_IBM,
+      ),
+      financialAndRiskAnalysisMetrics: getFinancialAndRiskAnalysisMetrics(
+        OVERVIEW,
+        BALANCE_SHEET_IBM,
+        CASHFLOW_IBM,
+        INCOME_STATEMENT_IBM,
+        EARNINGS_IBM,
+        DAILY_STOCK_IBM,
+      ),
+      ratings: [
+        {
+          name: '12-month',
+          list: ['SELL', 'UW', 'HOLD', 'OW', 'BUY'],
+          current: 'BUY',
         },
-        headers: {
-          default: new Header({
-            children: headerComponent(),
-          }),
+        {
+          name: 'Financial Strength',
+          list: ['LOW', 'LM', 'MED', 'MH', 'HIGH'],
+          current: 'HIGH',
         },
-        footers: {
-          // TODO: put the text in a table so that it's aligned
-          default: footerComponent,
-        },
-        children: [
-          new Paragraph({
-            children: [
-              new ImageRun({
-                // @ts-ignore
-                data: tableImage,
-                transformation: {
-                  width: 710,
-                  height: (tableImageWidth / 710) * tableImageHeight,
-                },
-                floating: {
-                  wrap: { type: TextWrappingType.TOP_AND_BOTTOM },
-                  horizontalPosition: {
-                    relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-                    offset: 385548,
-                  },
-                  verticalPosition: {
-                    relative: VerticalPositionRelativeFrom.PAGE,
-                    offset: 4155000,
-                  },
-                },
-              }),
-            ],
-          }),
-          ...secondHalf,
-        ],
-      },
-    ],
-  });
-  return Packer.toBlob(doc);
+      ],
+      recommendation: 'Buy',
+      financialStrength: 'High',
+      targetPrice: 182,
+      firstPageVisual: firstPageVisual,
+    });
+
+    return docxBlob;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      throw new Error(error.message);
+    }
+  }
+  throw new Error('geting docx blob failed');
 };

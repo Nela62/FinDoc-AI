@@ -1,7 +1,77 @@
-import { Button } from '@/components/ui/button';
-import { Form, FormField } from '@/components/ui/form';
+import { Dispatch, SetStateAction } from 'react';
+import Image from 'next/image';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
-export const TemplateCustomizationForm = () => {
+import { TemplateConfig } from '../../Component';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { DisplayLogo } from './DisplayLogo';
+
+const templateFormSchema = z.object({
+  authorName: z.string(),
+  authorCompanyName: z.string(),
+  authorCompanyLogo: z.string(),
+  colorScheme: z.string(),
+});
+
+const defaultCompanyLogo = '/default_finpanel_logo.png';
+
+export const TemplateCustomizationForm = ({
+  userId,
+  templateConfig,
+  setTemplateConfig,
+  setIsTemplateCustomization,
+}: {
+  userId: string;
+  templateConfig: TemplateConfig;
+  setTemplateConfig: Dispatch<SetStateAction<TemplateConfig | null>>;
+  setIsTemplateCustomization: Dispatch<SetStateAction<boolean>>;
+}) => {
+  const templateForm = useForm<z.infer<typeof templateFormSchema>>({
+    resolver: zodResolver(templateFormSchema),
+    defaultValues: {
+      authorName: templateConfig.authorName,
+      authorCompanyName: templateConfig.authorCompanyName,
+      colorScheme: templateConfig.colorScheme.id,
+    },
+  });
+
+  const onTemplateFormSubmit = (values: z.infer<typeof templateFormSchema>) => {
+    const colorScheme = templateConfig.colorSchemesList.find(
+      (scheme) => values.colorScheme === scheme.id,
+    );
+
+    if (!colorScheme) {
+      throw new Error('Color scheme not found.');
+    }
+
+    setTemplateConfig({
+      authorName: values.authorName,
+      authorCompanyName: values.authorCompanyName,
+      colorScheme: colorScheme,
+      authorCompanyLogo: values.authorCompanyLogo,
+      colorSchemesList: templateConfig.colorSchemesList,
+      authorCompanyLogosList: templateConfig.authorCompanyLogosList,
+    });
+  };
+
   return (
     <div className="space-y-4 w-[360px]">
       <div className="flex gap-2 items-center">
@@ -26,11 +96,7 @@ export const TemplateCustomizationForm = () => {
               <FormItem className="w-full relative">
                 <FormLabel>Author Name</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    className=""
-                    defaultValue={templateSettings.authorName}
-                  />
+                  <Input {...field} className="" defaultValue={field.value} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -38,16 +104,12 @@ export const TemplateCustomizationForm = () => {
           />
           <FormField
             control={templateForm.control}
-            name="companyName"
+            name="authorCompanyName"
             render={({ field }) => (
               <FormItem className="w-full relative">
                 <FormLabel>Company Name</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    className=""
-                    defaultValue={templateSettings.companyName}
-                  />
+                  <Input {...field} className="" defaultValue={field.value} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -55,13 +117,13 @@ export const TemplateCustomizationForm = () => {
           />
           <FormField
             control={templateForm.control}
-            name="companyLogo"
+            name="authorCompanyLogo"
             render={({ field }) => (
               <FormItem className="w-full relative">
                 <FormLabel>Company Logo</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={templateSettings.companyLogo}
+                  defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger className="w-full">
@@ -69,15 +131,22 @@ export const TemplateCustomizationForm = () => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {logos ? (
-                      logos.map((logo) => (
-                        <SelectItem value={logo.name} key={logo.id}>
-                          {logo.name}
+                    {templateConfig.authorCompanyLogosList.length > 0 ? (
+                      templateConfig.authorCompanyLogosList.map((fileName) => (
+                        <SelectItem value={fileName} key={fileName}>
+                          <DisplayLogo userId={userId} fileName={fileName} />
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="/default_coreline_logo.png">
-                        default_coreline_logo.png
+                      <SelectItem value={defaultCompanyLogo}>
+                        <Image
+                          src={defaultCompanyLogo}
+                          alt="preview image"
+                          className="h-10 w-auto bg-zinc-500 rounded-sm p-2 py-1"
+                          height={0}
+                          width={0}
+                          sizes="100vw"
+                        />
                       </SelectItem>
                     )}
                   </SelectContent>
@@ -87,13 +156,13 @@ export const TemplateCustomizationForm = () => {
           />
           <FormField
             control={templateForm.control}
-            name="colorSchemeId"
+            name="colorScheme"
             render={({ field }) => (
               <FormItem className="w-1/2 pr-2">
                 <FormLabel>Color Scheme</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={templateSettings.colorSchemeId}
+                  defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -101,8 +170,8 @@ export const TemplateCustomizationForm = () => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {...COLOR_SCHEMES.map((color) => (
-                      <SelectItem key={color.key} value={color.key}>
+                    {...templateConfig.colorSchemesList.map((color) => (
+                      <SelectItem key={color.id} value={color.id}>
                         <div className="flex gap-1 w-[120px]">
                           {...color.colors.map((c, i) => (
                             <div

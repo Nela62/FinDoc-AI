@@ -1,5 +1,15 @@
-import { Template } from '@/types/template';
 // add react lazy loading
-import { equityAnalystSidebar } from './docx/equityAnalystSidebar/main';
+import { TemplateConfig } from '@/types/template';
+import {
+  EquityAnalystSidebarProps,
+  equityAnalystSidebar,
+} from './docx/equityAnalystSidebar/main';
 
-export const TEMPLATES = { 'equity-analyst-sidebar': equityAnalystSidebar };
+type Templates = Record<
+  string,
+  (props: EquityAnalystSidebarProps & TemplateConfig) => Promise<Blob>
+>;
+
+export const TEMPLATES: Templates = {
+  'equity-analyst-sidebar': equityAnalystSidebar,
+};

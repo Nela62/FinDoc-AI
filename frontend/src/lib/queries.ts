@@ -246,7 +246,7 @@ export function fetchTemplates(client: TypedSupabaseClient) {
   return client
     .from('templates')
     .select(
-      'id, name, report_type, sample_text, section_ids, components_config',
+      'id, name, report_type, sample_text, section_ids, business_description, summary, component_id',
     )
     .throwOnError();
 }

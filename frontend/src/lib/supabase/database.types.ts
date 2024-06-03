@@ -444,11 +444,10 @@ export type Database = {
           author_name: string | null
           business_description: string | null
           color_scheme: string[] | null
-          company_logo: string | null
-          company_name: string | null
           id: string
           metrics: Json | null
           report_id: string
+          section_ids: string[]
           summary: string[] | null
           template_type: string
           user_id: string
@@ -457,11 +456,10 @@ export type Database = {
           author_name?: string | null
           business_description?: string | null
           color_scheme?: string[] | null
-          company_logo?: string | null
-          company_name?: string | null
           id?: string
           metrics?: Json | null
           report_id: string
+          section_ids: string[]
           summary?: string[] | null
           template_type: string
           user_id: string
@@ -470,11 +468,10 @@ export type Database = {
           author_name?: string | null
           business_description?: string | null
           color_scheme?: string[] | null
-          company_logo?: string | null
-          company_name?: string | null
           id?: string
           metrics?: Json | null
           report_id?: string
+          section_ids?: string[]
           summary?: string[] | null
           template_type?: string
           user_id?: string
@@ -498,6 +495,8 @@ export type Database = {
       }
       reports: {
         Row: {
+          company_logo: string | null
+          company_name: string | null
           company_ticker: string
           created_at: string
           financial_strength: string | null
@@ -514,6 +513,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          company_logo?: string | null
+          company_name?: string | null
           company_ticker: string
           created_at?: string
           financial_strength?: string | null
@@ -530,6 +531,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          company_logo?: string | null
+          company_name?: string | null
           company_ticker?: string
           created_at?: string
           financial_strength?: string | null
@@ -557,20 +560,20 @@ export type Database = {
       }
       settings: {
         Row: {
-          author_name: string | null
-          company_name: string | null
+          author_name: string
+          company_name: string
           id: string
           user_id: string
         }
         Insert: {
-          author_name?: string | null
-          company_name?: string | null
+          author_name: string
+          company_name: string
           id?: string
           user_id: string
         }
         Update: {
-          author_name?: string | null
-          company_name?: string | null
+          author_name?: string
+          company_name?: string
           id?: string
           user_id?: string
         }
@@ -578,11 +581,44 @@ export type Database = {
           {
             foreignKeyName: "settings_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
+      }
+      templates: {
+        Row: {
+          business_description: string | null
+          component_id: string
+          id: string
+          name: string
+          report_type: string
+          sample_text: Json
+          section_ids: string[]
+          summary: string[] | null
+        }
+        Insert: {
+          business_description?: string | null
+          component_id: string
+          id?: string
+          name: string
+          report_type: string
+          sample_text: Json
+          section_ids: string[]
+          summary?: string[] | null
+        }
+        Update: {
+          business_description?: string | null
+          component_id?: string
+          id?: string
+          name?: string
+          report_type?: string
+          sample_text?: Json
+          section_ids?: string[]
+          summary?: string[] | null
+        }
+        Relationships: []
       }
     }
     Views: {

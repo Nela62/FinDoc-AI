@@ -401,10 +401,10 @@ export const getGrowthAndValuationAnalysisMetrics = (
             numbers: incomeStatement.annualReports
               .slice(0, years > 5 ? years : years - 1)
               .map(
-                (_, i, arr) =>
-                  (Number(arr[i].totalRevenue) -
-                    Number(arr[i + 1].totalRevenue)) /
-                  Number(arr[i].totalRevenue),
+                (_, i) =>
+                  (Number(incomeStatement.annualReports[i].totalRevenue) -
+                    Number(incomeStatement.annualReports[i + 1].totalRevenue)) /
+                  Number(incomeStatement.annualReports[i].totalRevenue),
               ),
           },
           {
@@ -412,10 +412,12 @@ export const getGrowthAndValuationAnalysisMetrics = (
             numbers: incomeStatement.annualReports
               .slice(0, years > 5 ? years : years - 1)
               .map(
-                (_, i, arr) =>
-                  (Number(arr[i].operatingIncome) -
-                    Number(arr[i + 1].operatingIncome)) /
-                  Number(arr[i].operatingIncome),
+                (_, i) =>
+                  (Number(incomeStatement.annualReports[i].operatingIncome) -
+                    Number(
+                      incomeStatement.annualReports[i + 1].operatingIncome,
+                    )) /
+                  Number(incomeStatement.annualReports[i].operatingIncome),
               ),
           },
           {
@@ -423,9 +425,10 @@ export const getGrowthAndValuationAnalysisMetrics = (
             numbers: incomeStatement.annualReports
               .slice(0, years > 5 ? years : years - 1)
               .map(
-                (_, i, arr) =>
-                  (Number(arr[i].netIncome) - Number(arr[i + 1].netIncome)) /
-                  Number(arr[i].netIncome),
+                (_, i) =>
+                  (Number(incomeStatement.annualReports[i].netIncome) -
+                    Number(incomeStatement.annualReports[i + 1].netIncome)) /
+                  Number(incomeStatement.annualReports[i].netIncome),
               ),
           },
           {
@@ -433,10 +436,10 @@ export const getGrowthAndValuationAnalysisMetrics = (
             numbers: earnings.annualEarnings
               .slice(0, years > 5 ? years : years - 1)
               .map(
-                (_, i, arr) =>
-                  (Number(arr[i].reportedEPS) -
-                    Number(arr[i + 1].reportedEPS)) /
-                  Number(arr[i].reportedEPS),
+                (_, i) =>
+                  (Number(earnings.annualEarnings[i].reportedEPS) -
+                    Number(earnings.annualEarnings[i + 1].reportedEPS)) /
+                  Number(earnings.annualEarnings[i].reportedEPS),
               ),
           },
           {
@@ -444,10 +447,10 @@ export const getGrowthAndValuationAnalysisMetrics = (
             numbers: cashflow.annualReports
               .slice(0, years > 5 ? years : years - 1)
               .map(
-                (_, i, arr) =>
-                  (Number(arr[i].dividendPayout) -
-                    Number(arr[i + 1].dividendPayout)) /
-                  Number(arr[i].dividendPayout),
+                (_, i) =>
+                  (Number(cashflow.annualReports[i].dividendPayout) -
+                    Number(cashflow.annualReports[i + 1].dividendPayout)) /
+                  Number(cashflow.annualReports[i].dividendPayout),
               ),
           },
           {

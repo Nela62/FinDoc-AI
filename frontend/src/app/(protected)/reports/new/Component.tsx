@@ -5,26 +5,47 @@ import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { useDirectory } from '@supabase-cache-helpers/storage-react-query';
 import { useEffect, useState } from 'react';
-import { TemplatePreview } from './components/TemplatePreview';
+import { TemplatePreview } from './components/template/TemplatePreview';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getPdfTemplate } from './utils/getPdfTemplate';
+import { ReportForm } from './components/report/ReportForm';
+import { JSONContent } from '@tiptap/core';
+import { TemplateCustomizationForm } from './components/template/TemplateCustomizationForm';
 
-const defaultCompanyLogo = '/default_finpanel_logo.png';
+type ColorScheme = { id: string; colors: string[] };
+
+const COLOR_SCHEMES: ColorScheme[] = [
+  { id: 'blue', colors: ['#1c4587', '#f4e9d3', '#006f3b'] },
+  { id: 'red', colors: ['#7d1f1f', '#f4e9d3', '#006f3b'] },
+  { id: 'white', colors: ['#787878', '#cce8fb', '#0061d9'] },
+];
 
 export type TemplateConfig = {
   authorName: string;
   authorCompanyName: string;
-  colorScheme: string;
-  colorSchemesList: string[];
+  colorScheme: ColorScheme;
+  colorSchemesList: ColorScheme[];
   authorCompanyLogo?: string;
   authorCompanyLogosList: string[];
 };
 
+export type TemplateData = {
+  id: string;
+  name: string;
+  reportType: string;
+  sampleText: JSONContent;
+  sectionIds: string[];
+  componentId: string;
+  businessDescription?: string;
+  summary?: string[];
+};
+
 export const NewReport = ({ userId }: { userId: string }) => {
-  const [reportData, setReportData] = useState();
+  const [isTemplateCustomization, setIsTemplateCustomization] = useState(false);
   const [templateConfig, setTemplateConfig] = useState<TemplateConfig | null>(
     null,
   );
+  const [templateData, setTemplateData] = useState<TemplateData | null>(null);
+  const [reportType, setReportType] = useState<string>('Equity Analyst Report');
 
   const supabase = createClient();
 
@@ -42,8 +63,10 @@ export const NewReport = ({ userId }: { userId: string }) => {
       setTemplateConfig({
         authorName: settings[0].author_name,
         authorCompanyName: settings[0].company_name,
-        colorScheme: settings[0].color_schemes[0],
-        colorSchemesList: settings[0].color_schemes,
+        colorScheme: COLOR_SCHEMES[0],
+        colorSchemesList: COLOR_SCHEMES,
+        // colorScheme: settings[0].color_schemes[0],
+        // colorSchemesList: settings[0].color_schemes,
         authorCompanyLogo: logos.length > 0 ? logos[0].name : undefined,
         authorCompanyLogosList: logos.map((logo) => logo.name),
       });
@@ -51,8 +74,60 @@ export const NewReport = ({ userId }: { userId: string }) => {
   }, [settings, logos]);
 
   useEffect(() => {
-    templateConfig && getPdfTemplate(templateConfig);
-  }, [templateConfig]);
+    if (templates && reportType) {
+      if (templates.length > 0) {
+        const template = templates.find(
+          (template) => template.report_type === reportType,
+        );
 
-  return <div>{templateConfig ? <TemplatePreview /> : <Skeleton />}</div>;
+        if (!template) {
+          throw new Error('No templates found for this report type.');
+        }
+
+        setTemplateData({
+          id: template.id,
+          name: template.name,
+          reportType: template.report_type,
+          businessDescription: template.business_description ?? undefined,
+          summary: template.summary ?? undefined,
+          sampleText: template.sample_text as JSONContent,
+          sectionIds: template.section_ids,
+          componentId: template.component_id,
+        });
+      } else {
+        throw new Error('No templates were found.');
+      }
+    }
+  }, [templates, reportType]);
+
+  return (
+    <div className="w-full h-full flex">
+      {isTemplateCustomization ? (
+        templateConfig ? (
+          <TemplateCustomizationForm
+            userId={userId}
+            templateConfig={templateConfig}
+            setTemplateConfig={setTemplateConfig}
+            setIsTemplateCustomization={setIsTemplateCustomization}
+          />
+        ) : (
+          <Skeleton />
+        )
+      ) : (
+        <ReportForm
+          setIsTemplateCustomization={setIsTemplateCustomization}
+          setReportType={setReportType}
+        />
+      )}
+      {templateConfig && templateData ? (
+        <TemplatePreview
+          userId={userId}
+          templateConfig={templateConfig}
+          templateData={templateData}
+        />
+      ) : (
+        <Skeleton />
+      )}
+    </div>
+  );
 };

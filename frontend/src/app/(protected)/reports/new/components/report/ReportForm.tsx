@@ -15,9 +15,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { VirtualizedCombobox } from '@/components/ui/virtualized-combobox';
+import {
+  VirtualizedCombobox,
+  Option,
+} from '@/components/ui/virtualized-combobox';
+import { fetchTickers } from '@/lib/queries';
+import { createClient } from '@/lib/supabase/client';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { SquarePen, Wand2Icon } from 'lucide-react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -32,11 +39,15 @@ export const reportFormSchema = z.object({
   analystName: z.string().optional(),
   companyName: z.string().optional(),
   companyLogo: z.string().optional(),
-  colorSchemeId: z.array(z.string()),
-  templateId: z.string(),
 });
 
-export const ReportForm = () => {
+export const ReportForm = ({
+  setIsTemplateCustomization,
+  setReportType,
+}: {
+  setIsTemplateCustomization: Dispatch<SetStateAction<boolean>>;
+  setReportType: Dispatch<SetStateAction<string>>;
+}) => {
   const form = useForm<z.infer<typeof reportFormSchema>>({
     resolver: zodResolver(reportFormSchema),
     defaultValues: {
@@ -45,6 +56,24 @@ export const ReportForm = () => {
       financialStrength: 'AUTO',
     },
   });
+
+  const supabase = createClient();
+
+  const { data: tickersData } = useQuery(fetchTickers(supabase));
+
+  const tickers: Option[] =
+    tickersData
+      ?.map((ticker) => ({
+        value: ticker.symbol,
+        label: ticker.label,
+      }))
+      .sort((a, b) => (a.label > b.label ? 1 : b.label > a.label ? -1 : 0)) ??
+    [];
+
+  const onGenerateAndFormSubmit = (
+    values: z.infer<typeof reportFormSchema>,
+  ) => {};
+  const onFormSubmit = (values: z.infer<typeof reportFormSchema>) => {};
 
   return (
     <div className="w-[360px]">
@@ -61,7 +90,10 @@ export const ReportForm = () => {
               <FormItem>
                 <FormLabel>Report Type</FormLabel>
                 <Select
-                  onValueChange={field.onChange}
+                  onValueChange={(value: string) => {
+                    field.onChange(value);
+                    setReportType(value);
+                  }}
                   defaultValue={field.value}
                 >
                   <FormControl>

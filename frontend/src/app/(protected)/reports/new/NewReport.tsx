@@ -48,7 +48,7 @@ import {
 } from '@/lib/utils/citations';
 import { markdownToJson } from '@/lib/utils/formatText';
 import { JSONContent } from '@tiptap/core';
-import { generateDocxFile } from '@/components/Toolbar/components/export/components/docxExport';
+import { generateDocxFile } from '@/components/Toolbar/components/export/components/docxExportArchive';
 import { fetchSettings, fetchTickers } from '@/lib/queries';
 import {
   useDirectory,
