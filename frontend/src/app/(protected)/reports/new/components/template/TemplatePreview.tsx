@@ -1,6 +1,7 @@
 'use client';
 
 import { Document, Page, pdfjs } from 'react-pdf';
+import { useResizeObserver } from '@wojtekmaj/react-hooks';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -20,6 +21,13 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 const defaultCompanyLogo = '/default_finpanel_logo.png';
 
+const options = {
+  cMapUrl: '/cmaps/',
+  standardFontDataUrl: '/standard_fonts/',
+};
+
+const resizeObserverOptions = {};
+
 export const TemplatePreview = ({
   userId,
   templateConfig,
@@ -31,13 +39,27 @@ export const TemplatePreview = ({
 }) => {
   const [numPages, setNumPages] = useState<number>();
   const [chart, setChart] = useState<HTMLDivElement | null>(null);
-  const [file, setFile] = useState<string | null>(null);
+  const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number>();
+  // const [file, setFile] = useState<string | null>(null);
+  const file =
+    'https://phpgxkcyjkioartrccio.supabase.co/storage/v1/object/sign/sec-filings/sec-edgar-filings/AMZN/10-Q/0001018724-24-000083/primary-document.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzZWMtZmlsaW5ncy9zZWMtZWRnYXItZmlsaW5ncy9BTVpOLzEwLVEvMDAwMTAxODcyNC0yNC0wMDAwODMvcHJpbWFyeS1kb2N1bWVudC5wZGYiLCJpYXQiOjE3MTc0MzUyODMsImV4cCI6MTc0ODk3MTI4M30.NSwy9dfRU96Dzyuk_CznBkZ-oUVeqeyDXoP3BuK9qLo&t=2024-06-03T17%3A21%3A23.613Z';
 
   const onRefChange = useCallback((node: HTMLDivElement) => {
     console.log('ref changed');
     setChart(node);
     // chartRef.current = node;
   }, []);
+
+  const onResize = useCallback<ResizeObserverCallback>((entries) => {
+    const [entry] = entries;
+
+    if (entry) {
+      setContainerWidth(entry.contentRect.width);
+    }
+  }, []);
+
+  useResizeObserver(containerRef, resizeObserverOptions, onResize);
 
   const supabase = createClient();
 
@@ -90,14 +112,14 @@ export const TemplatePreview = ({
     }
   }, [authorCompanyLogoUrl, chart, templateConfig, templateData]);
 
-  useEffect(() => {
-    if (chart) {
-      getPdfFile()
-        .then((blob) => URL.createObjectURL(blob))
-        .then((url) => setFile(url))
-        .catch((err) => console.error(err));
-    }
-  }, [chart, getPdfFile]);
+  // useEffect(() => {
+  //   if (chart) {
+  //     getPdfFile()
+  //       .then((blob) => URL.createObjectURL(blob))
+  //       .then((url) => setFile(url))
+  //       .catch((err) => console.error(err));
+  //   }
+  // }, [chart, getPdfFile]);
 
   function onDocumentLoadSuccess({
     numPages: nextNumPages,
@@ -108,7 +130,7 @@ export const TemplatePreview = ({
   }
 
   return (
-    <div className="w-5/12">
+    <div className="w-1/2 relative">
       <div className="sr-only" id="hidden-container">
         <MarketDataChart
           colors={templateConfig.colorScheme.colors}
@@ -119,15 +141,31 @@ export const TemplatePreview = ({
           ref={onRefChange}
         />
       </div>
-      {file && (
-        <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
-          <ScrollArea>
-            {Array.from(new Array(numPages), (el, index) => (
-              <Page key={`page_${index + 1}`} pageNumber={index + 1} />
-            ))}
-          </ScrollArea>
-        </Document>
-      )}
+      <div
+        className="flex-col rounded-md overflow-hidden bg-white border hidden md:flex bg-muted/90"
+        ref={setContainerRef}
+      >
+        <div className="w-full flex justify-center items-center h-10 border-b">
+          <h2 className="font-semibold">{templateData.name}</h2>
+        </div>
+        {file && (
+          <Document
+            file={file}
+            onLoadSuccess={onDocumentLoadSuccess}
+            options={options}
+          >
+            <ScrollArea className="h-[calc(100vh-136px)]">
+              {Array.from(new Array(numPages), (el, index) => (
+                <Page
+                  key={`page_${index + 1}`}
+                  pageNumber={index + 1}
+                  width={containerWidth}
+                />
+              ))}
+            </ScrollArea>
+          </Document>
+        )}
+      </div>
     </div>
   );
 };

@@ -24,7 +24,7 @@ export const LeftSidebar = () => {
   const section = pathname.split('/')[1];
 
   return (
-    <aside className="hidden w-14 flex-col border-r bg-background sm:flex">
+    <aside className="hidden w-14 flex-col border-r sm:flex bg-gradient-to-b from-sidebar-top to-sidebar-bottom">
       <nav className="flex flex-col items-center gap-4 px-2 py-4">
         <Link
           href="#"

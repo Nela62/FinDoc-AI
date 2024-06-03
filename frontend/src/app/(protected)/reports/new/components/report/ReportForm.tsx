@@ -97,7 +97,7 @@ export const ReportForm = ({
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full bg-white">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -160,7 +160,7 @@ export const ReportForm = ({
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
@@ -188,7 +188,7 @@ export const ReportForm = ({
                     <p className="pt-1.5 text-sm">$</p>
                   </div>
                   <FormControl>
-                    <Input {...field} className="pl-6" type="number" />
+                    <Input {...field} className="pl-6 bg-white" type="number" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -206,7 +206,7 @@ export const ReportForm = ({
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>

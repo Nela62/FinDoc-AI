@@ -101,24 +101,26 @@ export const NewReport = ({ userId }: { userId: string }) => {
   }, [templates, reportType]);
 
   return (
-    <div className="w-full h-full flex">
-      {isTemplateCustomization ? (
-        templateConfig ? (
-          <TemplateCustomizationForm
-            userId={userId}
-            templateConfig={templateConfig}
-            setTemplateConfig={setTemplateConfig}
-            setIsTemplateCustomization={setIsTemplateCustomization}
-          />
+    <div className="w-full h-[calc(100vh-56px)] flex bg-muted/40 px-4 py-4">
+      <div className="grow">
+        {isTemplateCustomization ? (
+          templateConfig ? (
+            <TemplateCustomizationForm
+              userId={userId}
+              templateConfig={templateConfig}
+              setTemplateConfig={setTemplateConfig}
+              setIsTemplateCustomization={setIsTemplateCustomization}
+            />
+          ) : (
+            <Skeleton />
+          )
         ) : (
-          <Skeleton />
-        )
-      ) : (
-        <ReportForm
-          setIsTemplateCustomization={setIsTemplateCustomization}
-          setReportType={setReportType}
-        />
-      )}
+          <ReportForm
+            setIsTemplateCustomization={setIsTemplateCustomization}
+            setReportType={setReportType}
+          />
+        )}
+      </div>
       {templateConfig && templateData ? (
         <TemplatePreview
           userId={userId}

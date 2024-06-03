@@ -96,7 +96,11 @@ export const TemplateCustomizationForm = ({
               <FormItem className="w-full relative">
                 <FormLabel>Author Name</FormLabel>
                 <FormControl>
-                  <Input {...field} className="" defaultValue={field.value} />
+                  <Input
+                    {...field}
+                    className="bg-white"
+                    defaultValue={field.value}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -109,7 +113,11 @@ export const TemplateCustomizationForm = ({
               <FormItem className="w-full relative">
                 <FormLabel>Company Name</FormLabel>
                 <FormControl>
-                  <Input {...field} className="" defaultValue={field.value} />
+                  <Input
+                    {...field}
+                    className="bg-white"
+                    defaultValue={field.value}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -126,7 +134,7 @@ export const TemplateCustomizationForm = ({
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full bg-white">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -165,7 +173,7 @@ export const TemplateCustomizationForm = ({
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
