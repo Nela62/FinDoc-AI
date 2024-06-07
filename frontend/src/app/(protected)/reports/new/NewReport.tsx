@@ -4,7 +4,6 @@ import { useLogger } from 'next-axiom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Chart } from '@/components/Toolbar/components/export/components/Chart';
 
 import {
   Form,
@@ -81,6 +80,7 @@ import {
   Option,
   VirtualizedCombobox,
 } from '@/components/ui/virtualized-combobox';
+import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
 
 // const tickers: ComboboxOption[] = [
 //   { label: 'Amazon Inc.', value: 'AMZN' },
@@ -978,7 +978,7 @@ export const NewReportComponent = () => {
         {reportData.incomeStatement &&
           reportData.earnings &&
           reportData.dailyStock && (
-            <Chart
+            <MarketDataChart
               colors={
                 COLOR_SCHEMES.find(
                   (scheme) => scheme.key === templateSettings.colorSchemeId,

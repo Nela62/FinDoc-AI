@@ -4,11 +4,16 @@ import {
   BorderStyle,
   HeadingLevel,
   HeightRule,
+  HorizontalPositionAlign,
+  HorizontalPositionRelativeFrom,
   Paragraph,
   Table,
   TableCell,
   TableRow,
   TextRun,
+  TextWrappingType,
+  VerticalAlign,
+  VerticalPositionRelativeFrom,
   WidthType,
 } from 'docx';
 import { bordersNone, displayImage } from '../docx/utils';
@@ -23,7 +28,21 @@ export const metricsSidebar = async (
   colors: string[],
 ) => {
   const [primaryColor, secondaryColor, accentColor] = colors;
-  const logo = await displayImage({ image: companyLogo, height: 57.6 });
+  const logo = await displayImage({
+    image: companyLogo,
+    height: 57.6,
+    floating: {
+      horizontalPosition: {
+        relative: HorizontalPositionRelativeFrom.COLUMN,
+        align: HorizontalPositionAlign.CENTER,
+      },
+      verticalPosition: {
+        relative: VerticalPositionRelativeFrom.PARAGRAPH,
+        align: VerticalAlign.TOP,
+      },
+      wrap: { type: TextWrappingType.TOP_AND_BOTTOM },
+    },
+  });
 
   return new TableCell({
     margins: { left: 120, right: 120, bottom: 120, top: 200 },

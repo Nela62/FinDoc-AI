@@ -247,48 +247,48 @@ export type Database = {
       }
       companies: {
         Row: {
+          cik: string
+          company_name: string
           country: string | null
+          currency: string | null
           exchange: string | null
           id: string
-          industry_group: string | null
           isin: string | null
           label: string
           logo_link: string | null
-          market: string | null
           market_cap: string | null
-          name: string
-          sector: string | null
-          symbol: string
+          stock_name: string
+          ticker: string
           website: string | null
         }
         Insert: {
+          cik: string
+          company_name: string
           country?: string | null
+          currency?: string | null
           exchange?: string | null
           id?: string
-          industry_group?: string | null
           isin?: string | null
           label?: string
           logo_link?: string | null
-          market?: string | null
           market_cap?: string | null
-          name: string
-          sector?: string | null
-          symbol: string
+          stock_name: string
+          ticker: string
           website?: string | null
         }
         Update: {
+          cik?: string
+          company_name?: string
           country?: string | null
+          currency?: string | null
           exchange?: string | null
           id?: string
-          industry_group?: string | null
           isin?: string | null
           label?: string
           logo_link?: string | null
-          market?: string | null
           market_cap?: string | null
-          name?: string
-          sector?: string | null
-          symbol?: string
+          stock_name?: string
+          ticker?: string
           website?: string | null
         }
         Relationships: []

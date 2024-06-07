@@ -21,6 +21,9 @@ import {
   VerticalPositionRelativeFrom,
   Packer,
   ITableFloatOptions,
+  TableAnchorType,
+  RelativeHorizontalPosition,
+  RelativeVerticalPosition,
 } from 'docx';
 import {
   bordersNone,
@@ -112,10 +115,20 @@ export const equityAnalystSidebar = async ({
     companyName,
     createdAt,
     primaryColor,
+    true,
+  );
+
+  const firstPageHeader = await coloredHeader(
+    authorCompanyLogo,
+    companyTicker,
+    companyName,
+    createdAt,
+    primaryColor,
+    false,
   );
   const firstPage: ISectionOptions = await firstPageSection(
     authorCompanyName,
-    header,
+    firstPageHeader,
     businessDescription,
     summary,
     authors,
@@ -131,7 +144,9 @@ export const equityAnalystSidebar = async ({
     horizontalAnchor: 'margin',
     verticalAnchor: 'page',
     absoluteHorizontalPosition: 0,
-    absoluteVerticalPosition: 5555000,
+    absoluteVerticalPosition: 9220,
+    topFromText: 100,
+    bottomFromText: 0,
   };
 
   const mainPageSection: ISectionOptions = {
@@ -143,7 +158,6 @@ export const equityAnalystSidebar = async ({
     headers: { default: new Header({ children: header }) },
     footers: { default: classicFooter(authorCompanyName, primaryColor) },
     children: [
-      ...mainText,
       financialAnalysisTable(
         growthAndValuationAnalysisMetrics,
         financialAndRiskAnalysisMetrics,
@@ -151,6 +165,7 @@ export const equityAnalystSidebar = async ({
         accentColor,
         float,
       ),
+      ...mainText,
     ],
   };
   // const disclosurePageSection: ISectionOptions = {};

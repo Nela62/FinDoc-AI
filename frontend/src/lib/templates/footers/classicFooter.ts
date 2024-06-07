@@ -20,21 +20,21 @@ export const classicFooter = (
   new Footer({
     children: [
       new Table({
-        borders: {
-          ...bordersNone,
-          top: {
-            style: BorderStyle.SINGLE,
-            size: 4,
-            color: '000000',
-            space: 4,
-          },
-        },
+        borders: bordersNone,
         width: { size: 100, type: WidthType.PERCENTAGE },
         rows: [
           new TableRow({
             children: [
               new TableCell({
-                borders: bordersNone,
+                borders: {
+                  ...bordersNone,
+                  top: {
+                    style: BorderStyle.SINGLE,
+                    size: 6,
+                    color: '000000',
+                    space: 4,
+                  },
+                },
                 width: { size: 50, type: WidthType.PERCENTAGE },
                 verticalAlign: VerticalAlign.CENTER,
                 children: [
@@ -66,7 +66,15 @@ export const classicFooter = (
                 ],
               }),
               new TableCell({
-                borders: bordersNone,
+                borders: {
+                  ...bordersNone,
+                  top: {
+                    style: BorderStyle.SINGLE,
+                    size: 6,
+                    color: '000000',
+                    space: 4,
+                  },
+                },
                 width: { size: 50, type: WidthType.PERCENTAGE },
                 verticalAlign: VerticalAlign.CENTER,
                 children: [

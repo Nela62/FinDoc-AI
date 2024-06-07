@@ -1,4 +1,5 @@
 import {
+  BorderStyle,
   HeadingLevel,
   ITableFloatOptions,
   Paragraph,
@@ -6,7 +7,9 @@ import {
   TableCell,
   TableRow,
   TextRun,
+  WidthType,
 } from 'docx';
+import { bordersNone } from '../docx/utils';
 
 type Statistic = {
   name: string;
@@ -39,12 +42,27 @@ const displayCategoryTable = (
       new TableRow({
         children: [
           new TableCell({
-            shading: { fill: i % 2 === 0 ? undefined : secondaryColor },
+            width: { size: 40, type: WidthType.PERCENTAGE },
+            borders: bordersNone,
+            shading: {
+              fill:
+                i % 2 === (showHeaders ? 1 : 0) ? undefined : secondaryColor,
+            },
             children: [
               new Paragraph({ style: 'small-narrow', text: stat.name }),
-              ...stat.numbers.map((num) => {
-                const n = typeof num === 'number' ? num : parseFloat(num);
-                return new Paragraph({
+            ],
+          }),
+          ...stat.numbers.map((num) => {
+            const n = typeof num === 'number' ? num : parseFloat(num);
+
+            return new TableCell({
+              borders: bordersNone,
+              shading: {
+                fill:
+                  i % 2 === (showHeaders ? 1 : 0) ? undefined : secondaryColor,
+              },
+              children: [
+                new Paragraph({
                   style: 'small-narrow',
                   children: [
                     new TextRun({
@@ -52,9 +70,9 @@ const displayCategoryTable = (
                       ...(n < 0 && { color: accentColor }),
                     }),
                   ],
-                });
-              }),
-            ],
+                }),
+              ],
+            });
           }),
         ],
       }),
@@ -62,11 +80,11 @@ const displayCategoryTable = (
 
   showHeaders &&
     years &&
-    firstColumnName &&
     rows.unshift(
       new TableRow({
         children: [
           new TableCell({
+            borders: bordersNone,
             children: [
               new Paragraph({
                 text: firstColumnName,
@@ -77,6 +95,7 @@ const displayCategoryTable = (
           ...years.map(
             (year) =>
               new TableCell({
+                borders: bordersNone,
                 children: [
                   new Paragraph({
                     text: year.toString(),
@@ -91,7 +110,11 @@ const displayCategoryTable = (
 
   return [
     new Paragraph({ heading: HeadingLevel.HEADING_2, text: category.name }),
-    new Table({ rows: rows }),
+    new Table({
+      rows: rows,
+      width: { size: 5300, type: WidthType.DXA },
+      borders: bordersNone,
+    }),
   ];
 };
 
@@ -112,7 +135,7 @@ const leftColumn = (
         accentColor,
         i === 0,
         metrics.years,
-        '($ in Millions, except per share data)',
+        '($ in Millions, except EPS)',
       ),
     )
     .flat(),
@@ -150,6 +173,17 @@ export const financialAnalysisTable = (
 ) => {
   return new Table({
     ...(float && { float: float }),
+    width: { size: 10600, type: WidthType.DXA },
+    // columnWidths: [5349.5, 5349.5],
+    columnWidths: [5300, 5300],
+    margins: { left: 20, right: 20 },
+    borders: {
+      bottom: {
+        style: BorderStyle.NONE,
+        size: 0,
+        color: 'FFFFFF',
+      },
+    },
     rows: [
       new TableRow({
         children: [
@@ -173,6 +207,7 @@ export const financialAnalysisTable = (
       new TableRow({
         children: [
           new TableCell({
+            margins: { left: 50, bottom: 20, right: 50, top: 20 },
             children: [new Paragraph({ style: 'narrow', text: disclosure })],
           }),
         ],

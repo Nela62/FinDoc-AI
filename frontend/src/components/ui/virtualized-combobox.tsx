@@ -38,7 +38,6 @@ const VirtualizedCommand = ({
   selectedOption,
   onSelectOption,
 }: VirtualizedCommandProps) => {
-  console.log(options.length);
   const [filteredOptions, setFilteredOptions] =
     React.useState<Option[]>(options);
   const parentRef = React.useRef(null);
@@ -46,12 +45,11 @@ const VirtualizedCommand = ({
   const virtualizer = useVirtualizer({
     count: filteredOptions.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 35,
+    estimateSize: (i) => (filteredOptions[i].label.length > 48 ? 50 : 35),
     overscan: 5,
   });
 
   const virtualOptions = virtualizer.getVirtualItems();
-  console.log(virtualOptions.length);
 
   const handleSearch = (search: string) => {
     setFilteredOptions(
@@ -81,7 +79,6 @@ const VirtualizedCommand = ({
             overflow: 'auto',
           }}
         >
-          {/* <div> */}
           {virtualOptions.map((virtualOption) => (
             <CommandItem
               style={{
@@ -95,20 +92,14 @@ const VirtualizedCommand = ({
               key={filteredOptions[virtualOption.index].value}
               value={filteredOptions[virtualOption.index].value}
               onSelect={onSelectOption}
+              className={cn(
+                selectedOption?.value ===
+                  filteredOptions[virtualOption.index].value && 'bg-accent',
+              )}
             >
-              <Check
-                className={cn(
-                  'mr-2 h-4 w-4',
-                  selectedOption?.value ===
-                    filteredOptions[virtualOption.index].value
-                    ? 'opacity-100'
-                    : 'opacity-0',
-                )}
-              />
               {filteredOptions[virtualOption.index].label}
             </CommandItem>
           ))}
-          {/* </div> */}
         </CommandList>
       </CommandGroup>
     </Command>
@@ -145,6 +136,22 @@ export function VirtualizedCombobox({
     [onValueChange],
   );
 
+  const findOption = (): string => {
+    const label = options.find(
+      (option) => option.value === selectedOption.value,
+    )?.label;
+
+    if (!label) {
+      throw new Error(
+        'An exception occurred. ' +
+          selectedOption.value +
+          ' is not found in options list.',
+      );
+    }
+
+    return label;
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -156,13 +163,11 @@ export function VirtualizedCombobox({
             'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 font-normal ',
             !selectedOption && 'text-muted-foreground',
           )}
-          // style={{
-          //   width: width,
-          // }}
         >
           {selectedOption?.value
-            ? options.find((option) => option.value === selectedOption.value)
-                ?.label
+            ? findOption().length > 45
+              ? findOption().slice(0, 45) + '...'
+              : findOption()
             : searchPlaceholder}
           <CaretSortIcon className="h-4 w-4 opacity-50" />
           {/* <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" /> */}

@@ -17,14 +17,14 @@ import {
 import { useEffect, useState } from 'react';
 import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
 import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
-import { Chart } from '@/components/Toolbar/components/export/components/Chart';
 import { DAILY_STOCK_IBM } from '@/lib/data/daily_stock_ibm';
+import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
 
 // const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 // TODO: generate quarters and columns automatically based on date
 export default function ChartPage() {
   return (
-    <Chart
+    <MarketDataChart
       colors={['#1c4587', '#f4e9d3', '#006f3b']}
       targetPrice={168}
       incomeStatement={INCOME_STATEMENT_IBM}

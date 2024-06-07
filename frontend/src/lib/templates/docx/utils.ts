@@ -1,11 +1,13 @@
 import { JSONContent } from '@tiptap/core';
 import {
+  AlignmentType,
   BorderStyle,
   HeadingLevel,
   HorizontalPositionRelativeFrom,
   IFloating,
   IImageOptions,
   ImageRun,
+  LineRuleType,
   Paragraph,
   Tab,
   Table,
@@ -37,6 +39,8 @@ export const processCell = (cell: JSONContent): Paragraph => {
     });
   } else {
     paragraphContent = new Paragraph({
+      spacing: { line: 230, lineRule: LineRuleType.AT_LEAST },
+      alignment: AlignmentType.JUSTIFIED,
       children: [
         new Tab(),
         ...(cell.content
@@ -75,10 +79,10 @@ export const bordersNone = {
 };
 
 export const defaultMargins = {
-  top: 1550.6,
+  top: 1750.6,
   left: 604.8,
   right: 604.8,
-  bottom: 1000,
+  bottom: 1200,
   header: 288,
   footer: 691.2,
 };

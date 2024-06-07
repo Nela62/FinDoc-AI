@@ -2,7 +2,6 @@
 
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
-import { Chart } from './components/Chart';
 import { useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { toPng } from 'html-to-image';
@@ -25,6 +24,7 @@ import { generateDocxFile } from './components/docxExport';
 import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
 import { DAILY_STOCK_IBM } from '@/lib/data/daily_stock_ibm';
+import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
 
 export const ExportButton = ({
   editor,
@@ -79,7 +79,7 @@ export const ExportButton = ({
           targetPrice={168}
           ref={ref}
         /> */}
-        <Chart
+        <MarketDataChart
           colors={['#1c4587', '#f4e9d3', '#006f3b']}
           earnings={EARNINGS_IBM}
           incomeStatement={INCOME_STATEMENT_IBM}

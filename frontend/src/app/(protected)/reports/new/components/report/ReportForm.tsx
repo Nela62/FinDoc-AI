@@ -21,12 +21,25 @@ import {
 } from '@/components/ui/virtualized-combobox';
 import { fetchTickers } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
+import { getNanoId } from '@/lib/utils/nanoId';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
+import {
+  useInsertMutation,
+  useQuery,
+  useUpdateMutation,
+} from '@supabase-cache-helpers/postgrest-react-query';
+import { format } from 'date-fns';
 import { SquarePen, Wand2Icon } from 'lucide-react';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { fetchCacheAPIData, getRecommendation } from '../../utils/fetchAPI';
+import {
+  getFinancialAndRiskAnalysisMetrics,
+  getGrowthAndValuationAnalysisMetrics,
+  getNWeeksStock,
+  getSidebarMetrics,
+} from '@/lib/utils/financialAPI';
 
 export const reportFormSchema = z.object({
   reportType: z.string(),
@@ -44,9 +57,11 @@ export const reportFormSchema = z.object({
 export const ReportForm = ({
   setIsTemplateCustomization,
   setReportType,
+  userId,
 }: {
   setIsTemplateCustomization: Dispatch<SetStateAction<boolean>>;
   setReportType: Dispatch<SetStateAction<string>>;
+  userId: string;
 }) => {
   const form = useForm<z.infer<typeof reportFormSchema>>({
     resolver: zodResolver(reportFormSchema),
@@ -61,19 +76,147 @@ export const ReportForm = ({
 
   const { data: tickersData } = useQuery(fetchTickers(supabase));
 
+  // TODO: sort by cap instead
+
+  const { mutateAsync: insertNewReport } = useInsertMutation(
+    supabase.from('reports'),
+    ['id'],
+    'id, url',
+  );
+
+  const { mutateAsync: updateReport } = useUpdateMutation(
+    supabase.from('reports'),
+    ['id'],
+    'id, url',
+  );
+
+  const { mutateAsync: insertCache } = useInsertMutation(
+    supabase.from('api_cache'),
+    ['id'],
+    'id',
+  );
+
+  const { mutateAsync: insertTemplate } = useInsertMutation(
+    supabase.from('report_template'),
+    ['id'],
+    'id',
+  );
+
   const tickers: Option[] =
     tickersData
       ?.map((ticker) => ({
-        value: ticker.symbol,
+        value: ticker.ticker,
         label: ticker.label,
       }))
       .sort((a, b) => (a.label > b.label ? 1 : b.label > a.label ? -1 : 0)) ??
     [];
 
+  const baseActions = async (values: z.infer<typeof reportFormSchema>) => {
+    // TODO: launch the dialog
+    // Create a new report and save it to db
+    const nanoId = getNanoId();
+    const res = await insertNewReport([
+      {
+        title: `${format(new Date(), 'MMM d, yyyy')} - ${values.reportType}`,
+        company_ticker: values.companyTicker.value,
+        url: nanoId,
+        type: values.reportType,
+        recommendation: values.recommendation,
+        targetprice: values.targetPrice,
+        status: 'Draft',
+        user_id: userId,
+      },
+    ]);
+
+    if (!res) {
+      throw new Error('An exception occurred when creating a new report.');
+    }
+
+    const reportId = res[0].id;
+
+    // Fetch and cache API
+    const {
+      overview,
+      incomeStatement,
+      balanceSheet,
+      earnings,
+      dailyStock,
+      cashflow,
+    } = await fetchCacheAPIData(
+      reportId,
+      values.companyTicker.value,
+      supabase,
+      userId,
+      insertCache,
+    );
+
+    // If rec and/or fin strength are auto, assign them from api
+    const recommendation =
+      values.recommendation !== 'Auto'
+        ? values.recommendation
+        : getRecommendation(overview);
+
+    const targetPrice = values.targetPrice
+      ? values.targetPrice
+      : overview.AnalystTargetPrice;
+
+    const financialStrength =
+      values.financialStrength && values.financialStrength !== 'Auto'
+        ? values.financialStrength
+        : 'Medium';
+
+    // Update the report with rec and fin strength
+    updateReport({
+      id: reportId,
+      recommendation: recommendation,
+      targetprice: targetPrice,
+      financial_strength: financialStrength,
+    });
+
+    // Generate metrics
+    const sidebarMetrics = getSidebarMetrics(
+      overview,
+      balanceSheet,
+      incomeStatement,
+      getNWeeksStock(dailyStock),
+      targetPrice,
+      financialStrength,
+    );
+    const growthAndValuationAnalysisMetrics =
+      getGrowthAndValuationAnalysisMetrics(
+        balanceSheet,
+        cashflow,
+        incomeStatement,
+        earnings,
+        dailyStock,
+      );
+    const financialAndRiskAnalysisMetrics = getFinancialAndRiskAnalysisMetrics(
+      balanceSheet,
+      cashflow,
+      incomeStatement,
+    );
+
+    // Generate a company overview if any
+    // Get the company logo
+    // Store template config in db
+    // Get necessary documents and add them to the report library
+  };
+
   const onGenerateAndFormSubmit = (
     values: z.infer<typeof reportFormSchema>,
-  ) => {};
-  const onFormSubmit = (values: z.infer<typeof reportFormSchema>) => {};
+  ) => {
+    // baseActions
+    // set reportdata with all info
+    // start report generation
+    // generate a summary if required
+    // Save the pdf template in db
+  };
+
+  const onFormSubmit = (values: z.infer<typeof reportFormSchema>) => {
+    // baseActions
+    // route to the report content editor page
+    // save the pdf template in db
+  };
 
   return (
     <div className="w-[360px]">
@@ -165,12 +308,12 @@ export const ReportForm = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="AUTO">Auto</SelectItem>
-                      <SelectItem value="BUY">Buy</SelectItem>
-                      <SelectItem value="OVERWEIGHT">Overweight</SelectItem>
-                      <SelectItem value="HOLD">Hold</SelectItem>
-                      <SelectItem value="UNDERWEIGHT">Underweight</SelectItem>
-                      <SelectItem value="SELL">Sell</SelectItem>
+                      <SelectItem value="Auto">Auto</SelectItem>
+                      <SelectItem value="Buy">Buy</SelectItem>
+                      <SelectItem value="Overweight">Overweight</SelectItem>
+                      <SelectItem value="Hold">Hold</SelectItem>
+                      <SelectItem value="Underweight">Underweight</SelectItem>
+                      <SelectItem value="Sell">Sell</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -211,12 +354,12 @@ export const ReportForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="AUTO">Auto</SelectItem>
-                    <SelectItem value="LOW">Low</SelectItem>
-                    <SelectItem value="LM">Low-Medium</SelectItem>
-                    <SelectItem value="MED">Medium</SelectItem>
-                    <SelectItem value="MH">Medium-High</SelectItem>
-                    <SelectItem value="HIGH">High</SelectItem>
+                    <SelectItem value="Auto">Auto</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Low-Medium">Low-Medium</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="Medium-High">Medium-High</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

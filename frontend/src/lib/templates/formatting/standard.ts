@@ -28,7 +28,7 @@ export const getStandardStyles = (primaryColor: string): IStylesOptions => ({
         allCaps: true,
         font: 'Arial Narrow',
       },
-      paragraph: { spacing: { before: 60, after: 40 } },
+      paragraph: { spacing: { before: 100, after: 40 } },
     },
     heading3: {
       run: {

@@ -237,7 +237,7 @@ export function fetchSettings(client: TypedSupabaseClient) {
 export function fetchTickers(client: TypedSupabaseClient) {
   return client
     .from('companies')
-    .select('id, name, label, symbol, website, logo_link')
+    .select('id, company_name, stock_name, label, ticker, website, logo_link')
     .limit(20000)
     .throwOnError();
 }

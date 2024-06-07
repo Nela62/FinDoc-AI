@@ -51,7 +51,6 @@ export const getDocxBlob = async (
         'HIGH',
       ),
       growthAndValuationAnalysisMetrics: getGrowthAndValuationAnalysisMetrics(
-        OVERVIEW,
         BALANCE_SHEET_IBM,
         CASHFLOW_IBM,
         INCOME_STATEMENT_IBM,
@@ -59,12 +58,9 @@ export const getDocxBlob = async (
         DAILY_STOCK_IBM,
       ),
       financialAndRiskAnalysisMetrics: getFinancialAndRiskAnalysisMetrics(
-        OVERVIEW,
         BALANCE_SHEET_IBM,
         CASHFLOW_IBM,
         INCOME_STATEMENT_IBM,
-        EARNINGS_IBM,
-        DAILY_STOCK_IBM,
       ),
       ratings: [
         {

@@ -19,6 +19,7 @@ const metricsArr = (metrics: SidebarMetrics, secondaryColor: string) =>
       children: [
         new TableCell({
           width: { size: '100%' },
+          columnSpan: 2,
           borders: {
             ...bordersNone,
             bottom: { style: BorderStyle.SINGLE, size: 4, color: 'a3a3a3' },

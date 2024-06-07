@@ -16,6 +16,7 @@ export const coloredHeader = async (
   companyName: string,
   createdAt: Date,
   primaryColor: string,
+  showPageNumber: boolean,
 ): Promise<Paragraph[]> => {
   const { width: headerImageWidth, height: headerImageHeight } =
     await getImageSize(authorCompanyLogo);
@@ -35,11 +36,12 @@ export const coloredHeader = async (
             behindDocument: false,
             horizontalPosition: {
               relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-              offset: 385548,
+              offset: 395548,
             },
             verticalPosition: {
               relative: VerticalPositionRelativeFrom.TOP_MARGIN,
-              offset: 351752,
+              // offset: 351752,
+              offset: 442752,
             },
           },
         }),
@@ -82,12 +84,9 @@ export const coloredHeader = async (
           font: 'Arial Narrow',
         }),
         new TextRun({
-          children: [
-            '  Page ',
-            PageNumber.CURRENT,
-            ' OF ',
-            PageNumber.TOTAL_PAGES,
-          ],
+          children: showPageNumber
+            ? ['  Page ', PageNumber.CURRENT, ' OF ', PageNumber.TOTAL_PAGES]
+            : [],
           bold: true,
           size: 16,
           color: 'ffffff',

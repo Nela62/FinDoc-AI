@@ -110,7 +110,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
         className="grid grid-cols-[50px_2fr_4fr_4fr_4fr_2fr] divide-x divide-y w-[477px] divide-zinc-400"
         style={{ fontSize: '8px' }}
       >
-        <div className="border-t border-l border-zinc-400">
+        <div className="border-t border-l border-zinc-400 leading-snug">
           <h2
             style={{ fontSize: '9px' }}
             className="text-foreground font-bold pl-1"
@@ -193,7 +193,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
         <div></div>
         <div className="relative border-l-none flex h-[44px] w-[477px]">
           <div className="w-[50px] h-[44px] flex flex-col justify-between pl-1">
-            <div>
+            <div className="leading-snug">
               <h2
                 style={{ fontSize: '9px' }}
                 className="text-foreground font-bold"
@@ -268,7 +268,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
         </div>
         <div className="relative border-l-none flex h-[44px] w-[477px]">
           <div className="w-[50px] h-[44px] flex flex-col justify-between pl-1">
-            <div>
+            <div className="leading-snug">
               <h2
                 style={{ fontSize: '9px' }}
                 className="text-foreground font-bold"

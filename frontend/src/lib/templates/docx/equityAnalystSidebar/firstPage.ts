@@ -45,7 +45,7 @@ export const firstPageSection = async (
             },
             verticalPosition: {
               relative: VerticalPositionRelativeFrom.PAGE,
-              offset: 5555000,
+              offset: 5865000,
             },
           },
         })
@@ -116,7 +116,9 @@ export const firstPageSection = async (
           bold: true,
         }),
         new TextRun({
-          style: 'small-narrow',
+          font: 'Arial Narrow',
+          size: 16,
+          color: '000000',
           text: "\tPricing reflects previous trading week's closing price",
         }),
       ],
@@ -139,20 +141,12 @@ export const firstPageSection = async (
   );
 
   return {
-    properties: { page: { margin: { ...defaultMargins, top: 290 } } },
+    properties: { page: { margin: { ...defaultMargins, top: 256 } } },
     footers: { default: classicFooter(authorCompanyName, primaryColor) },
     children: [
       ...header,
       new Table({
-        borders: {
-          ...bordersNone,
-          bottom: {
-            style: BorderStyle.SINGLE,
-            size: 4,
-            color: '000000',
-            space: 2,
-          },
-        },
+        borders: bordersNone,
         width: { size: 100.5, type: WidthType.PERCENTAGE },
         rows: [
           new TableRow({

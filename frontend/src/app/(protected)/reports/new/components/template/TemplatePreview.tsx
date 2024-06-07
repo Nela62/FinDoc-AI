@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFileUrl } from '@supabase-cache-helpers/storage-react-query';
 import { createClient } from '@/lib/supabase/client';
 import { TemplateConfig, TemplateData } from '../../Component';
-import { MarketDataChart } from '@/lib/templates/ charts/MarketDataChart';
+import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
 import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
 import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 import { DAILY_STOCK_IBM } from '@/lib/data/daily_stock_ibm';
@@ -145,7 +145,7 @@ export const TemplatePreview = ({
         className="flex-col rounded-md overflow-hidden bg-white border hidden md:flex"
         ref={setContainerRef}
       >
-        <div className="w-full bg-muted/90 flex justify-center items-center h-10 border-b">
+        <div className="w-full flex justify-center items-center h-10 border-b">
           <h2 className="font-semibold">{templateData.name}</h2>
         </div>
         {file && (
