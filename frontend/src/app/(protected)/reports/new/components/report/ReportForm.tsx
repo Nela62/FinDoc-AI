@@ -58,6 +58,17 @@ export const reportFormSchema = z.object({
   financialStrength: z.string().optional(),
 });
 
+const section_ids = [
+  'company_overview',
+  'investment_thesis',
+  'business_description',
+  'recent_developments',
+  // 'industry_overview_competitive_positioning',
+  'financial_analysis',
+  'valuation',
+  // 'management_and_risks',
+];
+
 export const ReportForm = ({
   setIsTemplateCustomization,
   templateConfig,
@@ -245,18 +256,18 @@ export const ReportForm = ({
     );
 
     // Store template config in db
-    insertTemplate([
-      {
-        user_id: userId,
-        report_id: reportId,
-        template_type: 'equity-analyst-sidebar',
-        business_description: companyOverview,
-        color_scheme: templateConfig.colorScheme.colors,
-        author_name: templateConfig.authorName,
-        author_company_name: templateConfig.authorCompanyName,
-        author_company_logo: templateConfig.authorCompanyLogo,
-      },
-    ]);
+    // insertTemplate([
+    //   {
+    //     user_id: userId,
+    //     report_id: reportId,
+    //     template_type: 'equity-analyst-sidebar',
+    //     business_description: companyOverview,
+    //     color_scheme: templateConfig.colorScheme.colors,
+    //     author_name: templateConfig.authorName,
+    //     author_company_name: templateConfig.authorCompanyName,
+    //     author_company_logo: templateConfig.authorCompanyLogo,
+    //   },
+    // ]);
 
     // Get necessary documents and add them to the report library
   };
@@ -266,6 +277,7 @@ export const ReportForm = ({
   ) => {
     // baseActions
     await baseActions(values);
+
     // set reportdata with all info
     // start report generation
     // generate a summary if required
