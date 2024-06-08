@@ -117,6 +117,7 @@ export const NewReport = ({ userId }: { userId: string }) => {
         ) : (
           <ReportForm
             setIsTemplateCustomization={setIsTemplateCustomization}
+            templateConfig={templateConfig}
             setReportType={setReportType}
             userId={userId}
           />

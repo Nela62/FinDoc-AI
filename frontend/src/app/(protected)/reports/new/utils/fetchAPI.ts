@@ -212,6 +212,16 @@ export const getPublicCompanyImg = async (
   cik: string,
   website: string | null,
   name: string,
+  updateTickers: any,
+  tickersData: {
+    id: string;
+    cik: string;
+    company_name: string;
+    stock_name: string;
+    label: string;
+    ticker: string;
+    website: string | null;
+  }[],
 ) => {
   const {
     data: { session },
@@ -255,6 +265,8 @@ export const getPublicCompanyImg = async (
     companyLogoBlob = await downloadPublicCompanyImg(link);
     await uploadPublicCompanyImg(companyLogoBlob, cik);
 
-    supabase.from('companies').update({ website: link }).eq('cik', cik);
+    const tickers = tickersData.filter((ticker) => ticker.cik === cik);
+
+    updateTickers(tickers.map((ticker) => ({ id: ticker.id, website: link })));
   }
 };

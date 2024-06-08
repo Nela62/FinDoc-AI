@@ -46,6 +46,7 @@ import {
   getSidebarMetrics,
 } from '@/lib/utils/financialAPI';
 import { ApiProp } from '@/app/api/building-block/blocks';
+import { TemplateConfig } from '../../Component';
 
 export const reportFormSchema = z.object({
   reportType: z.string(),
@@ -59,10 +60,12 @@ export const reportFormSchema = z.object({
 
 export const ReportForm = ({
   setIsTemplateCustomization,
+  templateConfig,
   setReportType,
   userId,
 }: {
   setIsTemplateCustomization: Dispatch<SetStateAction<boolean>>;
+  templateConfig: TemplateConfig | null;
   setReportType: Dispatch<SetStateAction<string>>;
   userId: string;
 }) => {
@@ -78,6 +81,12 @@ export const ReportForm = ({
   const supabase = createClient();
 
   const { data: tickersData } = useQuery(fetchTickers(supabase));
+
+  const { mutateAsync: updateTickers } = useUpdateMutation(
+    supabase.from('companies'),
+    ['id'],
+    'id',
+  );
 
   // TODO: sort by cap instead
 
@@ -115,6 +124,9 @@ export const ReportForm = ({
     [];
 
   const baseActions = async (values: z.infer<typeof reportFormSchema>) => {
+    if (!templateConfig) {
+      throw new Error('Template is not ready yet.');
+    }
     // TODO: launch the dialog
     // Create a new report and save it to db
     const nanoId = getNanoId();
@@ -208,29 +220,44 @@ export const ReportForm = ({
       (ticker) => ticker.ticker === values.companyTicker.value,
     );
 
-    if (!tickerData) {
+    if (!tickerData || !tickersData) {
       throw new Error(
         `Company name for ticker ${values.companyTicker.value} was not found.`,
       );
     }
-    // const companyOverview = await fetch('/api/building-block/', {
-    //   method: 'POST',
-    //   body: JSON.stringify({
-    //     blockId: 'company_overview',
-    //     customPrompt: '',
-    //     companyName: tickerData.company_name,
-    //     apiData: apiData,
-    //   }),
-    // }).then((res) => res.json());
+    const companyOverview = await fetch('/api/building-block/', {
+      method: 'POST',
+      body: JSON.stringify({
+        blockId: 'company_overview',
+        customPrompt: '',
+        companyName: tickerData.company_name,
+        apiData: apiData,
+      }),
+    }).then((res) => res.json());
 
     const publicCompanyLogo = await getPublicCompanyImg(
       supabase,
       tickerData.cik,
       tickerData.website,
       tickerData.company_name,
+      updateTickers,
+      tickersData,
     );
 
     // Store template config in db
+    insertTemplate([
+      {
+        user_id: userId,
+        report_id: reportId,
+        template_type: 'equity-analyst-sidebar',
+        business_description: companyOverview,
+        color_scheme: templateConfig.colorScheme.colors,
+        author_name: templateConfig.authorName,
+        author_company_name: templateConfig.authorCompanyName,
+        author_company_logo: templateConfig.authorCompanyLogo,
+      },
+    ]);
+
     // Get necessary documents and add them to the report library
   };
 
@@ -245,10 +272,11 @@ export const ReportForm = ({
     // Save the pdf template in db
   };
 
-  const onFormSubmit = (values: z.infer<typeof reportFormSchema>) => {
+  const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
     // baseActions
-    // route to the report content editor page
+    await baseActions(values);
     // save the pdf template in db
+    // route to the report content editor page
   };
 
   return (

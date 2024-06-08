@@ -15,7 +15,7 @@ import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 import { DAILY_STOCK_IBM } from '@/lib/data/daily_stock_ibm';
 import { getPdfTemplate } from '../../utils/getPdfTemplate';
 import { toPng } from 'html-to-image';
-import { getDocxBlob } from '../../utils/getDocxBlob';
+import { getTemplateDocxBlob } from '../../utils/getDocxBlob';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
@@ -89,7 +89,7 @@ export const TemplatePreview = ({
     ).then((res) => res.blob());
 
     try {
-      const docxBlob = await getDocxBlob(
+      const docxBlob = await getTemplateDocxBlob(
         templateData,
         templateConfig,
         authorCompanyLogo,
