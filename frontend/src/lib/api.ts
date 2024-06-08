@@ -5,7 +5,7 @@ export class API {
   public static uploadImage = async (img: File) => {
     const formData = new FormData();
     formData.append('img', img);
-    const response = await fetch('/api/image', {
+    const response = await fetch('/api/images', {
       method: 'POST',
       body: formData,
     });

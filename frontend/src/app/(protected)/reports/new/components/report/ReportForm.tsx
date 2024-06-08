@@ -33,13 +33,19 @@ import { SquarePen, Wand2Icon } from 'lucide-react';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { fetchCacheAPIData, getRecommendation } from '../../utils/fetchAPI';
+import {
+  cleanLink,
+  fetchCacheAPIData,
+  getPublicCompanyImg,
+  getRecommendation,
+} from '../../utils/fetchAPI';
 import {
   getFinancialAndRiskAnalysisMetrics,
   getGrowthAndValuationAnalysisMetrics,
   getNWeeksStock,
   getSidebarMetrics,
 } from '@/lib/utils/financialAPI';
+import { ApiProp } from '@/app/api/building-block/blocks';
 
 export const reportFormSchema = z.object({
   reportType: z.string(),
@@ -49,9 +55,6 @@ export const reportFormSchema = z.object({
     .preprocess((a) => parseFloat(z.string().parse(a)), z.number())
     .optional(),
   financialStrength: z.string().optional(),
-  analystName: z.string().optional(),
-  companyName: z.string().optional(),
-  companyLogo: z.string().optional(),
 });
 
 export const ReportForm = ({
@@ -67,8 +70,8 @@ export const ReportForm = ({
     resolver: zodResolver(reportFormSchema),
     defaultValues: {
       reportType: 'Equity Analyst Report',
-      recommendation: 'AUTO',
-      financialStrength: 'AUTO',
+      recommendation: 'Auto',
+      financialStrength: 'Auto',
     },
   });
 
@@ -115,6 +118,7 @@ export const ReportForm = ({
     // TODO: launch the dialog
     // Create a new report and save it to db
     const nanoId = getNanoId();
+
     const res = await insertNewReport([
       {
         title: `${format(new Date(), 'MMM d, yyyy')} - ${values.reportType}`,
@@ -135,6 +139,15 @@ export const ReportForm = ({
     const reportId = res[0].id;
 
     // Fetch and cache API
+    // TODO: split fetch and insert and move it to backend api
+    const apiData = await fetchCacheAPIData(
+      reportId,
+      values.companyTicker.value,
+      supabase,
+      userId,
+      insertCache,
+    );
+
     const {
       overview,
       incomeStatement,
@@ -142,13 +155,7 @@ export const ReportForm = ({
       earnings,
       dailyStock,
       cashflow,
-    } = await fetchCacheAPIData(
-      reportId,
-      values.companyTicker.value,
-      supabase,
-      userId,
-      insertCache,
-    );
+    } = apiData;
 
     // If rec and/or fin strength are auto, assign them from api
     const recommendation =
@@ -158,7 +165,7 @@ export const ReportForm = ({
 
     const targetPrice = values.targetPrice
       ? values.targetPrice
-      : overview.AnalystTargetPrice;
+      : Number(overview.AnalystTargetPrice);
 
     const financialStrength =
       values.financialStrength && values.financialStrength !== 'Auto'
@@ -197,15 +204,41 @@ export const ReportForm = ({
     );
 
     // Generate a company overview if any
-    // Get the company logo
+    const tickerData = tickersData?.find(
+      (ticker) => ticker.ticker === values.companyTicker.value,
+    );
+
+    if (!tickerData) {
+      throw new Error(
+        `Company name for ticker ${values.companyTicker.value} was not found.`,
+      );
+    }
+    // const companyOverview = await fetch('/api/building-block/', {
+    //   method: 'POST',
+    //   body: JSON.stringify({
+    //     blockId: 'company_overview',
+    //     customPrompt: '',
+    //     companyName: tickerData.company_name,
+    //     apiData: apiData,
+    //   }),
+    // }).then((res) => res.json());
+
+    const publicCompanyLogo = await getPublicCompanyImg(
+      supabase,
+      tickerData.cik,
+      tickerData.website,
+      tickerData.company_name,
+    );
+
     // Store template config in db
     // Get necessary documents and add them to the report library
   };
 
-  const onGenerateAndFormSubmit = (
+  const onGenerateAndFormSubmit = async (
     values: z.infer<typeof reportFormSchema>,
   ) => {
     // baseActions
+    await baseActions(values);
     // set reportdata with all info
     // start report generation
     // generate a summary if required
@@ -383,7 +416,7 @@ export const ReportForm = ({
             Customize Template -{'>'}
           </Button>
 
-          <div className="flex gap-5 w-full mt-14">
+          {/* <div className="flex gap-5 w-full mt-14">
             <Button
               variant="outline"
               type="submit"
@@ -406,7 +439,19 @@ export const ReportForm = ({
                 <p>Report</p>
               </div>
             </Button>
-          </div>
+          </div> */}
+          <Button
+            type="submit"
+            onClick={form.handleSubmit(onGenerateAndFormSubmit)}
+            name="generate"
+            className="flex gap-2 h-11 w-1/2 bg-sky-700 hover:bg-sky-600"
+          >
+            <Wand2Icon className="h-5 w-5" />
+            <div className="flex flex-col w-fit justify-start">
+              <p>Generate Full</p>
+              <p>Report</p>
+            </div>
+          </Button>
         </form>
       </Form>
     </div>
