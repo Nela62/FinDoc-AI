@@ -10,6 +10,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ReportForm } from './components/report/ReportForm';
 import { JSONContent } from '@tiptap/core';
 import { TemplateCustomizationForm } from './components/template/TemplateCustomizationForm';
+import { AllReportsColumn } from './components/allReports/AllReportsColumn';
+import { ReportInfo } from './components/allReports/ReportInfo';
 
 type ColorScheme = { id: string; colors: string[] };
 
@@ -46,6 +48,7 @@ export const NewReport = ({ userId }: { userId: string }) => {
   );
   const [templateData, setTemplateData] = useState<TemplateData | null>(null);
   const [reportType, setReportType] = useState<string>('Equity Analyst Report');
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -101,9 +104,18 @@ export const NewReport = ({ userId }: { userId: string }) => {
   }, [templates, reportType]);
 
   return (
-    <div className="w-full h-[calc(100vh-56px)] border-t flex gap-8 bg-muted/40 px-4 py-4">
+    <div className="w-full border-t flex gap-8 bg-muted/40">
       <div className="grow">
-        {isTemplateCustomization ? (
+        <AllReportsColumn
+          userId={userId}
+          selectedReportId={selectedReportId}
+          setSelectedReportId={setSelectedReportId}
+        />
+      </div>
+      <div className="">
+        {selectedReportId ? (
+          <ReportInfo reportId={selectedReportId} />
+        ) : isTemplateCustomization ? (
           templateConfig ? (
             <TemplateCustomizationForm
               userId={userId}

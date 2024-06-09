@@ -23,7 +23,11 @@ import {
 import { signOut } from './actions';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { fetchReportById, getReportIdByUrl } from '@/lib/queries';
+import {
+  fetchReportById,
+  fetchSettings,
+  getReportIdByUrl,
+} from '@/lib/queries';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 
 export const Header = () => {
@@ -44,6 +48,7 @@ export const Header = () => {
         !(subSection === 'new' || subSection === 'all'),
     },
   );
+  const { data: settings } = useQuery(fetchSettings(supabase));
 
   let subSectionObject = { label: '', href: '' };
 
@@ -81,7 +86,7 @@ export const Header = () => {
   }
 
   return (
-    <header className="flex justify-between h-14 items-center gap-4 bg-muted/40 px-4">
+    <header className="flex justify-between h-10 items-center gap-4 bg-muted/40 px-4">
       <Breadcrumb className="hidden md:flex grow">
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -111,27 +116,19 @@ export const Header = () => {
           )}
         </BreadcrumbList>
       </Breadcrumb>
-      <Button
+      {/* <Button
         variant="outline"
-        className="relative rounded-lg pl-4 md:w-40 lg:w-56 text-muted-foreground shadow-sm border-input font-light justify-start"
+        className="relative rounded-lg pl-4 md:w-40 lg:w-56 text-muted-foreground shadow-sm border-input font-light justify-start h-8"
       >
         Search...
-      </Button>
+      </Button> */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="overflow-hidden rounded-full"
-          >
-            <Image
-              src="/placeholder-user.jpg"
-              width={36}
-              height={36}
-              alt="Avatar"
-              className="overflow-hidden rounded-full"
-            />
-          </Button>
+          {settings && (
+            <p className="text-sm text-primary/70 cursor-pointer select-none">
+              {settings[0].author_name}
+            </p>
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>My Account</DropdownMenuLabel>

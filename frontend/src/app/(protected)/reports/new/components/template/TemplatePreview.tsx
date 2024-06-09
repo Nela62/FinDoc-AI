@@ -130,7 +130,7 @@ export const TemplatePreview = ({
   }
 
   return (
-    <div className="w-1/2 relative">
+    <div className="w-[40%] relative">
       <div className="sr-only" id="hidden-container">
         <MarketDataChart
           colors={templateConfig.colorScheme.colors}
@@ -142,7 +142,7 @@ export const TemplatePreview = ({
         />
       </div>
       <div
-        className="flex-col rounded-md overflow-hidden bg-white border hidden md:flex"
+        className="flex-col overflow-hidden bg-white border-l hidden md:flex"
         ref={setContainerRef}
       >
         <div className="w-full flex justify-center items-center h-10 border-b">
@@ -154,7 +154,7 @@ export const TemplatePreview = ({
             onLoadSuccess={onDocumentLoadSuccess}
             options={options}
           >
-            <ScrollArea className="h-[calc(100vh-136px)]">
+            <ScrollArea className="h-[calc(100vh-82px)]">
               {Array.from(new Array(numPages), (el, index) => (
                 <Page
                   key={`page_${index + 1}`}

@@ -255,7 +255,6 @@ export type Database = {
           id: string
           isin: string | null
           label: string
-          logo_link: string | null
           market_cap: string | null
           stock_name: string
           ticker: string
@@ -270,7 +269,6 @@ export type Database = {
           id?: string
           isin?: string | null
           label?: string
-          logo_link?: string | null
           market_cap?: string | null
           stock_name: string
           ticker: string
@@ -285,7 +283,6 @@ export type Database = {
           id?: string
           isin?: string | null
           label?: string
-          logo_link?: string | null
           market_cap?: string | null
           stock_name?: string
           ticker?: string
@@ -441,37 +438,40 @@ export type Database = {
       }
       report_template: {
         Row: {
-          author_name: string | null
+          author_company_logo: string
+          author_company_name: string
+          author_name: string
           business_description: string | null
-          color_scheme: string[] | null
+          color_scheme: string[]
           id: string
           metrics: Json | null
           report_id: string
-          section_ids: string[]
           summary: string[] | null
           template_type: string
           user_id: string
         }
         Insert: {
-          author_name?: string | null
+          author_company_logo: string
+          author_company_name: string
+          author_name: string
           business_description?: string | null
-          color_scheme?: string[] | null
+          color_scheme: string[]
           id?: string
           metrics?: Json | null
           report_id: string
-          section_ids: string[]
           summary?: string[] | null
           template_type: string
           user_id: string
         }
         Update: {
-          author_name?: string | null
+          author_company_logo?: string
+          author_company_name?: string
+          author_name?: string
           business_description?: string | null
-          color_scheme?: string[] | null
+          color_scheme?: string[]
           id?: string
           metrics?: Json | null
           report_id?: string
-          section_ids?: string[]
           summary?: string[] | null
           template_type?: string
           user_id?: string
@@ -504,6 +504,7 @@ export type Database = {
           id: string
           json_content: Json | null
           recommendation: string | null
+          section_ids: string[]
           status: string
           targetprice: number | null
           title: string
@@ -522,6 +523,7 @@ export type Database = {
           id?: string
           json_content?: Json | null
           recommendation?: string | null
+          section_ids: string[]
           status: string
           targetprice?: number | null
           title: string
@@ -540,6 +542,7 @@ export type Database = {
           id?: string
           json_content?: Json | null
           recommendation?: string | null
+          section_ids?: string[]
           status?: string
           targetprice?: number | null
           title?: string
@@ -549,6 +552,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reports_ticker_fkey"
+            columns: ["company_ticker"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["ticker"]
+          },
           {
             foreignKeyName: "reports_user_id_fkey"
             columns: ["user_id"]

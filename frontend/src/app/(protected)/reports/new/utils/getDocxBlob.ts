@@ -129,9 +129,13 @@ const convertFinancialStrength = (financialStrength: FinancialStrength) => {
 };
 
 export const getDocxBlob = async ({
-  templateData,
-  templateConfig,
+  componentId,
+  summary,
+  businessDescription,
+  authorName,
+  authorCompanyName,
   authorCompanyLogo,
+  colorScheme,
   companyLogo,
   firstPageVisual,
   content,
@@ -144,9 +148,13 @@ export const getDocxBlob = async ({
   financialStrength,
   targetPrice,
 }: {
-  templateData: TemplateData;
-  templateConfig: TemplateConfig;
+  componentId: string;
+  summary: string[];
+  businessDescription: string;
+  authorName: string;
+  authorCompanyName: string;
   authorCompanyLogo: Blob;
+  colorScheme: string[];
   companyLogo: Blob;
   firstPageVisual: Blob;
   content: JSONContent;
@@ -159,28 +167,28 @@ export const getDocxBlob = async ({
   financialStrength: FinancialStrength;
   targetPrice: number;
 }) => {
-  if (!TEMPLATES.hasOwnProperty(templateData.componentId)) {
+  if (!TEMPLATES.hasOwnProperty(componentId)) {
     throw new Error("Template with this component id doesn't exist");
   }
 
   // ({ content, colors, twoColumn, authors, authorCompanyName, authorCompanyLogo, createdAt, companyName, companyTicker, companyLogo, summary, businessDescription, sidebarMetrics, growthAndValuationAnalysisMetrics, financialAndRiskAnalysisMetrics, ratings, recommendation, financialStrength, targetPrice, firstPageVisual, secondPageVisual, lastPageVisual, }: EquityAnalystSidebarProps & TemplateConfig)
-  const templateFn = TEMPLATES[templateData.componentId];
+  const templateFn = TEMPLATES[componentId];
 
   try {
     console.log('docxBlob');
     const docxBlob = await templateFn({
       content: content,
-      colors: templateConfig.colorScheme.colors,
+      colors: colorScheme,
       twoColumn: true,
-      authors: [templateConfig.authorName],
-      authorCompanyName: templateConfig.authorCompanyName,
+      authors: [authorName],
+      authorCompanyName: authorCompanyName,
       authorCompanyLogo: authorCompanyLogo,
       createdAt: new Date(),
       companyName: companyName,
       companyTicker: companyTicker,
       companyLogo: companyLogo,
-      summary: templateData.summary ?? [],
-      businessDescription: templateData.businessDescription ?? '',
+      summary: summary ?? [],
+      businessDescription: businessDescription ?? '',
       sidebarMetrics: sidebarMetrics,
       growthAndValuationAnalysisMetrics: growthAndValuationAnalysisMetrics,
       financialAndRiskAnalysisMetrics: financialAndRiskAnalysisMetrics,

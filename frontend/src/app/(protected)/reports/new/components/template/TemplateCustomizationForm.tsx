@@ -73,7 +73,7 @@ export const TemplateCustomizationForm = ({
   };
 
   return (
-    <div className="space-y-4 w-[360px]">
+    <div className="space-y-4 py-4 w-[360px] flex flex-col h-full">
       <div className="flex gap-2 items-center">
         <Button
           variant="ghost"
@@ -82,121 +82,131 @@ export const TemplateCustomizationForm = ({
         >
           {'<'}-
         </Button>
-        <h2 className="text-foreground/90">Template Customization</h2>
+        <h2 className="font-semibold text-primary/80">
+          Template Customization
+        </h2>
       </div>
       <Form {...templateForm}>
         <form
           onSubmit={templateForm.handleSubmit(onTemplateFormSubmit)}
-          className="space-y-4"
+          className="flex flex-col justify-between grow"
         >
-          <FormField
-            control={templateForm.control}
-            name="authorName"
-            render={({ field }) => (
-              <FormItem className="w-full relative">
-                <FormLabel>Author Name</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    className="bg-white"
-                    defaultValue={field.value}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={templateForm.control}
-            name="authorCompanyName"
-            render={({ field }) => (
-              <FormItem className="w-full relative">
-                <FormLabel>Company Name</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    className="bg-white"
-                    defaultValue={field.value}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={templateForm.control}
-            name="authorCompanyLogo"
-            render={({ field }) => (
-              <FormItem className="w-full relative">
-                <FormLabel>Company Logo</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+          <div className="space-y-4">
+            <FormField
+              control={templateForm.control}
+              name="authorName"
+              render={({ field }) => (
+                <FormItem className="w-full relative">
+                  <FormLabel>Author Name</FormLabel>
                   <FormControl>
-                    <SelectTrigger className="w-full bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <Input
+                      {...field}
+                      className="bg-white"
+                      defaultValue={field.value}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    {templateConfig.authorCompanyLogosList.length > 0 ? (
-                      templateConfig.authorCompanyLogosList.map((fileName) => (
-                        <SelectItem value={fileName} key={fileName}>
-                          <DisplayLogo userId={userId} fileName={fileName} />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={templateForm.control}
+              name="authorCompanyName"
+              render={({ field }) => (
+                <FormItem className="w-full relative">
+                  <FormLabel>Company Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      className="bg-white"
+                      defaultValue={field.value}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={templateForm.control}
+              name="authorCompanyLogo"
+              render={({ field }) => (
+                <FormItem className="w-full relative">
+                  <FormLabel>Company Logo</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {templateConfig.authorCompanyLogosList.length > 0 ? (
+                        templateConfig.authorCompanyLogosList.map(
+                          (fileName) => (
+                            <SelectItem value={fileName} key={fileName}>
+                              <DisplayLogo
+                                userId={userId}
+                                fileName={fileName}
+                              />
+                            </SelectItem>
+                          ),
+                        )
+                      ) : (
+                        <SelectItem value={defaultCompanyLogo}>
+                          <Image
+                            src={defaultCompanyLogo}
+                            alt="preview image"
+                            className="h-10 w-auto bg-zinc-500 rounded-sm p-2 py-1"
+                            height={0}
+                            width={0}
+                            sizes="100vw"
+                          />
                         </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value={defaultCompanyLogo}>
-                        <Image
-                          src={defaultCompanyLogo}
-                          alt="preview image"
-                          className="h-10 w-auto bg-zinc-500 rounded-sm p-2 py-1"
-                          height={0}
-                          width={0}
-                          sizes="100vw"
-                        />
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={templateForm.control}
-            name="colorScheme"
-            render={({ field }) => (
-              <FormItem className="w-1/2 pr-2">
-                <FormLabel>Color Scheme</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {...templateConfig.colorSchemesList.map((color) => (
-                      <SelectItem key={color.id} value={color.id}>
-                        <div className="flex gap-1 w-[120px]">
-                          {...color.colors.map((c, i) => (
-                            <div
-                              key={c + i}
-                              style={{ backgroundColor: c }}
-                              className="h-5 w-1/3 rounded-sm"
-                            ></div>
-                          ))}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                      )}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={templateForm.control}
+              name="colorScheme"
+              render={({ field }) => (
+                <FormItem className="w-1/2 pr-2">
+                  <FormLabel>Color Scheme</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {...templateConfig.colorSchemesList.map((color) => (
+                        <SelectItem key={color.id} value={color.id}>
+                          <div className="flex gap-1 w-[120px]">
+                            {...color.colors.map((c, i) => (
+                              <div
+                                key={c + i}
+                                style={{ backgroundColor: c }}
+                                className="h-5 w-1/3 rounded-sm"
+                              ></div>
+                            ))}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           <div className="w-full gap-4 flex">
             <Button
               className="w-1/2"

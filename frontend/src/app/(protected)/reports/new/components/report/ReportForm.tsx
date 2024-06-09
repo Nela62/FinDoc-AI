@@ -228,7 +228,7 @@ export const ReportForm = ({
 
     // Generate a company overview if any
     const tickerData = tickersData?.find(
-      (ticker) => ticker.ticker === values.companyTicker.value,
+      (company) => company.ticker === values.companyTicker.value,
     );
 
     if (!tickerData || !tickersData) {
@@ -292,84 +292,67 @@ export const ReportForm = ({
   };
 
   return (
-    <div className="w-[360px]">
+    <div className="w-[360px] flex flex-col py-4 gap-4 h-full">
+      <h2 className="font-semibold text-primary/80">Configurations</h2>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onGenerateAndFormSubmit)}
-          className="space-y-4"
+          className="space-y-4 grow justify-between flex flex-col"
         >
-          {/* Report type */}
-          <FormField
-            control={form.control}
-            name="reportType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Report Type</FormLabel>
-                <Select
-                  onValueChange={(value: string) => {
-                    field.onChange(value);
-                    setReportType(value);
-                  }}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Equity Analyst Report">
-                      Equity Analyst Report
-                    </SelectItem>
-                    <SelectItem value="Earnings Call Note">
-                      Earnings Call Note
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {/* <FormField
+          <div className="flex flex-col space-y-4">
+            <FormField
+              control={form.control}
+              name="reportType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Report Type</FormLabel>
+                  <Select
+                    onValueChange={(value: string) => {
+                      field.onChange(value);
+                      setReportType(value);
+                    }}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Equity Analyst Report">
+                        Equity Analyst Report
+                      </SelectItem>
+                      <SelectItem value="Earnings Call Note">
+                        Earnings Call Note
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
               control={form.control}
               name="companyTicker"
               render={({ field }) => (
                 <FormItem className="">
                   <FormLabel>Company</FormLabel>
                   <FormControl>
-                    <Combobox
+                    <VirtualizedCombobox
                       options={tickers}
-                      emptyMessage="Search equity..."
                       onValueChange={field.onChange}
+                      searchPlaceholder="Select ticker..."
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
-            /> */}
-          <FormField
-            control={form.control}
-            name="companyTicker"
-            render={({ field }) => (
-              <FormItem className="">
-                <FormLabel>Company</FormLabel>
-                <FormControl>
-                  <VirtualizedCombobox
-                    options={tickers}
-                    onValueChange={field.onChange}
-                    searchPlaceholder="Select ticker..."
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="flex gap-4">
+            />
             <FormField
               control={form.control}
               name="recommendation"
               render={({ field }) => (
-                <FormItem className="w-1/2">
+                <FormItem className="">
                   <FormLabel>Recommendation</FormLabel>
                   <Select
                     onValueChange={field.onChange}
@@ -398,7 +381,7 @@ export const ReportForm = ({
               name="targetPrice"
               disabled={form.watch('recommendation') === 'AUTO'}
               render={({ field }) => (
-                <FormItem className="w-1/2 relative">
+                <FormItem className="relative">
                   <FormLabel>Target Price</FormLabel>
                   <div className="absolute l-0 ml-2 b-0 text-foreground/70">
                     <p className="pt-1.5 text-sm">$</p>
@@ -410,51 +393,51 @@ export const ReportForm = ({
                 </FormItem>
               )}
             />
-          </div>
-          <FormField
-            control={form.control}
-            name="financialStrength"
-            render={({ field }) => (
-              <FormItem className="w-1/2 pr-2">
-                <FormLabel>Financial Strength</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Auto">Auto</SelectItem>
-                    <SelectItem value="Low">Low</SelectItem>
-                    <SelectItem value="Low-Medium">Low-Medium</SelectItem>
-                    <SelectItem value="Medium">Medium</SelectItem>
-                    <SelectItem value="Medium-High">Medium-High</SelectItem>
-                    <SelectItem value="High">High</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="financialStrength"
+              render={({ field }) => (
+                <FormItem className="">
+                  <FormLabel>Financial Strength</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Auto">Auto</SelectItem>
+                      <SelectItem value="Low">Low</SelectItem>
+                      <SelectItem value="Low-Medium">Low-Medium</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="Medium-High">Medium-High</SelectItem>
+                      <SelectItem value="High">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {/* <div className="flex flex-col space-y-3">
+            {/* <div className="flex flex-col space-y-3">
                     <Label>Data Sources</Label>
                     <Button variant="outline" className="w-1/2">
                       Edit Sources
                     </Button>
                   </div> */}
-          <Button
-            variant="ghost"
-            className="text-xs mt-2 mb-4 font-normal px-2"
-            onClick={() => {
-              setIsTemplateCustomization(true);
-            }}
-          >
-            Customize Template -{'>'}
-          </Button>
+            <Button
+              variant="ghost"
+              className="text-xs w-fit mt-2 mb-4 font-normal px-2"
+              onClick={() => {
+                setIsTemplateCustomization(true);
+              }}
+            >
+              Customize Template -{'>'}
+            </Button>
+          </div>
 
           {/* <div className="flex gap-5 w-full mt-14">
             <Button
@@ -484,12 +467,11 @@ export const ReportForm = ({
             type="submit"
             onClick={form.handleSubmit(onGenerateAndFormSubmit)}
             name="generate"
-            className="flex gap-2 h-11 w-1/2 bg-sky-700 hover:bg-sky-600"
+            className="flex gap-2 h-11 mx-auto bg-azure hover:bg-azure/95 px-6"
           >
             <Wand2Icon className="h-5 w-5" />
             <div className="flex flex-col w-fit justify-start">
-              <p>Generate Full</p>
-              <p>Report</p>
+              <p>Generate Report</p>
             </div>
           </Button>
         </form>

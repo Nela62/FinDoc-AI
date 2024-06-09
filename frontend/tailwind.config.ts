@@ -27,6 +27,7 @@ const config = {
           // bottom: '#4785D4',
           // bottom: '#002F6E',
         },
+        azure: '#4078BF',
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

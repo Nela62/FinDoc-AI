@@ -5,9 +5,22 @@ export function fetchAllReports(client: TypedSupabaseClient) {
   return client
     .from('reports')
     .select(
-      'id, user_id, title, company_ticker, type, recommendation, targetprice, status, created_at, updated_at, url, html_content, json_content',
+      'id, user_id, title, company_ticker, type, recommendation, targetprice, financial_strength, status, created_at, updated_at, url, html_content, json_content, companies (company_name, stock_name)',
     )
     .throwOnError();
+}
+
+export function fetchTemplateConfig(
+  client: TypedSupabaseClient,
+  reportId: string,
+) {
+  return client
+    .from('report_template')
+    .select(
+      'template_type, business_description, summary, color_scheme, author_name, author_company_name, author_company_logo, metrics',
+    )
+    .eq('report_id', reportId)
+    .single();
 }
 
 export function getReportIdByUrl(
@@ -40,7 +53,7 @@ export function fetchReportById(client: TypedSupabaseClient, reportId: string) {
   return client
     .from('reports')
     .select(
-      'id, user_id, title, company_ticker, type, recommendation, targetprice, status, created_at, updated_at, url, html_content, json_content',
+      'id, user_id, title, company_ticker, type, recommendation, targetprice, financial_strength, status, created_at, updated_at, url, html_content, json_content, companies (cik, company_name, stock_name)',
     )
     .eq('id', reportId)
     .throwOnError()
