@@ -130,7 +130,7 @@ export const TemplatePreview = ({
   }
 
   return (
-    <div className="w-[50%] relative">
+    <div className="w-[40%] relative">
       <div className="sr-only" id="hidden-container">
         <MarketDataChart
           colors={templateConfig.colorScheme.colors}

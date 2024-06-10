@@ -21,6 +21,8 @@ import {
   Earnings,
   IncomeStatement,
 } from '@/types/alphaVantageApi';
+import { SidebarMetrics } from '@/lib/templates/metrics/components/statistics';
+import { AnalysisMetrics } from '@/lib/templates/docxTables/financialAnalysisTable';
 
 const defaultCompanyLogo = '/default_finpanel_logo.png';
 
@@ -28,6 +30,12 @@ type apiCacheData = {
   incomeStatement: IncomeStatement;
   earnings: Earnings;
   dailyStock: DailyStockData;
+};
+
+type Metrics = {
+  sidebarMetrics: SidebarMetrics;
+  growthAndValuationAnalysisMetrics: AnalysisMetrics;
+  financialAndRiskAnalysisMetrics: AnalysisMetrics;
 };
 
 export const ReportInfo = ({
@@ -154,6 +162,8 @@ export const ReportInfo = ({
       .then((url) => fetch(url))
       .then((res) => res.blob());
 
+    const metrics = templateConfig.metrics as Metrics;
+
     const docxBlob = await getDocxBlob({
       componentId: templateConfig.template_type,
       summary: templateConfig.summary ?? [],
@@ -164,11 +174,10 @@ export const ReportInfo = ({
       content: report.json_content as JSONContent,
       companyName: report.companies.company_name,
       companyTicker: report.company_ticker,
-      sidebarMetrics: templateConfig.metrics.sidebarMetrics,
+      sidebarMetrics: metrics.sidebarMetrics,
       growthAndValuationAnalysisMetrics:
-        templateConfig.metrics.growthAndValuationAnalysisMetrics,
-      financialAndRiskAnalysisMetrics:
-        templateConfig.metrics.financialAndRiskAnalysisMetrics,
+        metrics.growthAndValuationAnalysisMetrics,
+      financialAndRiskAnalysisMetrics: metrics.financialAndRiskAnalysisMetrics,
       recommendation: report.recommendation as Recommendation,
       financialStrength: report.financial_strength as FinancialStrength,
       targetPrice: report.targetprice,

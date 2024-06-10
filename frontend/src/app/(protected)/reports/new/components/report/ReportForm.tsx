@@ -480,7 +480,7 @@ export const ReportForm = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <div className="w-[360px] flex flex-col py-4 gap-4 h-full">
+      <div className="w-[360px] mx-auto flex flex-col py-4 gap-4 h-full">
         <h2 className="font-semibold text-primary/80">Configurations</h2>
         <Form {...form}>
           <form

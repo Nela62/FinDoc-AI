@@ -116,7 +116,7 @@ export const NewReport = ({ userId }: { userId: string }) => {
           setSelectedReportId={setSelectedReportId}
         />
       </div>
-      <div className="">
+      <div className="min-w-[360px] w-[20%]">
         {selectedReportId ? (
           <ReportInfo reportId={selectedReportId} userId={userId} />
         ) : isTemplateCustomization ? (
