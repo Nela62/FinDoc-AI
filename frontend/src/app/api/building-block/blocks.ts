@@ -247,6 +247,8 @@ export const generateBlock = async (
 
   // return message.content.find((block) => !block.text.includes('scratchpad'))
   //   .text;
+
+  // @ts-ignore
   return message.content[0].text
     .replace(/(.*?)<output>/gs, '')
     .replace('</output>', '');
@@ -299,6 +301,7 @@ export const generateInvestmentThesis = async (
 
   // return message.content.find((block) => !block.text.includes('scratchpad'))
   //   .text;
+  // @ts-ignore
   return message.content[0].text
     .replace(/(.*?)<output>/gs, '')
     .replace('</output>', '');
@@ -323,12 +326,7 @@ export const generateSummary = async (reportContent: string) => {
     model: 'claude-3-haiku-20240307',
   });
 
-  console.log(
-    message.content[0].text
-      .replace(/(.*?)<output>/gs, '')
-      .replace('</output>', ''),
-  );
-
+  // @ts-ignore
   return message.content[0].text
     .replace(/(.*?)<output>/gs, '')
     .replace('</output>', '');
