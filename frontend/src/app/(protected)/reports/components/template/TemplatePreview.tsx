@@ -154,7 +154,7 @@ export const TemplatePreview = ({
             onLoadSuccess={onDocumentLoadSuccess}
             options={options}
           >
-            <ScrollArea className="h-[calc(100vh-82px)]">
+            <ScrollArea className="h-[calc(100vh-42px)]">
               {Array.from(new Array(numPages), (el, index) => (
                 <Page
                   key={`page_${index + 1}`}

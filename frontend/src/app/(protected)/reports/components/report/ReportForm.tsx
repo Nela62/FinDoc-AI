@@ -63,6 +63,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
+import { TemplateCustomizationForm } from '../template/TemplateCustomizationForm';
 
 const defaultCompanyLogo = '/default_finpanel_logo.png';
 
@@ -186,7 +187,7 @@ export const ReportForm = ({
 
     const res = await insertNewReport([
       {
-        title: `${values.companyTicker} - ${values.reportType} - ${format(
+        title: `${values.companyTicker.value} - ${values.reportType} - ${format(
           new Date(),
           'd MMM yyyy',
         )}`,
@@ -409,7 +410,7 @@ export const ReportForm = ({
       ${generatedBlocks[id]}`;
 
         const json = markdownToJson(generatedBlocks[id]);
-        console.log(json);
+
         generatedJson.content?.push(
           {
             type: 'heading',
@@ -616,13 +617,21 @@ export const ReportForm = ({
                 )}
               />
 
+              {templateConfig && (
+                <TemplateCustomizationForm
+                  userId={userId}
+                  templateConfig={templateConfig}
+                  setTemplateConfig={setTemplateConfig}
+                />
+              )}
+
               {/* <div className="flex flex-col space-y-3">
                     <Label>Data Sources</Label>
                     <Button variant="outline" className="w-1/2">
                       Edit Sources
                     </Button>
                   </div> */}
-              <Button
+              {/* <Button
                 variant="ghost"
                 className="text-xs w-fit mt-2 mb-4 font-normal px-2"
                 onClick={() => {
@@ -630,7 +639,7 @@ export const ReportForm = ({
                 }}
               >
                 Customize Template -{'>'}
-              </Button>
+              </Button> */}
             </div>
 
             {/* <div className="flex gap-5 w-full mt-14">

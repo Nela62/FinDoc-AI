@@ -46,7 +46,7 @@ export const AllReportsColumn = ({
       {isLoading || !reports ? (
         <Skeleton className="w-full h-4" />
       ) : (
-        <div className="flex flex-col gap-1 h-[calc(100vh-170px)]">
+        <div className="flex flex-col gap-1 h-[calc(100vh-118px)]">
           <ScrollArea>
             {...reports.map((report) => (
               <div

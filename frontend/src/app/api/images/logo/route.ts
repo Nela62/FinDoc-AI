@@ -3,11 +3,16 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   const supabase = serviceClient();
-  const { src, cik, format, name } = await req.json();
+  const { src, cik, format, name, index } = await req.json();
 
   const blob = await fetch(src).then((res) => res.blob());
 
   try {
+    if (index === 0) {
+      await supabase.storage
+        .from('public-company-logos')
+        .upload('exists', '', { contentType: 'text/plain' });
+    }
     const res = await supabase.storage
       .from('public-company-logos')
       .upload(`${cik}/${name}`, blob, { contentType: `image/${format}` });

@@ -25,7 +25,7 @@ export default async function Layout({
       <div className="flex h-screen w-full bg-muted/40">
         <LeftSidebar />
         <div className="flex flex-col w-full">
-          <Header />
+          {/* <Header /> */}
           <main className="grid flex-1 items-start">{children}</main>
         </div>
       </div>

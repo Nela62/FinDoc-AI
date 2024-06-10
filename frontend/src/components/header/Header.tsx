@@ -100,7 +100,7 @@ export const Header = () => {
               </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
+          {/* <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
               <Link href={subSectionObject.href}>{subSectionObject.label}</Link>
@@ -113,7 +113,7 @@ export const Header = () => {
                 <BreadcrumbPage>{data.title}</BreadcrumbPage>
               </BreadcrumbItem>
             </>
-          )}
+          )} */}
         </BreadcrumbList>
       </Breadcrumb>
       {/* <Button

@@ -150,10 +150,11 @@ const uploadPublicCompanyImg = async (
   cik: string,
   format: string,
   name: string,
+  index: number,
 ) => {
   const res = await fetch('/api/images/logo/', {
     method: 'POST',
-    body: JSON.stringify({ src, cik, format, name }),
+    body: JSON.stringify({ src, cik, format, name, index }),
   });
 
   if (!res.ok) {
@@ -182,7 +183,7 @@ export const downloadPublicCompanyImgs = async (
 
   if (!session) throw new Error('Session not found');
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public-company-logos/${cik}/dark-logo`,
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public-company-logos/${cik}/exists`,
     {
       method: 'HEAD',
       headers: {
@@ -222,7 +223,7 @@ export const downloadPublicCompanyImgs = async (
     .then((res) => res.json())
     .catch((err) => console.error(err));
 
-  images.logos.forEach(async (img: any) => {
+  images.logos.forEach(async (img: any, index: number) => {
     if (img.type === 'other') return;
 
     const format =
@@ -233,6 +234,7 @@ export const downloadPublicCompanyImgs = async (
       cik,
       format.format,
       `${img.theme}-${img.type}`,
+      index,
     );
   });
 };

@@ -48,22 +48,11 @@ export const LeftSidebar = () => {
           {/* <Briefcase className="h-4 w-4 transition-all group-hover:scale-110" /> */}
           <span className="sr-only">Acme Inc</span>
         </Link>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
-              href="/reports/new"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-            >
-              <PlusSquare className="h-5 w-5" />
-              <span className="sr-only">New Report</span>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="right">New Report</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href="/reports/all"
+              href="/reports/"
               className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
             >
               <Files className="h-5 w-5" />
@@ -116,13 +105,13 @@ export const LeftSidebar = () => {
           <TooltipTrigger asChild>
             <Link
               href="/settings"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8 cursor-not-allowed"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
             >
               <Settings className="h-5 w-5" />
               <span className="sr-only">Settings</span>
             </Link>
           </TooltipTrigger>
-          <TooltipContent side="right">Settings - coming soon!</TooltipContent>
+          <TooltipContent side="right">Settings</TooltipContent>
         </Tooltip>
       </nav>
     </aside>

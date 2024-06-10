@@ -20,7 +20,8 @@ function transformContent(obj) {
       const contentWithCitations = sentences.map((sentence: any) => {
         const citations = sentence.match(/\[\d+\.\d+\]/g) || [];
 
-        if (citations.length === 0) return { type: 'text', text: sentence };
+        if (citations.length === 0)
+          return { type: 'text', text: sentence + ' ' };
         else {
           const textPart = sentence.split(/\[\d+\.\d+\]/)[0];
           return [
