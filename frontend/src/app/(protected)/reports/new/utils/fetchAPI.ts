@@ -145,75 +145,26 @@ export const cleanLink = (link: string) => {
   return cleanLink;
 };
 
-const getOrgId = async (name: string) => {
-  const domain = await fetch(`https://api.brandfetch.io/v2/search/${name}`, {
-    method: 'GET',
-    headers: {
-      accept: 'application/json',
-      Authorization: 'Bearer ' + process.env.NEXT_PUBLIC_BRANDFETCH_API_KEY,
-    },
-  })
-    .then((res) => (res.ok ? res.json() : new Error('Company Logo not found')))
-    .then((data) => {
-      console.log(data);
-      return data[0].domain;
-    })
-    .catch((err) => console.error(err));
-
-  return domain;
-};
-
-const downloadPublicCompanyImg = async (orgId: string): Promise<Blob> => {
-  const imgUrl = await fetch(`https://api.brandfetch.io/v2/brands/${orgId}`, {
-    method: 'GET',
-    headers: {
-      accept: 'application/json',
-      Authorization: 'Bearer ' + process.env.NEXT_PUBLIC_BRANDFETCH_API_KEY,
-    },
-  })
-    .then((res) => (res.ok ? res.json() : new Error('Company Logo not found')))
-    .then((data) => {
-      console.log(data);
-      return data.logos.find((logo: any) => logo.type === 'logo')?.formats[0]
-        .src;
-    })
-    .catch((err) => console.error(err));
-
-  const companyLogoBlob = await fetch(imgUrl)
-    .then((res) => {
-      console.log(res);
-      return res.blob();
-    })
-    .catch((err) => console.error(err));
-
-  if (!companyLogoBlob) {
-    throw new Error('An exception occurred when fetching a company logo.');
-  }
-  return companyLogoBlob;
-};
-
-const uploadPublicCompanyImg = async (img: Blob, cik: string) => {
-  const formData = new FormData();
-  formData.append('img', img);
-  formData.append('cik', cik);
-
+const uploadPublicCompanyImg = async (
+  src: string,
+  cik: string,
+  format: string,
+  name: string,
+) => {
   const res = await fetch('/api/images/logo/', {
     method: 'POST',
-    body: formData,
+    body: JSON.stringify({ src, cik, format, name }),
   });
 
   if (!res.ok) {
-    throw new Error('Could not upload image to db');
+    throw new Error(`Could not upload image ${name} to db`);
   }
 };
 
-export const getPublicCompanyImg = async (
-  supabase: TypedSupabaseClient,
+export const downloadPublicCompanyImgs = async (
   cik: string,
-  website: string | null,
-  name: string,
   updateTickers: any,
-  tickersData: {
+  tickers: {
     id: string;
     cik: string;
     company_name: string;
@@ -222,18 +173,16 @@ export const getPublicCompanyImg = async (
     ticker: string;
     website: string | null;
   }[],
+  orgId: string | null,
+  supabase: TypedSupabaseClient,
 ) => {
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
-  if (!session) {
-    throw new Error('Could not find session');
-  }
-
-  let companyLogoBlob;
+  if (!session) throw new Error('Session not found');
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public-company-logos/${cik}/logo.png`,
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public-company-logos/${cik}/dark-logo`,
     {
       method: 'HEAD',
       headers: {
@@ -242,31 +191,48 @@ export const getPublicCompanyImg = async (
     },
   );
 
-  if (response.ok) {
-    let { data } = await supabase.storage
-      .from('public-company-logos')
-      .download(cik + '/logo.png');
+  console.log(response);
 
-    if (!data) {
-      throw new Error(
-        'An exception occurred when fetching company logo from supabase.',
-      );
-    }
+  if (response.ok) return;
 
-    companyLogoBlob = data;
-  } else if (website) {
-    // fetch logo
-    const link = cleanLink(website);
-    companyLogoBlob = await downloadPublicCompanyImg(link);
-    await uploadPublicCompanyImg(companyLogoBlob, cik);
-  } else {
-    // fetch domain then fetch logo
-    const link = await getOrgId(name);
-    companyLogoBlob = await downloadPublicCompanyImg(link);
-    await uploadPublicCompanyImg(companyLogoBlob, cik);
+  if (!orgId) {
+    orgId = await fetch(`https://api.brandfetch.io/v2/search/${orgId}`, {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        Authorization: 'Bearer ' + process.env.NEXT_PUBLIC_BRANDFETCH_API_KEY,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => data[0].domain)
+      .catch((err) => console.error(err));
 
-    const tickers = tickersData.filter((ticker) => ticker.cik === cik);
-
-    updateTickers(tickers.map((ticker) => ({ id: ticker.id, website: link })));
+    updateTickers(tickers.map((ticker) => ({ id: ticker.id, website: orgId })));
   }
+  const images = await fetch(
+    `https://api.brandfetch.io/v2/brands/${cleanLink(orgId || '')}`,
+    {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        Authorization: 'Bearer ' + process.env.NEXT_PUBLIC_BRANDFETCH_API_KEY,
+      },
+    },
+  )
+    .then((res) => res.json())
+    .catch((err) => console.error(err));
+
+  images.logos.forEach(async (img: any) => {
+    if (img.type === 'other') return;
+
+    const format =
+      img.formats.find((format: any) => format.format === 'png') ??
+      img.formats[0];
+    await uploadPublicCompanyImg(
+      format.src,
+      cik,
+      format.format,
+      `${img.theme}-${img.type}`,
+    );
+  });
 };

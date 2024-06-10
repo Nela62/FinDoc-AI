@@ -66,7 +66,7 @@ export const TemplateCustomizationForm = ({
       authorName: values.authorName,
       authorCompanyName: values.authorCompanyName,
       colorScheme: colorScheme,
-      authorCompanyLogo: values.authorCompanyLogo,
+      authorCompanyLogo: values.authorCompanyLogo ?? defaultCompanyLogo,
       colorSchemesList: templateConfig.colorSchemesList,
       authorCompanyLogosList: templateConfig.authorCompanyLogosList,
     });

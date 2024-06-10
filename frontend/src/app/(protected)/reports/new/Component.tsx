@@ -62,6 +62,10 @@ export const NewReport = ({ userId }: { userId: string }) => {
   );
 
   useEffect(() => {
+    console.log(templateConfig, templateData);
+  }, [templateConfig, templateData]);
+
+  useEffect(() => {
     if (settings && settings.length > 0 && logos) {
       setTemplateConfig({
         authorName: settings[0].author_name,
@@ -114,7 +118,7 @@ export const NewReport = ({ userId }: { userId: string }) => {
       </div>
       <div className="">
         {selectedReportId ? (
-          <ReportInfo reportId={selectedReportId} />
+          <ReportInfo reportId={selectedReportId} userId={userId} />
         ) : isTemplateCustomization ? (
           templateConfig ? (
             <TemplateCustomizationForm
@@ -129,6 +133,7 @@ export const NewReport = ({ userId }: { userId: string }) => {
         ) : (
           <ReportForm
             setIsTemplateCustomization={setIsTemplateCustomization}
+            setSelectedReportId={setSelectedReportId}
             templateConfig={templateConfig}
             setReportType={setReportType}
             userId={userId}

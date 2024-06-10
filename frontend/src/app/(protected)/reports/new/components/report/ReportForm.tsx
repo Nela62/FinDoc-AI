@@ -34,9 +34,8 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import {
-  cleanLink,
+  downloadPublicCompanyImgs,
   fetchCacheAPIData,
-  getPublicCompanyImg,
   getRecommendation,
 } from '../../utils/fetchAPI';
 import {
@@ -45,8 +44,27 @@ import {
   getNWeeksStock,
   getSidebarMetrics,
 } from '@/lib/utils/financialAPI';
-import { ApiProp } from '@/app/api/building-block/blocks';
+import {
+  ApiProp,
+  generateBlock,
+  generateSummary,
+} from '@/app/api/building-block/blocks';
 import { TemplateConfig } from '../../Component';
+import { JSONContent } from '@tiptap/core';
+import { markdownToJson } from '@/lib/utils/formatText';
+import { getDocxBlob } from '../../utils/getDocxBlob';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Progress } from '@/components/ui/progress';
+
+const defaultCompanyLogo = '/default_finpanel_logo.png';
 
 export const reportFormSchema = z.object({
   reportType: z.string(),
@@ -59,27 +77,43 @@ export const reportFormSchema = z.object({
 });
 
 const section_ids = [
-  'company_overview',
   'investment_thesis',
   'business_description',
-  'recent_developments',
+  // 'recent_developments',
   // 'industry_overview_competitive_positioning',
-  'financial_analysis',
-  'valuation',
+  // 'financial_analysis',
+  // 'valuation',
   // 'management_and_risks',
 ];
 
+const titles = {
+  investment_thesis: 'Investment Thesis',
+  business_description: 'Business Description',
+  recent_developments: 'Recent Developments',
+  industry_overview_competitive_positioning:
+    'Industry Overview and Competitive Positioning',
+  financial_analysis: 'Financial Analysis',
+  valuation: 'Valuation',
+  management_and_risks: 'Management and Risks',
+};
+
 export const ReportForm = ({
   setIsTemplateCustomization,
+  setSelectedReportId,
   templateConfig,
   setReportType,
   userId,
 }: {
   setIsTemplateCustomization: Dispatch<SetStateAction<boolean>>;
+  setSelectedReportId: Dispatch<SetStateAction<string | null>>;
   templateConfig: TemplateConfig | null;
   setReportType: Dispatch<SetStateAction<string>>;
   userId: string;
 }) => {
+  const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState('');
+  const [isOpen, setOpen] = useState(false);
+
   const form = useForm<z.infer<typeof reportFormSchema>>({
     resolver: zodResolver(reportFormSchema),
     defaultValues: {
@@ -125,6 +159,12 @@ export const ReportForm = ({
     'id',
   );
 
+  const { mutateAsync: updateTemplate } = useUpdateMutation(
+    supabase.from('report_template'),
+    ['id'],
+    'id, url',
+  );
+
   const tickers: Option[] =
     tickersData
       ?.map((ticker) => ({
@@ -138,13 +178,18 @@ export const ReportForm = ({
     if (!templateConfig) {
       throw new Error('Template is not ready yet.');
     }
-    // TODO: launch the dialog
+    // launch the dialog
+    setOpen(true);
+    setProgressMessage('Fetching APIs...');
     // Create a new report and save it to db
     const nanoId = getNanoId();
 
     const res = await insertNewReport([
       {
-        title: `${format(new Date(), 'MMM d, yyyy')} - ${values.reportType}`,
+        title: `${values.companyTicker} - ${values.reportType} - ${format(
+          new Date(),
+          'd MMM yyyy',
+        )}`,
         company_ticker: values.companyTicker.value,
         url: nanoId,
         type: values.reportType,
@@ -152,6 +197,7 @@ export const ReportForm = ({
         targetprice: values.targetPrice,
         status: 'Draft',
         user_id: userId,
+        section_ids: section_ids,
       },
     ]);
 
@@ -226,7 +272,6 @@ export const ReportForm = ({
       incomeStatement,
     );
 
-    // Generate a company overview if any
     const tickerData = tickersData?.find(
       (company) => company.ticker === values.companyTicker.value,
     );
@@ -236,6 +281,10 @@ export const ReportForm = ({
         `Company name for ticker ${values.companyTicker.value} was not found.`,
       );
     }
+
+    // Generate a company overview if any
+    setProgress(25);
+    setProgressMessage('Generating a company overview...');
     const companyOverview = await fetch('/api/building-block/', {
       method: 'POST',
       body: JSON.stringify({
@@ -246,42 +295,170 @@ export const ReportForm = ({
       }),
     }).then((res) => res.json());
 
-    const publicCompanyLogo = await getPublicCompanyImg(
-      supabase,
+    await downloadPublicCompanyImgs(
       tickerData.cik,
-      tickerData.website,
-      tickerData.company_name,
       updateTickers,
-      tickersData,
+      tickersData.filter((ticker) => ticker.cik === tickerData.cik),
+      tickerData.website,
+      supabase,
     );
 
     // Store template config in db
-    // insertTemplate([
-    //   {
-    //     user_id: userId,
-    //     report_id: reportId,
-    //     template_type: 'equity-analyst-sidebar',
-    //     business_description: companyOverview,
-    //     color_scheme: templateConfig.colorScheme.colors,
-    //     author_name: templateConfig.authorName,
-    //     author_company_name: templateConfig.authorCompanyName,
-    //     author_company_logo: templateConfig.authorCompanyLogo,
-    //   },
-    // ]);
+    const data = await insertTemplate([
+      {
+        user_id: userId,
+        report_id: reportId,
+        template_type: 'equity-analyst-sidebar',
+        business_description: companyOverview,
+        color_scheme: templateConfig.colorScheme.colors,
+        author_name: templateConfig.authorName,
+        author_company_name: templateConfig.authorCompanyName,
+        author_company_logo:
+          templateConfig.authorCompanyLogo === defaultCompanyLogo
+            ? null
+            : templateConfig.authorCompanyLogo,
+        metrics: {
+          sidebarMetrics,
+          growthAndValuationAnalysisMetrics,
+          financialAndRiskAnalysisMetrics,
+        },
+      },
+    ]);
+
+    if (!data) {
+      throw new Error('Could not save new template.');
+    }
 
     // Get necessary documents and add them to the report library
+    return {
+      apiData,
+      tickerData,
+      reportId,
+      templateId: data[0].id,
+      companyOverview,
+      recommendation,
+      targetPrice,
+    };
   };
 
   const onGenerateAndFormSubmit = async (
     values: z.infer<typeof reportFormSchema>,
   ) => {
+    if (!templateConfig) {
+      throw new Error('Template config is not available.');
+    }
     // baseActions
-    await baseActions(values);
+    const {
+      apiData,
+      tickerData,
+      reportId,
+      templateId,
+      recommendation,
+      targetPrice,
+    } = await baseActions(values);
 
-    // set reportdata with all info
+    const generatedJson: JSONContent = { type: 'doc', content: [] };
+    let generatedContent = '';
+
+    const generatedBlocks: Record<string, string> = {};
+
     // start report generation
-    // generate a summary if required
-    // Save the pdf template in db
+    setProgress(50);
+    setProgressMessage('Writing the report...');
+
+    Promise.all(
+      section_ids.map(async (id: string) => {
+        let content = '';
+        if (id === 'investment_thesis') {
+          content = await fetch('/api/building-block', {
+            method: 'POST',
+            body: JSON.stringify({
+              blockId: id,
+              customPrompt: '',
+              companyName: tickerData.company_name,
+              apiData: apiData,
+              recommendation: recommendation,
+              targetPrice: targetPrice,
+            }),
+          })
+            .then((res) => res.json())
+            .then((res) => res.block);
+
+          console.log(content);
+
+          generatedBlocks[id] = content;
+        } else {
+          content = await fetch('/api/building-block', {
+            method: 'POST',
+            body: JSON.stringify({
+              blockId: id,
+              customPrompt: '',
+              companyName: tickerData.company_name,
+              apiData: apiData,
+            }),
+          })
+            .then((res) => res.json())
+            .then((res) => res.block);
+
+          console.log(content);
+
+          generatedBlocks[id] = content;
+        }
+      }),
+    ).then(async () => {
+      console.log('generated all sections');
+
+      section_ids.forEach((id) => {
+        generatedContent += `##${titles[id as keyof typeof titles]}\
+      ${generatedBlocks[id]}`;
+
+        const json = markdownToJson(generatedBlocks[id]);
+        generatedJson.content?.push(
+          {
+            type: 'heading',
+            attrs: {
+              id: '220f43a9-c842-4178-b5b4-5ed8a33c6192',
+              level: 2,
+              'data-toc-id': '220f43a9-c842-4178-b5b4-5ed8a33c6192',
+            },
+            content: [
+              {
+                text: titles[id as keyof typeof titles],
+                type: 'text',
+              },
+            ],
+          },
+          { ...json.content },
+        );
+      });
+
+      // generate a summary if required
+      setProgress(75);
+      setProgressMessage('Generating a summary...');
+      const summary = await fetch('/api/building-block/summary', {
+        method: 'POST',
+        body: JSON.stringify({ reportContent: generatedContent }),
+      })
+        .then((res) => res.json())
+        .then((res) =>
+          res
+            .split('- ')
+            .map((point: string) => point.trim())
+            .slice(1),
+        );
+
+      // update report and template
+      updateReport({ id: reportId, json_content: generatedJson });
+      updateTemplate({
+        id: templateId,
+        summary: summary,
+      });
+
+      setProgress(100);
+      setOpen(false);
+
+      setSelectedReportId(reportId);
+    });
   };
 
   const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
@@ -292,154 +469,173 @@ export const ReportForm = ({
   };
 
   return (
-    <div className="w-[360px] flex flex-col py-4 gap-4 h-full">
-      <h2 className="font-semibold text-primary/80">Configurations</h2>
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onGenerateAndFormSubmit)}
-          className="space-y-4 grow justify-between flex flex-col"
-        >
-          <div className="flex flex-col space-y-4">
-            <FormField
-              control={form.control}
-              name="reportType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Report Type</FormLabel>
-                  <Select
-                    onValueChange={(value: string) => {
-                      field.onChange(value);
-                      setReportType(value);
-                    }}
-                    defaultValue={field.value}
-                  >
+    <>
+      <AlertDialog open={isOpen} onOpenChange={setOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Generating report...</AlertDialogTitle>
+            <Progress value={progress} className="w-full" />
+            <AlertDialogDescription>{progressMessage}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <div className="w-[360px] flex flex-col py-4 gap-4 h-full">
+        <h2 className="font-semibold text-primary/80">Configurations</h2>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onGenerateAndFormSubmit)}
+            className="space-y-4 grow justify-between flex flex-col"
+          >
+            <div className="flex flex-col space-y-4">
+              <FormField
+                control={form.control}
+                name="reportType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Report Type</FormLabel>
+                    <Select
+                      onValueChange={(value: string) => {
+                        field.onChange(value);
+                        setReportType(value);
+                      }}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Equity Analyst Report">
+                          Equity Analyst Report
+                        </SelectItem>
+                        <SelectItem value="Earnings Call Note">
+                          Earnings Call Note
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="companyTicker"
+                render={({ field }) => (
+                  <FormItem className="">
+                    <FormLabel>Company</FormLabel>
                     <FormControl>
-                      <SelectTrigger className="w-full bg-white">
-                        <SelectValue />
-                      </SelectTrigger>
+                      <VirtualizedCombobox
+                        options={tickers}
+                        onValueChange={field.onChange}
+                        searchPlaceholder="Select ticker..."
+                      />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Equity Analyst Report">
-                        Equity Analyst Report
-                      </SelectItem>
-                      <SelectItem value="Earnings Call Note">
-                        Earnings Call Note
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="companyTicker"
-              render={({ field }) => (
-                <FormItem className="">
-                  <FormLabel>Company</FormLabel>
-                  <FormControl>
-                    <VirtualizedCombobox
-                      options={tickers}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="recommendation"
+                render={({ field }) => (
+                  <FormItem className="">
+                    <FormLabel>Recommendation</FormLabel>
+                    <Select
                       onValueChange={field.onChange}
-                      searchPlaceholder="Select ticker..."
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="recommendation"
-              render={({ field }) => (
-                <FormItem className="">
-                  <FormLabel>Recommendation</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Auto">Auto</SelectItem>
+                        <SelectItem value="Buy">Buy</SelectItem>
+                        <SelectItem value="Overweight">Overweight</SelectItem>
+                        <SelectItem value="Hold">Hold</SelectItem>
+                        <SelectItem value="Underweight">Underweight</SelectItem>
+                        <SelectItem value="Sell">Sell</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="targetPrice"
+                disabled={form.watch('recommendation') === 'Auto'}
+                render={({ field }) => (
+                  <FormItem className="relative">
+                    <FormLabel>Target Price</FormLabel>
+                    <div className="absolute l-0 ml-2 b-0 text-foreground/70">
+                      <p className="pt-1.5 text-sm">$</p>
+                    </div>
                     <FormControl>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue />
-                      </SelectTrigger>
+                      <Input
+                        className="pl-6 bg-white"
+                        type="number"
+                        {...field}
+                        min={0}
+                        value={field.value ?? ''}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Auto">Auto</SelectItem>
-                      <SelectItem value="Buy">Buy</SelectItem>
-                      <SelectItem value="Overweight">Overweight</SelectItem>
-                      <SelectItem value="Hold">Hold</SelectItem>
-                      <SelectItem value="Underweight">Underweight</SelectItem>
-                      <SelectItem value="Sell">Sell</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="targetPrice"
-              disabled={form.watch('recommendation') === 'AUTO'}
-              render={({ field }) => (
-                <FormItem className="relative">
-                  <FormLabel>Target Price</FormLabel>
-                  <div className="absolute l-0 ml-2 b-0 text-foreground/70">
-                    <p className="pt-1.5 text-sm">$</p>
-                  </div>
-                  <FormControl>
-                    <Input {...field} className="pl-6 bg-white" type="number" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="financialStrength"
-              render={({ field }) => (
-                <FormItem className="">
-                  <FormLabel>Financial Strength</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Auto">Auto</SelectItem>
-                      <SelectItem value="Low">Low</SelectItem>
-                      <SelectItem value="Low-Medium">Low-Medium</SelectItem>
-                      <SelectItem value="Medium">Medium</SelectItem>
-                      <SelectItem value="Medium-High">Medium-High</SelectItem>
-                      <SelectItem value="High">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="financialStrength"
+                render={({ field }) => (
+                  <FormItem className="">
+                    <FormLabel>Financial Strength</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Auto">Auto</SelectItem>
+                        <SelectItem value="Low">Low</SelectItem>
+                        <SelectItem value="Low-Medium">Low-Medium</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="Medium-High">Medium-High</SelectItem>
+                        <SelectItem value="High">High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* <div className="flex flex-col space-y-3">
+              {/* <div className="flex flex-col space-y-3">
                     <Label>Data Sources</Label>
                     <Button variant="outline" className="w-1/2">
                       Edit Sources
                     </Button>
                   </div> */}
-            <Button
-              variant="ghost"
-              className="text-xs w-fit mt-2 mb-4 font-normal px-2"
-              onClick={() => {
-                setIsTemplateCustomization(true);
-              }}
-            >
-              Customize Template -{'>'}
-            </Button>
-          </div>
+              <Button
+                variant="ghost"
+                className="text-xs w-fit mt-2 mb-4 font-normal px-2"
+                onClick={() => {
+                  setIsTemplateCustomization(true);
+                }}
+              >
+                Customize Template -{'>'}
+              </Button>
+            </div>
 
-          {/* <div className="flex gap-5 w-full mt-14">
+            {/* <div className="flex gap-5 w-full mt-14">
             <Button
               variant="outline"
               type="submit"
@@ -463,19 +659,20 @@ export const ReportForm = ({
               </div>
             </Button>
           </div> */}
-          <Button
-            type="submit"
-            onClick={form.handleSubmit(onGenerateAndFormSubmit)}
-            name="generate"
-            className="flex gap-2 h-11 mx-auto bg-azure hover:bg-azure/95 px-6"
-          >
-            <Wand2Icon className="h-5 w-5" />
-            <div className="flex flex-col w-fit justify-start">
-              <p>Generate Report</p>
-            </div>
-          </Button>
-        </form>
-      </Form>
-    </div>
+            <Button
+              type="submit"
+              onClick={form.handleSubmit(onGenerateAndFormSubmit)}
+              name="generate"
+              className="flex gap-2 h-11 mx-auto bg-azure hover:bg-azure/95 px-6"
+            >
+              <Wand2Icon className="h-5 w-5" />
+              <div className="flex flex-col w-fit justify-start">
+                <p>Generate Report</p>
+              </div>
+            </Button>
+          </form>
+        </Form>
+      </div>
+    </>
   );
 };

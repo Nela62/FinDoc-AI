@@ -1,4 +1,5 @@
 import { Humanloop } from 'humanloop';
+import Anthropic from '@anthropic-ai/sdk';
 
 import {
   BalanceSheet,
@@ -164,16 +165,16 @@ const environmentAndSustainabilityContext = (apiData: ApiProp): string => {
 
 const contextMap: Record<string, (apiData: ApiProp) => string> = {
   company_overview: (apiData) => companyOverviewContext(apiData),
-  investment_thesis: investmentThesisContext,
-  business_description: businessDescriptionContext,
-  recent_developments: recentDevelopmentsContext,
-  industry_overview_competitive_positioning:
-    industryOverviewCompetitivePositioningContext,
-  financial_analysis: financialAnalysisContext,
-  valuation: valuationContext,
-  management_and_risks: managementAndRisksContext,
-  environment_and_sustainability_governance:
-    environmentAndSustainabilityContext,
+  investment_thesis: (apiData) => investmentThesisContext(apiData),
+  business_description: (apiData) => businessDescriptionContext(apiData),
+  recent_developments: (apiData) => recentDevelopmentsContext(apiData),
+  industry_overview_competitive_positioning: (apiData) =>
+    industryOverviewCompetitivePositioningContext(apiData),
+  financial_analysis: (apiData) => financialAnalysisContext(apiData),
+  valuation: (apiData) => valuationContext(apiData),
+  management_and_risks: (apiData) => managementAndRisksContext(apiData),
+  environment_and_sustainability_governance: (apiData) =>
+    environmentAndSustainabilityContext(apiData),
 };
 
 const humanloopIdsMap: Record<string, string> = {
@@ -188,6 +189,21 @@ const humanloopIdsMap: Record<string, string> = {
   environment_and_sustainability_governance: 'pr_Hp3kSGo0vlOaS5Yo6pkor',
 };
 
+const anthropic = new Anthropic();
+
+function findReplaceString(string: string, find: string, replace: string) {
+  if (/[a-zA-Z\_]+/g.test(string)) {
+    return string.replace(
+      new RegExp('{{(?:\\s+)?(' + find + ')(?:\\s+)?}}'),
+      replace,
+    );
+  } else {
+    throw new Error(
+      'Find statement does not match regular expression: /[a-zA-Z_]+/',
+    );
+  }
+}
+
 export const generateBlock = async (
   blockId: string,
   customPrompt: string,
@@ -195,31 +211,130 @@ export const generateBlock = async (
   apiData: ApiProp,
 ) => {
   const context = contextMap[blockId](apiData);
-  // const config = await humanloop.projects
-  //   .getActiveConfig({
-  //     id: humanloopIdsMap[blockId],
-  //   })
-  //   .then((res) => res.data.config);
-
-  const chatResponse = await humanloop
-    .chatDeployed({
-      project_id: humanloopIdsMap[blockId],
-      // @ts-ignore
-      messages: [],
-      source: 'dev-frontend',
-      inputs: {
-        CONTEXT: context,
-        CUSTOM_PROMPT: customPrompt,
-        COMPANY_NAME: companyName,
-      },
-      // model_config: {
-      //   name: 'haiku',
-      //   provider: 'anthropic',
-      //   model: 'claude-3-haiku-20240307',
-      //   temperature: 0.2,
-      // },
+  const config = await humanloop.projects
+    .getActiveConfig({
+      id: humanloopIdsMap[blockId],
     })
-    .then((res) => res.data.data);
+    .then((res) => res.data.config);
 
-  return chatResponse[0].output;
+  // @ts-ignore
+  let template = config.chat_template[0].content;
+  template = findReplaceString(template, 'CONTEXT', context);
+  template = findReplaceString(template, 'CUSTOM_PROMPT', customPrompt);
+  template = findReplaceString(template, 'COMPANY_NAME', companyName);
+
+  const message = await anthropic.messages.create({
+    temperature: 0.2,
+    max_tokens: 4096,
+    messages: [{ role: 'user', content: template }],
+    // model: 'claude-3-opus-20240229',
+    model: 'claude-3-haiku-20240307',
+  });
+
+  console.log(message.content);
+
+  // humanloop.log({
+  //   project_id: humanloopIdsMap[blockId],
+  //   config_id: config.id,
+  //   inputs: {
+  //     CONTEXT: context,
+  //     CUSTOM_PROMPT: customPrompt,
+  //     COMPANY_NAME: companyName,
+  //   },
+  //   output: message.content.find((block) => !block.text.includes('scratchpad'))
+  //     .text,
+  // });
+
+  // return message.content.find((block) => !block.text.includes('scratchpad'))
+  //   .text;
+  return '';
+};
+
+export const generateInvestmentThesis = async (
+  blockId: string,
+  customPrompt: string,
+  companyName: string,
+  apiData: ApiProp,
+  recommendation: string,
+  targetPrice: string,
+) => {
+  const context = contextMap[blockId](apiData);
+  const config = await humanloop.projects
+    .getActiveConfig({
+      id: humanloopIdsMap[blockId],
+    })
+    .then((res) => res.data.config);
+
+  // @ts-ignore
+  let template = config.chat_template[0].content;
+  template = findReplaceString(template, 'CONTEXT', context);
+  template = findReplaceString(template, 'CUSTOM_PROMPT', customPrompt);
+  template = findReplaceString(template, 'COMPANY_NAME', companyName);
+  template = findReplaceString(template, 'RECOMMENDATION', recommendation);
+  template = findReplaceString(template, 'TARGET_PRICE', targetPrice);
+
+  console.log(template);
+
+  const message = await anthropic.messages.create({
+    temperature: 0.2,
+    max_tokens: 4096,
+    messages: [{ role: 'user', content: template }],
+    // model: 'claude-3-opus-20240229',
+    model: 'claude-3-haiku-20240307',
+  });
+
+  console.log(message.content);
+
+  // humanloop.log({
+  //   project_id: humanloopIdsMap[blockId],
+  //   config_id: config.id,
+  //   inputs: {
+  //     CONTEXT: context,
+  //     CUSTOM_PROMPT: customPrompt,
+  //     COMPANY_NAME: companyName,
+  //     RECOMMENDATION: recommendation,
+  //     TARGET_PRICE: targetPrice,
+  //   },
+  //   output: message.content.find((block) => !block.text.includes('scratchpad'))
+  //     .text,
+  // });
+
+  // return message.content.find((block) => !block.text.includes('scratchpad'))
+  //   .text;
+  return '';
+};
+
+export const generateSummary = async (reportContent: string) => {
+  const config = await humanloop.projects
+    .getActiveConfig({
+      id: 'pr_U4jwcfdNjstPSeWE56IFS',
+    })
+    .then((res) => res.data.config);
+
+  // @ts-ignore
+  let template = config.chat_template[0].content;
+  template = findReplaceString(template, 'REPORT', reportContent);
+
+  const message = await anthropic.messages.create({
+    temperature: 0.2,
+    max_tokens: 4096,
+    messages: [{ role: 'user', content: template }],
+    // model: 'claude-3-opus-20240229',
+    model: 'claude-3-haiku-20240307',
+  });
+
+  console.log(message.content);
+
+  // humanloop.log({
+  //   project_id: 'pr_U4jwcfdNjstPSeWE56IFS',
+  //   config_id: config.id,
+  //   inputs: {
+  //     REPORT: reportContent,
+  //   },
+  //   output: message.content.find((block) => !block.text.includes('scratchpad'))
+  //     .text,
+  // });
+
+  // return message.content.find((block) => !block.text.includes('scratchpad'))
+  //   .text;
 };

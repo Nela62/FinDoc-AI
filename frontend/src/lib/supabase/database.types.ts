@@ -438,7 +438,7 @@ export type Database = {
       }
       report_template: {
         Row: {
-          author_company_logo: string
+          author_company_logo: string | null
           author_company_name: string
           author_name: string
           business_description: string | null
@@ -451,7 +451,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          author_company_logo: string
+          author_company_logo?: string | null
           author_company_name: string
           author_name: string
           business_description?: string | null
@@ -464,7 +464,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          author_company_logo?: string
+          author_company_logo?: string | null
           author_company_name?: string
           author_name?: string
           business_description?: string | null
@@ -480,7 +480,7 @@ export type Database = {
           {
             foreignKeyName: "report_template_report_id_fkey"
             columns: ["report_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "reports"
             referencedColumns: ["id"]
           },

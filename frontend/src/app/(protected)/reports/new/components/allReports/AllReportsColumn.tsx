@@ -10,6 +10,7 @@ import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { format } from 'date-fns';
 import { Plus } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
+import { DisplayIcon } from './DisplayIcon';
 
 export const AllReportsColumn = ({
   userId,
@@ -22,7 +23,6 @@ export const AllReportsColumn = ({
 }) => {
   const supabase = createClient();
   const { data: reports, isLoading } = useQuery(fetchAllReports(supabase));
-  console.log(reports);
 
   return (
     <div className="flex flex-col border-r-[0.5px] h-full">
@@ -56,14 +56,20 @@ export const AllReportsColumn = ({
               >
                 <div
                   className={cn(
-                    'text-sm group-hover:bg-azure/10 py-2 pl-4 pr-2 text-primary/70 font-medium flex justify-between items-center my-0.5',
+                    'text-sm group-hover:bg-azure/10 py-2 pl-4 pr-2 text-primary/70 font-medium flex my-0.5 gap-2',
                     selectedReportId === report.id && 'bg-azure/20',
                   )}
                 >
+                  {report.companies?.cik && report.companies?.company_name && (
+                    <DisplayIcon
+                      cik={report.companies?.cik}
+                      companyName={report.companies?.company_name}
+                    />
+                  )}
                   <div className="flex flex-col gap-1 w-full">
                     <div className="flex justify-between items-center w-full h-6">
                       <p className="">
-                        {report.companies.stock_name.split(' - ')[0]}
+                        {report.companies?.stock_name.split(' - ')[0]}
                       </p>
                       <DotsHorizontalIcon className="text-transparent h-6 w-6 group-hover:text-primary/70 hover:bg-azure/25 p-1 rounded-full" />
                     </div>

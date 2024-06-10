@@ -2,21 +2,15 @@ import { serviceClient } from '@/lib/supabase/service';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
-  console.log('called the api');
-
   const supabase = serviceClient();
-  const formData = await req.formData();
-  const img = formData.get('img');
-  const cik = formData.get('cik');
+  const { src, cik, format, name } = await req.json();
 
-  if (!img || !(img instanceof File)) {
-    return Response.error();
-  }
+  const blob = await fetch(src).then((res) => res.blob());
 
   try {
     const res = await supabase.storage
       .from('public-company-logos')
-      .upload(`${cik}/logo.png`, img, { contentType: 'image/png' });
+      .upload(`${cik}/${name}`, blob, { contentType: `image/${format}` });
   } catch (err) {
     console.error(err);
   }

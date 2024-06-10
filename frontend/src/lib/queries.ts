@@ -5,7 +5,7 @@ export function fetchAllReports(client: TypedSupabaseClient) {
   return client
     .from('reports')
     .select(
-      'id, user_id, title, company_ticker, type, recommendation, targetprice, financial_strength, status, created_at, updated_at, url, html_content, json_content, companies (company_name, stock_name)',
+      'id, user_id, title, company_ticker, type, recommendation, targetprice, financial_strength, status, created_at, updated_at, url, html_content, json_content, companies (company_name, stock_name, cik)',
     )
     .throwOnError();
 }

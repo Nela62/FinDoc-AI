@@ -9,7 +9,10 @@ import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { getDocxBlob } from '../../utils/getDocxBlob';
 import { JSONContent } from '@tiptap/core';
 import { FinancialStrength, Recommendation } from '@/types/report';
-import { useFileUrl } from '@supabase-cache-helpers/storage-react-query';
+import {
+  useDirectory,
+  useFileUrl,
+} from '@supabase-cache-helpers/storage-react-query';
 import { useCallback, useEffect, useState } from 'react';
 import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
 import { toPng } from 'html-to-image';
@@ -18,6 +21,8 @@ import {
   Earnings,
   IncomeStatement,
 } from '@/types/alphaVantageApi';
+
+const defaultCompanyLogo = '/default_finpanel_logo.png';
 
 type apiCacheData = {
   incomeStatement: IncomeStatement;
@@ -32,6 +37,7 @@ export const ReportInfo = ({
   reportId: string;
   userId: string;
 }) => {
+  const [logoName, setLogoName] = useState<string | null>(null);
   const [chart, setChart] = useState<HTMLDivElement | null>(null);
   const [apiCacheData, setApiCacheData] = useState<apiCacheData | null>(null);
 
@@ -79,20 +85,39 @@ export const ReportInfo = ({
     {
       ensureExistence: true,
       refetchOnWindowFocus: false,
-      enabled: !!templateConfig,
+      enabled: !!templateConfig && !!templateConfig.author_company_logo,
     },
+  );
+
+  const { data: images } = useDirectory(
+    supabase.storage.from('public-company-logos'),
+    report?.companies?.cik ?? '',
+    { refetchOnWindowFocus: false, enabled: !!report && !!report.companies },
   );
 
   const { data: companyLogoUrl } = useFileUrl(
     supabase.storage.from('public-company-logos'),
-    `${report?.companies?.cik}/logo.png`,
+    `${report?.companies?.cik}/${logoName}`,
     'private',
     {
       ensureExistence: true,
       refetchOnWindowFocus: false,
-      enabled: !!report,
+      enabled: !!report && !!logoName,
     },
   );
+
+  useEffect(() => {
+    if (!images) return;
+    const logo =
+      images.find((image) => image.name === 'dark-logo') ??
+      images.find((image) => image.name === 'light-logo') ??
+      images.find((image) => image.name === 'dark-icon') ??
+      images.find((image) => image.name === 'light-icon') ??
+      images.find((image) => image.name === 'dark-symbol') ??
+      images.find((image) => image.name === 'light-symbol');
+
+    setLogoName(logo?.name ?? null);
+  }, [images]);
 
   const downloadDocx = async () => {
     if (
@@ -115,13 +140,13 @@ export const ReportInfo = ({
       );
     }
 
-    if (!authorCompanyLogoUrl || !companyLogoUrl) {
+    if (!companyLogoUrl) {
       throw new Error('Could not find company logos.');
     }
 
-    const authorCompanyLogo = await fetch(authorCompanyLogoUrl).then((res) =>
-      res.blob(),
-    );
+    const authorCompanyLogo = await fetch(
+      authorCompanyLogoUrl ?? defaultCompanyLogo,
+    ).then((res) => res.blob());
 
     const companyLogo = await fetch(companyLogoUrl).then((res) => res.blob());
 
@@ -131,7 +156,7 @@ export const ReportInfo = ({
       .then((url) => fetch(url))
       .then((res) => res.blob());
 
-    const docxBlob = getDocxBlob({
+    const docxBlob = await getDocxBlob({
       componentId: templateConfig.template_type,
       summary: templateConfig.summary ?? [],
       businessDescription: templateConfig.business_description ?? '',
@@ -152,6 +177,21 @@ export const ReportInfo = ({
       companyLogo: companyLogo,
       firstPageVisual: firstPageVisual,
     });
+
+    const url = URL.createObjectURL(docxBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = report.title;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    // const formData = new FormData();
+    // formData.append('file', docxBlob);
+
+    // const pdfBlob = await fetch('/api/convert/', {
+    //   method: 'POST',
+    //   body: formData,
+    // }).then((res) => res.blob());
   };
 
   return (
