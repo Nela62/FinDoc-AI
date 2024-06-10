@@ -162,7 +162,7 @@ export const ReportForm = ({
   const { mutateAsync: updateTemplate } = useUpdateMutation(
     supabase.from('report_template'),
     ['id'],
-    'id, url',
+    'id',
   );
 
   const tickers: Option[] =
@@ -285,7 +285,7 @@ export const ReportForm = ({
     // Generate a company overview if any
     setProgress(25);
     setProgressMessage('Generating a company overview...');
-    const companyOverview = await fetch('/api/building-block/', {
+    const { block: companyOverview } = await fetch('/api/building-block/', {
       method: 'POST',
       body: JSON.stringify({
         blockId: 'company_overview',
@@ -370,7 +370,7 @@ export const ReportForm = ({
       section_ids.map(async (id: string) => {
         let content = '';
         if (id === 'investment_thesis') {
-          content = await fetch('/api/building-block', {
+          content = await fetch('/api/building-block/investment-thesis', {
             method: 'POST',
             body: JSON.stringify({
               blockId: id,
@@ -383,8 +383,6 @@ export const ReportForm = ({
           })
             .then((res) => res.json())
             .then((res) => res.block);
-
-          console.log(content);
 
           generatedBlocks[id] = content;
         } else {
@@ -400,8 +398,6 @@ export const ReportForm = ({
             .then((res) => res.json())
             .then((res) => res.block);
 
-          console.log(content);
-
           generatedBlocks[id] = content;
         }
       }),
@@ -413,6 +409,7 @@ export const ReportForm = ({
       ${generatedBlocks[id]}`;
 
         const json = markdownToJson(generatedBlocks[id]);
+        console.log(json);
         generatedJson.content?.push(
           {
             type: 'heading',
@@ -428,7 +425,7 @@ export const ReportForm = ({
               },
             ],
           },
-          { ...json.content },
+          ...json.content,
         );
       });
 
@@ -441,11 +438,12 @@ export const ReportForm = ({
       })
         .then((res) => res.json())
         .then((res) =>
-          res
+          res.summary
             .split('- ')
             .map((point: string) => point.trim())
             .slice(1),
         );
+      console.log(summary);
 
       // update report and template
       updateReport({ id: reportId, json_content: generatedJson });

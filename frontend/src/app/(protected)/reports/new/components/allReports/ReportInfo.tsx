@@ -150,8 +150,6 @@ export const ReportInfo = ({
 
     const companyLogo = await fetch(companyLogoUrl).then((res) => res.blob());
 
-    const metrics = JSON.parse(templateConfig.metrics as string);
-
     const firstPageVisual = await toPng(chart)
       .then((url) => fetch(url))
       .then((res) => res.blob());
@@ -166,10 +164,11 @@ export const ReportInfo = ({
       content: report.json_content as JSONContent,
       companyName: report.companies.company_name,
       companyTicker: report.company_ticker,
-      sidebarMetrics: metrics.sidebarMetrics,
+      sidebarMetrics: templateConfig.metrics.sidebarMetrics,
       growthAndValuationAnalysisMetrics:
-        metrics.growthAndValuationAnalysisMetrics,
-      financialAndRiskAnalysisMetrics: metrics.financialAndRiskAnalysisMetrics,
+        templateConfig.metrics.growthAndValuationAnalysisMetrics,
+      financialAndRiskAnalysisMetrics:
+        templateConfig.metrics.financialAndRiskAnalysisMetrics,
       recommendation: report.recommendation as Recommendation,
       financialStrength: report.financial_strength as FinancialStrength,
       targetPrice: report.targetprice,

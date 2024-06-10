@@ -18,6 +18,8 @@ const humanloop = new Humanloop({
   apiKey: process.env.HUMANLOOP_API_KEY,
 });
 
+const formatInstructions = `\nAfter you've outlined your key points in the scratchpad, write out your response inside <output> tags.`;
+
 export type ApiProp = {
   overview: Overview;
   balanceSheet: BalanceSheet;
@@ -226,12 +228,10 @@ export const generateBlock = async (
   const message = await anthropic.messages.create({
     temperature: 0.2,
     max_tokens: 4096,
-    messages: [{ role: 'user', content: template }],
+    messages: [{ role: 'user', content: template + formatInstructions }],
     // model: 'claude-3-opus-20240229',
     model: 'claude-3-haiku-20240307',
   });
-
-  console.log(message.content);
 
   // humanloop.log({
   //   project_id: humanloopIdsMap[blockId],
@@ -247,7 +247,9 @@ export const generateBlock = async (
 
   // return message.content.find((block) => !block.text.includes('scratchpad'))
   //   .text;
-  return '';
+  return message.content[0].text
+    .replace(/(.*?)<output>/gs, '')
+    .replace('</output>', '');
 };
 
 export const generateInvestmentThesis = async (
@@ -273,17 +275,13 @@ export const generateInvestmentThesis = async (
   template = findReplaceString(template, 'RECOMMENDATION', recommendation);
   template = findReplaceString(template, 'TARGET_PRICE', targetPrice);
 
-  console.log(template);
-
   const message = await anthropic.messages.create({
     temperature: 0.2,
     max_tokens: 4096,
-    messages: [{ role: 'user', content: template }],
+    messages: [{ role: 'user', content: template + formatInstructions }],
     // model: 'claude-3-opus-20240229',
     model: 'claude-3-haiku-20240307',
   });
-
-  console.log(message.content);
 
   // humanloop.log({
   //   project_id: humanloopIdsMap[blockId],
@@ -301,7 +299,9 @@ export const generateInvestmentThesis = async (
 
   // return message.content.find((block) => !block.text.includes('scratchpad'))
   //   .text;
-  return '';
+  return message.content[0].text
+    .replace(/(.*?)<output>/gs, '')
+    .replace('</output>', '');
 };
 
 export const generateSummary = async (reportContent: string) => {
@@ -318,12 +318,20 @@ export const generateSummary = async (reportContent: string) => {
   const message = await anthropic.messages.create({
     temperature: 0.2,
     max_tokens: 4096,
-    messages: [{ role: 'user', content: template }],
+    messages: [{ role: 'user', content: template + formatInstructions }],
     // model: 'claude-3-opus-20240229',
     model: 'claude-3-haiku-20240307',
   });
 
-  console.log(message.content);
+  console.log(
+    message.content[0].text
+      .replace(/(.*?)<output>/gs, '')
+      .replace('</output>', ''),
+  );
+
+  return message.content[0].text
+    .replace(/(.*?)<output>/gs, '')
+    .replace('</output>', '');
 
   // humanloop.log({
   //   project_id: 'pr_U4jwcfdNjstPSeWE56IFS',
