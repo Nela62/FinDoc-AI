@@ -50,6 +50,7 @@ export const TemplateCustomizationForm = ({
       authorName: templateConfig.authorName,
       authorCompanyName: templateConfig.authorCompanyName,
       colorScheme: templateConfig.colorScheme.id,
+      authorCompanyLogo: templateConfig.authorCompanyLogo ?? defaultCompanyLogo,
     },
   });
 
@@ -158,7 +159,7 @@ export const TemplateCustomizationForm = ({
                           <Image
                             src={defaultCompanyLogo}
                             alt="preview image"
-                            className="h-10 w-auto bg-zinc-500 rounded-sm p-2 py-1"
+                            className="h-8 w-auto bg-zinc-500 rounded-sm p-2 py-1"
                             height={0}
                             width={0}
                             sizes="100vw"

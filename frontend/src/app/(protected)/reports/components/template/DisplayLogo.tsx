@@ -32,7 +32,7 @@ export const DisplayLogo = ({
       <Image
         src={url}
         alt="preview image"
-        className="h-10 w-auto bg-zinc-500 rounded-sm p-2 py-1"
+        className="h-8 w-auto bg-zinc-500 rounded-sm p-2 py-1"
         height={0}
         width={0}
         sizes="100vw"
