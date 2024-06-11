@@ -35,7 +35,7 @@ export default async function Login() {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect('/reports/all');
+    redirect('/reports/');
   }
 
   return (

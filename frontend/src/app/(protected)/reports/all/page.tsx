@@ -16,7 +16,7 @@ import { Metadata } from 'next';
 // TODO: add export functionality
 
 export const metadata: Metadata = {
-  title: 'Coreline - View All Reports',
+  title: 'Finpanel - View All Reports',
   description: 'Supercharge your financial report generation',
 };
 

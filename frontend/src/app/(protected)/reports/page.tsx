@@ -18,7 +18,7 @@ import { Metadata } from 'next';
 import { NewReport } from './Component';
 
 export const metadata: Metadata = {
-  title: 'Coreline - Create New Report',
+  title: 'Finpanel - Create New Report',
   description: 'Supercharge your financial report generation',
 };
 

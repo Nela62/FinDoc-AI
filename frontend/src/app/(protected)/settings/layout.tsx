@@ -14,7 +14,7 @@ import { redirect } from 'next/navigation';
 import { fetchSettings } from '@/lib/queries';
 
 export const metadata: Metadata = {
-  title: 'Coreline - Settings',
+  title: 'Finpanel - Settings',
 };
 
 export default async function SettingsPage({

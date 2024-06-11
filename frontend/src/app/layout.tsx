@@ -12,7 +12,7 @@ import { Toaster } from '@/components/ui/toaster';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Coreline - Financial Report Generation',
+  title: 'Finpanel - Financial Report Generation',
   description: 'Supercharge your financial report generation',
 };
 

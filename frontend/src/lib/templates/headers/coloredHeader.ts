@@ -102,8 +102,8 @@ export const coloredHeader = async (
                 new ImageRun({
                   data: buffer,
                   transformation: {
-                    width: (50 / headerImageHeight) * headerImageWidth,
-                    height: 50,
+                    width: (45 / headerImageHeight) * headerImageWidth,
+                    height: 45,
                   },
                   // floating: {
                   //   zIndex: 10,

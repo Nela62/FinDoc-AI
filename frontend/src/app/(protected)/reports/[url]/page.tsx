@@ -19,7 +19,7 @@ import { ReportPage } from './components/ReportPage';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Coreline - View Report',
+  title: 'Finpanel - View Report',
   description: 'Supercharge your financial report generation',
 };
 
