@@ -53,7 +53,7 @@ export function fetchReportById(client: TypedSupabaseClient, reportId: string) {
   return client
     .from('reports')
     .select(
-      'id, user_id, title, company_ticker, type, recommendation, targetprice, financial_strength, status, created_at, updated_at, url, html_content, json_content, companies (cik, company_name, stock_name)',
+      'id, user_id, title, company_ticker, type, recommendation, targetprice, financial_strength, status, created_at, updated_at, url, html_content, json_content, companies (cik, company_name, stock_name, isin, exchange, country, market_cap, currency, website)',
     )
     .eq('id', reportId)
     .throwOnError()

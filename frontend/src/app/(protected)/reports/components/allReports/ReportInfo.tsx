@@ -7,6 +7,13 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { useFileUrl } from '@supabase-cache-helpers/storage-react-query';
+import { format } from 'date-fns';
+import { useCallback, useMemo } from 'react';
+
+type ReportInfoType = {
+  title: string;
+  value: string;
+};
 
 export const ReportInfo = ({
   reportId,
@@ -60,6 +67,38 @@ export const ReportInfo = ({
     URL.revokeObjectURL(docxFileData);
   };
 
+  const getReportInfo = useMemo(() => {
+    if (!report) return [];
+    const info: ReportInfoType[] = [
+      {
+        title: 'Company Name',
+        value: report.companies?.stock_name.split(' - ')[0] ?? 'NULL',
+      },
+      { title: 'Ticker', value: report.company_ticker },
+      { title: 'Stock Name', value: report.companies?.stock_name ?? 'NULL' },
+      { title: 'Report Type', value: report.type },
+      {
+        title: 'Date Created',
+        value: format(report.created_at, 'd MMMM yyyy, h:m:s a'),
+      },
+      {
+        title: 'Last Updated',
+        value: format(report.updated_at, 'd MMMM yyyy, h:m:s a'),
+      },
+      { title: 'Recommendation', value: report.recommendation ?? '' },
+      { title: 'Target Price', value: report.targetprice?.toString() ?? '' },
+      { title: 'Financial Strength', value: report.financial_strength ?? '' },
+      { title: 'CIK', value: report.companies?.cik ?? 'NULL' },
+      { title: 'ISIN', value: report.companies?.isin ?? 'NULL' },
+      { title: 'Exchange', value: report.companies?.exchange ?? 'NULL' },
+      { title: 'Currency', value: report.companies?.currency ?? 'NULL' },
+      { title: 'Country', value: report.companies?.country ?? 'NULL' },
+      { title: 'Market Cap', value: report.companies?.market_cap ?? 'NULL' },
+      { title: 'Website', value: report.companies?.website ?? 'NULL' },
+    ];
+    return info;
+  }, [report]);
+
   return (
     <div className="w-[360px] py-4">
       <div className="sr-only" id="hidden-container"></div>
@@ -79,6 +118,18 @@ export const ReportInfo = ({
         >
           Download pdf
         </Button>
+      </div>
+      <div className="flex flex-col w-full mt-8 gap-6">
+        {getReportInfo
+          ? getReportInfo.map((row: ReportInfoType) => (
+              <div key={row.title} className="flex items-center">
+                <p className="w-1/2 font-semibold text-sm text-primary/80">
+                  {row.title}
+                </p>
+                <p className="w-1/2 text-sm text-primary/70">{row.value}</p>
+              </div>
+            ))
+          : []}
       </div>
     </div>
   );
