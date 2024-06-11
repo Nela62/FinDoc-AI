@@ -1,14 +1,15 @@
 create table if not exists public.report_template (
   "id" "uuid" DEFAULT "gen_random_uuid"() PRIMARY KEY,
-  report_id uuid not null references public.reports (id),
+  report_id uuid unique not null references public.reports (id),
   user_id uuid not null references auth.users (id),
   template_type text not null,
   business_description text,
   summary text array,
-  color_scheme text array,
-  author_name text,
-  metrics jsonb,
-  section_ids text array not null
+  color_scheme text array not null,
+  author_name text not null,
+  author_company_name text not null,
+  author_company_logo text,
+  metrics jsonb
 );
 
 ALTER TABLE
@@ -386,7 +387,7 @@ values
       ] },
 { "type": "paragraph",
 "attrs": { "class": null } } ] }',
-    ARRAY ['investment_thesis'],
+    ARRAY ['investment_thesis', 'business_description', 'recent_developments', 'industry_overview', 'financial_analysis', 'valuation', 'management_and_risks'],
     'equity-analyst-sidebar',
     'Acme Industries, Inc. is a prominent U.S. e-commerce retailer and among the top e-commerce sites worldwide. Acme Industries also encompasses Acme Cloud Solutions (ACS), a global leader in cloud-based Infrastructure-as-a-Service (IaaS) platforms. The company''s Prime membership platform is a key online retail differentiator, offering customers free shipping (after an annual fee) along with exclusive media content (music, video, audible books, etc.). Acme''s flagship products, such as the Acme Reader and the VoiceBox digital voice assistants, are leaders in their categories.',
     ARRAY [
