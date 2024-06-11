@@ -17,7 +17,7 @@ export function fetchTemplateConfig(
   return client
     .from('report_template')
     .select(
-      'template_type, business_description, summary, color_scheme, author_name, author_company_name, author_company_logo, metrics',
+      'id, template_type, business_description, summary, color_scheme, author_name, author_company_name, author_company_logo, metrics',
     )
     .eq('report_id', reportId)
     .single();

@@ -94,7 +94,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
       >
         <p>200-Day Moving Average</p>
         <div className="flex gap-2">
-          <p>Target Price: $165.00</p>
+          <p>Target Price: ${props.targetPrice}</p>
           <p>52 Week High: ${stockMax}</p>
           <p>52 Week Low: ${stockMin}</p>
           <p>

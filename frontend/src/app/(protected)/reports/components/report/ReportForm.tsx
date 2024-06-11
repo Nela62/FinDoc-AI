@@ -19,7 +19,7 @@ import {
   VirtualizedCombobox,
   Option,
 } from '@/components/ui/virtualized-combobox';
-import { fetchTickers } from '@/lib/queries';
+import { fetchAPICacheByReportId, fetchTickers } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
 import { getNanoId } from '@/lib/utils/nanoId';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,7 +30,13 @@ import {
 } from '@supabase-cache-helpers/postgrest-react-query';
 import { format } from 'date-fns';
 import { SquarePen, Wand2Icon } from 'lucide-react';
-import { Dispatch, SetStateAction, useState } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import {
@@ -63,9 +69,21 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
+import { useDocxGenerator } from '@/hooks/useDocxGenerator';
+import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
+import {
+  DailyStockData,
+  Earnings,
+  IncomeStatement,
+} from '@/types/alphaVantageApi';
 
 const defaultCompanyLogo = '/default_finpanel_logo.png';
 
+type apiCacheData = {
+  incomeStatement: IncomeStatement;
+  earnings: Earnings;
+  dailyStock: DailyStockData;
+};
 export const reportFormSchema = z.object({
   reportType: z.string(),
   companyTicker: z.object({ value: z.string(), label: z.string() }),
@@ -113,6 +131,18 @@ export const ReportForm = ({
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState('');
   const [isOpen, setOpen] = useState(false);
+  const [curReportId, setReportId] = useState<string | null>(null);
+  const [chart, setChart] = useState<HTMLDivElement | null>(null);
+  const [apiCacheData, setApiCacheData] = useState<apiCacheData | null>(null);
+
+  const {
+    docxFile,
+    pdfFile,
+    isLoading,
+    generateDocxBlob,
+    generatePdf,
+    targetPrice,
+  } = useDocxGenerator(userId, curReportId);
 
   const form = useForm<z.infer<typeof reportFormSchema>>({
     resolver: zodResolver(reportFormSchema),
@@ -124,6 +154,39 @@ export const ReportForm = ({
   });
 
   const supabase = createClient();
+
+  const { data: apiCache } = useQuery(
+    fetchAPICacheByReportId(supabase, curReportId ?? ''),
+    { enabled: !!curReportId },
+  );
+
+  useEffect(() => {
+    if (!apiCache) return;
+
+    const incomeStatement = apiCache.find((cache) =>
+      cache.endpoint.includes('INCOME_STATEMENT'),
+    );
+
+    const earnings = apiCache.find((cache) =>
+      cache.endpoint.includes('EARNINGS'),
+    );
+
+    const dailyStock = apiCache.find((cache) =>
+      cache.endpoint.includes('TIME_SERIES_DAILY'),
+    );
+
+    if (incomeStatement && earnings && dailyStock) {
+      setApiCacheData({
+        incomeStatement: incomeStatement.json_data as IncomeStatement,
+        earnings: earnings.json_data as Earnings,
+        dailyStock: dailyStock.json_data as DailyStockData,
+      });
+    }
+  }, [apiCache]);
+
+  const onRefChange = useCallback((node: HTMLDivElement) => {
+    setChart(node);
+  }, []);
 
   const { data: tickersData } = useQuery(fetchTickers(supabase));
 
@@ -186,7 +249,7 @@ export const ReportForm = ({
 
     const res = await insertNewReport([
       {
-        title: `${values.companyTicker} - ${values.reportType} - ${format(
+        title: `${values.companyTicker.value} - ${values.reportType} - ${format(
           new Date(),
           'd MMM yyyy',
         )}`,
@@ -283,7 +346,7 @@ export const ReportForm = ({
     }
 
     // Generate a company overview if any
-    setProgress(25);
+    setProgress(20);
     setProgressMessage('Generating a company overview...');
     const { block: companyOverview } = await fetch('/api/building-block/', {
       method: 'POST',
@@ -363,7 +426,7 @@ export const ReportForm = ({
     const generatedBlocks: Record<string, string> = {};
 
     // start report generation
-    setProgress(50);
+    setProgress(40);
     setProgressMessage('Writing the report...');
 
     Promise.all(
@@ -430,7 +493,7 @@ export const ReportForm = ({
       });
 
       // generate a summary if required
-      setProgress(75);
+      setProgress(60);
       setProgressMessage('Generating a summary...');
       const summary = await fetch('/api/building-block/summary', {
         method: 'POST',
@@ -452,12 +515,23 @@ export const ReportForm = ({
         summary: summary,
       });
 
-      setProgress(100);
-      setOpen(false);
+      setProgress(80);
 
-      setSelectedReportId(reportId);
+      setReportId(reportId);
     });
   };
+
+  useEffect(() => {
+    if (!isLoading && chart) {
+      generateDocxBlob(chart)
+        .then((blob: Blob) => generatePdf(blob))
+        .then(() => {
+          setProgress(100);
+          setOpen(false);
+          setSelectedReportId(curReportId);
+        });
+    }
+  }, [isLoading, chart]);
 
   const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
     // baseActions
@@ -480,6 +554,18 @@ export const ReportForm = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <div className="sr-only" id="hidden-container">
+        {apiCache && templateConfig && targetPrice && apiCacheData && (
+          <MarketDataChart
+            colors={templateConfig.colorScheme.colors}
+            targetPrice={targetPrice}
+            incomeStatement={apiCacheData.incomeStatement}
+            earnings={apiCacheData.earnings}
+            dailyStock={apiCacheData.dailyStock}
+            ref={onRefChange}
+          />
+        )}
+      </div>
       <div className="w-[360px] mx-auto flex flex-col py-4 gap-4 h-full">
         <h2 className="font-semibold text-primary/80">Configurations</h2>
         <Form {...form}>

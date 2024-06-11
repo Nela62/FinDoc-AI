@@ -12,6 +12,7 @@ import { JSONContent } from '@tiptap/core';
 import { TemplateCustomizationForm } from './components/template/TemplateCustomizationForm';
 import { AllReportsColumn } from './components/allReports/AllReportsColumn';
 import { ReportInfo } from './components/allReports/ReportInfo';
+import { ReportPreview } from './components/allReports/ReportPreview';
 
 type ColorScheme = { id: string; colors: string[] };
 
@@ -140,14 +141,16 @@ export const NewReport = ({ userId }: { userId: string }) => {
           />
         )}
       </div>
-      {templateConfig && templateData ? (
+      {selectedReportId ? (
+        <ReportPreview userId={userId} reportId={selectedReportId} />
+      ) : templateConfig && templateData ? (
         <TemplatePreview
           userId={userId}
           templateConfig={templateConfig}
           templateData={templateData}
         />
       ) : (
-        <Skeleton />
+        <Skeleton className="w-[50%] h-full" />
       )}
     </div>
   );

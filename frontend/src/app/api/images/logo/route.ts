@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     if (index === 0) {
       await supabase.storage
         .from('public-company-logos')
-        .upload('exists', '', { contentType: 'text/plain' });
+        .upload(`${cik}/exists`, '', { contentType: 'text/plain' });
     }
     const res = await supabase.storage
       .from('public-company-logos')

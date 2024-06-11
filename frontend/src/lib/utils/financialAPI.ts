@@ -48,7 +48,7 @@ export async function fetchDailyStock(
   userId: string,
   symbol: string,
 ) {
-  const endpoint = `query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY}&outputsize=full`;
+  const endpoint = `query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&apikey=${process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY}&outputsize=full`;
 
   const { data } = await fetchAPICacheByEndpoint(
     client,
@@ -102,6 +102,26 @@ export const getNWeeksStock = (
   const data = dailyStock['Time Series (Daily)'];
   const nWeeksAgo = sub(start, { weeks: weeks });
   const days = eachDayOfInterval({ start: nWeeksAgo, end: new Date() });
+  const stockData: DailyStockDataPoint[] = [];
+
+  days.forEach((day) => {
+    const formattedDay = format(day, 'yyyy-MM-dd');
+    if (data.hasOwnProperty(formattedDay)) {
+      stockData.push({ day: formattedDay, data: data[formattedDay] });
+    }
+  });
+
+  return stockData;
+};
+
+export const getNYearsStock = (
+  dailyStock: DailyStockData,
+  years: number = 1,
+  start: Date = new Date(),
+) => {
+  const data = dailyStock['Time Series (Daily)'];
+  const nYearsAgo = sub(start, { years: years });
+  const days = eachDayOfInterval({ start: nYearsAgo, end: new Date() });
   const stockData: DailyStockDataPoint[] = [];
 
   days.forEach((day) => {
