@@ -7,10 +7,12 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { AnalysisMetrics } from '@/lib/templates/docxTables/financialAnalysisTable';
 import { SidebarMetrics } from '@/lib/templates/metrics/components/statistics';
+import { getNWeeksStock } from '@/lib/utils/financialAPI';
 import {
   DailyStockData,
   Earnings,
   IncomeStatement,
+  Overview,
 } from '@/types/alphaVantageApi';
 import { FinancialStrength, Recommendation } from '@/types/report';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
@@ -77,6 +79,12 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
     }
   }, [docxFileData, pdfFileData]);
 
+  // TODO: remove apiCache from here and move overview and closing price to fin api utils
+  const { data: apiCache } = useQuery(
+    fetchAPICacheByReportId(supabase, reportId ?? ''),
+    { enabled: !!reportId },
+  );
+
   const { mutateAsync: uploadDocx } = useUpload(
     supabase.storage.from('saved-templates'),
     {
@@ -139,8 +147,8 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
   useEffect(() => {
     console.log(logoName);
     console.log(companyLogoUrl);
-    if (logoName && companyLogoUrl) setLoading(false);
-  }, [logoName, companyLogoUrl]);
+    if (logoName && companyLogoUrl && apiCache) setLoading(false);
+  }, [logoName, companyLogoUrl, apiCache]);
 
   const generateDocxBlob = useCallback(
     async (chart: HTMLDivElement): Promise<Blob> => {
@@ -153,7 +161,7 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
         throw new Error('TemplateConfig is missing');
       }
 
-      if (!logoName) {
+      if (!logoName || !apiCache) {
         throw new Error('LogoName is missing');
       }
 
@@ -184,6 +192,18 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
 
       const metrics = templateConfig.metrics as Metrics;
 
+      const overviewData = apiCache.find((cache) =>
+        cache.endpoint.includes('OVERVIEW'),
+      )?.json_data;
+
+      // @ts-ignore
+      const dailyStock = getNWeeksStock(
+        // @ts-ignore
+        apiCache.find((cache) =>
+          cache.endpoint.includes('TIME_SERIES_DAILY_ADJUSTED'),
+        )?.json_data,
+      );
+
       const docxBlob = await getDocxBlob({
         componentId: templateConfig.template_type,
         summary: templateConfig.summary ?? [],
@@ -205,6 +225,9 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
         authorCompanyLogo: authorCompanyLogo,
         companyLogo: companyLogo,
         firstPageVisual: firstPageVisual,
+        // @ts-ignore
+        overview: overviewData,
+        lastClosingPrice: Number(dailyStock[dailyStock.length - 1].data),
       });
 
       if (!docxBlob) {
@@ -226,22 +249,28 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
       templateConfig,
       uploadDocx,
       logoName,
+      apiCache,
     ],
   );
 
-  const generatePdf = useCallback(async (docxBlob: Blob) => {
-    const formData = new FormData();
-    formData.append('file', docxBlob);
+  const generatePdf = useCallback(
+    async (docxBlob: Blob) => {
+      const formData = new FormData();
+      formData.append('file', docxBlob);
 
-    const pdfBlob = await fetch('/api/convert/', {
-      method: 'POST',
-      body: formData,
-    }).then((res) => res.blob());
+      const pdfBlob = await fetch('/api/convert/', {
+        method: 'POST',
+        body: formData,
+      }).then((res) => res.blob());
 
-    const pdfFile = new File([pdfBlob], 'pdfBlob', { type: 'application/pdf' });
+      const pdfFile = new File([pdfBlob], 'pdfBlob', {
+        type: 'application/pdf',
+      });
 
-    uploadPdf({ files: [pdfFile] });
-  }, []);
+      uploadPdf({ files: [pdfFile] });
+    },
+    [uploadPdf],
+  );
 
   return {
     docxFile,

@@ -137,13 +137,4 @@ export const displayRatings = (
     spacing: { before: 120 },
     text: `${authorCompanyName} assigns a 12-month BUY, OVERWEIGHT, HOLD, UNDERWEIGHT or SELL rating to each stock.`,
   }),
-  ...recommendationDisclosure.map(
-    (point, i) =>
-      new Paragraph({
-        style: 'sidebar-narrow',
-        numbering: { reference: 'sidebar-bullets', level: 0 },
-        spacing: { after: i === recommendationDisclosure.length - 1 ? 120 : 0 },
-        text: point,
-      }),
-  ),
 ];

@@ -30,7 +30,8 @@ export const metricsSidebar = async (
   const [primaryColor, secondaryColor, accentColor] = colors;
   const logo = await displayImage({
     image: companyLogo,
-    height: 57.6,
+    // height: 57.6,
+    height: 30,
     floating: {
       horizontalPosition: {
         relative: HorizontalPositionRelativeFrom.COLUMN,
@@ -47,6 +48,7 @@ export const metricsSidebar = async (
   return new TableCell({
     margins: { left: 120, right: 120, bottom: 120, top: 200 },
     width: { type: WidthType.DXA, size: 3528 },
+    columnSpan: 3,
     shading: { fill: secondaryColor },
     children: [
       new Paragraph({

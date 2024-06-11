@@ -16,6 +16,7 @@ import { JSONContent } from '@tiptap/core';
 import { SidebarMetrics } from '@/lib/templates/metrics/components/statistics';
 import { AnalysisMetrics } from '@/lib/templates/docxTables/financialAnalysisTable';
 import { FinancialStrength, Recommendation } from '@/types/report';
+import { Overview } from '@/types/alphaVantageApi';
 
 export const getTemplateDocxBlob = async (
   templateData: TemplateData,
@@ -82,6 +83,8 @@ export const getTemplateDocxBlob = async (
       financialStrength: 'High',
       targetPrice: 182,
       firstPageVisual: firstPageVisual,
+      overview: OVERVIEW,
+      lastClosingPrice: 169.03,
     });
 
     return docxBlob;
@@ -147,6 +150,8 @@ export const getDocxBlob = async ({
   recommendation,
   financialStrength,
   targetPrice,
+  overview,
+  lastClosingPrice,
 }: {
   componentId: string;
   summary: string[];
@@ -166,6 +171,8 @@ export const getDocxBlob = async ({
   recommendation: Recommendation;
   financialStrength: FinancialStrength;
   targetPrice: number;
+  overview: Overview;
+  lastClosingPrice: number;
 }) => {
   if (!TEMPLATES.hasOwnProperty(componentId)) {
     throw new Error("Template with this component id doesn't exist");
@@ -208,6 +215,8 @@ export const getDocxBlob = async ({
       financialStrength: financialStrength,
       targetPrice: targetPrice,
       firstPageVisual: firstPageVisual,
+      overview: overview,
+      lastClosingPrice: lastClosingPrice,
     });
 
     return docxBlob;

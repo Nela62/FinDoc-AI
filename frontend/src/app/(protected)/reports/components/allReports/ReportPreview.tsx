@@ -98,7 +98,6 @@ export const ReportPreview = ({
     docxFile,
     pdfFile,
     isLoading,
-    logoName,
     generateDocxBlob,
     generatePdf,
     targetPrice,
@@ -113,7 +112,7 @@ export const ReportPreview = ({
       console.log('generating docx');
       generateDocxBlob(chart).then((blob) => generatePdf(blob));
     }
-  }, [chart, docxFile, isLoading]);
+  }, [chart, docxFile, isLoading, generateDocxBlob, generatePdf]);
 
   useEffect(() => {
     if (pdfFile) {

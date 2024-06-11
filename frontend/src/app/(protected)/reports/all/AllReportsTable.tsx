@@ -145,6 +145,7 @@ export const AllReportsTable = () => {
             </CardHeader>
             <CardContent>
               {reports ? (
+                // @ts-ignore
                 <DataTable columns={columns} data={reports as Report[]} />
               ) : (
                 <Loader className="mr-2 h-4 w-4 animate-spin" />

@@ -43,6 +43,7 @@ import {
   AnalysisMetrics,
   financialAnalysisTable,
 } from '../../docxTables/financialAnalysisTable';
+import { Overview } from '@/types/alphaVantageApi';
 
 const ratingsList = [
   {
@@ -80,6 +81,8 @@ export type EquityAnalystSidebarProps = {
   firstPageVisual?: Blob | Table;
   secondPageVisual?: Blob | Table;
   lastPageVisual?: Blob | Table;
+  overview: Overview;
+  lastClosingPrice: number;
 };
 
 export const equityAnalystSidebar = async ({
@@ -105,6 +108,8 @@ export const equityAnalystSidebar = async ({
   firstPageVisual,
   secondPageVisual,
   lastPageVisual,
+  overview,
+  lastClosingPrice,
 }: EquityAnalystSidebarProps & TemplateConfig): Promise<Blob> => {
   const [primaryColor, secondaryColor, accentColor] = colors;
   const mainText = getDocxContent(content);
@@ -115,7 +120,11 @@ export const equityAnalystSidebar = async ({
     companyName,
     createdAt,
     primaryColor,
+    secondaryColor,
     true,
+    overview,
+    lastClosingPrice,
+    targetPrice,
   );
 
   const firstPageHeader = await coloredHeader(
@@ -124,8 +133,13 @@ export const equityAnalystSidebar = async ({
     companyName,
     createdAt,
     primaryColor,
+    secondaryColor,
     false,
+    overview,
+    lastClosingPrice,
+    targetPrice,
   );
+
   const firstPage: ISectionOptions = await firstPageSection(
     authorCompanyName,
     firstPageHeader,
@@ -155,7 +169,17 @@ export const equityAnalystSidebar = async ({
       type: SectionType.NEXT_PAGE,
       column: { count: 2, space: 300 },
     },
-    headers: { default: new Header({ children: header }) },
+    headers: {
+      default: new Header({
+        children: [
+          new Table({
+            borders: bordersNone,
+            width: { size: 100.5, type: WidthType.PERCENTAGE },
+            rows: header,
+          }),
+        ],
+      }),
+    },
     footers: { default: classicFooter(authorCompanyName, primaryColor) },
     children: [
       financialAnalysisTable(

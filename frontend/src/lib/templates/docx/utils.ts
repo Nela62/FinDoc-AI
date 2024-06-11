@@ -79,11 +79,12 @@ export const bordersNone = {
 };
 
 export const defaultMargins = {
-  top: 1750.6,
+  top: 2600.6,
   left: 604.8,
   right: 604.8,
   bottom: 1200,
-  header: 288,
+  // header: 288,
+  header: 604,
   footer: 691.2,
 };
 

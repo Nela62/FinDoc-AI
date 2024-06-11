@@ -20,7 +20,7 @@ import { Rating } from '../../metrics/components/ratings';
 
 export const firstPageSection = async (
   authorCompanyName: string,
-  header: Paragraph[],
+  header: TableRow[],
   businessDescription: string,
   summary: string[],
   authors: string[],
@@ -33,39 +33,47 @@ export const firstPageSection = async (
 ): Promise<ISectionOptions> => {
   const [primaryColor, secondaryColor, accentColor] = colors;
 
+  const graph = await fetch('/first_graph.png').then((res) => res.blob());
+  const displayGraph = await displayImage({
+    image: graph,
+    width: 500,
+  });
+
   const displayFirstPageVisual =
     firstPageVisual instanceof Blob
       ? await displayImage({
           image: firstPageVisual,
-          width: 477,
-          floating: {
-            horizontalPosition: {
-              relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-              offset: 0,
-            },
-            verticalPosition: {
-              relative: VerticalPositionRelativeFrom.PAGE,
-              offset: 5865000,
-            },
-          },
+          width: 500,
+          // floating: {
+          //   horizontalPosition: {
+          //     relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
+          //     offset: 0,
+          //   },
+          //   verticalPosition: {
+          //     relative: VerticalPositionRelativeFrom.PAGE,
+          //     offset: 5865000,
+          //   },
+          // },
         })
       : firstPageVisual;
 
   const leftColumn = [
     new Paragraph({
       style: 'narrow',
-      border: {
-        bottom: {
-          style: BorderStyle.SINGLE,
-          size: 4,
-          color: '000000',
-          space: 3,
-        },
-      },
       spacing: { before: 30 },
       text: businessDescription,
     }),
+    new Paragraph({ children: [displayGraph] }),
     new Paragraph({
+      // border: {
+      //   top: {
+      //     style: BorderStyle.SINGLE,
+      //     size: 4,
+      //     color: '000000',
+      //     space: 7,
+      //   },
+      // },
+
       text: "Analyst's Notes",
       heading: HeadingLevel.TITLE,
     }),
@@ -119,7 +127,7 @@ export const firstPageSection = async (
           font: 'Arial Narrow',
           size: 16,
           color: '000000',
-          text: "\tPricing reflects previous trading week's closing price",
+          text: "\tPricing reflects previous trading day's closing price",
         }),
       ],
     }),
@@ -141,17 +149,18 @@ export const firstPageSection = async (
   );
 
   return {
-    properties: { page: { margin: { ...defaultMargins, top: 256 } } },
+    properties: { page: { margin: { ...defaultMargins, top: 604 } } },
     footers: { default: classicFooter(authorCompanyName, primaryColor) },
     children: [
-      ...header,
       new Table({
         borders: bordersNone,
         width: { size: 100.5, type: WidthType.PERCENTAGE },
         rows: [
+          ...header,
           new TableRow({
             children: [
               new TableCell({
+                columnSpan: 7,
                 borders: bordersNone,
                 margins: { right: 120 },
                 children: leftColumn,

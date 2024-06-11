@@ -175,7 +175,7 @@ export const financialAnalysisTable = (
     ...(float && { float: float }),
     width: { size: 10600, type: WidthType.DXA },
     // columnWidths: [5349.5, 5349.5],
-    columnWidths: [5300, 5300],
+    // columnWidths: [7000, 3600],
     margins: { left: 20, right: 20 },
     borders: {
       bottom: {

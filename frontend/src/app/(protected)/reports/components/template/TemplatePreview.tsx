@@ -41,9 +41,9 @@ export const TemplatePreview = ({
   const [chart, setChart] = useState<HTMLDivElement | null>(null);
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>();
-  // const [file, setFile] = useState<string | null>(null);
-  const file =
-    'https://phpgxkcyjkioartrccio.supabase.co/storage/v1/object/sign/sec-filings/sec-edgar-filings/AMZN/10-Q/0001018724-24-000083/primary-document.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzZWMtZmlsaW5ncy9zZWMtZWRnYXItZmlsaW5ncy9BTVpOLzEwLVEvMDAwMTAxODcyNC0yNC0wMDAwODMvcHJpbWFyeS1kb2N1bWVudC5wZGYiLCJpYXQiOjE3MTc0MzUyODMsImV4cCI6MTc0ODk3MTI4M30.NSwy9dfRU96Dzyuk_CznBkZ-oUVeqeyDXoP3BuK9qLo&t=2024-06-03T17%3A21%3A23.613Z';
+  const [file, setFile] = useState<string | null>(null);
+  // const file =
+  //   'https://phpgxkcyjkioartrccio.supabase.co/storage/v1/object/sign/sec-filings/sec-edgar-filings/AMZN/10-Q/0001018724-24-000083/primary-document.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzZWMtZmlsaW5ncy9zZWMtZWRnYXItZmlsaW5ncy9BTVpOLzEwLVEvMDAwMTAxODcyNC0yNC0wMDAwODMvcHJpbWFyeS1kb2N1bWVudC5wZGYiLCJpYXQiOjE3MTc0MzUyODMsImV4cCI6MTc0ODk3MTI4M30.NSwy9dfRU96Dzyuk_CznBkZ-oUVeqeyDXoP3BuK9qLo&t=2024-06-03T17%3A21%3A23.613Z';
 
   const onRefChange = useCallback((node: HTMLDivElement) => {
     console.log('ref changed');
@@ -112,14 +112,14 @@ export const TemplatePreview = ({
     }
   }, [authorCompanyLogoUrl, chart, templateConfig, templateData]);
 
-  // useEffect(() => {
-  //   if (chart) {
-  //     getPdfFile()
-  //       .then((blob) => URL.createObjectURL(blob))
-  //       .then((url) => setFile(url))
-  //       .catch((err) => console.error(err));
-  //   }
-  // }, [chart, getPdfFile]);
+  useEffect(() => {
+    if (chart) {
+      getPdfFile()
+        .then((blob) => URL.createObjectURL(blob))
+        .then((url) => setFile(url))
+        .catch((err) => console.error(err));
+    }
+  }, [chart, getPdfFile]);
 
   function onDocumentLoadSuccess({
     numPages: nextNumPages,

@@ -99,8 +99,8 @@ const section_ids = [
   'business_description',
   // 'recent_developments',
   // 'industry_overview_competitive_positioning',
-  // 'financial_analysis',
-  // 'valuation',
+  'financial_analysis',
+  'valuation',
   // 'management_and_risks',
 ];
 
@@ -516,6 +516,7 @@ export const ReportForm = ({
       });
 
       setProgress(80);
+      setProgressMessage('Creating a pdf file...');
 
       setReportId(reportId);
     });
@@ -530,8 +531,17 @@ export const ReportForm = ({
           setOpen(false);
           setSelectedReportId(curReportId);
         });
+    } else {
+      console.log('still loading');
     }
-  }, [isLoading, chart]);
+  }, [
+    isLoading,
+    chart,
+    // curReportId,
+    // generateDocxBlob,
+    // generatePdf,
+    // setSelectedReportId,
+  ]);
 
   const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
     // baseActions
