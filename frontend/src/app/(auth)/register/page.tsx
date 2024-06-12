@@ -41,7 +41,7 @@ export default async function Register() {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect('/reports/all');
+    redirect('/reports');
   }
   return (
     <div className="container bg-background relative hidden h-full flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">

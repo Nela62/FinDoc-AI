@@ -125,7 +125,12 @@ const leftColumn = (
 ) => [
   new Paragraph({
     heading: HeadingLevel.HEADING_1,
-    text: 'Growth & Valuation Analysis',
+    children: [
+      new TextRun({
+        text: 'Growth & Valuation Analysis',
+        shading: { color: 'ffffff' },
+      }),
+    ],
   }),
   ...metrics.categories
     .map((category, i) =>

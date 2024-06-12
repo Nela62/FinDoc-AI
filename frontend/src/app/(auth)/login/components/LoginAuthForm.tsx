@@ -53,7 +53,7 @@ export const LoginAuthForm = ({
       setError('Could not authenticate user');
       // setError(error);
     } else {
-      router.push('/reports/all');
+      router.push('/reports');
     }
   };
 

@@ -145,7 +145,7 @@ export const LeftSidebar = () => {
           <p className="">New Report</p>
         </Link>
         <Link
-          href="/reports/all"
+          href="/reports"
           className={cn(
             'flex w-full gap-3 items-center rounded-lg transition-colors px-2 py-1.5',
             section === 'reports'

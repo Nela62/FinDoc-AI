@@ -23,6 +23,7 @@ import {
   getLowestClosingStockPrice,
   getMeanClosingStockPrice,
   getNWeeksStock,
+  getNYearsStock,
 } from '@/lib/utils/financialAPI';
 import { format } from 'date-fns';
 
@@ -60,7 +61,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
 
   const [primaryColor, secondaryColor, accentColor] = props.colors;
 
-  const stockData = getNWeeksStock(props.dailyStock);
+  const stockData = getNYearsStock(props.dailyStock, 4);
   const chartStockData = stockData.map((dataPoint) => ({
     day: dataPoint.day,
     data: dataPoint.data['4. close'],

@@ -1,7 +1,9 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { signOut } from './actions';
 
 export const Settings = ({
   children,
@@ -12,7 +14,7 @@ export const Settings = ({
   const section = pathname.split('/')[2];
 
   return (
-    <div className="pt-10 flex h-full flex-col w-full gap-6 bg-muted/40">
+    <div className="pt-16 flex h-full flex-col w-full gap-6 bg-muted/40">
       <div className="mx-auto grid w-full max-w-6xl gap-2">
         <h1 className="text-3xl font-semibold">Settings</h1>
       </div>
@@ -55,6 +57,15 @@ export const Settings = ({
           >
             Support
           </Link>
+          <Button
+            className="w-fit"
+            size="sm"
+            onClick={async () => {
+              await signOut();
+            }}
+          >
+            Logout
+          </Button>
         </nav>
         <div className="grid gap-6">{children}</div>
       </div>

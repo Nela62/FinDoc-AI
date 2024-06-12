@@ -30,6 +30,7 @@ import {
   useUpdateMutation,
 } from '@supabase-cache-helpers/postgrest-react-query';
 import { useToast } from '@/components/ui/use-toast';
+import { signOut } from '../actions';
 
 const authorFormSchema = z.object({
   authorName: z.string().optional(),
