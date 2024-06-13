@@ -583,26 +583,26 @@ export const ReportForm = ({
     });
   };
 
-  // useEffect(() => {
-  //   if (!isLoading && chart) {
-  //     generateDocxBlob(chart)
-  //       .then((blob: Blob) => generatePdf(blob))
-  //       .then(() => {
-  //         setProgress((state) => state + progressValue);
-  //         setOpen(false);
-  //         setSelectedReportId(curReportId);
-  //       });
-  //   } else {
-  //     console.log('still loading');
-  //   }
-  // }, [
-  //   isLoading,
-  //   chart,
-  //   // curReportId,
-  //   // generateDocxBlob,
-  //   // generatePdf,
-  //   // setSelectedReportId,
-  // ]);
+  useEffect(() => {
+    if (!isLoading && chart) {
+      generateDocxBlob(chart)
+        .then((blob: Blob) => generatePdf(blob))
+        .then(() => {
+          setProgress((state) => state + progressValue);
+          setOpen(false);
+          setSelectedReportId(curReportId);
+        });
+    } else {
+      console.log('still loading');
+    }
+  }, [
+    isLoading,
+    chart,
+    // curReportId,
+    // generateDocxBlob,
+    // generatePdf,
+    // setSelectedReportId,
+  ]);
 
   const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
     // baseActions
