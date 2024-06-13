@@ -42,6 +42,7 @@ import { z } from 'zod';
 import {
   downloadPublicCompanyImgs,
   fetchCacheAPIData,
+  fetchCacheNews,
   getRecommendation,
 } from '../../utils/fetchAPI';
 import {
@@ -344,6 +345,9 @@ export const ReportForm = ({
         `Company name for ticker ${values.companyTicker.value} was not found.`,
       );
     }
+
+    // Fetch web data
+    await fetchCacheNews();
 
     // Generate a company overview if any
     setProgress(20);

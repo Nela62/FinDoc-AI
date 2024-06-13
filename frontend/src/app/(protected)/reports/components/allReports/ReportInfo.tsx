@@ -1,9 +1,5 @@
 import { Button } from '@/components/ui/button';
-import {
-  fetchAPICacheByReportId,
-  fetchReportById,
-  fetchTemplateConfig,
-} from '@/lib/queries';
+import { fetchReportById, fetchTemplateConfig } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { useFileUrl } from '@supabase-cache-helpers/storage-react-query';

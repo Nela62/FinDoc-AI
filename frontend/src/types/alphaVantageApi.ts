@@ -219,3 +219,38 @@ export type Cashflow = {
   annualReports: CashflowDataPoint[];
   quarterlyReports: CashflowDataPoint[];
 };
+
+type NewsData = {
+  items: string;
+  sentiment_score_definition: string;
+  relevance_score_definition: string;
+  feed: Feed[];
+};
+
+type Feed = {
+  title: string;
+  url: string;
+  time_published: string;
+  authors: string[];
+  summary: string;
+  banner_image: string;
+  source: string;
+  category_within_source: string;
+  source_domain: string;
+  topics: Topic[];
+  overall_sentiment_score: number;
+  overall_sentiment_label: string;
+  ticker_sentiment: TickerSentiment[];
+};
+
+type Topic = {
+  topic: string;
+  relevance_score: string;
+};
+
+type TickerSentiment = {
+  ticker: string;
+  relevance_score: string;
+  ticker_sentiment_score: string;
+  ticker_sentiment_label: string;
+};

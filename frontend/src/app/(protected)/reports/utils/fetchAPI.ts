@@ -1,4 +1,8 @@
-import { fetchAVEndpoint, fetchDailyStock } from '@/lib/utils/financialAPI';
+import {
+  fetchAVEndpoint,
+  fetchDailyStock,
+  fetchNews,
+} from '@/lib/utils/financialAPI';
 import {
   BalanceSheet,
   Cashflow,
@@ -9,6 +13,7 @@ import {
 } from '@/types/alphaVantageApi';
 import { Recommendation } from '@/types/report';
 import { TypedSupabaseClient } from '@/types/supabase';
+import { format, subMonths } from 'date-fns';
 
 type ApiData = {
   overview: Overview;
@@ -19,6 +24,12 @@ type ApiData = {
   dailyStock: DailyStockData;
 };
 
+type NewsData = {
+  last3Months: NewsData;
+  last6Months: NewsData;
+  last12Months: NewsData;
+};
+
 export const fetchCacheAPIData = async (
   reportId: string,
   ticker: string,
@@ -26,7 +37,7 @@ export const fetchCacheAPIData = async (
   userId: string,
   insertCache: any,
 ): Promise<ApiData> => {
-  // TODO: once we have a premium api key, change it to Promise.all
+  // TODO: change it to Promise.all
   const overview = await fetchAVEndpoint(
     supabase,
     insertCache,
@@ -87,6 +98,54 @@ export const fetchCacheAPIData = async (
     earnings,
     dailyStock,
     cashflow,
+  };
+};
+
+const formatDate = (date: Date) => {
+  return format(date, "yyyyMMdd'T'HHmm");
+};
+
+export const fetchCacheNews = async (
+  reportId: string,
+  ticker: string,
+  supabase: TypedSupabaseClient,
+  userId: string,
+  insertCache: any,
+): Promise<NewsData> => {
+  const last3Months = await fetchNews(
+    supabase,
+    insertCache,
+    reportId,
+    userId,
+    ticker,
+    formatDate(new Date()),
+    formatDate(subMonths(new Date(), 3)),
+  );
+
+  const last6Months = await fetchNews(
+    supabase,
+    insertCache,
+    reportId,
+    userId,
+    ticker,
+    formatDate(subMonths(new Date(), 3)),
+    formatDate(subMonths(new Date(), 6)),
+  );
+
+  const last12Months = await fetchNews(
+    supabase,
+    insertCache,
+    reportId,
+    userId,
+    ticker,
+    formatDate(subMonths(new Date(), 6)),
+    formatDate(subMonths(new Date(), 12)),
+  );
+
+  return {
+    last3Months,
+    last6Months,
+    last12Months,
   };
 };
 

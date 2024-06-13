@@ -41,6 +41,35 @@ async function fetchAndCache(
   }
 }
 
+export async function fetchNews(
+  client: TypedSupabaseClient,
+  insertCache: any,
+  reportId: string,
+  userId: string,
+  symbol: string,
+  timeFrom: string,
+  timeTo: string,
+) {
+  // 20240312T0000
+  const endpoint = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${symbol}&apikey=${process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY}&time_from=${timeFrom}&time_to=${timeTo}&sort=RELEVANCE&limit=15`;
+
+  const { data } = await fetchAPICacheByEndpoint(
+    client,
+    reportId,
+    endpoint,
+    'alpha_vantage',
+  );
+
+  if (!data) return;
+
+  if (data.length === 0) {
+    return await fetchAndCache(insertCache, reportId, userId, endpoint);
+  } else {
+    // return json
+    return data[0].json_data;
+  }
+}
+
 export async function fetchDailyStock(
   client: TypedSupabaseClient,
   insertCache: any,
