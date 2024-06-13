@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -77,6 +79,7 @@ import {
   Earnings,
   IncomeStatement,
 } from '@/types/alphaVantageApi';
+import { data } from '@/lib/data/structuredData';
 
 const defaultCompanyLogo = '/default_finpanel_logo.png';
 
@@ -98,11 +101,11 @@ export const reportFormSchema = z.object({
 const section_ids = [
   // 'investment_thesis',
   // 'business_description',
-  'recent_developments',
+  // 'recent_developments',
   // 'industry_overview_competitive_positioning',
   // 'financial_analysis',
   // 'valuation',
-  // 'management_and_risks',
+  'management_and_risks',
 ];
 
 const titles = {
@@ -445,6 +448,12 @@ export const ReportForm = ({
 
     const generatedBlocks: Record<string, string> = {};
 
+    // TODO: Generate this dynamically
+    // const { data: pdfData } = await supabase
+    //   .from('documents')
+    //   .select('structured_data')
+    //   .eq('url', 'sec-edgar-filings/AMZN/10-K/0001018724-24-000008');
+
     // start report generation
     setProgress((state) => state + progressValue);
     setProgressMessage('Writing the report...');
@@ -477,6 +486,23 @@ export const ReportForm = ({
               companyName: tickerData.company_name,
               apiData: apiData,
               news: { last3Months, last6Months, last12Months },
+            }),
+          })
+            .then((res) => res.json())
+            .then((res) => res.block);
+
+          generatedBlocks[id] = content;
+        } else if (
+          id === 'industry_overview_competitive_positioning' ||
+          id === 'management_and_risks'
+        ) {
+          content = await fetch('/api/building-block/10K', {
+            method: 'POST',
+            body: JSON.stringify({
+              blockId: id,
+              customPrompt: '',
+              companyName: tickerData.company_name,
+              pdfData: data,
             }),
           })
             .then((res) => res.json())
@@ -590,9 +616,19 @@ export const ReportForm = ({
       <AlertDialog open={isOpen} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Generating report...</AlertDialogTitle>
+            <AlertDialogTitle>Generating report</AlertDialogTitle>
+            <Image
+              src="/tech2d.gif"
+              alt="Animated gif"
+              className="h-auto w-auto"
+              width={0}
+              height={0}
+              sizes="100vw"
+            />
             <Progress value={progress} className="w-full" />
-            <AlertDialogDescription>{progressMessage}</AlertDialogDescription>
+            <AlertDialogDescription className="text-base pt-6">
+              {progressMessage}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

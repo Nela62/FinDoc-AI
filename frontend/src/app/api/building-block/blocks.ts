@@ -445,3 +445,105 @@ async function fetchNewsContent(url: string) {
 
   return content;
 }
+
+export const generate10KBlock = async (
+  blockId: string,
+  customPrompt: string,
+  companyName: string,
+  pdfData: Record<string, any>,
+) => {
+  let context = '';
+  if (blockId === 'industry_overview_competitive_positioning') {
+    context = getCompetition(pdfData);
+  } else if (blockId === 'management_and_risks') {
+    context = getManagementRisk(pdfData);
+  }
+  const config = await humanloop.projects
+    .getActiveConfig({
+      id: humanloopIdsMap[blockId],
+    })
+    .then((res) => res.data.config);
+
+  // @ts-ignore
+  let template = config.chat_template[0].content;
+  template = findReplaceString(template, 'CONTEXT', context);
+  template = findReplaceString(template, 'CUSTOM_PROMPT', customPrompt);
+  template = findReplaceString(template, 'COMPANY_NAME', companyName);
+
+  const message = await anthropic.messages.create({
+    temperature: 0.2,
+    max_tokens: 4096,
+    messages: [{ role: 'user', content: template + formatInstructions }],
+    // model: 'claude-3-opus-20240229',
+    model: 'claude-3-haiku-20240307',
+  });
+
+  // https://github.com/anthropics/anthropic-sdk-typescript/issues/432
+  humanloop.log({
+    project_id: humanloopIdsMap[blockId],
+    config_id: config.id,
+    inputs: {
+      CONTEXT: context,
+      CUSTOM_PROMPT: customPrompt,
+      COMPANY_NAME: companyName,
+    },
+    output: message.content[0].text
+      .replace(/(.*?)<output>/gs, '')
+      .replace('</output>', ''),
+  });
+
+  // return message.content.find((block) => !block.text.includes('scratchpad'))
+  //   .text;
+
+  // @ts-ignore
+  return message.content[0].text
+    .replace(/(.*?)<output>/gs, '')
+    .replace('</output>', '');
+};
+
+// COMPETITION
+function getCompetition(pdfData: Record<string, any>) {
+  const start = pdfData.elements.findIndex(
+    (element: any) =>
+      element.Text?.trim() === 'Competition' && element.Font.weight === 700,
+  );
+  const end = pdfData.elements.findIndex(
+    (element: any, i: number) => i > start && element.Font.weight === 700,
+  );
+  return pdfData.elements
+    .slice(start, end)
+    .map((el: any) => el.Text)
+    .join('');
+}
+
+function getManagementRisk(pdfData: Record<string, any>) {
+  console.log(pdfData.elements[0].Text);
+  const start = pdfData.elements.findIndex(
+    (element: any) =>
+      typeof element.Text === 'string' &&
+      element.Text.includes('Management\u2019s Discussion and Analysis') &&
+      element.Font.weight === 700,
+  );
+  const regex = /Item\s+(\d+)\./i;
+
+  let itemNumber = '';
+  const match = pdfData.elements[start].Text.match(regex);
+  if (match) {
+    itemNumber = match[1];
+    console.log(itemNumber);
+  } else {
+    console.log('No match found.');
+  }
+
+  const end = pdfData.elements.findIndex(
+    (element: any, i: number) =>
+      i > start &&
+      typeof element.Text === 'string' &&
+      element.Text.startsWith(`Item ${Number(itemNumber) + 1}`) &&
+      element.Font.weight === 700,
+  );
+  return pdfData.elements
+    .slice(start, end)
+    .map((el: any) => el.Text)
+    .join('');
+}
