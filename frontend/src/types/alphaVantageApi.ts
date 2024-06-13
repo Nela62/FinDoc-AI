@@ -220,14 +220,14 @@ export type Cashflow = {
   quarterlyReports: CashflowDataPoint[];
 };
 
-type NewsData = {
+export type NewsData = {
   items: string;
   sentiment_score_definition: string;
   relevance_score_definition: string;
   feed: Feed[];
 };
 
-type Feed = {
+export type Feed = {
   title: string;
   url: string;
   time_published: string;
@@ -243,12 +243,12 @@ type Feed = {
   ticker_sentiment: TickerSentiment[];
 };
 
-type Topic = {
+export type Topic = {
   topic: string;
   relevance_score: string;
 };
 
-type TickerSentiment = {
+export type TickerSentiment = {
   ticker: string;
   relevance_score: string;
   ticker_sentiment_score: string;

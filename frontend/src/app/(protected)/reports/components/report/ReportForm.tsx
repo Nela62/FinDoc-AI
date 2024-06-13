@@ -96,12 +96,12 @@ export const reportFormSchema = z.object({
 });
 
 const section_ids = [
-  'investment_thesis',
-  'business_description',
-  // 'recent_developments',
+  // 'investment_thesis',
+  // 'business_description',
+  'recent_developments',
   // 'industry_overview_competitive_positioning',
-  'financial_analysis',
-  'valuation',
+  // 'financial_analysis',
+  // 'valuation',
   // 'management_and_risks',
 ];
 
@@ -135,6 +135,8 @@ export const ReportForm = ({
   const [curReportId, setReportId] = useState<string | null>(null);
   const [chart, setChart] = useState<HTMLDivElement | null>(null);
   const [apiCacheData, setApiCacheData] = useState<apiCacheData | null>(null);
+
+  const progressValue = 100 / 6;
 
   const {
     docxFile,
@@ -347,10 +349,18 @@ export const ReportForm = ({
     }
 
     // Fetch web data
-    await fetchCacheNews();
+    setProgress((state) => state + progressValue);
+    setProgressMessage('Fetching web news...');
+    const { last3Months, last6Months, last12Months } = await fetchCacheNews(
+      reportId,
+      values.companyTicker.value,
+      supabase,
+      userId,
+      insertCache,
+    );
 
     // Generate a company overview if any
-    setProgress(20);
+    setProgress((state) => state + progressValue);
     setProgressMessage('Generating a company overview...');
     const { block: companyOverview } = await fetch('/api/building-block/', {
       method: 'POST',
@@ -405,6 +415,9 @@ export const ReportForm = ({
       companyOverview,
       recommendation,
       targetPrice,
+      last3Months,
+      last6Months,
+      last12Months,
     };
   };
 
@@ -422,6 +435,9 @@ export const ReportForm = ({
       templateId,
       recommendation,
       targetPrice,
+      last3Months,
+      last6Months,
+      last12Months,
     } = await baseActions(values);
 
     const generatedJson: JSONContent = { type: 'doc', content: [] };
@@ -430,7 +446,7 @@ export const ReportForm = ({
     const generatedBlocks: Record<string, string> = {};
 
     // start report generation
-    setProgress(40);
+    setProgress((state) => state + progressValue);
     setProgressMessage('Writing the report...');
 
     Promise.all(
@@ -446,6 +462,21 @@ export const ReportForm = ({
               apiData: apiData,
               recommendation: recommendation,
               targetPrice: targetPrice,
+            }),
+          })
+            .then((res) => res.json())
+            .then((res) => res.block);
+
+          generatedBlocks[id] = content;
+        } else if (id === 'recent_developments') {
+          content = await fetch('/api/building-block/recent-developments', {
+            method: 'POST',
+            body: JSON.stringify({
+              blockId: id,
+              customPrompt: '',
+              companyName: tickerData.company_name,
+              apiData: apiData,
+              news: { last3Months, last6Months, last12Months },
             }),
           })
             .then((res) => res.json())
@@ -497,7 +528,7 @@ export const ReportForm = ({
       });
 
       // generate a summary if required
-      setProgress(60);
+      setProgress((state) => state + progressValue);
       setProgressMessage('Generating a summary...');
       const summary = await fetch('/api/building-block/summary', {
         method: 'POST',
@@ -519,33 +550,33 @@ export const ReportForm = ({
         summary: summary,
       });
 
-      setProgress(80);
+      setProgress((state) => state + progressValue);
       setProgressMessage('Creating a pdf file...');
 
       setReportId(reportId);
     });
   };
 
-  useEffect(() => {
-    if (!isLoading && chart) {
-      generateDocxBlob(chart)
-        .then((blob: Blob) => generatePdf(blob))
-        .then(() => {
-          setProgress(100);
-          setOpen(false);
-          setSelectedReportId(curReportId);
-        });
-    } else {
-      console.log('still loading');
-    }
-  }, [
-    isLoading,
-    chart,
-    // curReportId,
-    // generateDocxBlob,
-    // generatePdf,
-    // setSelectedReportId,
-  ]);
+  // useEffect(() => {
+  //   if (!isLoading && chart) {
+  //     generateDocxBlob(chart)
+  //       .then((blob: Blob) => generatePdf(blob))
+  //       .then(() => {
+  //         setProgress((state) => state + progressValue);
+  //         setOpen(false);
+  //         setSelectedReportId(curReportId);
+  //       });
+  //   } else {
+  //     console.log('still loading');
+  //   }
+  // }, [
+  //   isLoading,
+  //   chart,
+  //   // curReportId,
+  //   // generateDocxBlob,
+  //   // generatePdf,
+  //   // setSelectedReportId,
+  // ]);
 
   const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
     // baseActions

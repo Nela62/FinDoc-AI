@@ -7,6 +7,7 @@ import {
   DailyStockData,
   Earnings,
   IncomeStatement,
+  NewsData,
   Overview,
 } from '@/types/alphaVantageApi';
 
@@ -233,21 +234,100 @@ export const generateBlock = async (
     model: 'claude-3-haiku-20240307',
   });
 
-  // humanloop.log({
-  //   project_id: humanloopIdsMap[blockId],
-  //   config_id: config.id,
-  //   inputs: {
-  //     CONTEXT: context,
-  //     CUSTOM_PROMPT: customPrompt,
-  //     COMPANY_NAME: companyName,
-  //   },
-  //   output: message.content.find((block) => !block.text.includes('scratchpad'))
-  //     .text,
-  // });
+  // https://github.com/anthropics/anthropic-sdk-typescript/issues/432
+  humanloop.log({
+    project_id: humanloopIdsMap[blockId],
+    config_id: config.id,
+    inputs: {
+      CONTEXT: context,
+      CUSTOM_PROMPT: customPrompt,
+      COMPANY_NAME: companyName,
+    },
+    output: message.content[0].text
+      .replace(/(.*?)<output>/gs, '')
+      .replace('</output>', ''),
+  });
 
   // return message.content.find((block) => !block.text.includes('scratchpad'))
   //   .text;
 
+  // @ts-ignore
+  return message.content[0].text
+    .replace(/(.*?)<output>/gs, '')
+    .replace('</output>', '');
+};
+
+type NewsDataRes = {
+  last3Months: NewsData;
+  last6Months: NewsData;
+  last12Months: NewsData;
+};
+
+// TODO: get content for each article
+const getRecentDevelopmentsContext = async (news: NewsDataRes) => {
+  let context: Record<string, string>[] = [];
+  const promises = Object.keys(news).map((key: string) => {
+    return Promise.all(
+      news[key as keyof typeof news].feed.slice(0, 15).map(async (f) => {
+        const content = await fetchNewsContent(f.url);
+        const obj = {
+          title: f.title,
+          summary: f.summary,
+          time_published: f.time_published,
+          content: content ?? '',
+        };
+        context.push(obj);
+      }),
+    );
+  });
+
+  await Promise.all(promises);
+
+  return JSON.stringify(context);
+};
+
+export const generateRecentDevelopments = async (
+  blockId: string,
+  customPrompt: string,
+  companyName: string,
+  news: NewsDataRes,
+) => {
+  const context = await getRecentDevelopmentsContext(news);
+  const config = await humanloop.projects
+    .getActiveConfig({
+      id: humanloopIdsMap[blockId],
+    })
+    .then((res) => res.data.config);
+
+  // @ts-ignore
+  let template = config.chat_template[0].content;
+  template = findReplaceString(template, 'CONTEXT', context);
+  template = findReplaceString(template, 'CUSTOM_PROMPT', customPrompt);
+  template = findReplaceString(template, 'COMPANY_NAME', companyName);
+
+  const message = await anthropic.messages.create({
+    temperature: 0.2,
+    max_tokens: 4096,
+    messages: [{ role: 'user', content: template + formatInstructions }],
+    // model: 'claude-3-opus-20240229',
+    model: 'claude-3-haiku-20240307',
+  });
+
+  humanloop.log({
+    project_id: humanloopIdsMap[blockId],
+    config_id: config.id,
+    inputs: {
+      CONTEXT: context,
+      CUSTOM_PROMPT: customPrompt,
+      COMPANY_NAME: companyName,
+    },
+    output: message.content[0].text
+      .replace(/(.*?)<output>/gs, '')
+      .replace('</output>', ''),
+  });
+
+  // return message.content.find((block) => !block.text.includes('scratchpad'))
+  //   .text;
   // @ts-ignore
   return message.content[0].text
     .replace(/(.*?)<output>/gs, '')
@@ -285,19 +365,20 @@ export const generateInvestmentThesis = async (
     model: 'claude-3-haiku-20240307',
   });
 
-  // humanloop.log({
-  //   project_id: humanloopIdsMap[blockId],
-  //   config_id: config.id,
-  //   inputs: {
-  //     CONTEXT: context,
-  //     CUSTOM_PROMPT: customPrompt,
-  //     COMPANY_NAME: companyName,
-  //     RECOMMENDATION: recommendation,
-  //     TARGET_PRICE: targetPrice,
-  //   },
-  //   output: message.content.find((block) => !block.text.includes('scratchpad'))
-  //     .text,
-  // });
+  humanloop.log({
+    project_id: humanloopIdsMap[blockId],
+    config_id: config.id,
+    inputs: {
+      CONTEXT: context,
+      CUSTOM_PROMPT: customPrompt,
+      COMPANY_NAME: companyName,
+      RECOMMENDATION: recommendation,
+      TARGET_PRICE: targetPrice,
+    },
+    output: message.content[0].text
+      .replace(/(.*?)<output>/gs, '')
+      .replace('</output>', ''),
+  });
 
   // return message.content.find((block) => !block.text.includes('scratchpad'))
   //   .text;
@@ -344,3 +425,23 @@ export const generateSummary = async (reportContent: string) => {
   // return message.content.find((block) => !block.text.includes('scratchpad'))
   //   .text;
 };
+
+async function fetchNewsContent(url: string) {
+  const jsdom = require('jsdom');
+  const { JSDOM } = jsdom;
+
+  const content = await fetch(url)
+    .then((response) => response.text())
+    .then((html) => {
+      const dom = new JSDOM(html);
+      const paragraphs = dom.window.document.querySelectorAll('p');
+      const articleContent = Array.from(paragraphs).map((p) => p.textContent);
+
+      return articleContent.join();
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+    });
+
+  return content;
+}

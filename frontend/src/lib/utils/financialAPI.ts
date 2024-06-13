@@ -8,6 +8,7 @@ import {
   DailyStockDataPoint,
   Earnings,
   IncomeStatement,
+  NewsData,
   Overview,
 } from '@/types/alphaVantageApi';
 import { SidebarMetrics } from '../templates/metrics/components/statistics';

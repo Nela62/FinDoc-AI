@@ -9,6 +9,7 @@ import {
   DailyStockData,
   Earnings,
   IncomeStatement,
+  NewsData,
   Overview,
 } from '@/types/alphaVantageApi';
 import { Recommendation } from '@/types/report';
@@ -24,7 +25,7 @@ type ApiData = {
   dailyStock: DailyStockData;
 };
 
-type NewsData = {
+type NewsDataRes = {
   last3Months: NewsData;
   last6Months: NewsData;
   last12Months: NewsData;
@@ -111,7 +112,7 @@ export const fetchCacheNews = async (
   supabase: TypedSupabaseClient,
   userId: string,
   insertCache: any,
-): Promise<NewsData> => {
+): Promise<NewsDataRes> => {
   const last3Months = await fetchNews(
     supabase,
     insertCache,
