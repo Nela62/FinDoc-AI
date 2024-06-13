@@ -29,7 +29,7 @@ export function getReportIdByUrl(
 ) {
   return client
     .from('reports')
-    .select('id')
+    .select('id, url')
     .eq('url', reportUrl)
     .throwOnError()
     .maybeSingle();

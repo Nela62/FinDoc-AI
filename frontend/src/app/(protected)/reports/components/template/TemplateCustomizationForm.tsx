@@ -117,11 +117,7 @@ export const TemplateCustomizationForm = ({
                 <FormItem className="w-full relative">
                   <FormLabel>Company Name</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      className="bg-white"
-                      defaultValue={field.value}
-                    />
+                    <Input {...field} className="bg-white" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

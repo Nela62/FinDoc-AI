@@ -8,22 +8,11 @@ import {
   convertInchesToTwip,
   LineRuleType,
   type ISectionOptions,
-  TableRow,
-  TableCell,
-  Paragraph,
-  BorderStyle,
-  HeadingLevel,
-  TextRun,
   WidthType,
   SectionType,
   Header,
-  HorizontalPositionRelativeFrom,
-  VerticalPositionRelativeFrom,
   Packer,
   ITableFloatOptions,
-  TableAnchorType,
-  RelativeHorizontalPosition,
-  RelativeVerticalPosition,
 } from 'docx';
 import {
   bordersNone,
@@ -36,6 +25,7 @@ import { getStandardStyles } from '../../formatting/standard';
 import { SidebarMetrics } from '../../metrics/components/statistics';
 import { classicFooter } from '../../footers/classicFooter';
 import { coloredHeader } from '../../headers/coloredHeader';
+import { disclaimerHeader } from '../../headers/disclaimerHeader';
 import { format } from 'date-fns';
 import { firstPageSection } from './firstPage';
 import { Rating } from '../../metrics/components/ratings';
@@ -44,6 +34,7 @@ import {
   financialAnalysisTable,
 } from '../../docxTables/financialAnalysisTable';
 import { Overview } from '@/types/alphaVantageApi';
+import { DisclaimerSection } from '../../disclaimer/standard';
 
 const ratingsList = [
   {
@@ -140,6 +131,20 @@ export const equityAnalystSidebar = async ({
     targetPrice,
   );
 
+  const displayDisclaimerHeader = await disclaimerHeader(
+    authorCompanyLogo,
+    companyTicker,
+    createdAt,
+    primaryColor,
+    true,
+  );
+
+  const disclaimerSection = DisclaimerSection(
+    displayDisclaimerHeader,
+    authorCompanyName,
+    primaryColor,
+  );
+
   const firstPage: ISectionOptions = await firstPageSection(
     authorCompanyName,
     firstPageHeader,
@@ -222,9 +227,29 @@ export const equityAnalystSidebar = async ({
             },
           ],
         },
+        {
+          reference: 'disclaimer-bullets',
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.BULLET,
+              text: '\u2022',
+              alignment: AlignmentType.LEFT,
+              style: {
+                paragraph: {
+                  indent: {
+                    left: convertInchesToTwip(0.2),
+                    hanging: convertInchesToTwip(0.1),
+                  },
+                },
+                run: { color: '000000', size: 18 },
+              },
+            },
+          ],
+        },
       ],
     },
-    sections: [firstPage, mainPageSection],
+    sections: [firstPage, mainPageSection, ...disclaimerSection],
   });
   return Packer.toBlob(doc);
 };

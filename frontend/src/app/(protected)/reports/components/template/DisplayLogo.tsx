@@ -24,7 +24,8 @@ export const DisplayLogo = ({
   );
 
   if (!url) {
-    throw new Error('Url not found.');
+    return;
+    // throw new Error('Url not found.');
   }
 
   return (

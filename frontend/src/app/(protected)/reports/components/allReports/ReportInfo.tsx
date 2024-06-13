@@ -53,6 +53,8 @@ export const ReportInfo = ({
     if (!pdfFileData || !report) return;
     const link = document.createElement('a');
     link.href = pdfFileData;
+    link.target = '_blank'; // Open the link in a new tab
+    link.rel = 'noopener noreferrer'; // Recommended for security reasons
     link.download = report.title;
     link.click();
     URL.revokeObjectURL(pdfFileData);
