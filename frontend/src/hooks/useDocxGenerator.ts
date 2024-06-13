@@ -7,7 +7,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { AnalysisMetrics } from '@/lib/templates/docxTables/financialAnalysisTable';
 import { SidebarMetrics } from '@/lib/templates/metrics/components/statistics';
-import { getNWeeksStock } from '@/lib/utils/financialAPI';
+import { TopBarMetric, getNWeeksStock } from '@/lib/utils/financialAPI';
 import {
   DailyStockData,
   Earnings,
@@ -26,6 +26,7 @@ import { toPng } from 'html-to-image';
 import { useCallback, useEffect, useState } from 'react';
 
 type Metrics = {
+  topBarMetrics: TopBarMetric[];
   sidebarMetrics: SidebarMetrics;
   growthAndValuationAnalysisMetrics: AnalysisMetrics;
   financialAndRiskAnalysisMetrics: AnalysisMetrics;
@@ -161,7 +162,7 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
         throw new Error('TemplateConfig is missing');
       }
 
-      if (!logoName || !apiCache) {
+      if (!logoName) {
         throw new Error('LogoName is missing');
       }
 
@@ -192,18 +193,6 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
 
       const metrics = templateConfig.metrics as Metrics;
 
-      const overviewData = apiCache.find((cache) =>
-        cache.endpoint.includes('OVERVIEW'),
-      )?.json_data;
-
-      // @ts-ignore
-      const dailyStock = getNWeeksStock(
-        // @ts-ignore
-        apiCache.find((cache) =>
-          cache.endpoint.includes('TIME_SERIES_DAILY_ADJUSTED'),
-        )?.json_data,
-      );
-
       const docxBlob = await getDocxBlob({
         componentId: templateConfig.template_type,
         summary: templateConfig.summary ?? [],
@@ -214,6 +203,7 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
         content: report.json_content as JSONContent,
         companyName: report.companies.company_name,
         companyTicker: report.company_ticker,
+        topBarMetrics: metrics.topBarMetrics,
         sidebarMetrics: metrics.sidebarMetrics,
         growthAndValuationAnalysisMetrics:
           metrics.growthAndValuationAnalysisMetrics,
@@ -225,9 +215,6 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
         authorCompanyLogo: authorCompanyLogo,
         companyLogo: companyLogo,
         firstPageVisual: firstPageVisual,
-        // @ts-ignore
-        overview: overviewData,
-        lastClosingPrice: Number(dailyStock[dailyStock.length - 1].data),
       });
 
       if (!docxBlob) {
@@ -249,7 +236,6 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
       templateConfig,
       uploadDocx,
       logoName,
-      apiCache,
     ],
   );
 

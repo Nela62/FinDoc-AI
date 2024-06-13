@@ -23,8 +23,8 @@ import { getNWeeksStock, getSidebarMetrics } from '@/lib/utils/financialAPI';
 import { generateDocxFile } from './components/docxExport';
 import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
-import { DAILY_STOCK_IBM } from '@/lib/data/daily_stock_ibm';
 import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
+import { DAILY_IBM } from '@/lib/data/daily_imb';
 
 export const ExportButton = ({
   editor,
@@ -83,7 +83,7 @@ export const ExportButton = ({
           colors={['#1c4587', '#f4e9d3', '#006f3b']}
           earnings={EARNINGS_IBM}
           incomeStatement={INCOME_STATEMENT_IBM}
-          dailyStock={DAILY_STOCK_IBM}
+          dailyStock={DAILY_IBM}
           targetPrice={168}
           ref={ref}
         />

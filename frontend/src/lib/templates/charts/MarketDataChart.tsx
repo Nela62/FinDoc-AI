@@ -64,7 +64,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
   const stockData = getNYearsStock(props.dailyStock, 4);
   const chartStockData = stockData.map((dataPoint) => ({
     day: dataPoint.day,
-    data: dataPoint.data['4. close'],
+    data: dataPoint.data['5. adjusted close'],
   }));
   const stockMin = getLowestClosingStockPrice(stockData);
   const stockMax = getHighestClosingStockPrice(stockData);
@@ -96,12 +96,24 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
         <p>200-Day Moving Average</p>
         <div className="flex gap-2">
           <p>Target Price: ${props.targetPrice}</p>
-          <p>52 Week High: ${stockMax}</p>
-          <p>52 Week Low: ${stockMin}</p>
+          <p>
+            52 Week High: $
+            {stockMax.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </p>
+          <p>
+            52 Week Low: $
+            {stockMin.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </p>
           <p>
             Closed at{' '}
             {Number(
-              getLatestStockDataPoint(stockData)?.data['4. close'],
+              getLatestStockDataPoint(stockData)?.data['5. adjusted close'],
             ).toFixed(2)}{' '}
             on {format(new Date(), 'M/d')}
           </p>
@@ -145,7 +157,11 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
               dataKey="data"
               type="number"
               width={50}
-              ticks={[stockMin, stockMean, stockMax]}
+              ticks={[
+                Number(stockMin.toFixed(2)),
+                stockMean,
+                Number(stockMax.toFixed(2)),
+              ]}
               // domain={['dataMin', 'dataMax']}
               domain={[
                 (dataMin: number) => dataMin - 20,

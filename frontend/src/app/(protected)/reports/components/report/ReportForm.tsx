@@ -52,6 +52,7 @@ import {
   getGrowthAndValuationAnalysisMetrics,
   getNWeeksStock,
   getSidebarMetrics,
+  getTopBarMetrics,
 } from '@/lib/utils/financialAPI';
 import {
   ApiProp,
@@ -61,7 +62,6 @@ import {
 import { TemplateConfig } from '../../Component';
 import { JSONContent } from '@tiptap/core';
 import { markdownToJson } from '@/lib/utils/formatText';
-import { getDocxBlob } from '../../utils/getDocxBlob';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -318,6 +318,12 @@ export const ReportForm = ({
       financial_strength: financialStrength,
     });
 
+    const topBarMetrics = getTopBarMetrics(
+      overview,
+      targetPrice,
+      getNWeeksStock(dailyStock),
+    );
+
     // Generate metrics
     const sidebarMetrics = getSidebarMetrics(
       overview,
@@ -398,6 +404,7 @@ export const ReportForm = ({
             ? null
             : templateConfig.authorCompanyLogo,
         metrics: {
+          topBarMetrics,
           sidebarMetrics,
           growthAndValuationAnalysisMetrics,
           financialAndRiskAnalysisMetrics,

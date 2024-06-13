@@ -12,7 +12,6 @@ import { TemplateConfig, TemplateData } from '../../Component';
 import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
 import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
 import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
-import { DAILY_STOCK_IBM } from '@/lib/data/daily_stock_ibm';
 import { getPdfTemplate } from '../../utils/getPdfTemplate';
 import { toPng } from 'html-to-image';
 import { getTemplateDocxBlob } from '../../utils/getDocxBlob';
@@ -24,6 +23,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Loader2 } from 'lucide-react';
+import { DAILY_IBM } from '@/lib/data/daily_imb';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
@@ -159,7 +159,7 @@ export const TemplatePreview = ({
             targetPrice={182}
             incomeStatement={INCOME_STATEMENT_IBM}
             earnings={EARNINGS_IBM}
-            dailyStock={DAILY_STOCK_IBM}
+            dailyStock={DAILY_IBM}
             ref={onRefChange}
           />
         </div>

@@ -35,6 +35,7 @@ import {
 } from '../../docxTables/financialAnalysisTable';
 import { Overview } from '@/types/alphaVantageApi';
 import { DisclaimerSection } from '../../disclaimer/standard';
+import { TopBarMetric } from '@/lib/utils/financialAPI';
 
 const ratingsList = [
   {
@@ -62,6 +63,7 @@ const financialStrengthMap: Record<FinancialStrength, string> = {
 export type EquityAnalystSidebarProps = {
   summary: string[];
   businessDescription: string;
+  topBarMetrics: TopBarMetric[];
   sidebarMetrics: SidebarMetrics;
   growthAndValuationAnalysisMetrics: AnalysisMetrics;
   financialAndRiskAnalysisMetrics: AnalysisMetrics;
@@ -72,8 +74,6 @@ export type EquityAnalystSidebarProps = {
   firstPageVisual?: Blob | Table;
   secondPageVisual?: Blob | Table;
   lastPageVisual?: Blob | Table;
-  overview: Overview;
-  lastClosingPrice: number;
 };
 
 export const equityAnalystSidebar = async ({
@@ -89,6 +89,7 @@ export const equityAnalystSidebar = async ({
   companyLogo,
   summary,
   businessDescription,
+  topBarMetrics,
   sidebarMetrics,
   growthAndValuationAnalysisMetrics,
   financialAndRiskAnalysisMetrics,
@@ -99,8 +100,6 @@ export const equityAnalystSidebar = async ({
   firstPageVisual,
   secondPageVisual,
   lastPageVisual,
-  overview,
-  lastClosingPrice,
 }: EquityAnalystSidebarProps & TemplateConfig): Promise<Blob> => {
   const [primaryColor, secondaryColor, accentColor] = colors;
   const mainText = getDocxContent(content);
@@ -113,9 +112,7 @@ export const equityAnalystSidebar = async ({
     primaryColor,
     secondaryColor,
     true,
-    overview,
-    lastClosingPrice,
-    targetPrice,
+    topBarMetrics,
   );
 
   const firstPageHeader = await coloredHeader(
@@ -125,10 +122,8 @@ export const equityAnalystSidebar = async ({
     createdAt,
     primaryColor,
     secondaryColor,
-    false,
-    overview,
-    lastClosingPrice,
-    targetPrice,
+    true,
+    topBarMetrics,
   );
 
   const displayDisclaimerHeader = await disclaimerHeader(
@@ -136,7 +131,6 @@ export const equityAnalystSidebar = async ({
     companyTicker,
     createdAt,
     primaryColor,
-    true,
   );
 
   const disclaimerSection = DisclaimerSection(

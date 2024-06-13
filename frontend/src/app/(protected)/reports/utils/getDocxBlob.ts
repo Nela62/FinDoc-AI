@@ -1,15 +1,16 @@
 import { TEMPLATES } from '@/lib/templates';
 import { TemplateConfig, TemplateData } from '../Component';
 import {
+  TopBarMetric,
   getFinancialAndRiskAnalysisMetrics,
   getGrowthAndValuationAnalysisMetrics,
   getNWeeksStock,
   getSidebarMetrics,
+  getTopBarMetrics,
 } from '@/lib/utils/financialAPI';
 import { OVERVIEW } from '@/lib/data/overview_ibm';
 import { BALANCE_SHEET_IBM } from '@/lib/data/balance_sheet_ibm';
 import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
-import { DAILY_STOCK_IBM } from '@/lib/data/daily_stock_ibm';
 import { CASHFLOW_IBM } from '@/lib/data/cashflow_ibm';
 import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 import { JSONContent } from '@tiptap/core';
@@ -17,6 +18,7 @@ import { SidebarMetrics } from '@/lib/templates/metrics/components/statistics';
 import { AnalysisMetrics } from '@/lib/templates/docxTables/financialAnalysisTable';
 import { FinancialStrength, Recommendation } from '@/types/report';
 import { Overview } from '@/types/alphaVantageApi';
+import { DAILY_IBM } from '@/lib/data/daily_imb';
 
 export const getTemplateDocxBlob = async (
   templateData: TemplateData,
@@ -47,11 +49,12 @@ export const getTemplateDocxBlob = async (
       companyLogo: companyLogo,
       summary: templateData.summary ?? [],
       businessDescription: templateData.businessDescription ?? '',
+      topBarMetrics: getTopBarMetrics(OVERVIEW, 182, getNWeeksStock(DAILY_IBM)),
       sidebarMetrics: getSidebarMetrics(
         OVERVIEW,
         BALANCE_SHEET_IBM,
         INCOME_STATEMENT_IBM,
-        getNWeeksStock(DAILY_STOCK_IBM),
+        getNWeeksStock(DAILY_IBM),
         182,
         'HIGH',
       ),
@@ -60,7 +63,7 @@ export const getTemplateDocxBlob = async (
         CASHFLOW_IBM,
         INCOME_STATEMENT_IBM,
         EARNINGS_IBM,
-        DAILY_STOCK_IBM,
+        DAILY_IBM,
       ),
       financialAndRiskAnalysisMetrics: getFinancialAndRiskAnalysisMetrics(
         BALANCE_SHEET_IBM,
@@ -83,8 +86,6 @@ export const getTemplateDocxBlob = async (
       financialStrength: 'High',
       targetPrice: 182,
       firstPageVisual: firstPageVisual,
-      overview: OVERVIEW,
-      lastClosingPrice: 169.03,
     });
 
     return docxBlob;
@@ -144,14 +145,13 @@ export const getDocxBlob = async ({
   content,
   companyName,
   companyTicker,
+  topBarMetrics,
   sidebarMetrics,
   growthAndValuationAnalysisMetrics,
   financialAndRiskAnalysisMetrics,
   recommendation,
   financialStrength,
   targetPrice,
-  overview,
-  lastClosingPrice,
 }: {
   componentId: string;
   summary: string[];
@@ -165,14 +165,13 @@ export const getDocxBlob = async ({
   content: JSONContent;
   companyName: string;
   companyTicker: string;
+  topBarMetrics: TopBarMetric[];
   sidebarMetrics: SidebarMetrics;
   growthAndValuationAnalysisMetrics: AnalysisMetrics;
   financialAndRiskAnalysisMetrics: AnalysisMetrics;
   recommendation: Recommendation;
   financialStrength: FinancialStrength;
   targetPrice: number;
-  overview: Overview;
-  lastClosingPrice: number;
 }) => {
   if (!TEMPLATES.hasOwnProperty(componentId)) {
     throw new Error("Template with this component id doesn't exist");
@@ -196,6 +195,7 @@ export const getDocxBlob = async ({
       companyLogo: companyLogo,
       summary: summary ?? [],
       businessDescription: businessDescription ?? '',
+      topBarMetrics: topBarMetrics,
       sidebarMetrics: sidebarMetrics,
       growthAndValuationAnalysisMetrics: growthAndValuationAnalysisMetrics,
       financialAndRiskAnalysisMetrics: financialAndRiskAnalysisMetrics,
@@ -215,8 +215,6 @@ export const getDocxBlob = async ({
       financialStrength: financialStrength,
       targetPrice: targetPrice,
       firstPageVisual: firstPageVisual,
-      overview: overview,
-      lastClosingPrice: lastClosingPrice,
     });
 
     return docxBlob;

@@ -40,7 +40,7 @@ const metricsArr = (metrics: SidebarMetrics, secondaryColor: string) =>
               margins: { top: 20, bottom: 20 },
               borders: bordersNone,
               shading: { fill: secondaryColor },
-              width: { size: 60, type: WidthType.PERCENTAGE },
+              width: { size: 45, type: WidthType.PERCENTAGE },
               children: [
                 new Paragraph({
                   style: 'small-narrow',

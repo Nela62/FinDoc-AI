@@ -1,7 +1,7 @@
 import { BALANCE_SHEET_IBM } from '@/lib/data/balance_sheet_ibm';
 import { CASHFLOW_IBM } from '@/lib/data/cashflow_ibm';
-import { DAILY_STOCK_IBM } from '@/lib/data/daily_stock_ibm';
 import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
+import { DAILY_IBM } from '@/lib/data/daily_imb';
 import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
 import { OVERVIEW } from '@/lib/data/overview_ibm';
 import { TEMPLATES } from '@/lib/templates';
@@ -10,6 +10,7 @@ import {
   getGrowthAndValuationAnalysisMetrics,
   getNWeeksStock,
   getSidebarMetrics,
+  getTopBarMetrics,
 } from '@/lib/utils/financialAPI';
 
 export const generateDocxFile = async (firstPageVisual: Blob) => {
@@ -551,11 +552,12 @@ export const generateDocxFile = async (firstPageVisual: Blob) => {
       companyLogo: companyLogo,
       summary: templateData.summary ?? [],
       businessDescription: templateData.businessDescription ?? '',
+      topBarMetrics: getTopBarMetrics(OVERVIEW, 182, getNWeeksStock(DAILY_IBM)),
       sidebarMetrics: getSidebarMetrics(
         OVERVIEW,
         BALANCE_SHEET_IBM,
         INCOME_STATEMENT_IBM,
-        getNWeeksStock(DAILY_STOCK_IBM),
+        getNWeeksStock(DAILY_IBM),
         182,
         'HIGH',
       ),
@@ -564,7 +566,7 @@ export const generateDocxFile = async (firstPageVisual: Blob) => {
         CASHFLOW_IBM,
         INCOME_STATEMENT_IBM,
         EARNINGS_IBM,
-        DAILY_STOCK_IBM,
+        DAILY_IBM,
       ),
       financialAndRiskAnalysisMetrics: getFinancialAndRiskAnalysisMetrics(
         BALANCE_SHEET_IBM,
@@ -587,8 +589,6 @@ export const generateDocxFile = async (firstPageVisual: Blob) => {
       financialStrength: 'High',
       targetPrice: 182,
       firstPageVisual: firstPageVisual,
-      overview: OVERVIEW,
-      lastClosingPrice: 178,
     });
 
     return docxBlob;

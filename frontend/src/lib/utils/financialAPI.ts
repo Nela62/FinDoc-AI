@@ -172,7 +172,7 @@ export const getHighestClosingStockPrice = (
   stockData: DailyStockDataPoint[],
 ) => {
   const closingValues = stockData.map((value) =>
-    Number(value.data['4. close']),
+    Number(value.data['5. adjusted close']),
   );
   return Math.max(...closingValues);
 };
@@ -181,14 +181,14 @@ export const getLowestClosingStockPrice = (
   stockData: DailyStockDataPoint[],
 ) => {
   const closingValues = stockData.map((value) =>
-    Number(value.data['4. close']),
+    Number(value.data['5. adjusted close']),
   );
   return Math.min(...closingValues);
 };
 
 export const getMeanClosingStockPrice = (stockData: DailyStockDataPoint[]) => {
   const sum = stockData.reduce(
-    (acc, cur) => acc + Number(cur.data['4. close']),
+    (acc, cur) => acc + Number(cur.data['5. adjusted close']),
     0,
   );
   return (sum / stockData.length).toFixed(2);
@@ -197,23 +197,40 @@ export const getMeanClosingStockPrice = (stockData: DailyStockDataPoint[]) => {
 export const getAverageDailyVolume = (stockData: DailyStockDataPoint[]) => {
   // For 20 trading days
   const volumeValues = stockData.map((value) =>
-    Number(value.data['5. volume']),
+    Number(value.data['6. volume']),
   );
   const sum = volumeValues.slice(0, 20).reduce((acc, cur) => acc + cur, 0);
   return sum / 20;
 };
 
-function moneyFormat(labelValue: string | number) {
+function moneyFormat(labelValue: string | number, long: boolean) {
+  const strings = long
+    ? [' Trillion', ' Billion', ' Million']
+    : [' Tril', ' Bil', ' Mil'];
   // Nine Zeroes for Billions
-  return Math.abs(Number(labelValue)) >= 1.0e9
-    ? (Math.abs(Number(labelValue)) / 1.0e9).toFixed(2) + ' Billion'
+  return Math.abs(Number(labelValue)) >= 1.0e12
+    ? (Math.abs(Number(labelValue)) / 1.0e12).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }) + strings[0]
+    : Math.abs(Number(labelValue)) >= 1.0e9
+    ? (Math.abs(Number(labelValue)) / 1.0e9).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }) + strings[1]
     : // Six Zeroes for Millions
     Math.abs(Number(labelValue)) >= 1.0e6
-    ? (Math.abs(Number(labelValue)) / 1.0e6).toFixed(2) + ' Million'
+    ? (Math.abs(Number(labelValue)) / 1.0e6).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }) + strings[2]
     : // Three Zeroes for Thousands
     Math.abs(Number(labelValue)) >= 1.0e3
     ? Math.abs(Number(labelValue)) / 1.0e3 + 'K'
-    : Math.abs(Number(labelValue));
+    : Math.abs(Number(labelValue)).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
 }
 
 const getDebtCapitalRatio = (balanceSheet: BalanceSheet) =>
@@ -233,7 +250,7 @@ const getCurrentRatio = (balanceSheet: BalanceSheet) =>
   Number(balanceSheet.annualReports[0].totalCurrentLiabilities);
 
 const getCurrentFYPE = (overview: Overview, stockData: DailyStockDataPoint[]) =>
-  Number(stockData[0].data['4. close']) / Number(overview.EPS);
+  Number(stockData[0].data['5. adjusted close']) / Number(overview.EPS);
 
 const getPriceSales = (overview: Overview) =>
   Number(overview.MarketCapitalization) / Number(overview.RevenueTTM);
@@ -257,6 +274,59 @@ function capitalizeWords(str: string) {
     .join(' ');
 }
 
+export type TopBarMetric = { title: string; value: string };
+
+export const getTopBarMetrics = (
+  overview: Overview,
+  targetPrice: number,
+  stockData: DailyStockDataPoint[],
+): TopBarMetric[] => {
+  const lastClosingPrice = Number(
+    getLatestStockDataPoint(stockData).data['5. adjusted close'],
+  );
+
+  console.log(
+    (Math.abs(Number(overview.MarketCapitalization)) / 1.0e12).toLocaleString(
+      'en-US',
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      },
+    ) + ' Bil',
+  );
+
+  const topBarMetrics: TopBarMetric[] = [
+    { title: 'Last Price', value: '$' + lastClosingPrice.toString() },
+    { title: 'Target Price', value: '$' + targetPrice.toString() },
+    {
+      title: 'Price/Target',
+      value: (lastClosingPrice / targetPrice).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    },
+    {
+      title: 'Market Cap',
+      value: '$' + moneyFormat(overview.MarketCapitalization, false),
+    },
+    {
+      title: 'EBITDA',
+      value: moneyFormat(overview.EBITDA, false),
+    },
+    { title: 'Diluted EPS TTM', value: overview.DilutedEPSTTM },
+    { title: 'Revenue per share TTM', value: overview.RevenuePerShareTTM },
+    {
+      title: 'Gross profit TTM',
+      value: moneyFormat(overview.GrossProfitTTM, false),
+    },
+    { title: 'Forward PE', value: overview.ForwardPE },
+    { title: 'Trailing PE', value: overview.TrailingPE },
+  ];
+
+  return topBarMetrics;
+};
+
+// TODO: add support for foreign currencies
 export const getSidebarMetrics = (
   overview: Overview,
   balanceSheet: BalanceSheet,
@@ -266,13 +336,20 @@ export const getSidebarMetrics = (
   financialStrengthRating: string,
 ): SidebarMetrics => {
   const marketOverview = {
-    Price: '$' + getLatestStockDataPoint(stockData)?.data['4. close'],
+    Price: '$' + getLatestStockDataPoint(stockData)?.data['5. adjusted close'],
     'Target Price': '$' + targetPrice,
     '52 Week Price Range': `$${getLowestClosingStockPrice(
       stockData,
-    )} to $${getHighestClosingStockPrice(stockData)}`,
+    ).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })} to $${getHighestClosingStockPrice(stockData).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`,
     'Shares Outstanding': moneyFormat(
       Number(overview.SharesOutstanding).toFixed(2),
+      true,
     ),
     Dividend:
       overview.DividendPerShare === 'None'
@@ -281,6 +358,7 @@ export const getSidebarMetrics = (
     'Dividend Yield': overview.DividendYield,
     'Average Daily Volume': moneyFormat(
       getAverageDailyVolume(stockData).toFixed(2),
+      true,
     ),
   };
 
@@ -290,7 +368,7 @@ export const getSidebarMetrics = (
   };
 
   const financialStrength = {
-    'Financial Strength Rating': financialStrengthRating,
+    'Fin. Strength Rating': financialStrengthRating,
     'Debt/Capital Ratio': `${(getDebtCapitalRatio(balanceSheet) * 100).toFixed(
       2,
     )}%`,
@@ -302,9 +380,10 @@ export const getSidebarMetrics = (
         ? 0
         : getPayoutRatio(overview).toFixed(2),
     'Current Ratio': getCurrentRatio(balanceSheet).toFixed(2),
-    Revenue: '$' + moneyFormat(Number(overview.RevenueTTM)),
+    Revenue: '$' + moneyFormat(Number(overview.RevenueTTM), true),
     'After-Tax Income':
-      '$' + moneyFormat(Number(incomeStatement.annualReports[0].netIncome)),
+      '$' +
+      moneyFormat(Number(incomeStatement.annualReports[0].netIncome), true),
     EPS: overview.EPS,
     'Book Value': overview.BookValue,
   };

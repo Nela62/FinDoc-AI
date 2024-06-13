@@ -57,7 +57,10 @@ export type DailyData = {
   '2. high': string;
   '3. low': string;
   '4. close': string;
-  '5. volume': string;
+  '5. adjusted close': string;
+  '6. volume': string;
+  '7. dividend amount': string;
+  '8. split coefficient': string;
 };
 
 export type StockMetadata = {
