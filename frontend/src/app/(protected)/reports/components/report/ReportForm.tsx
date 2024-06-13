@@ -99,12 +99,12 @@ export const reportFormSchema = z.object({
 });
 
 const section_ids = [
-  // 'investment_thesis',
-  // 'business_description',
-  // 'recent_developments',
-  // 'industry_overview_competitive_positioning',
-  // 'financial_analysis',
-  // 'valuation',
+  'investment_thesis',
+  'business_description',
+  'recent_developments',
+  'industry_overview_competitive_positioning',
+  'financial_analysis',
+  'valuation',
   'management_and_risks',
 ];
 
