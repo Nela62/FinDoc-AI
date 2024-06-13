@@ -624,6 +624,7 @@ export const ReportForm = ({
               width={0}
               height={0}
               sizes="100vw"
+              unoptimized
             />
             <Progress value={progress} className="w-full" />
             <AlertDialogDescription className="text-base pt-6">
