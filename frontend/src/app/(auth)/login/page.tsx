@@ -39,39 +39,19 @@ export default async function Login() {
   }
 
   return (
-    <div className="container bg-background relative hidden h-full flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-      <Cover />
-      <div className="mx-auto flex flex-col justify-center space-y-7 w-fit">
-        <div className="flex flex-col gap-2 w-fit mx-auto items-center">
+    <div className="bg-zinc-900 h-full flex justify-center items-center">
+      <div className="bg-white w-[350px] rounded-md overflow-hidden">
+        <div className="py-5 bg-azure flex justify-center items-center">
           <Image
-            src="/coreline_logo.png"
-            alt="Coreline logo"
-            className="h-7 w-7"
+            src="/default_finpanel_logo.png"
+            alt="Finpanel logo"
+            className="h-7 w-auto"
             width={0}
             height={0}
             sizes="100vw"
           />
-          <h2 className="text-3xl font-semibold text-foreground">
-            Welcome back
-          </h2>
         </div>
-        <Card className="max-w-sm">
-          <CardHeader>
-            <CardTitle className="text-2xl">Login</CardTitle>
-            <CardDescription>
-              Enter your email below to login to your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <LoginAuthForm formAction={signIn} />
-          </CardContent>
-          <CardFooter className="text-sm justify-center">
-            Don&apos;t have an account?{' '}
-            <Link href="/register" className="underline ml-1">
-              Sign up
-            </Link>
-          </CardFooter>
-        </Card>
+        <LoginAuthForm formAction={signIn} />
       </div>
     </div>
   );

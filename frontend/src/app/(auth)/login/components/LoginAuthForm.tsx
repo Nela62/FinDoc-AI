@@ -19,6 +19,7 @@ import { useBoundStore } from '@/providers/store-provider';
 import { useState } from 'react';
 import { Loader2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { IconCircleChevronRight } from '@tabler/icons-react';
 // import { demoReports } from '@/stores/reports-store';
 
 const formSchema = z.object({
@@ -61,12 +62,12 @@ export const LoginAuthForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="px-6 mt-6">
               <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input type="email" {...field} />
@@ -79,7 +80,7 @@ export const LoginAuthForm = ({
           control={form.control}
           name="password"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="px-6">
               <FormLabel>Password</FormLabel>
               <FormControl>
                 <Input type="password" {...field} />
@@ -95,8 +96,15 @@ export const LoginAuthForm = ({
             Signing In
           </Button>
         ) : (
-          <Button className="w-full" type="submit">
-            Sign In
+          <Button
+            className="w-full py-8 rounded-none bg-azure hover:bg-azure/80"
+            size="lg"
+            type="submit"
+          >
+            <IconCircleChevronRight
+              className="h-10 w-10 text-white"
+              stroke={1}
+            />
           </Button>
         )}
       </form>
