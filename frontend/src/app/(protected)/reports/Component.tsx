@@ -117,9 +117,10 @@ export const NewReport = ({ userId }: { userId: string }) => {
         {selectedReportId ? (
           <ReportInfo reportId={selectedReportId} userId={userId} />
         ) : isTemplateCustomization ? (
-          templateConfig ? (
+          templateConfig && templateData ? (
             <TemplateCustomizationForm
               userId={userId}
+              templateData={templateData}
               templateConfig={templateConfig}
               setTemplateConfig={setTemplateConfig}
               setIsTemplateCustomization={setIsTemplateCustomization}
@@ -139,12 +140,8 @@ export const NewReport = ({ userId }: { userId: string }) => {
       </div>
       {selectedReportId ? (
         <ReportPreview userId={userId} reportId={selectedReportId} />
-      ) : templateConfig && templateData ? (
-        <TemplatePreview
-          userId={userId}
-          templateConfig={templateConfig}
-          templateData={templateData}
-        />
+      ) : templateData ? (
+        <TemplatePreview userId={userId} templateData={templateData} />
       ) : (
         <Skeleton className="w-[50%] h-full" />
       )}

@@ -91,8 +91,8 @@ export const getTemplateDocxBlob = async (
 
     return docxBlob;
   } catch (error) {
+    console.log(error);
     if (error instanceof Error) {
-      console.error(error.message);
       throw new Error(error.message);
     }
   }
