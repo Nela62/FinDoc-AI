@@ -285,18 +285,16 @@ export const getTopBarMetrics = (
     getLatestStockDataPoint(stockData).data['5. adjusted close'],
   );
 
-  console.log(
-    (Math.abs(Number(overview.MarketCapitalization)) / 1.0e12).toLocaleString(
-      'en-US',
-      {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      },
-    ) + ' Bil',
-  );
-
   const topBarMetrics: TopBarMetric[] = [
-    { title: 'Last Price', value: '$' + lastClosingPrice.toString() },
+    {
+      title: 'Last Price',
+      value:
+        '$' +
+        lastClosingPrice.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+    },
     { title: 'Target Price', value: '$' + targetPrice.toString() },
     {
       title: 'Price/Target',
@@ -336,7 +334,14 @@ export const getSidebarMetrics = (
   financialStrengthRating: string,
 ): SidebarMetrics => {
   const marketOverview = {
-    Price: '$' + getLatestStockDataPoint(stockData)?.data['5. adjusted close'],
+    Price:
+      '$' +
+      Number(
+        getLatestStockDataPoint(stockData)?.data['5. adjusted close'],
+      ).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
     'Target Price': '$' + targetPrice,
     '52 Week Price Range': `$${getLowestClosingStockPrice(
       stockData,
@@ -603,14 +608,16 @@ export const getGrowthAndValuationAnalysisMetrics = (
             numbers: cashflow.annualReports
               .slice(0, years === 5 ? years : years - 1)
               .map((_, i) =>
-                (
-                  (Number(cashflow.annualReports[i].dividendPayout) -
-                    Number(cashflow.annualReports[i + 1].dividendPayout)) /
-                  Number(cashflow.annualReports[i].dividendPayout)
-                ).toLocaleString('en-US', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 2,
-                }),
+                cashflow.annualReports[i].dividendPayout === 'None'
+                  ? '--'
+                  : (
+                      (Number(cashflow.annualReports[i].dividendPayout) -
+                        Number(cashflow.annualReports[i + 1].dividendPayout)) /
+                      Number(cashflow.annualReports[i].dividendPayout)
+                    ).toLocaleString('en-US', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    }),
               ),
           },
           {
@@ -618,18 +625,20 @@ export const getGrowthAndValuationAnalysisMetrics = (
             numbers: incomeStatement.annualReports
               .slice(0, years === 5 ? years : years - 1)
               .map((y, i) =>
-                (
-                  (Number(y.incomeTaxExpense) /
-                    Number(
-                      balanceSheet.annualReports[i].totalShareholderEquity,
-                    )) *
-                  (1 -
-                    Number(cashflow.annualReports[i].dividendPayout) /
-                      Number(y.netIncome))
-                ).toLocaleString('en-US', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 2,
-                }),
+                cashflow.annualReports[i].dividendPayout === 'None'
+                  ? '--'
+                  : (
+                      (Number(y.incomeTaxExpense) /
+                        Number(
+                          balanceSheet.annualReports[i].totalShareholderEquity,
+                        )) *
+                      (1 -
+                        Number(cashflow.annualReports[i].dividendPayout) /
+                          Number(y.netIncome))
+                    ).toLocaleString('en-US', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    }),
               ),
           },
         ],
@@ -643,13 +652,18 @@ export const getGrowthAndValuationAnalysisMetrics = (
               .map(
                 (_, i) =>
                   '$' +
-                  getHighestClosingStockPrice(
-                    getNWeeksStock(
-                      stockData,
-                      52,
-                      sub(new Date(), { years: i }),
+                  Number(
+                    getHighestClosingStockPrice(
+                      getNWeeksStock(
+                        stockData,
+                        52,
+                        sub(new Date(), { years: i }),
+                      ),
                     ),
-                  ),
+                  ).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }),
               )
               .reverse(),
           },
@@ -659,13 +673,18 @@ export const getGrowthAndValuationAnalysisMetrics = (
               .map(
                 (_, i) =>
                   '$' +
-                  getLowestClosingStockPrice(
-                    getNWeeksStock(
-                      stockData,
-                      52,
-                      sub(new Date(), { years: i }),
+                  Number(
+                    getLowestClosingStockPrice(
+                      getNWeeksStock(
+                        stockData,
+                        52,
+                        sub(new Date(), { years: i }),
+                      ),
                     ),
-                  ),
+                  ).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }),
               )
               .reverse(),
           },
