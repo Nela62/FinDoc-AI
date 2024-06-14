@@ -727,9 +727,9 @@ export const ReportForm = ({
                         <SelectItem value="Equity Analyst Report">
                           Equity Analyst Report
                         </SelectItem>
-                        <SelectItem value="Earnings Call Note">
+                        {/* <SelectItem value="Earnings Call Note">
                           Earnings Call Note
-                        </SelectItem>
+                        </SelectItem> */}
                       </SelectContent>
                     </Select>
                     <FormMessage />

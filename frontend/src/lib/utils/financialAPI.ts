@@ -667,6 +667,7 @@ export const getGrowthAndValuationAnalysisMetrics = (
               )
               .reverse(),
           },
+          // TODO: probably wrong
           {
             name: 'Price: Low',
             numbers: [...Array(years).keys()]
