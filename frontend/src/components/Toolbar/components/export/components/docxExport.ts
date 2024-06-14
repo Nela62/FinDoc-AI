@@ -589,6 +589,7 @@ export const generateDocxFile = async (firstPageVisual: Blob) => {
       financialStrength: 'High',
       targetPrice: 182,
       firstPageVisual: firstPageVisual,
+      sources: [],
     });
 
     return docxBlob;
