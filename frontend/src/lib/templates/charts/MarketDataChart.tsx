@@ -9,6 +9,7 @@ import {
   Bar,
   ReferenceLine,
   ReferenceDot,
+  LabelList,
 } from 'recharts';
 
 import { forwardRef, useEffect, useState } from 'react';
@@ -33,6 +34,25 @@ type ChartProps = {
   incomeStatement: IncomeStatement;
   earnings: Earnings;
   dailyStock: DailyStockData;
+};
+
+const renderCustomizedLabel = (props: any) => {
+  const { x, y, width, height, value } = props;
+  const low = height < 10;
+
+  return (
+    <g>
+      <text
+        y={low ? y - 4 : y + height - 6}
+        x={x + width / 2}
+        fill={low ? '#000' : '#fff'}
+        textAnchor="middle"
+        dominantBaseline="middle"
+      >
+        {value}
+      </text>
+    </g>
+  );
 };
 
 // const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
@@ -242,12 +262,9 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
               domain={['dataMin', 'dataMax']}
               hide
             />
-            <Bar
-              dataKey="y"
-              fill={primaryColor}
-              label={{ fill: 'white', position: 'insideBottom', fontSize: 7 }}
-              isAnimationActive={false}
-            />
+            <Bar dataKey="y" fill={primaryColor} isAnimationActive={false}>
+              <LabelList dataKey="y" content={renderCustomizedLabel} />
+            </Bar>
           </BarChart>
         </div>
         <div></div>
@@ -309,12 +326,9 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
             margin={{ bottom: 0, left: 0, top: 4, right: 0 }}
           >
             <YAxis tickLine={false} axisLine={false} type="number" hide />
-            <Bar
-              dataKey="y"
-              fill={primaryColor}
-              label={{ fill: 'white', position: 'insideBottom', fontSize: 7 }}
-              isAnimationActive={false}
-            />
+            <Bar dataKey="y" fill={primaryColor} isAnimationActive={false}>
+              <LabelList dataKey="y" content={renderCustomizedLabel} />
+            </Bar>
           </BarChart>
         </div>
         <div></div>

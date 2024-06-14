@@ -22,7 +22,7 @@ import { TargetPriceChart } from '@/lib/templates/charts/TargetPriceChart';
 // TODO: generate quarters and columns automatically based on date
 export default function ChartPage() {
   return (
-    <TargetPriceChart
+    <MarketDataChart
       colors={['#1c4587', '#f4e9d3', '#006f3b']}
       targetPrice={168}
       incomeStatement={INCOME_STATEMENT_IBM}
