@@ -405,8 +405,8 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
         </div>
         <div className="text-center">
           <div className="grid grid-cols-2 divide-x divide-zinc-400">
-            <div>Q3</div>
-            <div>Q4</div>
+            <div>Q1</div>
+            <div>Q2</div>
           </div>
           <div className="text-center font-semibold">2024</div>
         </div>

@@ -86,6 +86,7 @@ export const getTemplateDocxBlob = async (
       financialStrength: 'High',
       targetPrice: 182,
       firstPageVisual: firstPageVisual,
+      sources: [],
     });
 
     return docxBlob;
@@ -152,6 +153,7 @@ export const getDocxBlob = async ({
   recommendation,
   financialStrength,
   targetPrice,
+  sources,
 }: {
   componentId: string;
   summary: string[];
@@ -172,6 +174,7 @@ export const getDocxBlob = async ({
   recommendation: Recommendation;
   financialStrength: FinancialStrength;
   targetPrice: number;
+  sources: string[];
 }) => {
   if (!TEMPLATES.hasOwnProperty(componentId)) {
     throw new Error("Template with this component id doesn't exist");
@@ -215,6 +218,7 @@ export const getDocxBlob = async ({
       financialStrength: financialStrength,
       targetPrice: targetPrice,
       firstPageVisual: firstPageVisual,
+      sources: sources,
     });
 
     return docxBlob;

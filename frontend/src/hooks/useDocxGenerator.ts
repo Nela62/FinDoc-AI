@@ -30,6 +30,7 @@ type Metrics = {
   sidebarMetrics: SidebarMetrics;
   growthAndValuationAnalysisMetrics: AnalysisMetrics;
   financialAndRiskAnalysisMetrics: AnalysisMetrics;
+  sources: string[];
 };
 
 const defaultCompanyLogo = '/default_finpanel_logo.png';
@@ -215,6 +216,7 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
         authorCompanyLogo: authorCompanyLogo,
         companyLogo: companyLogo,
         firstPageVisual: firstPageVisual,
+        sources: metrics.sources,
       });
 
       if (!docxBlob) {

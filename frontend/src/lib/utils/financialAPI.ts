@@ -905,3 +905,5 @@ export const getFinancialAndRiskAnalysisMetrics = (
     ],
   };
 };
+
+export const getSources = () => {};

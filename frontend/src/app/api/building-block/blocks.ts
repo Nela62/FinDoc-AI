@@ -267,34 +267,16 @@ type NewsDataRes = {
 
 // TODO: get content for each article
 const getRecentDevelopmentsContext = async (news: NewsDataRes) => {
-  let context: Record<string, string>[] = [];
-  const promises = Object.keys(news).map((key: string) => {
-    return Promise.all(
-      news[key as keyof typeof news].feed.slice(0, 15).map(async (f) => {
-        const content = await fetchNewsContent(f.url);
-        const obj = {
-          title: f.title,
-          summary: f.summary,
-          time_published: f.time_published,
-          content: content ?? '',
-        };
-        context.push(obj);
-      }),
-    );
-  });
-
-  await Promise.all(promises);
-
-  return JSON.stringify(context);
+  c;
 };
 
 export const generateRecentDevelopments = async (
   blockId: string,
   customPrompt: string,
   companyName: string,
-  news: NewsDataRes,
+  newsContext: string,
 ) => {
-  const context = await getRecentDevelopmentsContext(news);
+  // const context = await getRecentDevelopmentsContext(news);
   const config = await humanloop.projects
     .getActiveConfig({
       id: humanloopIdsMap[blockId],
@@ -303,7 +285,7 @@ export const generateRecentDevelopments = async (
 
   // @ts-ignore
   let template = config.chat_template[0].content;
-  template = findReplaceString(template, 'CONTEXT', context);
+  template = findReplaceString(template, 'CONTEXT', newsContext);
   template = findReplaceString(template, 'CUSTOM_PROMPT', customPrompt);
   template = findReplaceString(template, 'COMPANY_NAME', companyName);
 
@@ -319,7 +301,7 @@ export const generateRecentDevelopments = async (
     project_id: humanloopIdsMap[blockId],
     config_id: config.id,
     inputs: {
-      CONTEXT: context,
+      CONTEXT: newsContext,
       CUSTOM_PROMPT: customPrompt,
       COMPANY_NAME: companyName,
     },

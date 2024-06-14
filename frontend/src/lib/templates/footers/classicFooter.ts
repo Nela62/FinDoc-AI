@@ -57,7 +57,7 @@ export const classicFooter = (
                     alignment: AlignmentType.LEFT,
                     children: [
                       new TextRun({
-                        text: `©2024 ${authorCompanyName}`,
+                        text: `©2024 ${authorCompanyName.split(' ')[0]}`,
                         size: 14,
                         color: '000000',
                       }),

@@ -36,6 +36,8 @@ import {
 import { Overview } from '@/types/alphaVantageApi';
 import { DisclaimerSection } from '../../disclaimer/standard';
 import { TopBarMetric } from '@/lib/utils/financialAPI';
+import { sourcesHeader } from '../../headers/sourcesHeader';
+import { SourcesSection } from '../../sources/standard';
 
 const ratingsList = [
   {
@@ -74,6 +76,7 @@ export type EquityAnalystSidebarProps = {
   firstPageVisual?: Blob | Table;
   secondPageVisual?: Blob | Table;
   lastPageVisual?: Blob | Table;
+  sources: string[];
 };
 
 export const equityAnalystSidebar = async ({
@@ -100,6 +103,7 @@ export const equityAnalystSidebar = async ({
   firstPageVisual,
   secondPageVisual,
   lastPageVisual,
+  sources,
 }: EquityAnalystSidebarProps & TemplateConfig): Promise<Blob> => {
   const [primaryColor, secondaryColor, accentColor] = colors;
   const mainText = getDocxContent(content);
@@ -131,6 +135,20 @@ export const equityAnalystSidebar = async ({
     companyTicker,
     createdAt,
     primaryColor,
+  );
+
+  const displaySourcesHeader = await sourcesHeader(
+    authorCompanyLogo,
+    companyTicker,
+    createdAt,
+    primaryColor,
+  );
+
+  const sourcesSection = SourcesSection(
+    displaySourcesHeader,
+    primaryColor,
+    authorCompanyName,
+    sources,
   );
 
   const disclaimerSection = DisclaimerSection(
@@ -243,7 +261,12 @@ export const equityAnalystSidebar = async ({
         },
       ],
     },
-    sections: [firstPage, mainPageSection, ...disclaimerSection],
+    sections: [
+      firstPage,
+      mainPageSection,
+      sourcesSection,
+      ...disclaimerSection,
+    ],
   });
   return Packer.toBlob(doc);
 };

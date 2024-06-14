@@ -78,8 +78,10 @@ import {
   DailyStockData,
   Earnings,
   IncomeStatement,
+  Feed,
 } from '@/types/alphaVantageApi';
 import { data } from '@/lib/data/structuredData';
+import { fetchNewsContent } from './actions';
 
 const defaultCompanyLogo = '/default_finpanel_logo.png';
 
@@ -360,13 +362,54 @@ export const ReportForm = ({
     // Fetch web data
     setProgress((state) => state + progressValue);
     setProgressMessage('Fetching web news...');
-    const { last3Months, last6Months, last12Months } = await fetchCacheNews(
+    const news = await fetchCacheNews(
       reportId,
       values.companyTicker.value,
       supabase,
       userId,
       insertCache,
     );
+
+    const getRecentDevelopmentsContext = async (news: any) => {
+      let context: Record<string, string>[] = [];
+      const promises = Object.keys(news).map((key: string) => {
+        return Promise.all(
+          news[key as keyof typeof news].feed
+            .slice(0, 15)
+            .map(async (f: Feed) => {
+              const content = await fetchNewsContent(f.url);
+              const obj = {
+                title: f.title,
+                summary: f.summary,
+                time_published: f.time_published,
+                content: content ?? '',
+              };
+              context.push(obj);
+            }),
+        );
+      });
+
+      await Promise.all(promises);
+
+      return JSON.stringify(context);
+    };
+
+    const newsContext = await getRecentDevelopmentsContext(news);
+
+    const sources = [];
+    sources.push(
+      `[1] ${tickerData.company_name}, "Form 10-K," Securities and Exchance Comission, Washington, D.C., 2024.`,
+    );
+
+    Object.entries(news).map(([key, value]) => {
+      value.feed.slice(0, 15).forEach((n: Feed) => {
+        sources.push(
+          `[${sources.length + 1}] ${n.authors[0]}, "${n.title}", ${
+            n.source
+          }, ${n.time_published.slice(0, 4)}. Available at ${n.url}`,
+        );
+      });
+    });
 
     // Generate a company overview if any
     setProgress((state) => state + progressValue);
@@ -408,6 +451,7 @@ export const ReportForm = ({
           sidebarMetrics,
           growthAndValuationAnalysisMetrics,
           financialAndRiskAnalysisMetrics,
+          sources,
         },
       },
     ]);
@@ -425,9 +469,8 @@ export const ReportForm = ({
       companyOverview,
       recommendation,
       targetPrice,
-      last3Months,
-      last6Months,
-      last12Months,
+      news,
+      newsContext,
     };
   };
 
@@ -445,9 +488,8 @@ export const ReportForm = ({
       templateId,
       recommendation,
       targetPrice,
-      last3Months,
-      last6Months,
-      last12Months,
+      news,
+      newsContext,
     } = await baseActions(values);
 
     const generatedJson: JSONContent = { type: 'doc', content: [] };
@@ -492,7 +534,7 @@ export const ReportForm = ({
               customPrompt: '',
               companyName: tickerData.company_name,
               apiData: apiData,
-              news: { last3Months, last6Months, last12Months },
+              newsContext: newsContext,
             }),
           })
             .then((res) => res.json())

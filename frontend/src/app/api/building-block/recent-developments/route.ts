@@ -6,7 +6,7 @@ import {
 
 // TODO: check if this is authenticated
 export async function POST(req: Request) {
-  const { blockId, customPrompt, companyName, news } = await req.json();
+  const { blockId, customPrompt, companyName, newsContext } = await req.json();
 
   console.log('generating block ' + blockId);
 
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     blockId,
     customPrompt,
     companyName,
-    news,
+    newsContext,
   );
 
   return NextResponse.json({ block: block });
