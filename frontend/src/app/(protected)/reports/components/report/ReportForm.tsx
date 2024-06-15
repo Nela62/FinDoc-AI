@@ -82,6 +82,7 @@ import {
 } from '@/types/alphaVantageApi';
 import { data } from '@/lib/data/structuredData';
 import { fetchNewsContent } from './actions';
+import { QuarterStockChart } from '@/lib/templates/charts/QuarterStockChart';
 
 const defaultCompanyLogo = '/default_finpanel_logo.png';
 
@@ -505,7 +506,7 @@ export const ReportForm = ({
 
     // start report generation
     setProgress((state) => state + progressValue);
-    setProgressMessage('Writing the report...');
+    setProgressMessage('Writing report...');
 
     Promise.all(
       section_ids.map(async (id: string) => {
@@ -687,14 +688,22 @@ export const ReportForm = ({
       </AlertDialog>
       <div className="sr-only" id="hidden-container">
         {apiCache && templateConfig && targetPrice && apiCacheData && (
-          <MarketDataChart
-            colors={templateConfig.colorScheme.colors}
-            targetPrice={targetPrice}
-            incomeStatement={apiCacheData.incomeStatement}
-            earnings={apiCacheData.earnings}
-            dailyStock={apiCacheData.dailyStock}
-            ref={onRefChange}
-          />
+          <>
+            <QuarterStockChart
+              colors={templateConfig.colorScheme.colors}
+              targetPrice={targetPrice}
+              dailyStock={apiCacheData.dailyStock}
+              ref={onStockRefChange}
+            />
+            <MarketDataChart
+              colors={templateConfig.colorScheme.colors}
+              targetPrice={targetPrice}
+              incomeStatement={apiCacheData.incomeStatement}
+              earnings={apiCacheData.earnings}
+              dailyStock={apiCacheData.dailyStock}
+              ref={onRefChange}
+            />
+          </>
         )}
       </div>
       <div className="w-[360px] mx-auto flex flex-col py-4 gap-4 h-full">

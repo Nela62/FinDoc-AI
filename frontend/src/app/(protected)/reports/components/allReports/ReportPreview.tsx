@@ -16,6 +16,8 @@ import {
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { fetchAPICacheByReportId, fetchTemplateConfig } from '@/lib/queries';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
+import { QuarterStockChart } from '@/lib/templates/charts/QuarterStockChart';
+import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
@@ -40,15 +42,11 @@ export const ReportPreview = ({
   userId: string;
 }) => {
   const [numPages, setNumPages] = useState<number>();
-  const [chart, setChart] = useState<HTMLDivElement | null>(null);
+  const [charts, setCharts] = useState<HTMLDivElement[] | null>(null);
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>();
   const [file, setFile] = useState<string | null>(null);
   const [apiCacheData, setApiCacheData] = useState<apiCacheData | null>(null);
-
-  const onRefChange = useCallback((node: HTMLDivElement) => {
-    setChart(node);
-  }, []);
 
   const onResize = useCallback<ResizeObserverCallback>((entries) => {
     const [entry] = entries;
@@ -108,11 +106,11 @@ export const ReportPreview = ({
       console.log('still loading');
       return;
     }
-    if (!docxFile && chart) {
+    if (!docxFile && charts) {
       console.log('generating docx');
       generateDocxBlob(chart).then((blob) => generatePdf(blob));
     }
-  }, [chart, docxFile, isLoading, generateDocxBlob, generatePdf]);
+  }, [charts, docxFile, isLoading, generateDocxBlob, generatePdf]);
 
   useEffect(() => {
     if (pdfFile) {
@@ -130,18 +128,16 @@ export const ReportPreview = ({
 
   return (
     <div className="w-[50%] relative">
-      <div className="sr-only" id="hidden-container">
-        {apiCache && templateConfig && targetPrice && apiCacheData && (
-          <MarketDataChart
-            colors={templateConfig.color_scheme}
-            targetPrice={targetPrice}
-            incomeStatement={apiCacheData.incomeStatement}
-            earnings={apiCacheData.earnings}
-            dailyStock={apiCacheData.dailyStock}
-            ref={onRefChange}
-          />
-        )}
-      </div>
+      {apiCache && templateConfig && targetPrice && apiCacheData && (
+        <ChartWrapper
+          colors={templateConfig.color_scheme}
+          targetPrice={targetPrice}
+          dailyStock={apiCacheData.dailyStock}
+          setCharts={setCharts}
+          incomeStatement={apiCacheData.incomeStatement}
+          earnings={apiCacheData.earnings}
+        />
+      )}
       <div
         className="flex-col overflow-hidden bg-white border-l hidden md:flex"
         ref={setContainerRef}

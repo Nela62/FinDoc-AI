@@ -144,6 +144,26 @@ export const getNWeeksStock = (
   return stockData;
 };
 
+export const getNMonthsStock = (
+  dailyStock: DailyStockData,
+  months: number = 3,
+  start: Date = new Date(),
+) => {
+  const data = dailyStock['Time Series (Daily)'];
+  const nMonthsAgo = sub(start, { months: months });
+  const days = eachDayOfInterval({ start: nMonthsAgo, end: new Date() });
+  const stockData: DailyStockDataPoint[] = [];
+
+  days.forEach((day) => {
+    const formattedDay = format(day, 'yyyy-MM-dd');
+    if (data.hasOwnProperty(formattedDay)) {
+      stockData.push({ day: formattedDay, data: data[formattedDay] });
+    }
+  });
+
+  return stockData;
+};
+
 export const getNYearsStock = (
   dailyStock: DailyStockData,
   years: number = 1,

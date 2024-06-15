@@ -189,7 +189,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
               ]}
             />
             <Area
-              type="monotone"
+              type="linear"
               dataKey="data"
               stroke={primaryColor}
               fill={secondaryColor}

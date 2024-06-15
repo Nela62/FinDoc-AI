@@ -18,6 +18,7 @@ import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
 import { DAILY_IBM } from '@/lib/data/daily_imb';
 import { TargetPriceChart } from '@/lib/templates/charts/TargetPriceChart';
+import { QuarterStockChart } from '@/lib/templates/charts/QuarterStockChart';
 
 // TODO: generate quarters and columns automatically based on date
 export default function ChartPage() {
