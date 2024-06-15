@@ -92,6 +92,12 @@ export const getStandardStyles = (primaryColor: string): IStylesOptions => ({
       run: { size: 16, color: '000000', font: 'Arial Narrow' },
     },
     {
+      id: 'small-header',
+      name: 'Small Narrow',
+      quickFormat: true,
+      run: { size: 14, color: '000000', font: 'Arial Narrow' },
+    },
+    {
       id: 'bold-narrow',
       name: 'Bold Narrow',
       quickFormat: true,

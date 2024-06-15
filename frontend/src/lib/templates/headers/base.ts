@@ -107,3 +107,43 @@ export const headerBase = async (
     ],
   });
 };
+
+export const topHeaderLine = (text: string) => {
+  return new TableRow({
+    children: [
+      new TableCell({
+        verticalAlign: 'center',
+        borders: bordersNone,
+        margins: { bottom: 50 },
+        columnSpan: 8,
+        children: [
+          new Paragraph({
+            style: 'small-header',
+            text: text,
+          }),
+        ],
+      }),
+      new TableCell({
+        borders: bordersNone,
+        margins: { bottom: 50 },
+        columnSpan: 2,
+        children: [
+          new Paragraph({
+            style: 'small-header',
+            children: [
+              new TextRun({
+                children: [
+                  '  Page ',
+                  PageNumber.CURRENT,
+                  ' OF ',
+                  PageNumber.TOTAL_PAGES,
+                ],
+              }),
+            ],
+            alignment: AlignmentType.RIGHT,
+          }),
+        ],
+      }),
+    ],
+  });
+};

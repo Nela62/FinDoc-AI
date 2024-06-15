@@ -19,6 +19,7 @@ import { AnalysisMetrics } from '@/lib/templates/docxTables/financialAnalysisTab
 import { FinancialStrength, Recommendation } from '@/types/report';
 import { Overview } from '@/types/alphaVantageApi';
 import { DAILY_IBM } from '@/lib/data/daily_imb';
+import { format } from 'date-fns';
 
 // TODO: Is this buffer page really needed?
 
@@ -35,6 +36,13 @@ export const getTemplateDocxBlob = async (
   }
 
   const templateFn = TEMPLATES[templateData.componentId];
+
+  const headerText = `${
+    templateConfig.authorCompanyName
+  } Equity Analyst Report | Report as of ${format(
+    new Date(),
+    'd MMMM yyy HH:mm:ss, O',
+  )} | Reporting Currency: USD | Trading Currency: USD | Exchange: NASDAQ`;
 
   try {
     const docxBlob = await templateFn({
@@ -88,6 +96,7 @@ export const getTemplateDocxBlob = async (
       targetPrice: 182,
       topFirstPageVisual: topFirstPageVisual,
       bottomFirstPageVisual: bottomFirstPageVisual,
+      topHeaderText: headerText,
       sources: [
         '[1] AMAZON COM INC, "Form 10-K," Securities and Exchance Comission, Washington, D.C., 2024.',
         '[2] Zane Fracek and Nicholas Rossolillo, "Why I Own Amazon Stock", Motley Fool, 2022. Available at https://www.fool.com/investing/2022/10/18/why-i-own-amazon-stock/',
@@ -204,6 +213,7 @@ export const getDocxBlob = async ({
   financialStrength,
   targetPrice,
   sources,
+  exchange,
 }: {
   componentId: string;
   summary: string[];
@@ -226,12 +236,19 @@ export const getDocxBlob = async ({
   sources: string[];
   bottomFirstPageVisual: Blob;
   topFirstPageVisual: Blob;
+  exchange: string;
 }) => {
   if (!TEMPLATES.hasOwnProperty(componentId)) {
     throw new Error("Template with this component id doesn't exist");
   }
 
-  // ({ content, colors, twoColumn, authors, authorCompanyName, authorCompanyLogo, createdAt, companyName, companyTicker, companyLogo, summary, businessDescription, sidebarMetrics, growthAndValuationAnalysisMetrics, financialAndRiskAnalysisMetrics, ratings, recommendation, financialStrength, targetPrice, firstPageVisual, secondPageVisual, lastPageVisual, }: EquityAnalystSidebarProps & TemplateConfig)
+  const headerText = `${
+    authorCompanyName.split(' ')[0]
+  } Equity Analyst Report | Report as of ${format(
+    new Date(),
+    'd MMMM yyy HH:mm:ss, O',
+  )} | Reporting Currency: USD | Trading Currency: USD | Exchange: ${exchange.toUpperCase()}`;
+
   const templateFn = TEMPLATES[componentId];
 
   try {
@@ -270,6 +287,7 @@ export const getDocxBlob = async ({
       topFirstPageVisual: topFirstPageVisual,
       bottomFirstPageVisual: bottomFirstPageVisual,
       sources: sources,
+      topHeaderText: headerText,
     });
 
     return docxBlob;

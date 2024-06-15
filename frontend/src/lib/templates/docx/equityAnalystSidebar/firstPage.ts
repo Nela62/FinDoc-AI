@@ -1,5 +1,6 @@
 import {
   BorderStyle,
+  Header,
   HeadingLevel,
   HorizontalPositionRelativeFrom,
   ISectionOptions,
@@ -17,6 +18,7 @@ import { format } from 'date-fns';
 import { metricsSidebar } from '../../metrics/sidebar';
 import { SidebarMetrics } from '../../metrics/components/statistics';
 import { Rating } from '../../metrics/components/ratings';
+import { topHeaderLine } from '../../headers/base';
 
 export const firstPageSection = async (
   authorCompanyName: string,
@@ -31,6 +33,7 @@ export const firstPageSection = async (
   colors: string[],
   bottomFirstPageVisual: Blob,
   topFirstPageVisual: Blob,
+  topHeaderText: string,
 ): Promise<ISectionOptions> => {
   const [primaryColor, secondaryColor, accentColor] = colors;
 
@@ -134,6 +137,17 @@ export const firstPageSection = async (
   return {
     properties: { page: { margin: { ...defaultMargins, top: 604 } } },
     footers: { default: classicFooter(authorCompanyName, primaryColor) },
+    headers: {
+      default: new Header({
+        children: [
+          new Table({
+            borders: bordersNone,
+            width: { size: 100.5, type: WidthType.PERCENTAGE },
+            rows: [topHeaderLine(topHeaderText)],
+          }),
+        ],
+      }),
+    },
     children: [
       new Table({
         borders: bordersNone,

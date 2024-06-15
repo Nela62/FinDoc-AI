@@ -12,6 +12,7 @@ import {
   getSidebarMetrics,
   getTopBarMetrics,
 } from '@/lib/utils/financialAPI';
+import { format } from 'date-fns';
 
 export const generateDocxFile = async (
   topFirstPageVisual: Blob,
@@ -540,8 +541,14 @@ export const generateDocxFile = async (
   );
   const companyLogo = await fetch('/acme_logo.jpg').then((res) => res.blob());
 
+  const headerText = `${
+    templateConfig.authorCompanyName
+  } Equity Analyst Report | Report as of ${format(
+    new Date(),
+    'd MMMM yyy HH:mm:ss, O',
+  )} | Reporting Currency: USD | Trading Currency: USD | Exchange: NASDAQ`;
+
   try {
-    console.log('docxBlob');
     const docxBlob = await templateFn({
       content: templateData.sampleText,
       colors: templateConfig.colorScheme.colors,
@@ -594,6 +601,7 @@ export const generateDocxFile = async (
       topFirstPageVisual: topFirstPageVisual,
       bottomFirstPageVisual: bottomFirstPageVisual,
       sources: [],
+      topHeaderText: headerText,
     });
 
     return docxBlob;

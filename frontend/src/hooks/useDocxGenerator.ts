@@ -147,8 +147,6 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
   }, [images]);
 
   useEffect(() => {
-    console.log(logoName);
-    console.log(companyLogoUrl);
     if (logoName && companyLogoUrl && apiCache) setLoading(false);
   }, [logoName, companyLogoUrl, apiCache]);
 
@@ -213,6 +211,7 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
         topFirstPageVisual: images[0],
         bottomFirstPageVisual: images[1],
         sources: metrics.sources,
+        exchange: report.companies.exchange ?? '',
       });
 
       if (!docxBlob) {

@@ -38,6 +38,7 @@ import { DisclaimerSection } from '../../disclaimer/standard';
 import { TopBarMetric } from '@/lib/utils/financialAPI';
 import { sourcesHeader } from '../../headers/sourcesHeader';
 import { SourcesSection } from '../../sources/standard';
+import { topHeaderLine } from '../../headers/base';
 
 const ratingsList = [
   {
@@ -76,6 +77,7 @@ export type EquityAnalystSidebarProps = {
   sources: string[];
   bottomFirstPageVisual: Blob;
   topFirstPageVisual: Blob;
+  topHeaderText: string;
 };
 
 export const equityAnalystSidebar = async ({
@@ -102,6 +104,7 @@ export const equityAnalystSidebar = async ({
   bottomFirstPageVisual,
   topFirstPageVisual,
   sources,
+  topHeaderText,
 }: EquityAnalystSidebarProps & TemplateConfig): Promise<Blob> => {
   const [primaryColor, secondaryColor, accentColor] = colors;
   const mainText = getDocxContent(content);
@@ -124,7 +127,7 @@ export const equityAnalystSidebar = async ({
     createdAt,
     primaryColor,
     secondaryColor,
-    true,
+    false,
     topBarMetrics,
   );
 
@@ -168,6 +171,7 @@ export const equityAnalystSidebar = async ({
     colors,
     bottomFirstPageVisual,
     topFirstPageVisual,
+    topHeaderText,
   );
 
   const float: ITableFloatOptions = {
@@ -191,7 +195,7 @@ export const equityAnalystSidebar = async ({
           new Table({
             borders: bordersNone,
             width: { size: 100.5, type: WidthType.PERCENTAGE },
-            rows: header,
+            rows: [topHeaderLine(topHeaderText), ...header],
           }),
         ],
       }),
