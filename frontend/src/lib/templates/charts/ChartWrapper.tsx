@@ -8,12 +8,11 @@ import {
   SetStateAction,
   useCallback,
   useEffect,
-  useImperativeHandle,
-  useRef,
   useState,
 } from 'react';
 import { QuarterStockChart } from './QuarterStockChart';
 import { MarketDataChart } from './MarketDataChart';
+import { toPng } from 'html-to-image';
 
 export const ChartWrapper = ({
   colors,
@@ -28,7 +27,7 @@ export const ChartWrapper = ({
   dailyStock: DailyStockData;
   incomeStatement: IncomeStatement;
   earnings: Earnings;
-  setCharts: Dispatch<SetStateAction<HTMLDivElement[] | null>>;
+  setCharts: Dispatch<SetStateAction<Blob[] | null>>;
 }) => {
   const [stockChart, setStockChart] = useState<HTMLDivElement | null>(null);
   const [marketChart, setMarketChart] = useState<HTMLDivElement | null>(null);
@@ -41,11 +40,28 @@ export const ChartWrapper = ({
     setMarketChart(node);
   }, []);
 
+  const getImgBlob = useCallback(
+    async (element: HTMLDivElement) =>
+      await toPng(element)
+        .then((url) => fetch(url))
+        .then((res) => res.blob()),
+    [],
+  );
+
+  const getImages = useCallback(
+    async (stockChart: HTMLDivElement, marketChart: HTMLDivElement) => {
+      const stockChartBlob = await getImgBlob(stockChart);
+      const marketChartBlob = await getImgBlob(marketChart);
+      return [stockChartBlob, marketChartBlob];
+    },
+    [getImgBlob],
+  );
+
   useEffect(() => {
     if (stockChart && marketChart) {
-      setCharts([stockChart, marketChart]);
+      getImages(stockChart, marketChart).then((images) => setCharts(images));
     }
-  }, [stockChart, marketChart, setCharts]);
+  }, [setCharts, stockChart, marketChart, getImages]);
 
   return (
     <div className="sr-only">

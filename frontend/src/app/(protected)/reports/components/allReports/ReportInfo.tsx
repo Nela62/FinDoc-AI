@@ -77,11 +77,11 @@ export const ReportInfo = ({
       { title: 'Report Type', value: report.type },
       {
         title: 'Date Created',
-        value: format(report.created_at, 'd MMMM yyyy, h:m:s a'),
+        value: format(report.created_at, 'd MMMM yyyy, h:mm:ss a'),
       },
       {
         title: 'Last Updated',
-        value: format(report.updated_at, 'd MMMM yyyy, h:m:s a'),
+        value: format(report.updated_at, 'd MMMM yyyy, h:mm:ss a'),
       },
       { title: 'Recommendation', value: report.recommendation ?? '' },
       { title: 'Target Price', value: report.targetprice?.toString() ?? '' },

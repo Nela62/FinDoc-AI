@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
 import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
 import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 
@@ -28,12 +27,7 @@ import {
 } from '@/components/ui/select';
 import { DisplayLogo } from './DisplayLogo';
 import { createClient } from '@/lib/supabase/client';
-import {
-  useFileUrl,
-  useUpload,
-} from '@supabase-cache-helpers/storage-react-query';
-import { toPng } from 'html-to-image';
-import { getTemplateDocxBlob } from '../../utils/getDocxBlob';
+import { useUpload } from '@supabase-cache-helpers/storage-react-query';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -42,6 +36,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { DAILY_IBM } from '@/lib/data/daily_imb';
+import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
+import { getTemplateDocxBlob } from '../../utils/getDocxBlob';
 
 const templateFormSchema = z.object({
   authorName: z.string(),
@@ -65,12 +61,8 @@ export const TemplateCustomizationForm = ({
   setTemplateConfig: Dispatch<SetStateAction<TemplateConfig | null>>;
   setIsTemplateCustomization: Dispatch<SetStateAction<boolean>>;
 }) => {
-  const [chart, setChart] = useState<HTMLDivElement | null>(null);
+  const [images, setImages] = useState<Blob[] | null>(null);
   const [isLoading, setLoading] = useState(false);
-
-  const onRefChange = useCallback((node: HTMLDivElement) => {
-    setChart(node);
-  }, []);
 
   const templateForm = useForm<z.infer<typeof templateFormSchema>>({
     resolver: zodResolver(templateFormSchema),
@@ -94,15 +86,10 @@ export const TemplateCustomizationForm = ({
 
   const getPdfFile = useCallback(
     async (newTemplateConfig: TemplateConfig) => {
-      if (!chart) {
+      if (!images) {
         throw new Error('No chart provided.');
       }
 
-      console.log(newTemplateConfig.colorScheme);
-
-      const firstPageVisual = await toPng(chart)
-        .then((url) => fetch(url))
-        .then((res) => res.blob());
       const companyLogo = await fetch('/acme_logo.jpg').then((res) =>
         res.blob(),
       );
@@ -133,7 +120,8 @@ export const TemplateCustomizationForm = ({
           newTemplateConfig,
           authorCompanyLogo,
           companyLogo,
-          firstPageVisual,
+          images[0],
+          images[1],
         );
 
         const formData = new FormData();
@@ -150,7 +138,7 @@ export const TemplateCustomizationForm = ({
         throw new Error('Something when wrong.');
       }
     },
-    [chart, templateData, supabase.storage, userId],
+    [templateData, supabase.storage, userId, images],
   );
 
   const onTemplateFormSubmit = (values: z.infer<typeof templateFormSchema>) => {
@@ -196,16 +184,14 @@ export const TemplateCustomizationForm = ({
         </AlertDialogContent>
       </AlertDialog>
       <div className="space-y-4 py-4 w-[360px] flex flex-col h-full">
-        <div className="sr-only" id="hidden-container">
-          <MarketDataChart
-            colors={templateConfig.colorScheme.colors}
-            targetPrice={182}
-            incomeStatement={INCOME_STATEMENT_IBM}
-            earnings={EARNINGS_IBM}
-            dailyStock={DAILY_IBM}
-            ref={onRefChange}
-          />
-        </div>
+        <ChartWrapper
+          colors={templateConfig.colorScheme.colors}
+          targetPrice={182}
+          incomeStatement={INCOME_STATEMENT_IBM}
+          earnings={EARNINGS_IBM}
+          dailyStock={DAILY_IBM}
+          setCharts={setImages}
+        />
         <div className="flex gap-2 items-center">
           <Button
             variant="ghost"

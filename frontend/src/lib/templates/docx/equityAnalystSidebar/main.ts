@@ -73,10 +73,9 @@ export type EquityAnalystSidebarProps = {
   financialStrength: FinancialStrength;
   ratings: Rating[];
   targetPrice: number;
-  firstPageVisual?: Blob | Table;
-  secondPageVisual?: Blob | Table;
-  lastPageVisual?: Blob | Table;
   sources: string[];
+  bottomFirstPageVisual: Blob;
+  topFirstPageVisual: Blob;
 };
 
 export const equityAnalystSidebar = async ({
@@ -100,9 +99,8 @@ export const equityAnalystSidebar = async ({
   recommendation,
   financialStrength,
   targetPrice,
-  firstPageVisual,
-  secondPageVisual,
-  lastPageVisual,
+  bottomFirstPageVisual,
+  topFirstPageVisual,
   sources,
 }: EquityAnalystSidebarProps & TemplateConfig): Promise<Blob> => {
   const [primaryColor, secondaryColor, accentColor] = colors;
@@ -164,11 +162,12 @@ export const equityAnalystSidebar = async ({
     summary,
     authors,
     recommendation,
-    firstPageVisual,
     sidebarMetrics,
     ratings,
     companyLogo,
     colors,
+    bottomFirstPageVisual,
+    topFirstPageVisual,
   );
 
   const float: ITableFloatOptions = {

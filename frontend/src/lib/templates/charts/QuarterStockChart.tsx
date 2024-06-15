@@ -51,36 +51,24 @@ export const QuarterStockChart = forwardRef((props: ChartProps, ref: any) => {
 
   const stockData = getNMonthsStock(props.dailyStock, 1);
   const chartStockData = stockData.map((dataPoint) => ({
-    day: dataPoint.day,
-    data: dataPoint.data['5. adjusted close'],
+    day: dataPoint.day.slice(5),
+    data: Number(dataPoint.data['5. adjusted close']),
   }));
   const stockMin = getLowestClosingStockPrice(stockData);
   const stockMax = getHighestClosingStockPrice(stockData);
   const stockMean = getMeanClosingStockPrice(stockData);
 
   return (
-    <div className="bg-background w-[477px] h-fit" ref={ref}>
+    <div className="bg-background w-[500px] h-fit" ref={ref}>
       <div
-        className="w-[477px] justify-between flex text-foreground/60 pb-2 pr-2"
+        className="w-[500px] justify-between flex text-foreground/60 pb-2 pr-2"
         style={{ fontSize: '7px' }}
       >
         <p>30-Day Moving Average</p>
         <div className="flex gap-2">
           <p>Target Price: ${props.targetPrice}</p>
-          <p>
-            30 DaysHigh: $
-            {stockMax.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </p>
-          <p>
-            30 DaysLow: $
-            {stockMin.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </p>
+          <p>30 Days High: ${stockMin.toFixed(2)}</p>
+          <p>30 Days Low: ${stockMax.toFixed(2)}</p>
           <p>
             Closed at{' '}
             {Number(
@@ -90,7 +78,7 @@ export const QuarterStockChart = forwardRef((props: ChartProps, ref: any) => {
           </p>
         </div>
       </div>
-      <div className="w-[477px] " style={{ fontSize: '8px' }}>
+      <div className="w-[500px] " style={{ fontSize: '8px' }}>
         <div className="leading-snug">
           <h2
             style={{ fontSize: '9px' }}
@@ -105,34 +93,25 @@ export const QuarterStockChart = forwardRef((props: ChartProps, ref: any) => {
             ($)
           </h2>
           <AreaChart
-            width={477}
+            width={500}
             height={120}
             data={chartStockData}
             margin={{ right: 0, bottom: 0 }}
             className="mt-[-14px]"
           >
-            <XAxis
-              dataKey="day"
-              // tickLine={false}
-              // tick={false}
-              axisLine
-              height={20}
-            />
+            <XAxis dataKey="day" height={20} axisLine />
             <YAxis
               tickLine={false}
               axisLine={false}
               dataKey="data"
               type="number"
               width={50}
-              ticks={[
-                Number(stockMin.toFixed(2)),
-                stockMean,
-                Number(stockMax.toFixed(2)),
-              ]}
-              // domain={['dataMin', 'dataMax']}
+              ticks={[stockMin.toFixed(2), stockMean, stockMax.toFixed(2)]}
               domain={[
-                (dataMin: number) => dataMin - 20,
-                (dataMax: number) => dataMax + 10,
+                // (dataMin: number) => dataMin - 0.1 * (stockMax - stockMin),
+                // (dataMax: number) => dataMax + 0.1 * (stockMax - stockMin),
+                (dataMin: number) => dataMin - 2,
+                (dataMax: number) => dataMax + 2,
               ]}
             />
             <Area

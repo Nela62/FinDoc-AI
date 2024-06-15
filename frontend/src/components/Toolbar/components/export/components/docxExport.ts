@@ -13,7 +13,10 @@ import {
   getTopBarMetrics,
 } from '@/lib/utils/financialAPI';
 
-export const generateDocxFile = async (firstPageVisual: Blob) => {
+export const generateDocxFile = async (
+  topFirstPageVisual: Blob,
+  bottomFirstPageVisual: Blob,
+) => {
   const templateConfig = {
     authorName: 'Finpanel AI',
     authorCompanyName: 'Finpanel Inc.',
@@ -588,7 +591,8 @@ export const generateDocxFile = async (firstPageVisual: Blob) => {
       recommendation: 'Buy',
       financialStrength: 'High',
       targetPrice: 182,
-      firstPageVisual: firstPageVisual,
+      topFirstPageVisual: topFirstPageVisual,
+      bottomFirstPageVisual: bottomFirstPageVisual,
       sources: [],
     });
 

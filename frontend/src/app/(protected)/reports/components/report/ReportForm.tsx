@@ -73,7 +73,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
-import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
 import {
   DailyStockData,
   Earnings,
@@ -82,7 +81,7 @@ import {
 } from '@/types/alphaVantageApi';
 import { data } from '@/lib/data/structuredData';
 import { fetchNewsContent } from './actions';
-import { QuarterStockChart } from '@/lib/templates/charts/QuarterStockChart';
+import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 
 const defaultCompanyLogo = '/default_finpanel_logo.png';
 
@@ -139,7 +138,7 @@ export const ReportForm = ({
   const [progressMessage, setProgressMessage] = useState('');
   const [isOpen, setOpen] = useState(false);
   const [curReportId, setReportId] = useState<string | null>(null);
-  const [chart, setChart] = useState<HTMLDivElement | null>(null);
+  const [images, setImages] = useState<Blob[] | null>(null);
   const [apiCacheData, setApiCacheData] = useState<apiCacheData | null>(null);
 
   const progressValue = 100 / 6;
@@ -192,10 +191,6 @@ export const ReportForm = ({
       });
     }
   }, [apiCache]);
-
-  const onRefChange = useCallback((node: HTMLDivElement) => {
-    setChart(node);
-  }, []);
 
   const { data: tickersData } = useQuery(fetchTickers(supabase));
 
@@ -634,8 +629,8 @@ export const ReportForm = ({
   };
 
   useEffect(() => {
-    if (!isLoading && chart) {
-      generateDocxBlob(chart)
+    if (!isLoading && images) {
+      generateDocxBlob(images)
         .then((blob: Blob) => generatePdf(blob))
         .then(() => {
           setProgress((state) => state + progressValue);
@@ -647,11 +642,12 @@ export const ReportForm = ({
     }
   }, [
     isLoading,
-    chart,
-    // curReportId,
-    // generateDocxBlob,
-    // generatePdf,
-    // setSelectedReportId,
+    images,
+    curReportId,
+    generateDocxBlob,
+    generatePdf,
+    setSelectedReportId,
+    progressValue,
   ]);
 
   const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
@@ -686,26 +682,16 @@ export const ReportForm = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <div className="sr-only" id="hidden-container">
-        {apiCache && templateConfig && targetPrice && apiCacheData && (
-          <>
-            <QuarterStockChart
-              colors={templateConfig.colorScheme.colors}
-              targetPrice={targetPrice}
-              dailyStock={apiCacheData.dailyStock}
-              ref={onStockRefChange}
-            />
-            <MarketDataChart
-              colors={templateConfig.colorScheme.colors}
-              targetPrice={targetPrice}
-              incomeStatement={apiCacheData.incomeStatement}
-              earnings={apiCacheData.earnings}
-              dailyStock={apiCacheData.dailyStock}
-              ref={onRefChange}
-            />
-          </>
-        )}
-      </div>
+      {apiCache && templateConfig && targetPrice && apiCacheData && (
+        <ChartWrapper
+          colors={templateConfig.colorScheme.colors}
+          targetPrice={targetPrice}
+          incomeStatement={apiCacheData.incomeStatement}
+          earnings={apiCacheData.earnings}
+          dailyStock={apiCacheData.dailyStock}
+          setCharts={setImages}
+        />
+      )}
       <div className="w-[360px] mx-auto flex flex-col py-4 gap-4 h-full">
         <h2 className="font-semibold text-primary/80">Configurations</h2>
         <Form {...form}>

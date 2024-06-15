@@ -25,37 +25,24 @@ export const firstPageSection = async (
   summary: string[],
   authors: string[],
   recommendation: string,
-  firstPageVisual: Blob | Table | undefined,
   metrics: SidebarMetrics,
   ratings: Rating[],
   companyLogo: Blob,
   colors: string[],
+  bottomFirstPageVisual: Blob,
+  topFirstPageVisual: Blob,
 ): Promise<ISectionOptions> => {
   const [primaryColor, secondaryColor, accentColor] = colors;
 
-  const graph = await fetch('/first_graph.png').then((res) => res.blob());
-  const displayGraph = await displayImage({
-    image: graph,
+  const displayTopFirstPageVisual = await displayImage({
+    image: topFirstPageVisual,
     width: 500,
   });
 
-  const displayFirstPageVisual =
-    firstPageVisual instanceof Blob
-      ? await displayImage({
-          image: firstPageVisual,
-          width: 500,
-          // floating: {
-          //   horizontalPosition: {
-          //     relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-          //     offset: 0,
-          //   },
-          //   verticalPosition: {
-          //     relative: VerticalPositionRelativeFrom.PAGE,
-          //     offset: 5865000,
-          //   },
-          // },
-        })
-      : firstPageVisual;
+  const displayBottomFirstPageVisual = await displayImage({
+    image: bottomFirstPageVisual,
+    width: 500,
+  });
 
   const leftColumn = [
     new Paragraph({
@@ -63,7 +50,7 @@ export const firstPageSection = async (
       spacing: { before: 30 },
       text: businessDescription,
     }),
-    new Paragraph({ children: [displayGraph] }),
+    new Paragraph({ children: [displayTopFirstPageVisual] }),
     new Paragraph({
       // border: {
       //   top: {
@@ -131,14 +118,10 @@ export const firstPageSection = async (
         }),
       ],
     }),
+    new Paragraph({
+      children: [displayBottomFirstPageVisual],
+    }),
   ];
-
-  displayFirstPageVisual &&
-    leftColumn.push(
-      new Paragraph({
-        children: [displayFirstPageVisual],
-      }),
-    );
 
   const rightColumn = await metricsSidebar(
     metrics,

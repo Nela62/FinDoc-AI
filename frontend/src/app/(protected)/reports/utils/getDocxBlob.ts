@@ -20,22 +20,23 @@ import { FinancialStrength, Recommendation } from '@/types/report';
 import { Overview } from '@/types/alphaVantageApi';
 import { DAILY_IBM } from '@/lib/data/daily_imb';
 
+// TODO: Is this buffer page really needed?
+
 export const getTemplateDocxBlob = async (
   templateData: TemplateData,
   templateConfig: TemplateConfig,
   authorCompanyLogo: Blob,
   companyLogo: Blob,
-  firstPageVisual: Blob,
+  topFirstPageVisual: Blob,
+  bottomFirstPageVisual: Blob,
 ) => {
   if (!TEMPLATES.hasOwnProperty(templateData.componentId)) {
     throw new Error("Template with this component id doesn't exist");
   }
 
-  // ({ content, colors, twoColumn, authors, authorCompanyName, authorCompanyLogo, createdAt, companyName, companyTicker, companyLogo, summary, businessDescription, sidebarMetrics, growthAndValuationAnalysisMetrics, financialAndRiskAnalysisMetrics, ratings, recommendation, financialStrength, targetPrice, firstPageVisual, secondPageVisual, lastPageVisual, }: EquityAnalystSidebarProps & TemplateConfig)
   const templateFn = TEMPLATES[templateData.componentId];
 
   try {
-    console.log('docxBlob');
     const docxBlob = await templateFn({
       content: templateData.sampleText,
       colors: templateConfig.colorScheme.colors,
@@ -85,7 +86,8 @@ export const getTemplateDocxBlob = async (
       recommendation: 'Buy',
       financialStrength: 'High',
       targetPrice: 182,
-      firstPageVisual: firstPageVisual,
+      topFirstPageVisual: topFirstPageVisual,
+      bottomFirstPageVisual: bottomFirstPageVisual,
       sources: [
         '[1] AMAZON COM INC, "Form 10-K," Securities and Exchance Comission, Washington, D.C., 2024.',
         '[2] Zane Fracek and Nicholas Rossolillo, "Why I Own Amazon Stock", Motley Fool, 2022. Available at https://www.fool.com/investing/2022/10/18/why-i-own-amazon-stock/',
@@ -189,7 +191,8 @@ export const getDocxBlob = async ({
   authorCompanyLogo,
   colorScheme,
   companyLogo,
-  firstPageVisual,
+  topFirstPageVisual,
+  bottomFirstPageVisual,
   content,
   companyName,
   companyTicker,
@@ -210,7 +213,6 @@ export const getDocxBlob = async ({
   authorCompanyLogo: Blob;
   colorScheme: string[];
   companyLogo: Blob;
-  firstPageVisual: Blob;
   content: JSONContent;
   companyName: string;
   companyTicker: string;
@@ -222,6 +224,8 @@ export const getDocxBlob = async ({
   financialStrength: FinancialStrength;
   targetPrice: number;
   sources: string[];
+  bottomFirstPageVisual: Blob;
+  topFirstPageVisual: Blob;
 }) => {
   if (!TEMPLATES.hasOwnProperty(componentId)) {
     throw new Error("Template with this component id doesn't exist");
@@ -231,7 +235,6 @@ export const getDocxBlob = async ({
   const templateFn = TEMPLATES[componentId];
 
   try {
-    console.log('docxBlob');
     const docxBlob = await templateFn({
       content: content,
       colors: colorScheme,
@@ -264,7 +267,8 @@ export const getDocxBlob = async ({
       recommendation: recommendation,
       financialStrength: financialStrength,
       targetPrice: targetPrice,
-      firstPageVisual: firstPageVisual,
+      topFirstPageVisual: topFirstPageVisual,
+      bottomFirstPageVisual: bottomFirstPageVisual,
       sources: sources,
     });
 

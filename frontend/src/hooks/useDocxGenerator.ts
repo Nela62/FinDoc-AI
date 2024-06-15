@@ -153,8 +153,7 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
   }, [logoName, companyLogoUrl, apiCache]);
 
   const generateDocxBlob = useCallback(
-    async (chart: HTMLDivElement): Promise<Blob> => {
-      console.log(logoName);
+    async (images: Blob[]): Promise<Blob> => {
       if (!report || !report.companies) {
         throw new Error('Report is missing');
       }
@@ -188,10 +187,6 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
 
       const companyLogo = await fetch(companyLogoUrl).then((res) => res.blob());
 
-      const firstPageVisual = await toPng(chart)
-        .then((url) => fetch(url))
-        .then((res) => res.blob());
-
       const metrics = templateConfig.metrics as Metrics;
 
       const docxBlob = await getDocxBlob({
@@ -215,7 +210,8 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
         targetPrice: report.targetprice,
         authorCompanyLogo: authorCompanyLogo,
         companyLogo: companyLogo,
-        firstPageVisual: firstPageVisual,
+        topFirstPageVisual: images[0],
+        bottomFirstPageVisual: images[1],
         sources: metrics.sources,
       });
 

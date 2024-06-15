@@ -179,6 +179,7 @@ export const EARNINGS_IBM = {
       fiscalDateEnding: '2022-03-31',
       reportedDate: '2022-04-19',
       reportedEPS: '1.4',
+      // reportedEPS: '-2',
       estimatedEPS: '1.38',
       surprise: '0.02',
       surprisePercentage: '1.4493',

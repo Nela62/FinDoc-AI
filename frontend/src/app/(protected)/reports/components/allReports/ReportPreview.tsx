@@ -7,7 +7,6 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
 import {
   DailyStockData,
   Earnings,
@@ -16,7 +15,6 @@ import {
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { fetchAPICacheByReportId, fetchTemplateConfig } from '@/lib/queries';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
-import { QuarterStockChart } from '@/lib/templates/charts/QuarterStockChart';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
@@ -42,7 +40,7 @@ export const ReportPreview = ({
   userId: string;
 }) => {
   const [numPages, setNumPages] = useState<number>();
-  const [charts, setCharts] = useState<HTMLDivElement[] | null>(null);
+  const [images, setImages] = useState<Blob[] | null>(null);
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>();
   const [file, setFile] = useState<string | null>(null);
@@ -106,11 +104,11 @@ export const ReportPreview = ({
       console.log('still loading');
       return;
     }
-    if (!docxFile && charts) {
+    if (!docxFile && images) {
       console.log('generating docx');
-      generateDocxBlob(chart).then((blob) => generatePdf(blob));
+      generateDocxBlob(images).then((blob) => generatePdf(blob));
     }
-  }, [charts, docxFile, isLoading, generateDocxBlob, generatePdf]);
+  }, [images, docxFile, isLoading, generateDocxBlob, generatePdf]);
 
   useEffect(() => {
     if (pdfFile) {
@@ -133,7 +131,7 @@ export const ReportPreview = ({
           colors={templateConfig.color_scheme}
           targetPrice={targetPrice}
           dailyStock={apiCacheData.dailyStock}
-          setCharts={setCharts}
+          setCharts={setImages}
           incomeStatement={apiCacheData.incomeStatement}
           earnings={apiCacheData.earnings}
         />

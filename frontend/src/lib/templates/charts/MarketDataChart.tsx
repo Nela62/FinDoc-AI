@@ -8,8 +8,8 @@ import {
   BarChart,
   Bar,
   ReferenceLine,
-  ReferenceDot,
   LabelList,
+  Rectangle,
 } from 'recharts';
 
 import { forwardRef, useEffect, useState } from 'react';
@@ -23,7 +23,6 @@ import {
   getLatestStockDataPoint,
   getLowestClosingStockPrice,
   getMeanClosingStockPrice,
-  getNWeeksStock,
   getNYearsStock,
 } from '@/lib/utils/financialAPI';
 import { format } from 'date-fns';
@@ -38,12 +37,21 @@ type ChartProps = {
 
 const renderCustomizedLabel = (props: any) => {
   const { x, y, width, height, value } = props;
-  const low = height < 10;
+  const low = Math.abs(height) < 10;
 
   return (
     <g>
       <text
-        y={low ? y - 4 : y + height - 6}
+        y={
+          low
+            ? value < 0
+              ? y + height - 4
+              : y - 4
+            : value < 0
+            ? y + height + 8
+            : y + height - 6
+        }
+        // y={y + height + 8}
         x={x + width / 2}
         fill={low ? '#000' : '#fff'}
         textAnchor="middle"
@@ -103,14 +111,95 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     .slice(0, 16)
     .map((quarter: any) => ({
       x: quarter.fiscalDateEnding,
-      y: quarter.reportedEPS,
+      y: Number(quarter.reportedEPS),
     }))
     .reverse();
+  // console.log(earningsData);
+
+  // const earningsData = [
+  //   {
+  //     x: '2020-06-30',
+  //     y: -0.02,
+  //   },
+  //   {
+  //     x: '2020-09-30',
+  //     y: -1.17,
+  //   },
+  //   {
+  //     x: '2020-12-31',
+  //     y: 0.26,
+  //   },
+  //   {
+  //     x: '2021-03-31',
+  //     y: 0.79,
+  //   },
+  //   {
+  //     x: '2021-06-30',
+  //     y: 1.49,
+  //   },
+  //   {
+  //     x: '2021-09-30',
+  //     y: '2.05',
+  //   },
+  //   {
+  //     x: '2021-12-31',
+  //     y: '2.5',
+  //   },
+  //   {
+  //     x: '2022-03-31',
+  //     y: '3.06',
+  //   },
+  //   {
+  //     x: '2022-06-30',
+  //     y: '2.67',
+  //   },
+  //   {
+  //     x: '2022-09-30',
+  //     y: '-0.33',
+  //   },
+  //   {
+  //     x: '2022-12-31',
+  //     y: '-0.7',
+  //   },
+  //   {
+  //     x: '2023-03-31',
+  //     y: '-0.23',
+  //   },
+  //   {
+  //     x: '2023-06-30',
+  //     y: '-0.35',
+  //   },
+  //   {
+  //     x: '2023-09-30',
+  //     y: '-1.14',
+  //   },
+  //   {
+  //     x: '2023-12-31',
+  //     y: '-0.56',
+  //   },
+  //   {
+  //     x: '2024-03-31',
+  //     y: '-0.81',
+  //   },
+  // ];
+
+  const CustomBar = (props: any) => {
+    const { value } = props;
+    let fill = primaryColor;
+
+    if (value < 0) {
+      fill = '#991b1b';
+    }
+    //use explicit fill here, or use the additional css class and make a css selector to update fill there
+    return (
+      <Rectangle {...props} fill={fill} className="recharts-bar-rectangle" />
+    );
+  };
 
   return (
-    <div className="bg-background w-[477px] h-fit" ref={ref}>
+    <div className="bg-background w-[500px] h-fit" ref={ref}>
       <div
-        className="w-[477px] justify-between flex text-foreground/60 pb-2 pr-2"
+        className="w-[500px] justify-between flex text-foreground/60 pb-2 pr-2"
         style={{ fontSize: '7px' }}
       >
         <p>200-Day Moving Average</p>
@@ -140,7 +229,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
         </div>
       </div>
       <div
-        className="grid grid-cols-[50px_2fr_4fr_4fr_4fr_2fr] divide-x divide-y w-[477px] divide-zinc-400"
+        className="grid grid-cols-[50px_2fr_4fr_4fr_4fr_2fr] divide-x divide-y w-[500px] divide-zinc-400"
         style={{ fontSize: '8px' }}
       >
         <div className="border-t border-l border-zinc-400 leading-snug">
@@ -157,7 +246,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
             ($)
           </h2>
           <AreaChart
-            width={477}
+            width={500}
             height={90}
             data={chartStockData}
             margin={{ right: 0, bottom: 0 }}
@@ -182,13 +271,13 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
                 stockMean,
                 Number(stockMax.toFixed(2)),
               ]}
-              // domain={['dataMin', 'dataMax']}
               domain={[
-                (dataMin: number) => dataMin - 20,
+                (dataMin: number) => dataMin - 10,
                 (dataMax: number) => dataMax + 10,
               ]}
             />
             <Area
+              height={90}
               type="linear"
               dataKey="data"
               stroke={primaryColor}
@@ -228,8 +317,8 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
         <div></div>
         <div></div>
         <div></div>
-        <div className="relative border-l-none flex h-[44px] w-[477px]">
-          <div className="w-[50px] h-[44px] flex flex-col justify-between pl-1">
+        <div className="relative border-l-none flex h-[50px] w-[500px]">
+          <div className="w-[50px] h-[50px] flex flex-col justify-between pl-1">
             <div className="leading-snug">
               <h2
                 style={{ fontSize: '9px' }}
@@ -248,8 +337,8 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
             <p className="font-semibold">Quarterly</p>
           </div>
           <BarChart
-            width={427}
-            height={44}
+            width={450}
+            height={50}
             data={earningsData}
             barCategoryGap={0.3}
             margin={{ bottom: 0, left: 0, top: 4, right: 0 }}
@@ -262,7 +351,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
               domain={['dataMin', 'dataMax']}
               hide
             />
-            <Bar dataKey="y" fill={primaryColor} isAnimationActive={false}>
+            <Bar dataKey="y" shape={CustomBar} isAnimationActive={false}>
               <LabelList dataKey="y" content={renderCustomizedLabel} />
             </Bar>
           </BarChart>
@@ -300,8 +389,8 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
             {props.earnings.annualEarnings[0].reportedEPS}
           </p>
         </div>
-        <div className="relative border-l-none flex h-[44px] w-[477px]">
-          <div className="w-[50px] h-[44px] flex flex-col justify-between pl-1">
+        <div className="relative border-l-none flex h-[50px] w-[500px]">
+          <div className="w-[50px] h-[50px] flex flex-col justify-between pl-1">
             <div className="leading-snug">
               <h2
                 style={{ fontSize: '9px' }}
@@ -319,14 +408,14 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
             <p className="font-semibold">Quarterly</p>
           </div>
           <BarChart
-            width={427}
-            height={44}
+            width={450}
+            height={50}
             data={revenueData}
             barCategoryGap={0.3}
             margin={{ bottom: 0, left: 0, top: 4, right: 0 }}
           >
             <YAxis tickLine={false} axisLine={false} type="number" hide />
-            <Bar dataKey="y" fill={primaryColor} isAnimationActive={false}>
+            <Bar dataKey="y" shape={CustomBar} isAnimationActive={false}>
               <LabelList dataKey="y" content={renderCustomizedLabel} />
             </Bar>
           </BarChart>
