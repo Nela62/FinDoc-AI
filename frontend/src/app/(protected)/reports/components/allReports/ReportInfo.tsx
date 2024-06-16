@@ -171,6 +171,7 @@ export const ReportInfo = ({
       await updateTemplateConfig({
         id: templateConfig.id,
         metrics: {
+          // @ts-ignore
           sources: templateConfig.metrics?.sources ?? [],
           sidebarMetrics,
           growthAndValuationAnalysisMetrics,
