@@ -56,7 +56,7 @@ export const DisplayIcon = ({
           src={url}
           alt="preview image"
           className={cn(
-            'h-10 w-10',
+            'h-8 min-w-8 max-w-8',
             iconName.includes('light') && 'bg-background/60',
           )}
           height={0}
