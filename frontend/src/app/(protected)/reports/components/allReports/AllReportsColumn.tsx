@@ -6,11 +6,31 @@ import { fetchAllReports } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { DotsHorizontalIcon, DotsVerticalIcon } from '@radix-ui/react-icons';
-import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
+import {
+  useDeleteMutation,
+  useQuery,
+} from '@supabase-cache-helpers/postgrest-react-query';
 import { format } from 'date-fns';
 import { Plus } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { DisplayIcon } from './DisplayIcon';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 export const AllReportsColumn = ({
   userId,
@@ -23,6 +43,12 @@ export const AllReportsColumn = ({
 }) => {
   const supabase = createClient();
   const { data: reports, isLoading } = useQuery(fetchAllReports(supabase));
+
+  const { mutateAsync: deleteReport } = useDeleteMutation(
+    supabase.from('reports'),
+    ['id'],
+    'id',
+  );
 
   return (
     <div className="flex flex-col border-r-[0.5px] h-full">
@@ -71,7 +97,40 @@ export const AllReportsColumn = ({
                       <p className="">
                         {report.companies?.stock_name.split(' - ')[0]}
                       </p>
-                      <DotsHorizontalIcon className="text-transparent h-6 w-6 group-hover:text-primary/70 hover:bg-azure/25 p-1 rounded-full" />
+
+                      <AlertDialog>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <DotsHorizontalIcon className="text-transparent h-6 w-6 group-hover:text-primary/70 hover:bg-azure/25 p-1 rounded-full" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem>Delete</DropdownMenuItem>
+                            </AlertDialogTrigger>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Are you sure you want to delete this report?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => {
+                                deleteReport({ id: report.id });
+                                setSelectedReportId(null);
+                              }}
+                            >
+                              Continue
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
 
                     <div className="flex justify-between text-xs text-primary/55">
