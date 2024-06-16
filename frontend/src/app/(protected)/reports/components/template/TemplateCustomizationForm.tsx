@@ -336,7 +336,10 @@ export const TemplateCustomizationForm = ({
               >
                 Reset
               </Button>
-              <Button className="w-1/2" type="submit">
+              <Button
+                className="w-1/2 bg-azure hover:bg-azure/95"
+                type="submit"
+              >
                 Apply
               </Button>
             </div>

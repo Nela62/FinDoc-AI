@@ -21,6 +21,7 @@ import {
   useUpsertMutation,
 } from '@supabase-cache-helpers/postgrest-react-query';
 import { format } from 'date-fns';
+import { Loader2Icon } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
 type ReportInfoType = {
@@ -249,6 +250,7 @@ export const ReportInfo = ({
       <div className="sr-only" id="hidden-container"></div>
       <div className="flex w-full justify-between">
         <Button variant="outline" onClick={updateTemplate} disabled={isLoading}>
+          {isLoading && <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />}
           Update
         </Button>
         <Button
