@@ -79,7 +79,7 @@ export const bordersNone = {
 };
 
 export const defaultMargins = {
-  top: 2600.6,
+  top: 2800.6,
   left: 604.8,
   right: 604.8,
   bottom: 1200,

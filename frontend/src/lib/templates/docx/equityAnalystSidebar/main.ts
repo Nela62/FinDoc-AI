@@ -178,7 +178,8 @@ export const equityAnalystSidebar = async ({
     horizontalAnchor: 'margin',
     verticalAnchor: 'page',
     absoluteHorizontalPosition: 0,
-    absoluteVerticalPosition: 9220,
+    // absoluteVerticalPosition: 9220,
+    absoluteVerticalPosition: 9270,
     topFromText: 100,
     bottomFromText: 0,
   };
@@ -205,6 +206,7 @@ export const equityAnalystSidebar = async ({
       financialAnalysisTable(
         growthAndValuationAnalysisMetrics,
         financialAndRiskAnalysisMetrics,
+        primaryColor,
         secondaryColor,
         accentColor,
         float,

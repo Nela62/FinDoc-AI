@@ -31,9 +31,11 @@ const disclosure =
 
 const displayCategoryTable = (
   category: Category,
+  primaryColor: string,
   secondaryColor: string,
   accentColor: string,
   showHeaders: boolean = false,
+  firstColumnWidth: number = 40,
   years?: string[] | number[],
   firstColumnName?: string,
 ) => {
@@ -42,7 +44,8 @@ const displayCategoryTable = (
       new TableRow({
         children: [
           new TableCell({
-            width: { size: 40, type: WidthType.PERCENTAGE },
+            margins: { left: 120, right: 120 },
+            width: { size: firstColumnWidth, type: WidthType.PERCENTAGE },
             borders: bordersNone,
             shading: {
               fill:
@@ -84,6 +87,7 @@ const displayCategoryTable = (
       new TableRow({
         children: [
           new TableCell({
+            margins: { left: 120, right: 120 },
             borders: bordersNone,
             children: [
               new Paragraph({
@@ -109,79 +113,135 @@ const displayCategoryTable = (
     );
 
   return [
-    new Paragraph({ heading: HeadingLevel.HEADING_2, text: category.name }),
-    new Table({
-      rows: rows,
-      width: { size: 5300, type: WidthType.DXA },
-      borders: bordersNone,
+    new TableRow({
+      children: [
+        new TableCell({
+          margins: { left: 120, right: 120 },
+          columnSpan: years && years.length + 1,
+          children: [
+            new Paragraph({
+              heading: HeadingLevel.HEADING_2,
+              text: category.name,
+            }),
+          ],
+        }),
+      ],
     }),
+    ...rows,
   ];
 };
 
+const leftColumnWidth = 7100;
+
 const leftColumn = (
   metrics: AnalysisMetrics,
+  primaryColor: string,
   secondaryColor: string,
   accentColor: string,
-) => [
-  new Paragraph({
-    heading: HeadingLevel.HEADING_1,
-    children: [
-      new TextRun({
-        text: 'Growth & Valuation Analysis',
-        shading: { color: 'ffffff' },
+) =>
+  new Table({
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            margins: { left: 120, right: 120 },
+            columnSpan: metrics.years.length + 1,
+            borders: bordersNone,
+            shading: { fill: primaryColor },
+            children: [
+              new Paragraph({
+                spacing: { after: 40 },
+                children: [
+                  new TextRun({
+                    text: 'Growth & Valuation Analysis',
+                    color: 'ffffff',
+                    size: 24,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
       }),
+      ...metrics.categories
+        .map((category, i) =>
+          displayCategoryTable(
+            category,
+            primaryColor,
+            secondaryColor,
+            accentColor,
+            i === 0,
+            30,
+            metrics.years,
+            '($ in Millions, except EPS)',
+          ),
+        )
+        .flat(),
     ],
-  }),
-  ...metrics.categories
-    .map((category, i) =>
-      displayCategoryTable(
-        category,
-        secondaryColor,
-        accentColor,
-        i === 0,
-        metrics.years,
-        '($ in Millions, except EPS)',
-      ),
-    )
-    .flat(),
-];
+    width: { size: leftColumnWidth, type: WidthType.DXA },
+    borders: bordersNone,
+  });
 
 const rightColumn = (
   metrics: AnalysisMetrics,
+  primaryColor: string,
   secondaryColor: string,
   accentColor: string,
-) => [
-  new Paragraph({
-    heading: HeadingLevel.HEADING_1,
-    text: 'Financial and Risk Analysis',
-  }),
-  ...metrics.categories
-    .map((category, i) =>
-      displayCategoryTable(
-        category,
-        secondaryColor,
-        accentColor,
-        i === 0,
-        metrics.years,
-        '',
-      ),
-    )
-    .flat(),
-];
+) =>
+  new Table({
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            margins: { left: 120, right: 120 },
+            columnSpan: metrics.years.length + 1,
+            borders: bordersNone,
+            shading: { fill: primaryColor },
+            children: [
+              new Paragraph({
+                spacing: { after: 40 },
+                children: [
+                  new TextRun({
+                    text: 'Financial and Risk Analysis',
+                    color: 'ffffff',
+                    size: 24,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+      ...metrics.categories
+        .map((category, i) =>
+          displayCategoryTable(
+            category,
+            primaryColor,
+            secondaryColor,
+            accentColor,
+            i === 0,
+            60,
+            metrics.years,
+            '($ in Millions, except EPS)',
+          ),
+        )
+        .flat(),
+    ],
+    width: { size: 10700 - leftColumnWidth, type: WidthType.DXA },
+    borders: bordersNone,
+  });
 
 export const financialAnalysisTable = (
   growthAndValuationAnalysisMetrics: AnalysisMetrics,
   financialAndRiskAnalysisMetrics: AnalysisMetrics,
+  primaryColor: string,
   secondaryColor: string,
   accentColor: string,
   float?: ITableFloatOptions,
 ) => {
   return new Table({
     ...(float && { float: float }),
-    width: { size: 10600, type: WidthType.DXA },
-    // columnWidths: [5349.5, 5349.5],
-    // columnWidths: [7000, 3600],
-    margins: { left: 20, right: 20 },
+    width: { size: 10700, type: WidthType.DXA },
     borders: {
       bottom: {
         style: BorderStyle.NONE,
@@ -194,18 +254,24 @@ export const financialAnalysisTable = (
         children: [
           new TableCell({
             rowSpan: 2,
-            children: leftColumn(
-              growthAndValuationAnalysisMetrics,
-              secondaryColor,
-              accentColor,
-            ),
+            children: [
+              leftColumn(
+                growthAndValuationAnalysisMetrics,
+                primaryColor,
+                secondaryColor,
+                accentColor,
+              ),
+            ],
           }),
           new TableCell({
-            children: rightColumn(
-              financialAndRiskAnalysisMetrics,
-              secondaryColor,
-              accentColor,
-            ),
+            children: [
+              rightColumn(
+                financialAndRiskAnalysisMetrics,
+                primaryColor,
+                secondaryColor,
+                accentColor,
+              ),
+            ],
           }),
         ],
       }),
@@ -213,7 +279,12 @@ export const financialAnalysisTable = (
         children: [
           new TableCell({
             margins: { left: 50, bottom: 20, right: 50, top: 20 },
-            children: [new Paragraph({ style: 'narrow', text: disclosure })],
+            children: [
+              new Paragraph({
+                style: 'narrow',
+                children: [new TextRun({ text: disclosure, size: 14 })],
+              }),
+            ],
           }),
         ],
       }),

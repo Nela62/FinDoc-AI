@@ -49,8 +49,8 @@ export const firstPageSection = async (
 
   const leftColumn = [
     new Paragraph({
+      spacing: { before: 0 },
       style: 'narrow',
-      spacing: { before: 30 },
       text: businessDescription,
     }),
     new Paragraph({ children: [displayTopFirstPageVisual] }),

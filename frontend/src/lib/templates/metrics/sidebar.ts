@@ -31,7 +31,7 @@ export const metricsSidebar = async (
   const logo = await displayImage({
     image: companyLogo,
     // height: 57.6,
-    height: 30,
+    height: 40,
     floating: {
       horizontalPosition: {
         relative: HorizontalPositionRelativeFrom.COLUMN,
