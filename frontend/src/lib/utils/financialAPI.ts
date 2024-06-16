@@ -97,6 +97,12 @@ export async function fetchDailyStock(
   }
 }
 
+export async function fetchAVEndpointNoCache(
+  client: TypedSupabaseClient,
+  symbol: string,
+  fn: string,
+) {}
+
 export async function fetchAVEndpoint(
   client: TypedSupabaseClient,
   insertCache: any,

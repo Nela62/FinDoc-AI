@@ -11,6 +11,11 @@ import {
   ReportGenerationState,
   createReportGenerationSlice,
 } from './report-generation-store';
+import {
+  PdfGenerationActions,
+  PdfGenerationState,
+  createPdfGenerationSlice,
+} from './pdf-generation-store';
 
 export type Store = EditorState &
   EditorActions &
@@ -19,7 +24,9 @@ export type Store = EditorState &
   PdfState &
   PdfActions &
   ReportGenerationState &
-  ReportGenerationActions;
+  ReportGenerationActions &
+  PdfGenerationState &
+  PdfGenerationActions;
 
 export const createBoundStore = () => {
   return create<Store>((...a) => ({
@@ -31,5 +38,7 @@ export const createBoundStore = () => {
     ...createPdfSlice(...a),
     // @ts-ignore
     ...createReportGenerationSlice(...a),
+    // @ts-ignore
+    ...createPdfGenerationSlice(...a),
   }));
 };

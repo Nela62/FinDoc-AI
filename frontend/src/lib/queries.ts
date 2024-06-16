@@ -153,7 +153,9 @@ export function fetchAPICacheByReportId(
 ) {
   return client
     .from('api_cache')
-    .select('id, json_data, endpoint, api_provider, accessed_at')
+    .select(
+      'id, json_data, endpoint, api_provider, accessed_at, user_id, report_id',
+    )
     .eq('report_id', reportId)
     .throwOnError();
 }

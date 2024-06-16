@@ -59,6 +59,7 @@ export const ChartWrapper = ({
 
   useEffect(() => {
     if (stockChart && marketChart) {
+      console.log('set new images');
       getImages(stockChart, marketChart).then((images) => setCharts(images));
     }
   }, [setCharts, stockChart, marketChart, getImages]);

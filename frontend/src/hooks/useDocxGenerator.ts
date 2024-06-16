@@ -19,6 +19,7 @@ import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import {
   useDirectory,
   useFileUrl,
+  useRemoveFiles,
   useUpload,
 } from '@supabase-cache-helpers/storage-react-query';
 import { JSONContent } from '@tiptap/core';
@@ -61,6 +62,10 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
     },
   );
 
+  const { mutateAsync: removeDocx } = useRemoveFiles(
+    supabase.storage.from('saved-templates'),
+  );
+
   const { data: pdfFileData } = useFileUrl(
     supabase.storage.from('saved-templates'),
     `${userId}/${templateConfig?.id}/pdf`,
@@ -70,6 +75,10 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
       enabled: !!templateConfig,
       retry: false,
     },
+  );
+
+  const { mutateAsync: removePdf } = useRemoveFiles(
+    supabase.storage.from('saved-templates'),
   );
 
   useEffect(() => {
@@ -92,6 +101,7 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
     {
       buildFileName: ({ fileName, path }) =>
         `${userId}/${templateConfig?.id}/docx`,
+      upsert: true,
     },
   );
 
@@ -100,6 +110,7 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
     {
       buildFileName: ({ fileName, path }) =>
         `${userId}/${templateConfig?.id}/pdf`,
+      upsert: true,
     },
   );
 

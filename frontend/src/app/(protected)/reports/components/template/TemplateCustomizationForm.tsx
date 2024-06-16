@@ -34,7 +34,7 @@ import {
   AlertDialogDescription,
   AlertDialogHeader,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { DAILY_IBM } from '@/lib/data/daily_imb';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import { getTemplateDocxBlob } from '../../utils/getDocxBlob';
@@ -176,7 +176,12 @@ export const TemplateCustomizationForm = ({
       <AlertDialog open={isLoading} onOpenChange={setLoading}>
         <AlertDialogContent className="w-fit">
           <AlertDialogHeader className="flex flex-col items-center">
-            <Loader2 className="h-7 w-7 animate-spin" />
+            <Image
+              src="/loading.gif"
+              alt="loading image"
+              height={60}
+              width={60}
+            />
             <AlertDialogDescription>
               Updating template configurations...
             </AlertDialogDescription>

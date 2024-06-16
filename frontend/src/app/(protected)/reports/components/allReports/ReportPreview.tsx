@@ -16,14 +16,17 @@ import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { fetchAPICacheByReportId, fetchTemplateConfig } from '@/lib/queries';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
+import { useImageData } from '@/hooks/useImageData';
+import { useBoundStore } from '@/providers/store-provider';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+} from '@/components/ui/alert-dialog';
+import Image from 'next/image';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
-
-type apiCacheData = {
-  incomeStatement: IncomeStatement;
-  earnings: Earnings;
-  dailyStock: DailyStockData;
-};
 
 const options = {
   cMapUrl: '/cmaps/',
@@ -44,7 +47,9 @@ export const ReportPreview = ({
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>();
   const [file, setFile] = useState<string | null>(null);
-  const [apiCacheData, setApiCacheData] = useState<apiCacheData | null>(null);
+
+  const { generate, startGeneration, endGeneration, isGenerating } =
+    useBoundStore((state) => state);
 
   const onResize = useCallback<ResizeObserverCallback>((entries) => {
     const [entry] = entries;
@@ -56,40 +61,6 @@ export const ReportPreview = ({
 
   useResizeObserver(containerRef, resizeObserverOptions, onResize);
 
-  const supabase = createClient();
-
-  const { data: apiCache } = useQuery(
-    fetchAPICacheByReportId(supabase, reportId),
-  );
-
-  useEffect(() => {
-    if (!apiCache) return;
-
-    const incomeStatement = apiCache.find((cache) =>
-      cache.endpoint.includes('INCOME_STATEMENT'),
-    );
-
-    const earnings = apiCache.find((cache) =>
-      cache.endpoint.includes('EARNINGS'),
-    );
-
-    const dailyStock = apiCache.find((cache) =>
-      cache.endpoint.includes('TIME_SERIES_DAILY'),
-    );
-
-    if (incomeStatement && earnings && dailyStock) {
-      setApiCacheData({
-        incomeStatement: incomeStatement.json_data as IncomeStatement,
-        earnings: earnings.json_data as Earnings,
-        dailyStock: dailyStock.json_data as DailyStockData,
-      });
-    }
-  }, [apiCache]);
-
-  const { data: templateConfig } = useQuery(
-    fetchTemplateConfig(supabase, reportId),
-  );
-
   const {
     docxFile,
     pdfFile,
@@ -99,16 +70,33 @@ export const ReportPreview = ({
     targetPrice,
   } = useDocxGenerator(userId, reportId);
 
+  const imageData = useImageData(reportId);
+
   useEffect(() => {
     if (isLoading) {
       console.log('still loading');
       return;
     }
-    if (!docxFile && images) {
-      console.log('generating docx');
-      generateDocxBlob(images).then((blob) => generatePdf(blob));
+
+    if ((!docxFile || generate) && images) {
+      startGeneration();
+      console.log('generating');
+      generateDocxBlob(images)
+        .then((blob) => generatePdf(blob))
+        .then(() => {
+          endGeneration();
+        });
     }
-  }, [images, docxFile, isLoading, generateDocxBlob, generatePdf]);
+  }, [
+    images,
+    docxFile,
+    isLoading,
+    generateDocxBlob,
+    generatePdf,
+    generate,
+    startGeneration,
+    endGeneration,
+  ]);
 
   useEffect(() => {
     if (pdfFile) {
@@ -125,42 +113,56 @@ export const ReportPreview = ({
   }
 
   return (
-    <div className="w-[50%] relative">
-      {apiCache && templateConfig && targetPrice && apiCacheData && (
+    <>
+      <AlertDialog open={isGenerating}>
+        <AlertDialogContent className="w-fit">
+          <AlertDialogHeader className="flex flex-col items-center">
+            <Image
+              src="/loading.gif"
+              alt="loading image"
+              height={60}
+              width={60}
+            />
+            <AlertDialogDescription>
+              Updating document...
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+        </AlertDialogContent>
+      </AlertDialog>
+      {!imageData.isLoading && targetPrice && (
         <ChartWrapper
-          colors={templateConfig.color_scheme}
           targetPrice={targetPrice}
-          dailyStock={apiCacheData.dailyStock}
           setCharts={setImages}
-          incomeStatement={apiCacheData.incomeStatement}
-          earnings={apiCacheData.earnings}
+          {...imageData}
         />
       )}
-      <div
-        className="flex-col overflow-hidden bg-white border-l hidden md:flex"
-        ref={setContainerRef}
-      >
-        <div className="w-full flex justify-center items-center h-10 border-b">
-          <h2 className="font-semibold">Preview</h2>
+      <div className="w-[50%] relative">
+        <div
+          className="flex-col overflow-hidden bg-white border-l hidden md:flex"
+          ref={setContainerRef}
+        >
+          <div className="w-full flex justify-center items-center h-10 border-b">
+            <h2 className="font-semibold">Preview</h2>
+          </div>
+          {file && (
+            <Document
+              file={file}
+              onLoadSuccess={onDocumentLoadSuccess}
+              options={options}
+            >
+              <ScrollArea className="h-[calc(100vh-42px)]">
+                {Array.from(new Array(numPages), (el, index) => (
+                  <Page
+                    key={`page_${index + 1}`}
+                    pageNumber={index + 1}
+                    width={containerWidth}
+                  />
+                ))}
+              </ScrollArea>
+            </Document>
+          )}
         </div>
-        {file && (
-          <Document
-            file={file}
-            onLoadSuccess={onDocumentLoadSuccess}
-            options={options}
-          >
-            <ScrollArea className="h-[calc(100vh-42px)]">
-              {Array.from(new Array(numPages), (el, index) => (
-                <Page
-                  key={`page_${index + 1}`}
-                  pageNumber={index + 1}
-                  width={containerWidth}
-                />
-              ))}
-            </ScrollArea>
-          </Document>
-        )}
       </div>
-    </div>
+    </>
   );
 };
