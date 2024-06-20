@@ -569,49 +569,55 @@ export const getGrowthAndValuationAnalysisMetrics = (
         statistics: [
           {
             name: 'Revenue',
-            numbers: incomeStatement.annualReports
-              .slice(0, years === 5 ? years : years - 1)
-              .map((_, i) =>
-                (
-                  (Number(incomeStatement.annualReports[i].totalRevenue) -
-                    Number(incomeStatement.annualReports[i + 1].totalRevenue)) /
-                  Number(incomeStatement.annualReports[i].totalRevenue)
-                ).toLocaleString('en-US', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 2,
-                }),
-              ),
+            numbers: incomeStatement.annualReports.slice(0, 5).map((_, i) =>
+              incomeStatement.annualReports.length > i + 1
+                ? (
+                    (Number(incomeStatement.annualReports[i].totalRevenue) -
+                      Number(
+                        incomeStatement.annualReports[i + 1].totalRevenue,
+                      )) /
+                    Number(incomeStatement.annualReports[i].totalRevenue)
+                  ).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })
+                : '--',
+            ),
           },
           {
             name: 'Operating Income',
-            numbers: incomeStatement.annualReports
-              .slice(0, years === 5 ? years : years - 1)
-              .map((_, i) =>
-                (
-                  (Number(incomeStatement.annualReports[i].operatingIncome) -
-                    Number(
-                      incomeStatement.annualReports[i + 1].operatingIncome,
-                    )) /
-                  Number(incomeStatement.annualReports[i].operatingIncome)
-                ).toLocaleString('en-US', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 2,
-                }),
-              ),
+            numbers: incomeStatement.annualReports.slice(0, 5).map((_, i) =>
+              incomeStatement.annualReports.length > i + 1
+                ? (
+                    (Number(incomeStatement.annualReports[i].operatingIncome) -
+                      Number(
+                        incomeStatement.annualReports[i + 1].operatingIncome,
+                      )) /
+                    Number(incomeStatement.annualReports[i].operatingIncome)
+                  ).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })
+                : '--',
+            ),
           },
           {
             name: 'Net Income',
             numbers: incomeStatement.annualReports
               .slice(0, years === 5 ? years : years - 1)
               .map((_, i) =>
-                (
-                  (Number(incomeStatement.annualReports[i].netIncome) -
-                    Number(incomeStatement.annualReports[i + 1].netIncome)) /
-                  Number(incomeStatement.annualReports[i].netIncome)
-                ).toLocaleString('en-US', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 2,
-                }),
+                incomeStatement.annualReports.length > i + 1
+                  ? (
+                      (Number(incomeStatement.annualReports[i].netIncome) -
+                        Number(
+                          incomeStatement.annualReports[i + 1].netIncome,
+                        )) /
+                      Number(incomeStatement.annualReports[i].netIncome)
+                    ).toLocaleString('en-US', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    })
+                  : '--',
               ),
           },
           {
@@ -619,14 +625,16 @@ export const getGrowthAndValuationAnalysisMetrics = (
             numbers: earnings.annualEarnings
               .slice(0, years === 5 ? years : years - 1)
               .map((_, i) =>
-                (
-                  (Number(earnings.annualEarnings[i].reportedEPS) -
-                    Number(earnings.annualEarnings[i + 1].reportedEPS)) /
-                  Number(earnings.annualEarnings[i].reportedEPS)
-                ).toLocaleString('en-US', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 2,
-                }),
+                earnings.annualEarnings.length > i + 1
+                  ? (
+                      (Number(earnings.annualEarnings[i].reportedEPS) -
+                        Number(earnings.annualEarnings[i + 1].reportedEPS)) /
+                      Number(earnings.annualEarnings[i].reportedEPS)
+                    ).toLocaleString('en-US', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    })
+                  : '--',
               ),
           },
           {
@@ -636,14 +644,16 @@ export const getGrowthAndValuationAnalysisMetrics = (
               .map((_, i) =>
                 cashflow.annualReports[i].dividendPayout === 'None'
                   ? '--'
-                  : (
+                  : cashflow.annualReports.length > i + 1
+                  ? (
                       (Number(cashflow.annualReports[i].dividendPayout) -
                         Number(cashflow.annualReports[i + 1].dividendPayout)) /
                       Number(cashflow.annualReports[i].dividendPayout)
                     ).toLocaleString('en-US', {
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 2,
-                    }),
+                    })
+                  : '--',
               ),
           },
           {
@@ -653,7 +663,8 @@ export const getGrowthAndValuationAnalysisMetrics = (
               .map((y, i) =>
                 cashflow.annualReports[i].dividendPayout === 'None'
                   ? '--'
-                  : (
+                  : cashflow.annualReports.length > i + 1
+                  ? (
                       (Number(y.incomeTaxExpense) /
                         Number(
                           balanceSheet.annualReports[i].totalShareholderEquity,
@@ -664,7 +675,8 @@ export const getGrowthAndValuationAnalysisMetrics = (
                     ).toLocaleString('en-US', {
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 2,
-                    }),
+                    })
+                  : '--',
               ),
           },
         ],
