@@ -47,14 +47,8 @@ const companyOverviewContext = (apiData: ApiProp): string => {
 const investmentThesisContext = (apiData: ApiProp): string => {
   let context = {
     incomeStatements: {
-      annual: [
-        apiData.incomeStatement.annualReports[0],
-        apiData.incomeStatement.annualReports[1],
-      ],
-      quarterly: [
-        apiData.incomeStatement.quarterlyReports[0],
-        apiData.incomeStatement.quarterlyReports[1],
-      ],
+      annual: apiData.incomeStatement.annualReports.slice(0, 2),
+      quarterly: apiData.incomeStatement.quarterlyReports.slice(0, 2),
     },
   };
 
@@ -64,14 +58,8 @@ const investmentThesisContext = (apiData: ApiProp): string => {
 const businessDescriptionContext = (apiData: ApiProp): string => {
   let context = {
     incomeStatements: {
-      annual: [
-        apiData.incomeStatement.annualReports[0],
-        apiData.incomeStatement.annualReports[1],
-      ],
-      quarterly: [
-        apiData.incomeStatement.quarterlyReports[0],
-        apiData.incomeStatement.quarterlyReports[1],
-      ],
+      annual: apiData.incomeStatement.annualReports.slice(0, 2),
+      quarterly: apiData.incomeStatement.quarterlyReports.slice(0, 2),
     },
   };
 
@@ -91,52 +79,16 @@ const industryOverviewCompetitivePositioningContext = (
 const financialAnalysisContext = (apiData: ApiProp): string => {
   let context = {
     incomeStatements: {
-      annual: [
-        apiData.incomeStatement.annualReports[0],
-        apiData.incomeStatement.annualReports[1],
-        apiData.incomeStatement.annualReports[2],
-        apiData.incomeStatement.annualReports[3],
-        apiData.incomeStatement.annualReports[4],
-      ],
-      quarterly: [
-        apiData.incomeStatement.quarterlyReports[0],
-        apiData.incomeStatement.quarterlyReports[1],
-        apiData.incomeStatement.quarterlyReports[2],
-        apiData.incomeStatement.quarterlyReports[3],
-        apiData.incomeStatement.quarterlyReports[4],
-      ],
+      annual: apiData.incomeStatement.annualReports.slice(0, 5),
+      quarterly: apiData.incomeStatement.quarterlyReports.slice(0, 5),
     },
     balanceSheet: {
-      annual: [
-        apiData.balanceSheet.annualReports[0],
-        apiData.balanceSheet.annualReports[1],
-        apiData.balanceSheet.annualReports[2],
-        apiData.balanceSheet.annualReports[3],
-        apiData.balanceSheet.annualReports[4],
-      ],
-      quarterly: [
-        apiData.balanceSheet.quarterlyReports[0],
-        apiData.balanceSheet.quarterlyReports[1],
-        apiData.balanceSheet.quarterlyReports[2],
-        apiData.balanceSheet.quarterlyReports[3],
-        apiData.balanceSheet.quarterlyReports[4],
-      ],
+      annual: apiData.balanceSheet.annualReports.slice(0, 5),
+      quarterly: apiData.balanceSheet.quarterlyReports.slice(0, 5),
     },
     cashflow: {
-      annual: [
-        apiData.cashflow.annualReports[0],
-        apiData.cashflow.annualReports[1],
-        apiData.cashflow.annualReports[2],
-        apiData.cashflow.annualReports[3],
-        apiData.cashflow.annualReports[4],
-      ],
-      quarterly: [
-        apiData.cashflow.quarterlyReports[0],
-        apiData.cashflow.quarterlyReports[1],
-        apiData.cashflow.quarterlyReports[2],
-        apiData.cashflow.quarterlyReports[3],
-        apiData.cashflow.quarterlyReports[4],
-      ],
+      annual: apiData.cashflow.annualReports.slice(0, 5),
+      quarterly: apiData.cashflow.quarterlyReports.slice(0, 5),
     },
   };
 
@@ -146,14 +98,8 @@ const financialAnalysisContext = (apiData: ApiProp): string => {
 const valuationContext = (apiData: ApiProp): string => {
   let context = {
     incomeStatements: {
-      annual: [
-        apiData.incomeStatement.annualReports[0],
-        apiData.incomeStatement.annualReports[1],
-      ],
-      quarterly: [
-        apiData.incomeStatement.quarterlyReports[0],
-        apiData.incomeStatement.quarterlyReports[1],
-      ],
+      annual: apiData.incomeStatement.annualReports.slice(0, 2),
+      quarterly: apiData.incomeStatement.quarterlyReports.slice(0, 2),
     },
   };
 

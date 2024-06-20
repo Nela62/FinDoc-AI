@@ -326,8 +326,8 @@ export const TemplateCustomizationForm = ({
               />
             </div>
 
-            <div className="w-full gap-4 flex">
-              <Button
+            <div className="w-full gap-4 flex justify-center">
+              {/* <Button
                 className="w-1/2"
                 variant="outline"
                 onClick={() => {
@@ -335,7 +335,7 @@ export const TemplateCustomizationForm = ({
                 }}
               >
                 Reset
-              </Button>
+              </Button> */}
               <Button
                 className="w-1/2 bg-azure hover:bg-azure/95"
                 type="submit"

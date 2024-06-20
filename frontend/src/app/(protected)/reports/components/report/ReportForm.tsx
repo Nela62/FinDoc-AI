@@ -141,7 +141,7 @@ export const ReportForm = ({
   const [images, setImages] = useState<Blob[] | null>(null);
   const [apiCacheData, setApiCacheData] = useState<apiCacheData | null>(null);
 
-  const progressValue = 100 / 6;
+  const progressValue = 100 / 7;
 
   const {
     docxFile,
@@ -241,13 +241,15 @@ export const ReportForm = ({
       .sort((a, b) => (a.label > b.label ? 1 : b.label > a.label ? -1 : 0)) ??
     [];
 
+  const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
   const baseActions = async (values: z.infer<typeof reportFormSchema>) => {
     if (!templateConfig) {
       throw new Error('Template is not ready yet.');
     }
     // launch the dialog
     setOpen(true);
-    setProgressMessage('Fetching APIs...');
+    setProgressMessage('Fetching data from APIs...');
     // Create a new report and save it to db
     const nanoId = getNanoId();
 
@@ -354,6 +356,11 @@ export const ReportForm = ({
         `Company name for ticker ${values.companyTicker.value} was not found.`,
       );
     }
+
+    // TODO: add sec filings here
+    setProgress((state) => state + progressValue);
+    setProgressMessage('Parsing SEC filings...');
+    await delay(4000);
 
     // Fetch web data
     setProgress((state) => state + progressValue);

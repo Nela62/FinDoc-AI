@@ -25,7 +25,8 @@ import {
   getMeanClosingStockPrice,
   getNYearsStock,
 } from '@/lib/utils/financialAPI';
-import { format } from 'date-fns';
+import { format, getQuarter, getYear, toDate } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
 
 type ChartProps = {
   colors: string[];
@@ -114,74 +115,38 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
       y: Number(quarter.reportedEPS),
     }))
     .reverse();
-  // console.log(earningsData);
 
-  // const earningsData = [
-  //   {
-  //     x: '2020-06-30',
-  //     y: -0.02,
-  //   },
-  //   {
-  //     x: '2020-09-30',
-  //     y: -1.17,
-  //   },
-  //   {
-  //     x: '2020-12-31',
-  //     y: 0.26,
-  //   },
-  //   {
-  //     x: '2021-03-31',
-  //     y: 0.79,
-  //   },
-  //   {
-  //     x: '2021-06-30',
-  //     y: 1.49,
-  //   },
-  //   {
-  //     x: '2021-09-30',
-  //     y: '2.05',
-  //   },
-  //   {
-  //     x: '2021-12-31',
-  //     y: '2.5',
-  //   },
-  //   {
-  //     x: '2022-03-31',
-  //     y: '3.06',
-  //   },
-  //   {
-  //     x: '2022-06-30',
-  //     y: '2.67',
-  //   },
-  //   {
-  //     x: '2022-09-30',
-  //     y: '-0.33',
-  //   },
-  //   {
-  //     x: '2022-12-31',
-  //     y: '-0.7',
-  //   },
-  //   {
-  //     x: '2023-03-31',
-  //     y: '-0.23',
-  //   },
-  //   {
-  //     x: '2023-06-30',
-  //     y: '-0.35',
-  //   },
-  //   {
-  //     x: '2023-09-30',
-  //     y: '-1.14',
-  //   },
-  //   {
-  //     x: '2023-12-31',
-  //     y: '-0.56',
-  //   },
-  //   {
-  //     x: '2024-03-31',
-  //     y: '-0.81',
-  //   },
-  // ];
+  const quarters =
+    props.incomeStatement.quarterlyReports.length > 16
+      ? 16
+      : props.incomeStatement.quarterlyReports.length;
+  const latestQuarter = getQuarter(
+    toDate(props.incomeStatement.quarterlyReports[0].fiscalDateEnding),
+  );
+  const latestYear = getYear(
+    toDate(props.incomeStatement.quarterlyReports[0].fiscalDateEnding),
+  );
+
+  let quartersList = [];
+
+  let left = quarters - latestQuarter;
+
+  quartersList.unshift(latestQuarter);
+
+  while (left) {
+    if (left > 4) {
+      left -= 4;
+      quartersList.unshift(4);
+    } else {
+      if (left !== 0) {
+        quartersList.unshift(left);
+      }
+      left = 0;
+    }
+  }
+  const columnsClass = `50px ${quartersList
+    .map((q) => q + 'fr')
+    .join(' ')}`.trim();
 
   const CustomBar = (props: any) => {
     const { value } = props;
@@ -190,7 +155,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     if (value < 0) {
       fill = '#991b1b';
     }
-    //use explicit fill here, or use the additional css class and make a css selector to update fill there
+
     return (
       <Rectangle {...props} fill={fill} className="recharts-bar-rectangle" />
     );
@@ -229,8 +194,11 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
         </div>
       </div>
       <div
-        className="grid grid-cols-[50px_2fr_4fr_4fr_4fr_2fr] divide-x divide-y w-[500px] divide-zinc-400"
-        style={{ fontSize: '8px' }}
+        className="grid divide-x divide-y w-[500px] divide-zinc-400"
+        style={{
+          fontSize: '8px',
+          gridTemplateColumns: columnsClass,
+        }}
       >
         <div className="border-t border-l border-zinc-400 leading-snug">
           <h2
@@ -312,11 +280,9 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
             /> */}
           </AreaChart>
         </div>
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
+        {quartersList.map((_, i) => (
+          <div key={uuidv4()}></div>
+        ))}
         <div className="relative border-l-none flex h-[50px] w-[500px]">
           <div className="w-[50px] h-[50px] flex flex-col justify-between pl-1">
             <div className="leading-snug">
@@ -333,7 +299,6 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
                 ($)
               </h2>
             </div>
-
             <p className="font-semibold">Quarterly</p>
           </div>
           <BarChart
@@ -356,39 +321,29 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
             </Bar>
           </BarChart>
         </div>
+        {quartersList.map((_, i) => (
+          <div key={uuidv4()}></div>
+        ))}
+        {/* <div></div>
         <div></div>
         <div></div>
         <div></div>
-        <div></div>
-        <div></div>
+        <div></div> */}
         <div className="flex items-center pl-1">
           <p className="font-semibold">Annual</p>
         </div>
-        <div className="flex items-center w-full justify-center">
-          <p className="font-semibold">
-            {props.earnings.annualEarnings[4].reportedEPS}
-          </p>
-        </div>
-        <div className="flex items-center w-full justify-center">
-          <p className="font-semibold">
-            {props.earnings.annualEarnings[3].reportedEPS}
-          </p>
-        </div>
-        <div className="flex items-center w-full justify-center">
-          <p className="font-semibold">
-            {props.earnings.annualEarnings[2].reportedEPS}
-          </p>
-        </div>
-        <div className="flex items-center w-full justify-center">
-          <p className="font-semibold">
-            {props.earnings.annualEarnings[1].reportedEPS}
-          </p>
-        </div>
-        <div className="flex items-center w-full justify-center">
-          <p className="font-semibold">
-            {props.earnings.annualEarnings[0].reportedEPS}
-          </p>
-        </div>
+        {...quartersList
+          .map((_, i) => (
+            <div
+              className="flex items-center w-full justify-center"
+              key={uuidv4()}
+            >
+              <p className="font-semibold">
+                {props.earnings.annualEarnings[i].reportedEPS}
+              </p>
+            </div>
+          ))
+          .reverse()}
         <div className="relative border-l-none flex h-[50px] w-[500px]">
           <div className="w-[50px] h-[50px] flex flex-col justify-between pl-1">
             <div className="leading-snug">
@@ -420,59 +375,55 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
             </Bar>
           </BarChart>
         </div>
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
+        {quartersList.map((_, i) => (
+          <div key={uuidv4()}></div>
+        ))}
         <div className="flex items-center pl-1">
           <p className="font-semibold">Annual</p>
         </div>
-        <div className="flex items-center w-full justify-center">
-          <p className="font-semibold">
-            {(
-              Number(props.incomeStatement.annualReports[4].totalRevenue) /
-              1.0e9
-            ).toFixed(2)}
-          </p>
-        </div>
-        <div className="flex items-center w-full justify-center">
-          <p className="font-semibold">
-            {(
-              Number(props.incomeStatement.annualReports[3].totalRevenue) /
-              1.0e9
-            ).toFixed(2)}
-          </p>
-        </div>
-        <div className="flex items-center w-full justify-center">
-          <p className="font-semibold">
-            {(
-              Number(props.incomeStatement.annualReports[2].totalRevenue) /
-              1.0e9
-            ).toFixed(2)}
-          </p>
-        </div>
-        <div className="flex items-center w-full justify-center">
-          <p className="font-semibold">
-            {(
-              Number(props.incomeStatement.annualReports[1].totalRevenue) /
-              1.0e9
-            ).toFixed(2)}
-          </p>
-        </div>
-        <div className="flex items-center w-full justify-center">
-          <p className="font-semibold">
-            {(
-              Number(props.incomeStatement.annualReports[0].totalRevenue) /
-              1.0e9
-            ).toFixed(2)}
-          </p>
-        </div>
+        {...quartersList
+          .map((_, i) => (
+            <div
+              className="flex items-center w-full justify-center"
+              key={uuidv4()}
+            >
+              <p className="font-semibold">
+                {props.incomeStatement.annualReports.length > i
+                  ? (
+                      Number(
+                        props.incomeStatement.annualReports[i].totalRevenue,
+                      ) / 1.0e9
+                    ).toFixed(2)
+                  : 0}
+              </p>
+            </div>
+          ))
+          .reverse()}
+
         <div className="">
           <p className="font-semibold pl-1">FY ends</p>
           <p className="font-semibold pl-1">Dec 31</p>
         </div>
-        <div className="text-center">
+        {...quartersList.map((num, i) => (
+          <div className="text-center" key={`${num}${i}`}>
+            <div
+              className="grid divide-x divide-zinc-400"
+              style={{ gridTemplateColumns: `repeat(${num}, 1fr)` }}
+            >
+              {i === 0
+                ? Array.from(Array(num).keys())
+                    .reverse()
+                    .map((n) => <div key={n}>Q{num - n}</div>)
+                : Array.from(Array(num).keys()).map((n) => (
+                    <div key={n}>Q{n + 1}</div>
+                  ))}
+            </div>
+            <div className="text-center font-semibold">
+              {latestYear - quartersList.length + i + 1}
+            </div>
+          </div>
+        ))}
+        {/* <div className="text-center">
           <div className="grid grid-cols-2 divide-x divide-zinc-400">
             <div>Q3</div>
             <div>Q4</div>
@@ -512,7 +463,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
             <div>Q2</div>
           </div>
           <div className="text-center font-semibold">2024</div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

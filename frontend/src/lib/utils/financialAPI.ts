@@ -724,7 +724,7 @@ export const getGrowthAndValuationAnalysisMetrics = (
               '4.7 - 2.1',
               '4.1 - 3.2',
               '3.4 - 1.6',
-            ],
+            ].slice(0, years),
           },
           {
             name: 'P/E: High-Low',
@@ -738,7 +738,7 @@ export const getGrowthAndValuationAnalysisMetrics = (
               '84.9',
               '58.2',
               '--',
-            ],
+            ].slice(0, years),
           },
           {
             name: 'Price/Cash Flow: High-Low',
@@ -753,7 +753,7 @@ export const getGrowthAndValuationAnalysisMetrics = (
               '32.7',
               '35.5',
               '44.2',
-            ],
+            ].slice(0, years),
           },
         ],
       },
