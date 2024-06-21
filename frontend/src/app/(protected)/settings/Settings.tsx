@@ -42,7 +42,7 @@ export const Settings = ({
           {/* <Link href="#">Notifications</Link> */}
           {/* <Link href="#">Workspaces</Link> */}
           <Link
-            href="#"
+            href="/settings/billing"
             className={
               section === 'billing' ? 'font-semibold text-primary' : ''
             }
