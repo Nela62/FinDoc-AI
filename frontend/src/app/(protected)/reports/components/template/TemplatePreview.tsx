@@ -47,7 +47,6 @@ export const TemplatePreview = ({
     `${userId}/default/equity-analyst`,
     'private',
     {
-      ensureExistence: true,
       refetchOnWindowFocus: false,
     },
   );

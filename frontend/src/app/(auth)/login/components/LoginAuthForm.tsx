@@ -20,42 +20,85 @@ import { useState } from 'react';
 import { Loader2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { IconCircleChevronRight } from '@tabler/icons-react';
+import { Separator } from '@/components/ui/separator';
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp';
 // import { demoReports } from '@/stores/reports-store';
 
 const formSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(2).max(50),
+  password: z.string().optional(),
+  token: z.string().optional(),
 });
 
 export type formType = z.infer<typeof formSchema>;
 
 export const LoginAuthForm = ({
-  formAction,
+  signInWithPassword,
+  signInWithOtp,
+  verifyOtp,
 }: {
-  formAction: (values: formType) => Promise<{ error: string | null }>;
+  signInWithPassword: (values: formType) => Promise<{ error: string | null }>;
+  signInWithOtp: (values: formType) => Promise<{ error: string | null }>;
+  verifyOtp: (values: formType) => Promise<{ error: string | null }>;
 }) => {
   const form = useForm<formType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
       password: '',
+      token: '',
     },
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOtp, setOtp] = useState(false);
+  const [isPassword, setPassword] = useState(false);
+
   const router = useRouter();
 
   const onSubmit = async (values: formType) => {
-    setIsLoading(true);
-    const { error } = await formAction(values);
-    setIsLoading(false);
-    if (error) {
-      console.log(error);
-      setError('Could not authenticate user');
-      // setError(error);
+    console.log('submitted values: ', values);
+    if (values.email === 'user@finpanel.com' && !values.password) {
+      setPassword(true);
+    } else if (values.email === 'user@finpanel.com' && values.password) {
+      console.log('signing with password');
+      setIsLoading(true);
+      const { error } = await signInWithPassword(values);
+      // setIsLoading(false);
+
+      if (error) {
+        console.log(error);
+        setError('Could not authenticate user');
+      } else {
+        router.push('/reports/');
+      }
+    } else if (values.token) {
+      setIsLoading(true);
+      const { error } = await verifyOtp(values);
+      if (error) {
+        console.log(error);
+        setError('Could not authenticate user');
+      } else {
+        //  setIsLoading(false)
+        router.push('/reports/');
+      }
     } else {
-      router.push('/reports');
+      const { error } = await signInWithOtp(values);
+      if (error) {
+        console.log(error);
+        setError('Could not authenticate user');
+      } else {
+        setOtp(true);
+      }
     }
+
+    // setIsLoading(true);
+    // const { error } = await signInWithPassword(values);
+    // // setIsLoading(false);
   };
 
   // TODO: add isPending control
@@ -63,48 +106,90 @@ export const LoginAuthForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem className="px-6 mt-6">
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input type="email" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem className="px-6">
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {isOtp ? (
+          <FormField
+            control={form.control}
+            name="token"
+            render={({ field }) => (
+              <FormItem className="px-6">
+                <FormLabel>One-Time Password</FormLabel>
+                <FormControl>
+                  <InputOTP maxLength={6} {...field}>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </FormControl>
+                <FormDescription>
+                  Please enter the one-time password sent to your email.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : (
+          <>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="px-6">
+                  <FormLabel>Email address</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {isPassword ? (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem className="px-6">
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <>
+                <div className="flex gap-2 w-full items-center">
+                  <Separator orientation="horizontal" className="grow shrink" />
+                  <p className="text-primary/70 text-sm font-semibold">or</p>
+                  <Separator orientation="horizontal" className="grow shrink" />
+                </div>
+                <div className="px-6 w-full">
+                  <Button className="w-full">Continue with Google</Button>
+                </div>
+              </>
+            )}
+          </>
+        )}
+
         {error && <p className="text-sm text-red-600">{error}</p>}
         {isLoading ? (
-          <Button className="w-full" type="submit" disabled>
+          <Button className="w-full py-4" type="submit" disabled>
             <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
             Signing In
           </Button>
         ) : (
           <Button
-            className="w-full py-8 rounded-none bg-azure hover:bg-azure/80"
+            className="w-full py-6 rounded-none bg-azure hover:bg-azure/80"
             size="lg"
             type="submit"
+            disabled={!form.watch('email')}
           >
-            <IconCircleChevronRight
-              className="h-10 w-10 text-white"
-              stroke={1}
-            />
+            <IconCircleChevronRight className="h-8 w-8 text-white" stroke={1} />
           </Button>
         )}
       </form>

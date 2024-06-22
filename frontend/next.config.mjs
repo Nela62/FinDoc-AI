@@ -14,6 +14,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'asset.brandfetch.io',
       },
+      {
+        protocol: 'https',
+        hostname: 'finpanel-media.nyc3.cdn.digitaloceanspaces.com',
+      },
     ],
   },
   webpack: (config) => {

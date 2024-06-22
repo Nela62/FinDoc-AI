@@ -82,6 +82,10 @@ import {
 import { data } from '@/lib/data/structuredData';
 import { fetchNewsContent } from './actions';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
+import {
+  useFileUrl,
+  useUpload,
+} from '@supabase-cache-helpers/storage-react-query';
 
 const defaultCompanyLogo = '/default_finpanel_logo.png';
 
@@ -167,6 +171,35 @@ export const ReportForm = ({
     fetchAPICacheByReportId(supabase, curReportId ?? ''),
     { enabled: !!curReportId },
   );
+
+  const { data: pdfUrl } = useFileUrl(
+    supabase.storage.from('saved-templates'),
+    `${userId}/default/equity-analyst`,
+    'private',
+    {
+      refetchOnWindowFocus: false,
+    },
+  );
+
+  const { mutateAsync: uploadTemplate } = useUpload(
+    supabase.storage.from('saved-templates'),
+    {
+      buildFileName: () => `${userId}/default/equity-analyst`,
+      upsert: true,
+    },
+  );
+
+  useEffect(() => {
+    if (!pdfUrl) {
+      console.log('pdf file not found');
+      fetch('/api/template')
+        .then((res) => res.blob())
+        .then((blob: Blob) => {
+          const file = new File([blob], 'file');
+          uploadTemplate({ files: [file] });
+        });
+    }
+  }, [pdfUrl, uploadTemplate]);
 
   useEffect(() => {
     if (!apiCache) return;

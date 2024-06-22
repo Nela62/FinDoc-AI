@@ -1,4 +1,10 @@
-import { Dispatch, SetStateAction, useCallback, useState } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,7 +33,10 @@ import {
 } from '@/components/ui/select';
 import { DisplayLogo } from './DisplayLogo';
 import { createClient } from '@/lib/supabase/client';
-import { useUpload } from '@supabase-cache-helpers/storage-react-query';
+import {
+  useFileUrl,
+  useUpload,
+} from '@supabase-cache-helpers/storage-react-query';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -83,6 +92,7 @@ export const TemplateCustomizationForm = ({
       upsert: true,
     },
   );
+
 
   const getPdfFile = useCallback(
     async (newTemplateConfig: TemplateConfig) => {

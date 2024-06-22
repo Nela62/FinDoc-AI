@@ -1,5 +1,7 @@
 import * as React from 'react';
 
+import { Montserrat } from 'next/font/google';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -15,16 +17,63 @@ import {
 } from '@/components/ui/card';
 import { LoginAuthForm, formType } from './components/LoginAuthForm';
 import { Cover } from './components/Cover';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { IconCircleChevronRight } from '@tabler/icons-react';
+import { Input } from '@/components/ui/input';
 
-const signIn = async ({ email, password }: formType) => {
+const font = Montserrat({ subsets: ['latin'] });
+
+const signInWithPassword = async ({ email, password }: formType) => {
   'use server';
 
   const supabase = createClient();
+
+  if (!password) return { error: 'No password' };
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
+
+  return { error: error ? error.message : null };
+};
+
+const signInWithOtp = async ({ email }: { email: string }) => {
+  'use server';
+  console.log('sending otp');
+
+  const supabase = createClient();
+
+  const { data, error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: true },
+  });
+
+  return { error: error ? error.message : null };
+};
+
+const verifyOtp = async ({ email, token }: formType) => {
+  'use server';
+
+  if (!token) return { error: 'No token provided' };
+
+  const supabase = createClient();
+
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'email',
+  });
+
+  if (!error && data && data.user) {
+    await supabase.from('settings').insert({
+      author_name: 'Finpanel AI',
+      company_name: 'Finpanel Inc.',
+      user_id: data.user.id,
+    });
+  }
+
   return { error: error ? error.message : null };
 };
 
@@ -39,8 +88,13 @@ export default async function Login() {
   }
 
   return (
-    <div className="bg-zinc-900 h-full flex justify-center items-center">
-      <div className="bg-white w-[350px] rounded-md overflow-hidden">
+    <div
+      className={cn(
+        'bg-zinc-800 h-full flex justify-center items-center',
+        font.className,
+      )}
+    >
+      <div className="bg-white w-[280px] rounded-md overflow-hidden">
         <div className="py-5 bg-azure flex justify-center items-center">
           <Image
             src="/default_finpanel_logo.png"
@@ -51,7 +105,28 @@ export default async function Login() {
             sizes="100vw"
           />
         </div>
-        <LoginAuthForm formAction={signIn} />
+        <div className="flex flex-col justify-center items-center gap-2 mt-6">
+          <LoginAuthForm
+            signInWithPassword={signInWithPassword}
+            signInWithOtp={signInWithOtp}
+            verifyOtp={verifyOtp}
+          />
+        </div>
+
+        {/* <div className="flex w-full text-xs font-semibold">
+          <Link
+            href="/login"
+            className="w-1/2 text-center py-2.5 text-primary/80 border-b border-azure/60"
+          >
+            Sign In
+          </Link>
+          <Link
+            href="/register"
+            className="w-1/2 text-center py-2.5 text-primary/60 border-b"
+          >
+            Sign Up
+          </Link>
+        </div> */}
       </div>
     </div>
   );
