@@ -93,7 +93,6 @@ export const TemplateCustomizationForm = ({
     },
   );
 
-
   const getPdfFile = useCallback(
     async (newTemplateConfig: TemplateConfig) => {
       if (!images) {
@@ -151,6 +150,21 @@ export const TemplateCustomizationForm = ({
     [templateData, supabase.storage, userId, images],
   );
 
+  useEffect(() => {
+    console.log(isLoading);
+    console.log(images);
+    console.log(templateConfig);
+    if (isLoading && images) {
+      console.log('generating pdf');
+      getPdfFile(templateConfig)
+        .then((blob) => {
+          const pdf = new File([blob], '', { type: 'application/pdf' });
+          uploadTemplate({ files: [pdf] });
+        })
+        .then(() => setLoading(false));
+    }
+  }, [isLoading, images, templateConfig, getPdfFile, uploadTemplate]);
+
   const onTemplateFormSubmit = (values: z.infer<typeof templateFormSchema>) => {
     setLoading(true);
 
@@ -172,13 +186,7 @@ export const TemplateCustomizationForm = ({
     };
 
     setTemplateConfig(newTemplateConfig);
-
-    getPdfFile(newTemplateConfig)
-      .then((blob) => {
-        const pdf = new File([blob], '', { type: 'application/pdf' });
-        uploadTemplate({ files: [pdf] });
-      })
-      .then(() => setLoading(false));
+    setImages(null);
   };
 
   return (

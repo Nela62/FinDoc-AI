@@ -62,7 +62,7 @@ export const ChartWrapper = ({
       console.log('set new images');
       getImages(stockChart, marketChart).then((images) => setCharts(images));
     }
-  }, [setCharts, stockChart, marketChart, getImages]);
+  }, [setCharts, stockChart, marketChart, getImages, colors]);
 
   return (
     <div className="sr-only">

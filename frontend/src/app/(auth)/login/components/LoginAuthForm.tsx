@@ -73,6 +73,7 @@ export const LoginAuthForm = ({
       if (error) {
         console.log(error);
         setError('Could not authenticate user');
+        setIsLoading(false);
       } else {
         router.push('/reports/');
       }
@@ -82,17 +83,21 @@ export const LoginAuthForm = ({
       if (error) {
         console.log(error);
         setError('Could not authenticate user');
+        setIsLoading(false);
       } else {
         //  setIsLoading(false)
         router.push('/reports/');
       }
     } else {
+      setIsLoading(true);
       const { error } = await signInWithOtp(values);
       if (error) {
         console.log(error);
+        setIsLoading(false);
         setError('Could not authenticate user');
       } else {
         setOtp(true);
+        setIsLoading(false);
       }
     }
 
