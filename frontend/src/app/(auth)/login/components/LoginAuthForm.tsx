@@ -42,12 +42,10 @@ export const LoginAuthForm = ({
   signInWithPassword,
   signInWithOtp,
   verifyOtp,
-}: // signInWithGoogle,
-{
+}: {
   signInWithPassword: (values: formType) => Promise<{ error: string | null }>;
   signInWithOtp: (values: formType) => Promise<{ error: string | null }>;
   verifyOtp: (values: formType) => Promise<{ error: string | null }>;
-  // signInWithGoogle: () => void;
 }) => {
   const form = useForm<formType>({
     resolver: zodResolver(formSchema),
@@ -78,9 +76,17 @@ export const LoginAuthForm = ({
 
   const onSubmit = async (values: formType) => {
     console.log('submitted values: ', values);
-    if (values.email === 'user@finpanel.com' && !values.password) {
+    if (
+      (values.email === 'user@finpanel.com' ||
+        values.email === 'user@coreline.ai') &&
+      !values.password
+    ) {
       setPassword(true);
-    } else if (values.email === 'user@finpanel.com' && values.password) {
+    } else if (
+      (values.email === 'user@finpanel.com' ||
+        values.email === 'user@coreline.ai') &&
+      values.password
+    ) {
       console.log('signing with password');
       setIsLoading(true);
       const { error } = await signInWithPassword(values);

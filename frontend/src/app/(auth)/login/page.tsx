@@ -86,7 +86,6 @@ export default async function Login() {
         <div className="flex flex-col justify-center items-center gap-2 mt-6">
           <LoginAuthForm
             signInWithPassword={signInWithPassword}
-            // signInWithGoogle={signInWithGoogle}
             signInWithOtp={signInWithOtp}
             verifyOtp={verifyOtp}
           />
