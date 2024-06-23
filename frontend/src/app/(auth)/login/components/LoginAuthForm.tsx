@@ -26,6 +26,8 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { createClient } from '@/lib/supabase/client';
+import Link from 'next/link';
+import { GoogleSignInButton } from './GoogleButton';
 // import { demoReports } from '@/stores/reports-store';
 
 const formSchema = z.object({
@@ -189,13 +191,14 @@ export const LoginAuthForm = ({
                   <Separator orientation="horizontal" className="grow shrink" />
                 </div>
                 <div className="px-6 w-full">
-                  <Button
+                  <GoogleSignInButton />
+                  {/* <Button
                     type="button"
                     onClick={buttonClick}
                     className="w-full"
                   >
                     Continue with Google
-                  </Button>
+                  </Button> */}
                 </div>
               </>
             )}
@@ -203,6 +206,18 @@ export const LoginAuthForm = ({
         )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
+
+        <p className="text-xs text-primary/60 px-6">
+          By clicking &quot;Continue with Google / Email&quot; you agree to our
+          User{' '}
+          <Link href="/tos" className="underline">
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link href="/tos" className="underline">
+            Privacy Policy
+          </Link>
+        </p>
         {isLoading ? (
           <Button className="w-full py-4" type="submit" disabled>
             <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />

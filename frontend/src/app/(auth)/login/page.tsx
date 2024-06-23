@@ -72,12 +72,12 @@ export default async function Login() {
         font.className,
       )}
     >
-      <div className="bg-white w-[280px] rounded-md overflow-hidden">
+      <div className="bg-white w-[310px] rounded-md overflow-hidden">
         <div className="py-5 bg-azure flex justify-center items-center">
           <Image
             src="/stacked_finpanel_logo.png"
             alt="Finpanel logo"
-            className="h-20 w-auto"
+            className="h-16 w-auto"
             width={0}
             height={0}
             sizes="100vw"
