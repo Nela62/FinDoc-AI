@@ -15,7 +15,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useBoundStore } from '@/providers/store-provider';
 import { useState } from 'react';
 import { Loader2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -26,6 +25,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
+import { createClient } from '@/lib/supabase/client';
 // import { demoReports } from '@/stores/reports-store';
 
 const formSchema = z.object({
@@ -40,10 +40,12 @@ export const LoginAuthForm = ({
   signInWithPassword,
   signInWithOtp,
   verifyOtp,
-}: {
+}: // signInWithGoogle,
+{
   signInWithPassword: (values: formType) => Promise<{ error: string | null }>;
   signInWithOtp: (values: formType) => Promise<{ error: string | null }>;
   verifyOtp: (values: formType) => Promise<{ error: string | null }>;
+  // signInWithGoogle: () => void;
 }) => {
   const form = useForm<formType>({
     resolver: zodResolver(formSchema),
@@ -59,6 +61,19 @@ export const LoginAuthForm = ({
   const [isPassword, setPassword] = useState(false);
 
   const router = useRouter();
+
+  const buttonClick = async () => {
+    console.log('clicked');
+
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_ORIGIN}/auth/callback`,
+      },
+    });
+    console.log('signed in');
+  };
 
   const onSubmit = async (values: formType) => {
     console.log('submitted values: ', values);
@@ -174,7 +189,13 @@ export const LoginAuthForm = ({
                   <Separator orientation="horizontal" className="grow shrink" />
                 </div>
                 <div className="px-6 w-full">
-                  <Button className="w-full">Continue with Google</Button>
+                  <Button
+                    type="button"
+                    onClick={buttonClick}
+                    className="w-full"
+                  >
+                    Continue with Google
+                  </Button>
                 </div>
               </>
             )}
@@ -192,7 +213,7 @@ export const LoginAuthForm = ({
             className="w-full py-6 rounded-none bg-azure hover:bg-azure/80"
             size="lg"
             type="submit"
-            disabled={!form.watch('email')}
+            // disabled={!form.watch('email')}
           >
             <IconCircleChevronRight className="h-8 w-8 text-white" stroke={1} />
           </Button>

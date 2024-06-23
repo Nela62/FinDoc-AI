@@ -3,24 +3,11 @@ import * as React from 'react';
 import { Montserrat } from 'next/font/google';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { LoginAuthForm, formType } from './components/LoginAuthForm';
-import { Cover } from './components/Cover';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { IconCircleChevronRight } from '@tabler/icons-react';
-import { Input } from '@/components/ui/input';
 
 const font = Montserrat({ subsets: ['latin'] });
 
@@ -65,15 +52,6 @@ const verifyOtp = async ({ email, token }: formType) => {
     token,
     type: 'email',
   });
-
-  if (!error && data && data.user) {
-    await supabase.from('settings').insert({
-      author_name: 'Finpanel AI',
-      company_name: 'Finpanel Inc.',
-      user_id: data.user.id,
-    });
-  }
-
   return { error: error ? error.message : null };
 };
 
@@ -97,9 +75,9 @@ export default async function Login() {
       <div className="bg-white w-[280px] rounded-md overflow-hidden">
         <div className="py-5 bg-azure flex justify-center items-center">
           <Image
-            src="/default_finpanel_logo.png"
+            src="/stacked_finpanel_logo.png"
             alt="Finpanel logo"
-            className="h-7 w-auto"
+            className="h-20 w-auto"
             width={0}
             height={0}
             sizes="100vw"
@@ -108,6 +86,7 @@ export default async function Login() {
         <div className="flex flex-col justify-center items-center gap-2 mt-6">
           <LoginAuthForm
             signInWithPassword={signInWithPassword}
+            // signInWithGoogle={signInWithGoogle}
             signInWithOtp={signInWithOtp}
             verifyOtp={verifyOtp}
           />

@@ -102,15 +102,15 @@ VALUES
     'a96b8bf9-a9fe-4204-abb2-cb99ddbdd1e8'
   );
 
-INSERT INTO
-  "public"."settings" (
-    "user_id",
-    "author_name",
-    "company_name"
-  )
-values
-  (
-    '8a84f859-4958-4496-a740-bf0b67707af3',
-    'Finpanel AI',
-    'Finpanel Inc.'
-  )
+-- INSERT INTO
+--   "public"."settings" (
+--     "user_id",
+--     "author_name",
+--     "company_name"
+--   )
+-- values
+--   (
+--     '8a84f859-4958-4496-a740-bf0b67707af3',
+--     'Finpanel AI',
+--     'Finpanel Inc.'
+--   )
