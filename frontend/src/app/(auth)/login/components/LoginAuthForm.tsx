@@ -65,16 +65,15 @@ export const LoginAuthForm = ({
   const router = useRouter();
 
   const buttonClick = async () => {
-    console.log('clicked');
-
+    console.log(`${process.env.NEXT_PUBLIC_ORIGIN}/auth/callback`);
     const supabase = createClient();
+
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${process.env.NEXT_PUBLIC_ORIGIN}/auth/callback`,
       },
     });
-    console.log('signed in');
   };
 
   const onSubmit = async (values: formType) => {
