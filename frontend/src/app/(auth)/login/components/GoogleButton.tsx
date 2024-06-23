@@ -1,6 +1,10 @@
-export const GoogleSignInButton = () => {
+export const GoogleSignInButton = ({ onClick }: { onClick: () => void }) => {
   return (
-    <button className="flex items-center justify-between w-full max-w-[400px] h-10 px-3 py-0 text-sm text-[#1f1f1f] bg-white border rounded transition duration-218 ease-in-out hover:shadow-sm hover:bg-zinc-100 disabled:bg-[#ffffff61] disabled:border-[#1f1f1f1f] disabled:cursor-default group">
+    <button
+      className="flex items-center justify-between w-full max-w-[400px] h-10 px-3 py-0 text-sm text-[#1f1f1f] bg-white border rounded transition duration-218 ease-in-out hover:shadow-sm hover:bg-zinc-100 disabled:bg-[#ffffff61] disabled:border-[#1f1f1f1f] disabled:cursor-default group"
+      onClick={onClick}
+      type="button"
+    >
       {/* <div className="absolute inset-0 bg-[#303030] opacity-0 transition-opacity duration-218 ease-in-out group-hover:opacity-[0.08] group-active:opacity-[0.12] group-focus:opacity-[0.12]"></div> */}
       <div className="flex items-center justify-center relative w-full">
         <span className="flex items-center">

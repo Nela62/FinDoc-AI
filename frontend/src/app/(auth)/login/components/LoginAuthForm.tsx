@@ -191,7 +191,7 @@ export const LoginAuthForm = ({
                   <Separator orientation="horizontal" className="grow shrink" />
                 </div>
                 <div className="px-6 w-full">
-                  <GoogleSignInButton />
+                  <GoogleSignInButton onClick={buttonClick} />
                   {/* <Button
                     type="button"
                     onClick={buttonClick}
