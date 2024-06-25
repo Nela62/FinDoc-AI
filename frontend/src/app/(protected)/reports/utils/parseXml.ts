@@ -1,26 +1,26 @@
 import { XMLParser } from 'fast-xml-parser';
 
-export const get10KCompetitionSection = (xml: any) => {
+const isBold = (text?: string) =>
+  text?.includes('font-weight:700') || text?.includes('font-weight:bold');
+
+const isUnderlined = (text?: string) =>
+  text?.includes('text-decoration:underline');
+
+const isItalic = (text?: string) => text?.includes('font-style:italic');
+
+const isUpperCase = (text?: string) =>
+  text?.split('').every((c) => c === c.toUpperCase());
+
+export const get10KSection = (xml: string, section: string) => {
   const parser = new XMLParser({ ignoreAttributes: false });
 
   const parsedXml = parser.parse(xml);
   const body = parsedXml.html.body;
 
-  let competition = '';
+  let text = '';
   let start = false;
   let end = false;
   let style = { underline: true };
-
-  const isBold = (text?: string) =>
-    text?.includes('font-weight:700') || text?.includes('font-weight:bold');
-
-  const isUnderlined = (text?: string) =>
-    text?.includes('text-decoration:underline');
-
-  const isItalic = (text?: string) => text?.includes('font-style:italic');
-
-  const isUpperCase = (text?: string) =>
-    text?.split('').every((c) => c === c.toUpperCase());
 
   const searchObject = (object: any) => {
     Object.entries(object).forEach(([key, value]: [string, any]) => {
@@ -29,12 +29,11 @@ export const get10KCompetitionSection = (xml: any) => {
         !start &&
         key === 'span' &&
         typeof value['#text'] === 'string' &&
-        value['#text'].toLowerCase().includes('competition') &&
+        value['#text'].toLowerCase().includes(section) &&
         isBold(value['@_style'])
       ) {
         start = true;
-        console.log('competition!');
-        competition += value['#text'] ? value['#text'] + '\n' : '';
+        text += value['#text'] ? value['#text'] + '\n' : '';
         style = {
           underline: isUnderlined(value['@_style']) ?? false,
         };
@@ -52,7 +51,7 @@ export const get10KCompetitionSection = (xml: any) => {
                 end = true;
                 return;
               } else {
-                competition += val['#text'] ? val['#text'] + '\n' : '';
+                text += val['#text'] ? val['#text'] + '\n' : '';
               }
             });
           } else {
@@ -66,7 +65,7 @@ export const get10KCompetitionSection = (xml: any) => {
               end = true;
               return;
             } else {
-              competition += value['#text'] ? value['#text'] + '\n' : '';
+              text += value['#text'] ? value['#text'] + '\n' : '';
             }
           }
         }
@@ -82,10 +81,14 @@ export const get10KCompetitionSection = (xml: any) => {
 
   searchObject(body);
 
-  return competition;
+  return text.length > 40000 ? text.slice(0, 40000) : text;
 };
 
-export const get10KMDASection = (xml: any) => {
+export const get10KItem = (
+  xml: any,
+  itemNum: string,
+  endSectionNum?: string,
+) => {
   const parser = new XMLParser({ ignoreAttributes: false });
 
   const parsedXml = parser.parse(xml);
@@ -93,12 +96,6 @@ export const get10KMDASection = (xml: any) => {
 
   let text = '';
   let scrape = false;
-
-  const isBold = (text?: string) =>
-    text?.includes('font-weight:700') || text?.includes('font-weight:bold');
-
-  const isUnderlined = (text?: string) =>
-    text?.includes('text-decoration:underline');
 
   const searchObject = (object: any) => {
     Object.entries(object).forEach(([key, value]: [string, any]) => {
@@ -110,7 +107,7 @@ export const get10KMDASection = (xml: any) => {
           value['#text']
             .toLowerCase()
             .replace('&#160;', ' ')
-            .startsWith('item 7.')
+            .startsWith(`item ${itemNum}.`)
         ) {
           scrape = true;
           console.log('mda!');
@@ -126,7 +123,7 @@ export const get10KMDASection = (xml: any) => {
                   val['#text']
                     ?.toLowerCase()
                     .replace('&#160;', ' ')
-                    .startsWith('item 8.')
+                    .startsWith(`item ${endSectionNum ?? itemNum + 1}.`)
                 ) {
                   console.log('end!');
                   scrape = false;
@@ -143,7 +140,7 @@ export const get10KMDASection = (xml: any) => {
                 value['#text']
                   ?.toLowerCase()
                   .replace('&#160;', ' ')
-                  .includes('item 8.')
+                  .includes(`item ${endSectionNum ?? itemNum + 1}.`)
               ) {
                 console.log('end!');
                 scrape = false;
@@ -160,7 +157,7 @@ export const get10KMDASection = (xml: any) => {
                   item['#text']
                     ?.toLowerCase()
                     .replace('&#160;', ' ')
-                    .startsWith('item 7.')
+                    .startsWith(`item ${itemNum}.`)
                 ) {
                   scrape = true;
                   console.log('mda!');
@@ -173,7 +170,7 @@ export const get10KMDASection = (xml: any) => {
                 value['#text']
                   ?.toLowerCase()
                   .replace('&#160;', ' ')
-                  .startsWith('item 7.')
+                  .startsWith(`item ${itemNum}.`)
               ) {
                 scrape = true;
                 console.log('mda!');
@@ -197,7 +194,7 @@ export const get10KMDASection = (xml: any) => {
 
   searchObject(body);
 
-  return text;
+  return text.length > 40000 ? text.slice(0, 40000) : text;
 };
 
 // TODO: could potentially capture all snippets that are bold and include competition

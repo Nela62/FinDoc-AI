@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "update-types": "supabase gen types typescript --linked --schema=public > src/lib/supabase/database.types.ts",
-    "update-local-types": "supabase gen types typescript --local --schema=public > src/lib/supabase/database.types.ts"
+    "update-local-types": "supabase gen types typescript --local --schema=public > src/lib/supabase/database.types.ts",
+    "get-seed-data": "supabase db dump --data-only -f supabase/seed.sql"
   },
   "dependencies": {
     "@adobe/pdfservices-node-sdk": "^4.0.0",

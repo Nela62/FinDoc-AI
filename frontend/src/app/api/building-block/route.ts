@@ -1,18 +1,13 @@
 import { NextResponse } from 'next/server';
-import { generateBlock } from './blocks';
+import { getBlock } from './utils/blocks';
 
 // TODO: check if this is authenticated
 export async function POST(req: Request) {
-  const { blockId, customPrompt, companyName, apiData } = await req.json();
+  const json = await req.json();
 
-  console.log('generating block ' + blockId);
+  console.log('generating block ' + json.blockId);
 
-  const block = await generateBlock(
-    blockId,
-    customPrompt,
-    companyName,
-    apiData,
-  );
+  const block = await getBlock(json);
 
   return NextResponse.json({ block: block });
 }

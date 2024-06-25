@@ -265,3 +265,7 @@ export function fetchTemplates(client: TypedSupabaseClient) {
     )
     .throwOnError();
 }
+
+export function fetchSubscription(client: TypedSupabaseClient) {
+  return client.from('subscriptions').select('user_id, plan').throwOnError();
+}

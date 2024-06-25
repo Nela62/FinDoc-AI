@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/server';
 import {
   fetchAllReports,
   fetchSettings,
+  fetchSubscription,
   fetchTemplates,
   fetchTickers,
 } from '@/lib/queries';
@@ -38,6 +39,7 @@ export default async function NewReportPage() {
   await prefetchQuery(queryClient, fetchTickers(supabase));
   await prefetchQuery(queryClient, fetchTemplates(supabase));
   await prefetchQuery(queryClient, fetchAllReports(supabase));
+  await prefetchQuery(queryClient, fetchSubscription(supabase));
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

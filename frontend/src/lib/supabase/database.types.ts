@@ -597,6 +597,32 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          id: string
+          plan: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          plan: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          plan?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       templates: {
         Row: {
           business_description: string | null

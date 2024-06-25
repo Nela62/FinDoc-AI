@@ -86,6 +86,8 @@ import {
   useFileUrl,
   useUpload,
 } from '@supabase-cache-helpers/storage-react-query';
+import { Params } from '@/app/api/building-block/utils/blocks';
+import { SubscriptionPlan } from '@/types/subscription';
 
 const defaultCompanyLogo = '/default_finpanel_logo.png';
 
@@ -108,10 +110,10 @@ const section_ids = [
   'investment_thesis',
   'business_description',
   'recent_developments',
-  'industry_overview_competitive_positioning',
+  'management',
+  'risks',
   'financial_analysis',
   'valuation',
-  'management_and_risks',
 ];
 
 const titles = {
@@ -131,12 +133,14 @@ export const ReportForm = ({
   templateConfig,
   setReportType,
   userId,
+  plan,
 }: {
   setIsTemplateCustomization: Dispatch<SetStateAction<boolean>>;
   setSelectedReportId: Dispatch<SetStateAction<string | null>>;
   templateConfig: TemplateConfig | null;
   setReportType: Dispatch<SetStateAction<string>>;
   userId: string;
+  plan: SubscriptionPlan;
 }) => {
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState('');
@@ -390,10 +394,18 @@ export const ReportForm = ({
       );
     }
 
-    // TODO: add sec filings here
     setProgress((state) => state + progressValue);
     setProgressMessage('Parsing SEC filings...');
-    await delay(4000);
+    const xmlPath = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/documents/${values.companyTicker.value}/10-K`,
+    )
+      .then((res) => res.json())
+      .then((json) => json.xml_path);
+
+    const xml = await supabase.storage
+      .from('sec-filings')
+      .download(xmlPath)
+      .then((res) => res.data?.text());
 
     // Fetch web data
     setProgress((state) => state + progressValue);
@@ -447,6 +459,15 @@ export const ReportForm = ({
       });
     });
 
+    const params: Omit<Params, 'blockId'> = {
+      plan,
+      companyName: tickerData.company_name,
+      apiData: apiData,
+      xmlData: xml ?? '',
+      newsData: newsContext,
+      customPrompt: '',
+    };
+
     // Generate a company overview if any
     setProgress((state) => state + progressValue);
     setProgressMessage('Generating a company overview...');
@@ -454,9 +475,7 @@ export const ReportForm = ({
       method: 'POST',
       body: JSON.stringify({
         blockId: 'company_overview',
-        customPrompt: '',
-        companyName: tickerData.company_name,
-        apiData: apiData,
+        ...params,
       }),
     }).then((res) => res.json());
 
@@ -507,6 +526,7 @@ export const ReportForm = ({
       targetPrice,
       news,
       newsContext,
+      xml,
     };
   };
 
@@ -526,6 +546,7 @@ export const ReportForm = ({
       targetPrice,
       news,
       newsContext,
+      xml,
     } = await baseActions(values);
 
     const generatedJson: JSONContent = { type: 'doc', content: [] };
@@ -533,82 +554,34 @@ export const ReportForm = ({
 
     const generatedBlocks: Record<string, string> = {};
 
-    // TODO: Generate this dynamically
-    // const { data: pdfData } = await supabase
-    //   .from('documents')
-    //   .select('structured_data')
-    //   .eq('url', 'sec-edgar-filings/AMZN/10-K/0001018724-24-000008');
-
-    // start report generation
     setProgress((state) => state + progressValue);
     setProgressMessage('Writing report...');
+
+    const params: Omit<Params, 'blockId'> = {
+      plan,
+      companyName: tickerData.company_name,
+      apiData: apiData,
+      xmlData: xml ?? '',
+      newsData: newsContext,
+      customPrompt: '',
+    };
 
     Promise.all(
       section_ids.map(async (id: string) => {
         let content = '';
-        if (id === 'investment_thesis') {
-          content = await fetch('/api/building-block/investment-thesis', {
-            method: 'POST',
-            body: JSON.stringify({
-              blockId: id,
-              customPrompt: '',
-              companyName: tickerData.company_name,
-              apiData: apiData,
-              recommendation: recommendation,
-              targetPrice: targetPrice,
-            }),
-          })
-            .then((res) => res.json())
-            .then((res) => res.block);
+        content = await fetch('/api/building-block', {
+          method: 'POST',
+          body: JSON.stringify({
+            blockId: id,
+            recommendation: recommendation,
+            targetPrice: targetPrice,
+            ...params,
+          }),
+        })
+          .then((res) => res.json())
+          .then((res) => res.block);
 
-          generatedBlocks[id] = content;
-        } else if (id === 'recent_developments') {
-          content = await fetch('/api/building-block/recent-developments', {
-            method: 'POST',
-            body: JSON.stringify({
-              blockId: id,
-              customPrompt: '',
-              companyName: tickerData.company_name,
-              apiData: apiData,
-              newsContext: newsContext,
-            }),
-          })
-            .then((res) => res.json())
-            .then((res) => res.block);
-
-          generatedBlocks[id] = content;
-        } else if (
-          id === 'industry_overview_competitive_positioning' ||
-          id === 'management_and_risks'
-        ) {
-          content = await fetch('/api/building-block/10K', {
-            method: 'POST',
-            body: JSON.stringify({
-              blockId: id,
-              customPrompt: '',
-              companyName: tickerData.company_name,
-              pdfData: data,
-            }),
-          })
-            .then((res) => res.json())
-            .then((res) => res.block);
-
-          generatedBlocks[id] = content;
-        } else {
-          content = await fetch('/api/building-block', {
-            method: 'POST',
-            body: JSON.stringify({
-              blockId: id,
-              customPrompt: '',
-              companyName: tickerData.company_name,
-              apiData: apiData,
-            }),
-          })
-            .then((res) => res.json())
-            .then((res) => res.block);
-
-          generatedBlocks[id] = content;
-        }
+        generatedBlocks[id] = content;
       }),
     ).then(async () => {
       console.log('generated all sections');
@@ -618,7 +591,7 @@ export const ReportForm = ({
       ${generatedBlocks[id]}`;
 
         const json = markdownToJson(generatedBlocks[id]);
-        console.log(json);
+        // console.log(json);
         generatedJson.content?.push(
           {
             type: 'heading',
@@ -637,6 +610,8 @@ export const ReportForm = ({
           ...json.content,
         );
       });
+
+      console.log(generatedContent);
 
       // generate a summary if required
       setProgress((state) => state + progressValue);
@@ -662,7 +637,7 @@ export const ReportForm = ({
       });
 
       setProgress((state) => state + progressValue);
-      setProgressMessage('Creating a pdf file...');
+      setProgressMessage('Creating pdf file...');
 
       setReportId(reportId);
     });

@@ -1,6 +1,10 @@
 'use client';
 
-import { fetchSettings, fetchTemplates } from '@/lib/queries';
+import {
+  fetchSettings,
+  fetchSubscription,
+  fetchTemplates,
+} from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { useDirectory } from '@supabase-cache-helpers/storage-react-query';
@@ -13,6 +17,7 @@ import { TemplateCustomizationForm } from './components/template/TemplateCustomi
 import { AllReportsColumn } from './components/allReports/AllReportsColumn';
 import { ReportInfo } from './components/allReports/ReportInfo';
 import { ReportPreview } from './components/allReports/ReportPreview';
+import { SubscriptionPlan } from '@/types/subscription';
 
 type ColorScheme = { id: string; colors: string[] };
 
@@ -54,6 +59,7 @@ export const NewReport = ({ userId }: { userId: string }) => {
   const supabase = createClient();
 
   const { data: templates } = useQuery(fetchTemplates(supabase));
+  const { data: planData } = useQuery(fetchSubscription(supabase));
 
   const { data: settings } = useQuery(fetchSettings(supabase));
   const { data: logos } = useDirectory(
@@ -135,6 +141,7 @@ export const NewReport = ({ userId }: { userId: string }) => {
             templateConfig={templateConfig}
             setReportType={setReportType}
             userId={userId}
+            plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
           />
         )}
       </div>

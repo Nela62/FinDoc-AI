@@ -1,0 +1,101 @@
+import { Humanloop } from 'humanloop';
+import Anthropic from '@anthropic-ai/sdk';
+import { SubscriptionPlan } from '@/types/subscription';
+
+export type Inputs = {
+  CONTEXT: string;
+  CUSTOM_PROMPT: string;
+  COMPANY_NAME: string;
+  RECOMMENDATION?: string;
+  TARGET_PRICE?: string;
+};
+
+const humanloopIdsMap: Record<string, string> = {
+  company_overview: 'pr_eEsRLn1ueHYu2ohtbLfz8',
+  investment_thesis: 'pr_InocnkalxtNTfsiEuFycf',
+  business_description: 'pr_9GNKdyMlqcxSm2VAhXd1Q',
+  recent_developments: 'pr_IkkvqHAnRftNW74gjqI3s',
+  financial_analysis: 'pr_ky4Ib9RjHwHhncWkVkZok',
+  valuation: 'pr_M4oPT2h4FumPzvwz78ABa',
+  management: 'pr_zkb65gD2Q42TTxTdFTVEa',
+  risks: 'pr_TkzimL1MD7xJUMA0wp7yz',
+  environment_and_sustainability_governance: 'pr_Hp3kSGo0vlOaS5Yo6pkor',
+  executive_summary: 'pr_U4jwcfdNjstPSeWE56IFS',
+};
+
+function findReplaceString(string: string, find: string, replace: string) {
+  if (/[a-zA-Z\_]+/g.test(string)) {
+    return string.replace(
+      new RegExp('{{(?:\\s+)?(' + find + ')(?:\\s+)?}}'),
+      replace,
+    );
+  } else {
+    throw new Error(
+      'Find statement does not match regular expression: /[a-zA-Z_]+/',
+    );
+  }
+}
+
+export const generateBlock = async (
+  blockId: string,
+  inputs: Inputs,
+  plan: SubscriptionPlan,
+) => {
+  if (!process.env.HUMANLOOP_API_KEY) {
+    throw new Error('Humanloop api key is required.');
+  }
+
+  const anthropic = new Anthropic();
+
+  const humanloop = new Humanloop({
+    apiKey: process.env.HUMANLOOP_API_KEY,
+  });
+
+  const formatInstructions = `\nAfter you've outlined your key points in the scratchpad, write out your response inside <output> tags.`;
+
+  const config = await humanloop.projects
+    .getActiveConfig({
+      id: humanloopIdsMap[blockId],
+    })
+    .then((res) => res.data.config);
+
+  // @ts-ignore
+  let template = config.chat_template[0].content;
+
+  Object.entries(inputs).map(([key, value]) => {
+    template = findReplaceString(template, key, value);
+  });
+
+  let model = 'claude-3-5-sonnet-20240620';
+
+  if (plan === 'dev') {
+    model = 'claude-3-haiku-20240307';
+  } else if (plan === 'professional' || plan === 'enterprise') {
+    model = 'claude-3-opus-20240229';
+  }
+
+  const message = await anthropic.messages.create({
+    temperature: 0.2,
+    max_tokens: 4096,
+    messages: [{ role: 'user', content: template + formatInstructions }],
+    model: model,
+  });
+
+  // https://github.com/anthropics/anthropic-sdk-typescript/issues/432
+  if (message.content[0].type === 'text') {
+    humanloop.log({
+      project_id: humanloopIdsMap[blockId],
+      config_id: config.id,
+      inputs: inputs,
+      output: message.content[0].text
+        .replace(/(.*?)<output>/gs, '')
+        .replace('</output>', ''),
+    });
+
+    return message.content[0].text
+      .replace(/(.*?)<output>/gs, '')
+      .replace('</output>', '');
+  } else {
+    return 'Error!';
+  }
+};

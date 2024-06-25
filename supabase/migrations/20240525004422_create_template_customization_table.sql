@@ -1,13 +1,13 @@
-create table if not exists public.report_template (
+CREATE TABLE IF NOT EXISTS public.report_template (
   "id" "uuid" DEFAULT "gen_random_uuid"() PRIMARY KEY,
-  report_id uuid unique not null references public.reports (id),
-  user_id uuid not null references auth.users (id),
-  template_type text not null,
+  report_id uuid UNIQUE NOT NULL REFERENCES public.reports (id),
+  user_id uuid NOT NULL REFERENCES auth.users (id),
+  template_type text NOT NULL,
   business_description text,
   summary text array,
-  color_scheme text array not null,
-  author_name text not null,
-  author_company_name text not null,
+  color_scheme text array NOT NULL,
+  author_name text NOT NULL,
+  author_company_name text NOT NULL,
   author_company_logo text,
   metrics jsonb
 );
@@ -31,22 +31,22 @@ CREATE POLICY "Enable ALL for authenticated users based on user_id" ON "public".
   )
 );
 
-alter table
+ALTER TABLE
   public.reports
-add
-  column financial_strength text,
-add
-  column company_name text,
-add
-  column company_logo text;
+ADD
+  COLUMN financial_strength text,
+ADD
+  COLUMN company_name text,
+ADD
+  COLUMN company_logo text;
 
-create table if not exists public.templates (
+CREATE TABLE IF NOT EXISTS public.templates (
   "id" "uuid" DEFAULT "gen_random_uuid"() PRIMARY KEY,
-  "name" text not null,
-  report_type text not null,
-  sample_text jsonb not null,
-  section_ids text array not null,
-  component_id text not null,
+  "name" text NOT NULL,
+  report_type text NOT NULL,
+  sample_text jsonb NOT NULL,
+  section_ids text array NOT NULL,
+  component_id text NOT NULL,
   business_description text,
   summary text array
 );
@@ -54,9 +54,9 @@ create table if not exists public.templates (
 ALTER TABLE
   "public"."templates" ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Enable ALL for authenticated users" ON "public"."templates" TO "authenticated" USING (true);
+CREATE POLICY "Enable ALL for authenticated users" ON "public"."templates" TO "authenticated" USING (TRUE);
 
-insert into
+INSERT INTO
   templates (
     name,
     report_type,
@@ -66,7 +66,7 @@ insert into
     business_description,
     summary
   )
-values
+VALUES
   (
     'Sidebar Layout',
     'Equity Analyst Report',
@@ -399,17 +399,17 @@ values
     ]
   );
 
-drop table public.settings;
+DROP TABLE public.settings;
 
-create table if not exists public.settings (
+CREATE TABLE IF NOT EXISTS public.settings (
   id uuid DEFAULT "gen_random_uuid"() PRIMARY KEY,
-  user_id uuid unique NOT NULL REFERENCES auth.users (id),
-  author_name text not null,
-  company_name text not null
+  user_id uuid UNIQUE NOT NULL REFERENCES auth.users (id),
+  author_name text NOT NULL,
+  company_name text NOT NULL
 );
 
-alter table
-  public.settings enable row level security;
+ALTER TABLE
+  public.settings enable ROW LEVEL SECURITY;
 
 CREATE POLICY "Enable ALL for authenticated users based on user_id" ON "public"."settings" TO "authenticated" USING (
   (

@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { Loader2Icon } from 'lucide-react';
+import { ArrowLeft, Loader2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { IconCircleChevronRight } from '@tabler/icons-react';
 import { Separator } from '@/components/ui/separator';
@@ -61,6 +61,11 @@ export const LoginAuthForm = ({
   const [isPassword, setPassword] = useState(false);
 
   const router = useRouter();
+
+  const resetState = () => {
+    setOtp(false);
+    setPassword(false);
+  };
 
   const buttonClick = async () => {
     console.log(`${process.env.NEXT_PUBLIC_ORIGIN}/auth/callback`);
@@ -133,6 +138,17 @@ export const LoginAuthForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
+        {(isOtp || isPassword) && (
+          <Button
+            className="mx-6"
+            variant="outline"
+            size="sm"
+            onClick={resetState}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        )}
         {isOtp ? (
           <FormField
             control={form.control}
