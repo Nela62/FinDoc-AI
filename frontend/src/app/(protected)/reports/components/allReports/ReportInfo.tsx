@@ -15,6 +15,7 @@ import {
   getTopBarMetrics,
 } from '@/lib/utils/financialAPI';
 import { useBoundStore } from '@/providers/store-provider';
+import { SubscriptionPlan } from '@/types/subscription';
 import {
   useQuery,
   useUpdateMutation,
@@ -32,9 +33,11 @@ type ReportInfoType = {
 export const ReportInfo = ({
   reportId,
   userId,
+  plan,
 }: {
   reportId: string;
   userId: string;
+  plan: SubscriptionPlan;
 }) => {
   const [isLoading, setLoading] = useState(false);
   const { initGeneration } = useBoundStore((state) => state);
@@ -253,13 +256,15 @@ export const ReportInfo = ({
           {isLoading && <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />}
           Update
         </Button>
-        <Button
-          variant="outline"
-          onClick={downloadDocx}
-          disabled={!report || !templateConfig || !docxFileData}
-        >
-          Download docx
-        </Button>
+        {plan !== 'free' && plan !== 'starter' && (
+          <Button
+            variant="outline"
+            onClick={downloadDocx}
+            disabled={!report || !templateConfig || !docxFileData}
+          >
+            Download docx
+          </Button>
+        )}
         <Button
           variant="outline"
           onClick={downloadPdf}

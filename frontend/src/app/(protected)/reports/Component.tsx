@@ -121,7 +121,11 @@ export const NewReport = ({ userId }: { userId: string }) => {
       </div>
       <div className="min-w-[360px] w-[20%]">
         {selectedReportId ? (
-          <ReportInfo reportId={selectedReportId} userId={userId} />
+          <ReportInfo
+            reportId={selectedReportId}
+            userId={userId}
+            plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
+          />
         ) : isTemplateCustomization ? (
           templateConfig && templateData ? (
             <TemplateCustomizationForm

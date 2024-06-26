@@ -576,7 +576,7 @@ export const getGrowthAndValuationAnalysisMetrics = (
                       Number(
                         incomeStatement.annualReports[i + 1].totalRevenue,
                       )) /
-                    Number(incomeStatement.annualReports[i].totalRevenue)
+                    Number(incomeStatement.annualReports[i + 1].totalRevenue)
                   ).toLocaleString('en-US', {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 2,
@@ -593,7 +593,7 @@ export const getGrowthAndValuationAnalysisMetrics = (
                       Number(
                         incomeStatement.annualReports[i + 1].operatingIncome,
                       )) /
-                    Number(incomeStatement.annualReports[i].operatingIncome)
+                    Number(incomeStatement.annualReports[i + 1].operatingIncome)
                   ).toLocaleString('en-US', {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 2,
@@ -612,7 +612,7 @@ export const getGrowthAndValuationAnalysisMetrics = (
                         Number(
                           incomeStatement.annualReports[i + 1].netIncome,
                         )) /
-                      Number(incomeStatement.annualReports[i].netIncome)
+                      Number(incomeStatement.annualReports[i + 1].netIncome)
                     ).toLocaleString('en-US', {
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 2,
@@ -629,7 +629,7 @@ export const getGrowthAndValuationAnalysisMetrics = (
                   ? (
                       (Number(earnings.annualEarnings[i].reportedEPS) -
                         Number(earnings.annualEarnings[i + 1].reportedEPS)) /
-                      Number(earnings.annualEarnings[i].reportedEPS)
+                      Number(earnings.annualEarnings[i + 1].reportedEPS)
                     ).toLocaleString('en-US', {
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 2,
@@ -648,7 +648,7 @@ export const getGrowthAndValuationAnalysisMetrics = (
                   ? (
                       (Number(cashflow.annualReports[i].dividendPayout) -
                         Number(cashflow.annualReports[i + 1].dividendPayout)) /
-                      Number(cashflow.annualReports[i].dividendPayout)
+                      Number(cashflow.annualReports[i + 1].dividendPayout)
                     ).toLocaleString('en-US', {
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 2,
@@ -665,7 +665,7 @@ export const getGrowthAndValuationAnalysisMetrics = (
                   ? '--'
                   : cashflow.annualReports.length > i + 1
                   ? (
-                      (Number(y.incomeTaxExpense) /
+                      (Number(y.netIncome) /
                         Number(
                           balanceSheet.annualReports[i].totalShareholderEquity,
                         )) *

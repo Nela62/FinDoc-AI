@@ -21,7 +21,11 @@ import {
   VirtualizedCombobox,
   Option,
 } from '@/components/ui/virtualized-combobox';
-import { fetchAPICacheByReportId, fetchTickers } from '@/lib/queries';
+import {
+  fetchAPICacheByReportId,
+  fetchAllReports,
+  fetchTickers,
+} from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
 import { getNanoId } from '@/lib/utils/nanoId';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,7 +34,7 @@ import {
   useQuery,
   useUpdateMutation,
 } from '@supabase-cache-helpers/postgrest-react-query';
-import { format } from 'date-fns';
+import { format, isAfter, startOfWeek, subWeeks } from 'date-fns';
 import { SquarePen, Wand2Icon } from 'lucide-react';
 import {
   Dispatch,
@@ -149,6 +153,8 @@ export const ReportForm = ({
   const [images, setImages] = useState<Blob[] | null>(null);
   const [apiCacheData, setApiCacheData] = useState<apiCacheData | null>(null);
 
+  const [reportsNum, setReportsNum] = useState(0);
+
   const progressValue = 100 / 7;
 
   const {
@@ -170,6 +176,21 @@ export const ReportForm = ({
   });
 
   const supabase = createClient();
+
+  const { data: reportsData } = useQuery(fetchAllReports(supabase));
+
+  useEffect(() => {
+    if (reportsData) {
+      const currentDate = new Date();
+      const lastSunday = startOfWeek(currentDate, { weekStartsOn: 0 });
+
+      const filteredDates = reportsData.filter((report) => {
+        const date = new Date(report.created_at);
+        return isAfter(date, lastSunday);
+      });
+      setReportsNum(filteredDates.length);
+    }
+  }, [reportsData]);
 
   const { data: apiCache } = useQuery(
     fetchAPICacheByReportId(supabase, curReportId ?? ''),
@@ -849,15 +870,17 @@ export const ReportForm = ({
                       Edit Sources
                     </Button>
                   </div> */}
-              <Button
-                variant="ghost"
-                className="text-xs w-fit mt-2 mb-4 font-normal px-2"
-                onClick={() => {
-                  setIsTemplateCustomization(true);
-                }}
-              >
-                Customize Template -{'>'}
-              </Button>
+              {plan !== 'free' && plan !== 'starter' && (
+                <Button
+                  variant="ghost"
+                  className="text-xs w-fit mt-2 mb-4 font-normal px-2"
+                  onClick={() => {
+                    setIsTemplateCustomization(true);
+                  }}
+                >
+                  Customize Template -{'>'}
+                </Button>
+              )}
             </div>
 
             {/* <div className="flex gap-5 w-full mt-14">
@@ -889,6 +912,7 @@ export const ReportForm = ({
               onClick={form.handleSubmit(onGenerateAndFormSubmit)}
               name="generate"
               className="flex gap-2 h-11 mx-auto bg-azure hover:bg-azure/95 px-6"
+              disabled={reportsNum > 5}
             >
               <Wand2Icon className="h-5 w-5" />
               <div className="flex flex-col w-fit justify-start">
