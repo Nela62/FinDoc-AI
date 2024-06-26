@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
-import { LoginAuthForm, formType } from './components/LoginAuthForm';
+import { RegisterAuthForm, formType } from './components/RegisterAuthForm';
 import { cn } from '@/lib/utils';
 
 const font = Montserrat({ subsets: ['latin'] });
@@ -84,7 +84,7 @@ export default async function Login() {
           />
         </div>
         <div className="flex flex-col justify-center items-center gap-2 mt-4">
-          <LoginAuthForm
+          <RegisterAuthForm
             signInWithPassword={signInWithPassword}
             signInWithOtp={signInWithOtp}
             verifyOtp={verifyOtp}
