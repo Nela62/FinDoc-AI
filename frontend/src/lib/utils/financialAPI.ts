@@ -469,7 +469,7 @@ export const getGrowthAndValuationAnalysisMetrics = (
       : incomeStatement.annualReports.length;
 
   return {
-    years: [...Array(years).keys()].map((_, i) => curY - i).reverse(),
+    years: [...Array(years).keys()].map((_, i) => curY - i - 1).reverse(),
     categories: [
       {
         name: 'Growth Analysis',
@@ -478,55 +478,64 @@ export const getGrowthAndValuationAnalysisMetrics = (
             name: 'Revenue',
             numbers: incomeStatement.annualReports
               .slice(0, years)
-              .map((y) => divideByMillion(y.totalRevenue)),
+              .map((y) => divideByMillion(y.totalRevenue))
+              .reverse(),
           },
           {
             name: 'COGS',
             numbers: incomeStatement.annualReports
               .slice(0, years)
-              .map((y) => divideByMillion(y.costofGoodsAndServicesSold)),
+              .map((y) => divideByMillion(y.costofGoodsAndServicesSold))
+              .reverse(),
           },
           {
             name: 'Gross Profit',
             numbers: incomeStatement.annualReports
               .slice(0, years)
-              .map((y) => divideByMillion(y.grossProfit)),
+              .map((y) => divideByMillion(y.grossProfit))
+              .reverse(),
           },
           {
             name: 'SG&A',
             numbers: incomeStatement.annualReports
               .slice(0, years)
-              .map((y) => divideByMillion(y.sellingGeneralAndAdministrative)),
+              .map((y) => divideByMillion(y.sellingGeneralAndAdministrative))
+              .reverse(),
           },
           {
             name: 'R&D',
             numbers: incomeStatement.annualReports
               .slice(0, years)
-              .map((y) => divideByMillion(y.researchAndDevelopment)),
+              .map((y) => divideByMillion(y.researchAndDevelopment))
+              .reverse(),
           },
           {
             name: 'Operating Income',
             numbers: incomeStatement.annualReports
               .slice(0, years)
-              .map((y) => divideByMillion(y.operatingIncome)),
+              .map((y) => divideByMillion(y.operatingIncome))
+              .reverse(),
           },
           {
             name: 'Interest Expense',
             numbers: incomeStatement.annualReports
               .slice(0, years)
-              .map((y) => divideByMillion(y.interestExpense)),
+              .map((y) => divideByMillion(y.interestExpense))
+              .reverse(),
           },
           {
             name: 'Pretax Income',
             numbers: incomeStatement.annualReports
               .slice(0, years)
-              .map((y) => divideByMillion(y.incomeBeforeTax)),
+              .map((y) => divideByMillion(y.incomeBeforeTax))
+              .reverse(),
           },
           {
             name: 'Income Taxes',
             numbers: incomeStatement.annualReports
               .slice(0, years)
-              .map((y) => divideByMillion(y.incomeTaxExpense)),
+              .map((y) => divideByMillion(y.incomeTaxExpense))
+              .reverse(),
           },
           {
             name: 'Tax Rate (%)',
@@ -536,31 +545,36 @@ export const getGrowthAndValuationAnalysisMetrics = (
                 (
                   Number(y.incomeTaxExpense) / Number(y.incomeBeforeTax)
                 ).toFixed(2),
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'Net Income',
             numbers: incomeStatement.annualReports
               .slice(0, years)
-              .map((y) => divideByMillion(y.netIncome)),
+              .map((y) => divideByMillion(y.netIncome))
+              .reverse(),
           },
           {
             name: 'Common Shares Outstanding',
             numbers: balanceSheet.annualReports
               .slice(0, years)
-              .map((y) => divideByMillion(y.commonStockSharesOutstanding)),
+              .map((y) => divideByMillion(y.commonStockSharesOutstanding))
+              .reverse(),
           },
           {
             name: 'EPS',
             numbers: earnings.annualEarnings
               .slice(0, years)
-              .map((y) => y.reportedEPS),
+              .map((y) => y.reportedEPS)
+              .reverse(),
           },
           {
             name: 'Dividend',
             numbers: cashflow.annualReports
               .slice(0, years)
-              .map((y) => divideByMillion(y.dividendPayoutCommonStock)),
+              .map((y) => divideByMillion(y.dividendPayoutCommonStock))
+              .reverse(),
           },
         ],
       },
@@ -569,37 +583,47 @@ export const getGrowthAndValuationAnalysisMetrics = (
         statistics: [
           {
             name: 'Revenue',
-            numbers: incomeStatement.annualReports.slice(0, 5).map((_, i) =>
-              incomeStatement.annualReports.length > i + 1
-                ? (
-                    (Number(incomeStatement.annualReports[i].totalRevenue) -
-                      Number(
-                        incomeStatement.annualReports[i + 1].totalRevenue,
-                      )) /
-                    Number(incomeStatement.annualReports[i + 1].totalRevenue)
-                  ).toLocaleString('en-US', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 2,
-                  })
-                : '--',
-            ),
+            numbers: incomeStatement.annualReports
+              .slice(0, 5)
+              .map((_, i) =>
+                incomeStatement.annualReports.length > i + 1
+                  ? (
+                      (Number(incomeStatement.annualReports[i].totalRevenue) -
+                        Number(
+                          incomeStatement.annualReports[i + 1].totalRevenue,
+                        )) /
+                      Number(incomeStatement.annualReports[i + 1].totalRevenue)
+                    ).toLocaleString('en-US', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    })
+                  : '--',
+              )
+              .reverse(),
           },
           {
             name: 'Operating Income',
-            numbers: incomeStatement.annualReports.slice(0, 5).map((_, i) =>
-              incomeStatement.annualReports.length > i + 1
-                ? (
-                    (Number(incomeStatement.annualReports[i].operatingIncome) -
+            numbers: incomeStatement.annualReports
+              .slice(0, 5)
+              .map((_, i) =>
+                incomeStatement.annualReports.length > i + 1
+                  ? (
+                      (Number(
+                        incomeStatement.annualReports[i].operatingIncome,
+                      ) -
+                        Number(
+                          incomeStatement.annualReports[i + 1].operatingIncome,
+                        )) /
                       Number(
                         incomeStatement.annualReports[i + 1].operatingIncome,
-                      )) /
-                    Number(incomeStatement.annualReports[i + 1].operatingIncome)
-                  ).toLocaleString('en-US', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 2,
-                  })
-                : '--',
-            ),
+                      )
+                    ).toLocaleString('en-US', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    })
+                  : '--',
+              )
+              .reverse(),
           },
           {
             name: 'Net Income',
@@ -618,7 +642,8 @@ export const getGrowthAndValuationAnalysisMetrics = (
                       maximumFractionDigits: 2,
                     })
                   : '--',
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'EPS',
@@ -635,7 +660,8 @@ export const getGrowthAndValuationAnalysisMetrics = (
                       maximumFractionDigits: 2,
                     })
                   : '--',
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'Dividend',
@@ -654,7 +680,8 @@ export const getGrowthAndValuationAnalysisMetrics = (
                       maximumFractionDigits: 2,
                     })
                   : '--',
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'Sustainable Growth Rate',
@@ -677,7 +704,8 @@ export const getGrowthAndValuationAnalysisMetrics = (
                       maximumFractionDigits: 2,
                     })
                   : '--',
-              ),
+              )
+              .reverse(),
           },
         ],
       },
@@ -796,7 +824,8 @@ export const getFinancialAndRiskAnalysisMetrics = (
               .slice(0, years)
               .map((y) =>
                 divideByMillion(y.cashAndCashEquivalentsAtCarryingValue),
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'Working Capital ($ in Millions)',
@@ -807,7 +836,8 @@ export const getFinancialAndRiskAnalysisMetrics = (
                   Number(y.totalCurrentAssets) -
                     Number(y.totalCurrentLiabilities),
                 ),
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'Current Ratio',
@@ -818,7 +848,8 @@ export const getFinancialAndRiskAnalysisMetrics = (
                   Number(y.totalCurrentAssets) /
                   Number(y.totalCurrentLiabilities)
                 ).toFixed(2),
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'LT Debt/Equity Ratio (%)',
@@ -832,7 +863,8 @@ export const getFinancialAndRiskAnalysisMetrics = (
                         Number(y.totalShareholderEquity)) *
                       100
                     ).toFixed(1),
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'Total Debt/Equity Ratio (%)',
@@ -846,7 +878,8 @@ export const getFinancialAndRiskAnalysisMetrics = (
                         Number(y.totalShareholderEquity)) *
                       100
                     ).toFixed(1),
-              ),
+              )
+              .reverse(),
           },
         ],
       },
@@ -862,7 +895,8 @@ export const getFinancialAndRiskAnalysisMetrics = (
                   (Number(y.grossProfit) / Number(y.totalRevenue)) *
                   100
                 ).toFixed(1),
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'Operating Margin',
@@ -873,7 +907,8 @@ export const getFinancialAndRiskAnalysisMetrics = (
                   (Number(y.operatingIncome) / Number(y.totalRevenue)) *
                   100
                 ).toFixed(1),
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'Net Margin',
@@ -883,7 +918,8 @@ export const getFinancialAndRiskAnalysisMetrics = (
                 ((Number(y.netIncome) / Number(y.totalRevenue)) * 100).toFixed(
                   1,
                 ),
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'Return on Assets',
@@ -895,7 +931,8 @@ export const getFinancialAndRiskAnalysisMetrics = (
                     Number(balanceSheet.annualReports[i].totalAssets)) *
                   100
                 ).toFixed(1),
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'Return on Equity',
@@ -909,7 +946,8 @@ export const getFinancialAndRiskAnalysisMetrics = (
                     )) *
                   100
                 ).toFixed(1),
-              ),
+              )
+              .reverse(),
           },
         ],
       },
@@ -929,7 +967,8 @@ export const getFinancialAndRiskAnalysisMetrics = (
                         Number(y.capitalExpenditures)) *
                       100
                     ).toFixed(1),
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'Oper. Income/Int. Exp. (ratio)',
@@ -942,7 +981,8 @@ export const getFinancialAndRiskAnalysisMetrics = (
                       (Number(y.operatingIncome) / Number(y.interestExpense)) *
                       100
                     ).toFixed(1),
-              ),
+              )
+              .reverse(),
           },
           {
             name: 'Payout Ratio',
@@ -956,7 +996,8 @@ export const getFinancialAndRiskAnalysisMetrics = (
                         Number(incomeStatement.annualReports[i].netIncome)) *
                       100
                     ).toFixed(1),
-              ),
+              )
+              .reverse(),
           },
         ],
       },
