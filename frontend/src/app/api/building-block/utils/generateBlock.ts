@@ -92,10 +92,14 @@ export const generateBlock = async (
         .replace('</output>', ''),
     });
 
-    return message.content[0].text
-      .replace(/(.*?)<output>/gs, '')
-      .replace('</output>', '');
+    return {
+      content: message.content[0].text
+        .replace(/(.*?)<output>/gs, '')
+        .replace('</output>', ''),
+      inputTokens: message.usage.input_tokens,
+      outputTokens: message.usage.output_tokens,
+    };
   } else {
-    return 'Error!';
+    return { error: 'error' };
   }
 };

@@ -47,7 +47,6 @@ export const get10KSection = (xml: string, section: string) => {
                 !isItalic(val['@_style']) &&
                 !isUpperCase(val['#text'])
               ) {
-                console.log('end!');
                 end = true;
                 return;
               } else {
@@ -61,7 +60,6 @@ export const get10KSection = (xml: string, section: string) => {
               !isItalic(value['@_style']) &&
               !isUpperCase(value['#text'])
             ) {
-              console.log('end!');
               end = true;
               return;
             } else {
@@ -110,7 +108,6 @@ export const get10KItem = (
             .startsWith(`item ${itemNum}.`)
         ) {
           scrape = true;
-          console.log('mda!');
           text += value['#text'] ? value['#text'] + '\n' : '';
         } else if (key === 'span') {
           if (scrape) {
@@ -125,7 +122,6 @@ export const get10KItem = (
                     .replace('&#160;', ' ')
                     .startsWith(`item ${endSectionNum ?? itemNum + 1}.`)
                 ) {
-                  console.log('end!');
                   scrape = false;
                   return;
                 } else {
@@ -142,7 +138,6 @@ export const get10KItem = (
                   .replace('&#160;', ' ')
                   .includes(`item ${endSectionNum ?? itemNum + 1}.`)
               ) {
-                console.log('end!');
                 scrape = false;
                 return;
               } else {
@@ -160,7 +155,6 @@ export const get10KItem = (
                     .startsWith(`item ${itemNum}.`)
                 ) {
                   scrape = true;
-                  console.log('mda!');
                   text += item['#text'] ? item['#text'] + '\n' : '';
                 }
               });
@@ -173,7 +167,6 @@ export const get10KItem = (
                   .startsWith(`item ${itemNum}.`)
               ) {
                 scrape = true;
-                console.log('mda!');
                 text += value['#text'] ? value['#text'] + '\n' : '';
               }
             }
@@ -230,7 +223,6 @@ export const getS1CompetitionSection = (xml: any) => {
         isBold(value['@_style'])
       ) {
         scrape = true;
-        console.log('competition!');
         competition += value['#text'] ? value['#text'] + '\n' : '';
         style = {
           underline: isUnderlined(value['@_style']) ?? false,

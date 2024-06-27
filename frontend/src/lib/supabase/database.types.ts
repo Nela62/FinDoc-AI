@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_jobs: {
+        Row: {
+          block_data: string | null
+          block_id: string | null
+          created_at: string
+          id: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          block_data?: string | null
+          block_id?: string | null
+          created_at?: string
+          id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          block_data?: string | null
+          block_id?: string | null
+          created_at?: string
+          id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       api_cache: {
         Row: {
           accessed_at: string

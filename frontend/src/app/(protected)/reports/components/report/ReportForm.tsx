@@ -100,6 +100,7 @@ type apiCacheData = {
   earnings: Earnings;
   dailyStock: DailyStockData;
 };
+
 export const reportFormSchema = z.object({
   reportType: z.string(),
   companyTicker: z.object({ value: z.string(), label: z.string() }),
@@ -131,6 +132,10 @@ const titles = {
   management_and_risks: 'Management and Risks',
 };
 
+type JobStatus = 'processing' | 'completed' | 'failed' | 'queued';
+
+type Job = { blockId: string; status: JobStatus; block: string };
+
 export const ReportForm = ({
   setIsTemplateCustomization,
   setSelectedReportId,
@@ -152,6 +157,9 @@ export const ReportForm = ({
   const [curReportId, setReportId] = useState<string | null>(null);
   const [images, setImages] = useState<Blob[] | null>(null);
   const [apiCacheData, setApiCacheData] = useState<apiCacheData | null>(null);
+
+  const [jobs, setJobs] = useState<Record<string, Job>>({});
+  const [error, setError] = useState<string | null>(null);
 
   const [reportsNum, setReportsNum] = useState(0);
 
@@ -178,6 +186,82 @@ export const ReportForm = ({
   const supabase = createClient();
 
   const { data: reportsData } = useQuery(fetchAllReports(supabase));
+
+  const createJob = async (params: Params) => {
+    try {
+      const { jobId } = await fetch(`/api/building-block`, {
+        method: 'POST',
+        body: JSON.stringify(params),
+      }).then((res) => res.json());
+
+      setJobs((prevJobs) => ({
+        ...prevJobs,
+        [jobId]: { blockId: params.blockId, status: 'processing' },
+      }));
+      return jobId;
+    } catch (error) {
+      setError('Failed to create job');
+      throw error;
+    }
+  };
+
+  const waitForJobCompletion = async (jobId: string) => {
+    while (true) {
+      const { status, block } = await fetch(
+        `/api/building-block?jobId=${jobId}`,
+      )
+        .then((res) => res.json())
+        .catch((e) => {
+          console.error(e);
+          throw error;
+        });
+
+      if (status === 'completed') {
+        return block;
+      } else if (status === 'failed') {
+        throw new Error('Job failed');
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
+    }
+  };
+
+  const waitForAllJobs = async (jobs: Record<string, string>[]) => {
+    let results: Record<string, any> = {};
+    await Promise.all(
+      jobs.map(async (job) => {
+        const res = await waitForJobCompletion(job.id);
+        results[job.blockId] = res;
+      }),
+    );
+    return results;
+  };
+
+  useEffect(() => {
+    const pollJobStatuses = async () => {
+      const updatedJobs: Record<string, any> = {};
+
+      for (const jobId in jobs) {
+        try {
+          const response = await fetch(
+            `/api/building-block?jobId=${jobId}`,
+          ).then((res) => res.json());
+          const { status, block } = response.data;
+          updatedJobs[jobId] = { ...jobs[jobId], status, block };
+        } catch (error) {
+          updatedJobs[jobId] = { ...jobs[jobId], status: 'failed' };
+        }
+      }
+
+      setJobs(updatedJobs);
+    };
+
+    const intervalId = setInterval(pollJobStatuses, 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [jobs]);
 
   useEffect(() => {
     if (reportsData) {
@@ -492,13 +576,20 @@ export const ReportForm = ({
     // Generate a company overview if any
     setProgress((state) => state + progressValue);
     setProgressMessage('Generating a company overview...');
-    const { block: companyOverview } = await fetch('/api/building-block/', {
-      method: 'POST',
-      body: JSON.stringify({
-        blockId: 'company_overview',
-        ...params,
-      }),
-    }).then((res) => res.json());
+    const companyOverviewJobId = await createJob({
+      blockId: 'company_overview',
+      ...params,
+    });
+
+    // const { block: companyOverview } = await fetch('/api/building-block/', {
+    //   method: 'POST',
+    //   body: JSON.stringify({
+    //     blockId: 'company_overview',
+    //     ...params,
+    //   }),
+    // }).then((res) => res.json());
+
+    const companyOverview = await waitForJobCompletion(companyOverviewJobId);
 
     await downloadPublicCompanyImgs(
       tickerData.cik,
@@ -542,7 +633,7 @@ export const ReportForm = ({
       tickerData,
       reportId,
       templateId: data[0].id,
-      companyOverview,
+      companyOverview: companyOverview,
       recommendation,
       targetPrice,
       news,
@@ -573,8 +664,6 @@ export const ReportForm = ({
     const generatedJson: JSONContent = { type: 'doc', content: [] };
     let generatedContent = '';
 
-    const generatedBlocks: Record<string, string> = {};
-
     setProgress((state) => state + progressValue);
     setProgressMessage('Writing report...');
 
@@ -587,81 +676,76 @@ export const ReportForm = ({
       customPrompt: '',
     };
 
-    Promise.all(
+    const jobIds = await Promise.all(
       section_ids.map(async (id: string) => {
-        let content = '';
-        content = await fetch('/api/building-block', {
-          method: 'POST',
-          body: JSON.stringify({
-            blockId: id,
-            recommendation: recommendation,
-            targetPrice: targetPrice,
-            ...params,
-          }),
-        })
-          .then((res) => res.json())
-          .then((res) => res.block);
-
-        generatedBlocks[id] = content;
+        const jobId = await createJob({
+          blockId: id,
+          recommendation: recommendation,
+          targetPrice: targetPrice.toString(),
+          ...params,
+        });
+        return { blockId: id, id: jobId };
       }),
-    ).then(async () => {
-      console.log('generated all sections');
+    );
 
-      section_ids.forEach((id) => {
-        generatedContent += `##${titles[id as keyof typeof titles]}\
+    const generatedBlocks = await waitForAllJobs(jobIds);
+
+    console.log('generated all sections');
+
+    section_ids.forEach((id) => {
+      generatedContent += `##${titles[id as keyof typeof titles]}\
       ${generatedBlocks[id]}`;
 
-        const json = markdownToJson(generatedBlocks[id]);
-        // console.log(json);
-        generatedJson.content?.push(
-          {
-            type: 'heading',
-            attrs: {
-              id: '220f43a9-c842-4178-b5b4-5ed8a33c6192',
-              level: 2,
-              'data-toc-id': '220f43a9-c842-4178-b5b4-5ed8a33c6192',
-            },
-            content: [
-              {
-                text: titles[id as keyof typeof titles],
-                type: 'text',
-              },
-            ],
+      const json = markdownToJson(generatedBlocks[id]);
+      // console.log(json);
+      generatedJson.content?.push(
+        {
+          type: 'heading',
+          attrs: {
+            id: '220f43a9-c842-4178-b5b4-5ed8a33c6192',
+            level: 2,
+            'data-toc-id': '220f43a9-c842-4178-b5b4-5ed8a33c6192',
           },
-          ...json.content,
-        );
-      });
-
-      console.log(generatedContent);
-
-      // generate a summary if required
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Generating a summary...');
-      const summary = await fetch('/api/building-block/summary', {
-        method: 'POST',
-        body: JSON.stringify({ reportContent: generatedContent }),
-      })
-        .then((res) => res.json())
-        .then((res) =>
-          res.summary
-            .split('- ')
-            .map((point: string) => point.trim())
-            .slice(1),
-        );
-      console.log(summary);
-
-      // update report and template
-      updateReport({ id: reportId, json_content: generatedJson });
-      updateTemplate({
-        id: templateId,
-        summary: summary,
-      });
-
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Creating pdf file...');
-
-      setReportId(reportId);
+          content: [
+            {
+              text: titles[id as keyof typeof titles],
+              type: 'text',
+            },
+          ],
+        },
+        ...json.content,
+      );
     });
+
+    console.log(generatedContent);
+
+    // generate a summary if required
+    setProgress((state) => state + progressValue);
+    setProgressMessage('Generating a summary...');
+    const summary = await fetch('/api/building-block/summary', {
+      method: 'POST',
+      body: JSON.stringify({ reportContent: generatedContent }),
+    })
+      .then((res) => res.json())
+      .then((res) =>
+        res.summary
+          .split('- ')
+          .map((point: string) => point.trim())
+          .slice(1),
+      );
+    console.log(summary);
+
+    // update report and template
+    updateReport({ id: reportId, json_content: generatedJson });
+    updateTemplate({
+      id: templateId,
+      summary: summary,
+    });
+
+    setProgress((state) => state + progressValue);
+    setProgressMessage('Creating pdf file...');
+
+    setReportId(reportId);
   };
 
   useEffect(() => {
@@ -912,7 +996,7 @@ export const ReportForm = ({
               onClick={form.handleSubmit(onGenerateAndFormSubmit)}
               name="generate"
               className="flex gap-2 h-11 mx-auto bg-azure hover:bg-azure/95 px-6"
-              disabled={reportsNum > 5}
+              disabled={plan === 'free' && reportsNum > 5}
             >
               <Wand2Icon className="h-5 w-5" />
               <div className="flex flex-col w-fit justify-start">

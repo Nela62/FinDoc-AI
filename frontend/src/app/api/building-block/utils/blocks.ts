@@ -153,7 +153,6 @@ const getValuationContext = (
       quarterly: apiData.incomeStatement.quarterlyReports.slice(0, 2),
     },
   };
-
   return JSON.stringify(context);
 };
 
@@ -180,6 +179,6 @@ export const getBlock = async (params: Params) => {
   params.recommendation && (inputs['RECOMMENDATION'] = params.recommendation);
   params.targetPrice && (inputs['TARGET_PRICE'] = params.targetPrice);
 
-  const text = await generateBlock(params.blockId, inputs, params.plan);
-  return text;
+  const res = await generateBlock(params.blockId, inputs, params.plan);
+  return res;
 };
