@@ -126,6 +126,7 @@ async function processTask(jobId: string, json: any) {
     }
   } catch (error) {
     console.error('Error processing task:', error);
+    // @ts-ignore
     if (error.status === 529) {
       await supabase
         .from('ai_jobs')
