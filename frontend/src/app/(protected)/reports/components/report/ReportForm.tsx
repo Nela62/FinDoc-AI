@@ -251,9 +251,10 @@ export const ReportForm = ({
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       let data = await response.json();
+      console.log(data);
 
       if (data.status === 'processing') {
-        await waitForSecJobCompletion(data.jobId);
+        await waitForSecJobCompletion(data.job_id);
         // Fetch again after job completion
         response = await fetch(apiUrl);
         if (!response.ok) {
