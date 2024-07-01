@@ -19,7 +19,7 @@ import { ReportPage } from './components/ReportPage';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Finpanel - View Report',
+  title: 'Findoc - View Report',
   description: 'Supercharge your financial report generation',
 };
 

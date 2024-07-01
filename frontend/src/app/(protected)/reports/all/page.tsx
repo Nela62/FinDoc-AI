@@ -16,7 +16,7 @@ import { Metadata } from 'next';
 // TODO: add export functionality
 
 export const metadata: Metadata = {
-  title: 'Finpanel - View All Reports',
+  title: 'Findoc - View All Reports',
   description: 'Supercharge your financial report generation',
 };
 

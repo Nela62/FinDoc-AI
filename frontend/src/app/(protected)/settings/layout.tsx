@@ -14,7 +14,7 @@ import { redirect } from 'next/navigation';
 import { fetchSettings } from '@/lib/queries';
 
 export const metadata: Metadata = {
-  title: 'Finpanel - Settings',
+  title: 'Findoc - Settings',
 };
 
 export default async function SettingsPage({

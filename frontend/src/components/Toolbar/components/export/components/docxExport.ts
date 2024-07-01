@@ -19,8 +19,8 @@ export const generateDocxFile = async (
   bottomFirstPageVisual: Blob,
 ) => {
   const templateConfig = {
-    authorName: 'Finpanel AI',
-    authorCompanyName: 'Finpanel Inc.',
+    authorName: 'Findoc AI',
+    authorCompanyName: 'Findoc Inc.',
     colorScheme: {
       id: 'blue',
       colors: ['#1c4587', '#f4e9d3', '#006f3b'],

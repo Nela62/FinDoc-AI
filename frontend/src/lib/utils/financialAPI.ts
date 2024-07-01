@@ -268,8 +268,9 @@ const getNetMargin = (incomeStatement: IncomeStatement) =>
   Number(incomeStatement.annualReports[0].netIncome) /
   Number(incomeStatement.annualReports[0].totalRevenue);
 
-const getPayoutRatio = (overview: Overview) =>
-  Number(overview.DividendPerShare) / Number(overview.EPS);
+const getPayoutRatio = (overview: Overview, incomeStatement: IncomeStatement) =>
+  Number(overview.DividendPerShare) /
+  Number(incomeStatement.annualReports[0].netIncome);
 
 const getCurrentRatio = (balanceSheet: BalanceSheet) =>
   Number(balanceSheet.annualReports[0].totalCurrentAssets) /
@@ -409,7 +410,7 @@ export const getSidebarMetrics = (
     'Payout Ratio':
       overview.DividendPerShare === 'None'
         ? 0
-        : getPayoutRatio(overview).toFixed(2),
+        : getPayoutRatio(overview, incomeStatement).toFixed(2),
     'Current Ratio': getCurrentRatio(balanceSheet).toFixed(2),
     Revenue: '$' + moneyFormat(Number(overview.RevenueTTM), true),
     'After-Tax Income':
@@ -813,7 +814,7 @@ export const getFinancialAndRiskAnalysisMetrics = (
       : incomeStatement.annualReports.length;
 
   return {
-    years: [...Array(years).keys()].map((_, i) => curY - i).reverse(),
+    years: [...Array(years).keys()].map((_, i) => curY - i - 1).reverse(),
     categories: [
       {
         name: 'Cash',
@@ -992,7 +993,7 @@ export const getFinancialAndRiskAnalysisMetrics = (
                 !y.dividendPayout
                   ? '--'
                   : (
-                      (Number(y.dividendPayout) /
+                      (Number(y.dividendPayoutCommonStock) /
                         Number(incomeStatement.annualReports[i].netIncome)) *
                       100
                     ).toFixed(1),

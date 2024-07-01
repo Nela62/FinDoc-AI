@@ -58,11 +58,6 @@ import {
   getSidebarMetrics,
   getTopBarMetrics,
 } from '@/lib/utils/financialAPI';
-import {
-  ApiProp,
-  generateBlock,
-  generateSummary,
-} from '@/app/api/building-block/blocks';
 import { TemplateConfig } from '../../Component';
 import { JSONContent } from '@tiptap/core';
 import { markdownToJson } from '@/lib/utils/formatText';
@@ -223,6 +218,58 @@ export const ReportForm = ({
       }
 
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
+    }
+  };
+
+  const waitForSecJobCompletion = async (jobId: string) => {
+    while (true) {
+      const { status, block } = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/sec-filing/status/${jobId}`,
+      )
+        .then((res) => res.json())
+        .catch((e) => {
+          console.error(e);
+          throw error;
+        });
+
+      if (status === 'completed') {
+        return block;
+      } else if (status === 'failed') {
+        throw new Error('Job failed');
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
+    }
+  };
+
+  const getSecFiling = async (ticker: string): Promise<string> => {
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/sec-filing/${ticker}/10-K`;
+
+    try {
+      let response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      let data = await response.json();
+
+      if (data.status === 'processing') {
+        await waitForSecJobCompletion(data.jobId);
+        // Fetch again after job completion
+        response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        data = await response.json();
+      }
+
+      if (data.status === 'available') {
+        return data.xmlPath;
+      } else {
+        throw new Error(`Unexpected status: ${data.status}`);
+      }
+    } catch (error) {
+      console.error('Error fetching SEC filing:', error);
+      throw error; // Re-throw to allow caller to handle
     }
   };
 
@@ -501,11 +548,8 @@ export const ReportForm = ({
 
     setProgress((state) => state + progressValue);
     setProgressMessage('Parsing SEC filings...');
-    const xmlPath = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/documents/${values.companyTicker.value}/10-K`,
-    )
-      .then((res) => res.json())
-      .then((json) => json.xml_path);
+
+    const xmlPath = await getSecFiling(values.companyTicker.value);
 
     const xml = await supabase.storage
       .from('sec-filings')
