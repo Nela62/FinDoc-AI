@@ -14,6 +14,8 @@ import {
 import { SidebarMetrics } from '../templates/metrics/components/statistics';
 import { AnalysisMetrics } from '../templates/docxTables/financialAnalysisTable';
 
+const metrics = ['TotalRevenue'];
+
 function removeApiKey(url: string) {
   const parsedUrl = new URL(url);
   parsedUrl.searchParams.delete('apikey');
