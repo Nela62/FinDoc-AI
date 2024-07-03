@@ -53,7 +53,7 @@ export async function fetchNews(
   timeFrom: string,
   timeTo: string,
 ) {
-  // 20240312T0000
+  // Time should be in this format: 20240312T0000
   const endpoint = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${symbol}&apikey=${process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY}&time_from=${timeFrom}&time_to=${timeTo}&sort=RELEVANCE&limit=15`;
 
   const { data } = await fetchAPICacheByEndpoint(

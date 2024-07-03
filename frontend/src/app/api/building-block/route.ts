@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getBlock } from './utils/blocks';
 import { serviceClient } from '@/lib/supabase/service';
+import { createClient } from '@/lib/supabase/server';
 
 // TODO: check if this is authenticated
 // export async function POST(req: Request) {
@@ -18,6 +19,20 @@ const supabase = serviceClient();
 const MAX_CONCURRENT_TASKS = 5; // Maximum number of concurrent tasks
 
 export async function POST(req: Request) {
+  const client = createClient();
+
+  const userRes = await client.auth.getUser();
+
+  if (!userRes.data.user) {
+    return Response.json(
+      {
+        error: 'Unauthorized access',
+        message: 'User not found or invalid credentials',
+      },
+      { status: 401 },
+    );
+  }
+
   const json = await req.json();
   console.log('generating block ' + json.blockId);
 
