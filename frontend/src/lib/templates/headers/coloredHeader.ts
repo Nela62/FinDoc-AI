@@ -1,7 +1,7 @@
 import { BorderStyle, Paragraph, TableCell, TableRow } from 'docx';
 import { bordersNone } from '../docx/utils';
 import { headerBase } from './base';
-import { TopBarMetric } from '@/lib/utils/financialAPI';
+import { Metric } from '@/lib/utils/financialAPI';
 
 export const coloredHeader = async (
   authorCompanyLogo: Blob,
@@ -11,7 +11,7 @@ export const coloredHeader = async (
   primaryColor: string,
   secondaryColor: string,
   showPageNumber: boolean,
-  topBarMetrics: TopBarMetric[],
+  topBarMetrics: Metric[],
 ): Promise<TableRow[]> => {
   const base = await headerBase(
     primaryColor,

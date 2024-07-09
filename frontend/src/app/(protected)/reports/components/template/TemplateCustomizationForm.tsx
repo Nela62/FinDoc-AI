@@ -10,9 +10,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
-import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
-
 import { TemplateConfig, TemplateData } from '../../Component';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,6 +44,8 @@ import { ArrowLeft } from 'lucide-react';
 import { DAILY_IBM } from '@/lib/data/daily_imb';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import { getTemplateDocxBlob } from '../../utils/getDocxBlob';
+import { POLYGON_ANNUAL } from '@/lib/data/polygon_annual';
+import { POLYGON_QUARTERLY } from '@/lib/data/polygon_quarterly';
 
 const templateFormSchema = z.object({
   authorName: z.string(),
@@ -210,8 +209,8 @@ export const TemplateCustomizationForm = ({
         <ChartWrapper
           colors={templateConfig.colorScheme.colors}
           targetPrice={182}
-          incomeStatement={INCOME_STATEMENT_IBM}
-          earnings={EARNINGS_IBM}
+          polygonAnnual={POLYGON_ANNUAL}
+          polygonQuarterly={POLYGON_QUARTERLY}
           dailyStock={DAILY_IBM}
           setCharts={setImages}
         />

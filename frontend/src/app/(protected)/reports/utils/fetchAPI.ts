@@ -1,8 +1,4 @@
-import {
-  fetchAVEndpoint,
-  fetchDailyStock,
-  fetchNews,
-} from '@/lib/utils/financialAPI';
+import { fetchDailyStock, fetchNews } from '@/lib/utils/financialAPI';
 import {
   BalanceSheet,
   Cashflow,
@@ -31,113 +27,24 @@ type NewsDataRes = {
   last12Months: NewsData;
 };
 
-export const fetchCacheAPIData = async (
-  reportId: string,
-  ticker: string,
-  supabase: TypedSupabaseClient,
-  userId: string,
-  insertCache: any,
-): Promise<ApiData> => {
-  // TODO: change it to Promise.all
-  const overview = await fetchAVEndpoint(
-    supabase,
-    insertCache,
-    reportId,
-    userId,
-    'OVERVIEW',
-    ticker,
-  );
-
-  const incomeStatement = await fetchAVEndpoint(
-    supabase,
-    insertCache,
-    reportId,
-    userId,
-    'INCOME_STATEMENT',
-    ticker,
-  );
-
-  const cashflow = await fetchAVEndpoint(
-    supabase,
-    insertCache,
-    reportId,
-    userId,
-    'CASH_FLOW',
-    ticker,
-  );
-
-  const balanceSheet = await fetchAVEndpoint(
-    supabase,
-    insertCache,
-    reportId,
-    userId,
-    'BALANCE_SHEET',
-    ticker,
-  );
-
-  const earnings = await fetchAVEndpoint(
-    supabase,
-    insertCache,
-    reportId,
-    userId,
-    'EARNINGS',
-    ticker,
-  );
-
-  const dailyStock = await fetchDailyStock(
-    supabase,
-    insertCache,
-    reportId,
-    userId,
-    ticker,
-  );
-
-  return {
-    overview,
-    incomeStatement,
-    balanceSheet,
-    earnings,
-    dailyStock,
-    cashflow,
-  };
-};
-
 const formatDate = (date: Date) => {
   return format(date, "yyyyMMdd'T'HHmm");
 };
 
-export const fetchCacheNews = async (
-  reportId: string,
-  ticker: string,
-  supabase: TypedSupabaseClient,
-  userId: string,
-  insertCache: any,
-): Promise<NewsDataRes> => {
+export const fetchAllNews = async (ticker: string): Promise<NewsDataRes> => {
   const last3Months = await fetchNews(
-    supabase,
-    insertCache,
-    reportId,
-    userId,
     ticker,
     formatDate(new Date()),
     formatDate(subMonths(new Date(), 3)),
   );
 
   const last6Months = await fetchNews(
-    supabase,
-    insertCache,
-    reportId,
-    userId,
     ticker,
     formatDate(subMonths(new Date(), 3)),
     formatDate(subMonths(new Date(), 6)),
   );
 
   const last12Months = await fetchNews(
-    supabase,
-    insertCache,
-    reportId,
-    userId,
     ticker,
     formatDate(subMonths(new Date(), 6)),
     formatDate(subMonths(new Date(), 12)),

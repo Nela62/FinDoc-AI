@@ -6,7 +6,6 @@ import {
   LevelFormat,
   AlignmentType,
   convertInchesToTwip,
-  LineRuleType,
   type ISectionOptions,
   WidthType,
   SectionType,
@@ -14,28 +13,19 @@ import {
   Packer,
   ITableFloatOptions,
 } from 'docx';
-import {
-  bordersNone,
-  defaultMargins,
-  displayImage,
-  getDocxContent,
-  getImageSize,
-} from '../utils';
+import { bordersNone, defaultMargins, getDocxContent } from '../utils';
 import { getStandardStyles } from '../../formatting/standard';
-import { SidebarMetrics } from '../../metrics/components/statistics';
 import { classicFooter } from '../../footers/classicFooter';
 import { coloredHeader } from '../../headers/coloredHeader';
 import { disclaimerHeader } from '../../headers/disclaimerHeader';
-import { format } from 'date-fns';
 import { firstPageSection } from './firstPage';
 import { Rating } from '../../metrics/components/ratings';
 import {
   AnalysisMetrics,
   financialAnalysisTable,
 } from '../../docxTables/financialAnalysisTable';
-import { Overview } from '@/types/alphaVantageApi';
 import { DisclaimerSection } from '../../disclaimer/standard';
-import { TopBarMetric } from '@/lib/utils/financialAPI';
+import { Metric, SidebarMetrics } from '@/lib/utils/financialAPI';
 import { sourcesHeader } from '../../headers/sourcesHeader';
 import { SourcesSection } from '../../sources/standard';
 import { topHeaderLine } from '../../headers/base';
@@ -66,7 +56,7 @@ const financialStrengthMap: Record<FinancialStrength, string> = {
 export type EquityAnalystSidebarProps = {
   summary: string[];
   businessDescription: string;
-  topBarMetrics: TopBarMetric[];
+  topBarMetrics: Metric[];
   sidebarMetrics: SidebarMetrics;
   growthAndValuationAnalysisMetrics: AnalysisMetrics;
   financialAndRiskAnalysisMetrics: AnalysisMetrics;

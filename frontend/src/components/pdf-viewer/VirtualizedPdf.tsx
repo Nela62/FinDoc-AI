@@ -36,7 +36,7 @@ import { multiHighlight } from '@/lib/utils/multi-line-highlight';
 import { useBoundStore } from '@/providers/store-provider';
 import { Document as PdfDocument } from '@/types/document';
 import { createClient } from '@/lib/supabase/client';
-import { fetchFile, fetchPDFCitation, getReportIdByUrl } from '@/lib/queries';
+import { fetchFile, getReportIdByUrl } from '@/lib/queries';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { PDFCitation } from '@/types/citation';
@@ -76,19 +76,19 @@ const PageRenderer: React.FC<PageRenderer> = ({
   const { data: report } = useQuery(
     getReportIdByUrl(supabase, pathname.split('/').pop() as string),
   );
-  const { data: citations, error: citationsError } = useQuery(
-    fetchPDFCitation(supabase, citationSnippetId ?? ''),
-  );
+  // const { data: citations, error: citationsError } = useQuery(
+  //   fetchPDFCitation(supabase, citationSnippetId ?? ''),
+  // );
 
   // Get which page is in view from an intersection observer
   const { ref: inViewRef, inView } = useInView({
     threshold: OBSERVER_THRESHOLD_PERCENTAGE * Math.min(1 / scale, 1),
   });
 
-  const selectedCitation: PDFCitation | undefined = useMemo(
-    () => (citations ? citations[0] : undefined),
-    [citations],
-  );
+  // const selectedCitation: PDFCitation | undefined = useMemo(
+  //   () => (citations ? citations[0] : undefined),
+  //   [citations],
+  // );
   // BUG: In-pdf link navigation doesn't work
 
   // Prevents black flickering, which is fixed in 7.1.2, but we must
@@ -142,42 +142,36 @@ const PageRenderer: React.FC<PageRenderer> = ({
 
   // BUG: Highlighting doesn't work when clicking on citations in text editor
 
-  const conditionalHighlight = () => {
-    // if (Number(selectedCitation.page) === pageNumber + 1)
-    //   console.log(isHighlighted);
-    if (
-      documentFocused &&
-      selectedCitation &&
-      Number(selectedCitation.page) === pageNumber + 1 &&
-      !isHighlighted
-    ) {
-      multiHighlight(
-        selectedCitation.text,
-        pageNumber,
-        // pdfFocusState.citation.color,
-      );
-      setIsHighlighted(true);
-    }
-  };
+  // const conditionalHighlight = () => {
+  //   // if (Number(selectedCitation.page) === pageNumber + 1)
+  //   //   console.log(isHighlighted);
+  //   if (
+  //     documentFocused &&
+  //     selectedCitation &&
+  //     Number(selectedCitation.page) === pageNumber + 1 &&
+  //     !isHighlighted
+  //   ) {
+  //     multiHighlight(
+  //       selectedCitation.text,
+  //       pageNumber,
+  //       // pdfFocusState.citation.color,
+  //     );
+  //     setIsHighlighted(true);
+  //   }
+  // };
 
-  // TODO: fix this
-  const maybeHighlight = useCallback(debounce(conditionalHighlight, 50), [
-    pageNumber,
-    isHighlighted,
-    selectedCitation,
-    conditionalHighlight,
-  ]);
-
-  // useEffect(() => {
-  //   return () => {
-  //     maybeHighlight.cancel();
-  //   };
-  // }, []);
+  // // TODO: fix this
+  // const maybeHighlight = useCallback(debounce(conditionalHighlight, 50), [
+  //   pageNumber,
+  //   isHighlighted,
+  //   selectedCitation,
+  //   conditionalHighlight,
+  // ]);
 
   const onPageRenderSuccess = useCallback(
     (page: { width: number }) => {
       showPageCanvas();
-      maybeHighlight();
+      // maybeHighlight();
       // react-pdf absolutely pins the pdf into the upper left corner
       // so when the scale changes and the width is smaller than the parent
       // container, we need to use flex box to center the pdf.
@@ -190,7 +184,7 @@ const PageRenderer: React.FC<PageRenderer> = ({
         setShouldCenter(false);
       }
     },
-    [showPageCanvas, listWidth, maybeHighlight],
+    [showPageCanvas, listWidth],
   );
 
   // useEffect(() => {
@@ -255,9 +249,9 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
     );
     const { citationSnippetId } = useBoundStore((s) => s);
 
-    const { data: citations, error: citationsError } = useQuery(
-      fetchPDFCitation(supabase, citationSnippetId ?? ''),
-    );
+    // const { data: citations, error: citationsError } = useQuery(
+    //   fetchPDFCitation(supabase, citationSnippetId ?? ''),
+    // );
 
     const fetchPdf = useCallback(async () => {
       const res = await fetchFile(supabase, file.url);
@@ -272,10 +266,10 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
       fetchPdf();
     }, [fetchPdf]);
 
-    const selectedCitation: PDFCitation | undefined = useMemo(
-      () => (citations ? citations[0] : undefined),
-      [citations],
-    );
+    // const selectedCitation: PDFCitation | undefined = useMemo(
+    //   () => (citations ? citations[0] : undefined),
+    //   [citations],
+    // );
 
     useEffect(() => {
       // Changing scale changes the measurement of the item, so we need to bust the cache, see:
@@ -329,15 +323,15 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
       }
       loadFirstPage().catch(() => console.log('page load error'));
       setNumPages(pdf.numPages);
-      selectedCitation &&
-        onItemClick({ pageNumber: Number(selectedCitation.page) - 1 });
+      // selectedCitation &&
+      // onItemClick({ pageNumber: Number(selectedCitation.page) - 1 });
     }, [
       pdf,
       setNumPages,
       setScaleFit,
       newWidthPx,
       onItemClick,
-      selectedCitation,
+      // selectedCitation,
     ]);
 
     React.useImperativeHandle(ref, () => ({

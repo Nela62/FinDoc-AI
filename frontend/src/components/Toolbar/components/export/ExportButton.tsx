@@ -4,21 +4,11 @@ import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { fetchAPICacheByReportId } from '@/lib/queries';
-import {
-  BalanceSheet,
-  DailyStockData,
-  DailyStockDataPoint,
-  Earnings,
-  IncomeStatement,
-  Overview,
-} from '@/types/alphaVantageApi';
-import { getNWeeksStock, getSidebarMetrics } from '@/lib/utils/financialAPI';
 import { generateDocxFile } from './components/docxExport';
-import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
-import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
 import { DAILY_IBM } from '@/lib/data/daily_imb';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
+import { POLYGON_ANNUAL } from '@/lib/data/polygon_annual';
+import { POLYGON_QUARTERLY } from '@/lib/data/polygon_quarterly';
 
 export const ExportButton = ({
   editor,
@@ -66,8 +56,8 @@ export const ExportButton = ({
     <div className="text-sm">
       <ChartWrapper
         colors={['#1c4587', '#f4e9d3', '#006f3b']}
-        earnings={EARNINGS_IBM}
-        incomeStatement={INCOME_STATEMENT_IBM}
+        polygonAnnual={POLYGON_ANNUAL}
+        polygonQuarterly={POLYGON_QUARTERLY}
         dailyStock={DAILY_IBM}
         targetPrice={168}
         setCharts={setImages}

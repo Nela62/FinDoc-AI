@@ -1,7 +1,8 @@
 import { TEMPLATES } from '@/lib/templates';
 import { TemplateConfig, TemplateData } from '../Component';
 import {
-  TopBarMetric,
+  Metric,
+  SidebarMetrics,
   getFinancialAndRiskAnalysisMetrics,
   getGrowthAndValuationAnalysisMetrics,
   getNWeeksStock,
@@ -9,17 +10,14 @@ import {
   getTopBarMetrics,
 } from '@/lib/utils/financialAPI';
 import { OVERVIEW } from '@/lib/data/overview_ibm';
-import { BALANCE_SHEET_IBM } from '@/lib/data/balance_sheet_ibm';
-import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
-import { CASHFLOW_IBM } from '@/lib/data/cashflow_ibm';
-import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
 import { JSONContent } from '@tiptap/core';
-import { SidebarMetrics } from '@/lib/templates/metrics/components/statistics';
 import { AnalysisMetrics } from '@/lib/templates/docxTables/financialAnalysisTable';
 import { FinancialStrength, Recommendation } from '@/types/report';
 import { Overview } from '@/types/alphaVantageApi';
 import { DAILY_IBM } from '@/lib/data/daily_imb';
 import { format } from 'date-fns';
+import { QUARTERLY_FUNDAMENTALS } from '@/lib/data/quarterly_fundamentals';
+import { ANNUAL_FUNDAMENTALS } from '@/lib/data/annual_fundamentals';
 
 // TODO: Is this buffer page really needed?
 
@@ -58,27 +56,25 @@ export const getTemplateDocxBlob = async (
       companyLogo: companyLogo,
       summary: templateData.summary ?? [],
       businessDescription: templateData.businessDescription ?? '',
-      topBarMetrics: getTopBarMetrics(OVERVIEW, 182, getNWeeksStock(DAILY_IBM)),
+      topBarMetrics: getTopBarMetrics(
+        OVERVIEW,
+        182,
+        getNWeeksStock(DAILY_IBM),
+        QUARTERLY_FUNDAMENTALS,
+      ),
       sidebarMetrics: getSidebarMetrics(
         OVERVIEW,
-        BALANCE_SHEET_IBM,
-        INCOME_STATEMENT_IBM,
         getNWeeksStock(DAILY_IBM),
         182,
         'HIGH',
+        QUARTERLY_FUNDAMENTALS,
       ),
       growthAndValuationAnalysisMetrics: getGrowthAndValuationAnalysisMetrics(
-        BALANCE_SHEET_IBM,
-        CASHFLOW_IBM,
-        INCOME_STATEMENT_IBM,
-        EARNINGS_IBM,
+        ANNUAL_FUNDAMENTALS,
         DAILY_IBM,
       ),
-      financialAndRiskAnalysisMetrics: getFinancialAndRiskAnalysisMetrics(
-        BALANCE_SHEET_IBM,
-        CASHFLOW_IBM,
-        INCOME_STATEMENT_IBM,
-      ),
+      financialAndRiskAnalysisMetrics:
+        getFinancialAndRiskAnalysisMetrics(ANNUAL_FUNDAMENTALS),
       ratings: [
         {
           name: '12-month',
@@ -226,7 +222,7 @@ export const getDocxBlob = async ({
   content: JSONContent;
   companyName: string;
   companyTicker: string;
-  topBarMetrics: TopBarMetric[];
+  topBarMetrics: Metric[];
   sidebarMetrics: SidebarMetrics;
   growthAndValuationAnalysisMetrics: AnalysisMetrics;
   financialAndRiskAnalysisMetrics: AnalysisMetrics;

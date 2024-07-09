@@ -13,11 +13,7 @@ import {
 } from '@supabase-cache-helpers/postgrest-react-query';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import {
-  fetchCitationSnippets,
-  fetchCitedDocuments,
-  fetchReportById,
-} from '@/lib/queries';
+import { fetchReportById } from '@/lib/queries';
 
 const debounce = require('lodash.debounce');
 
@@ -50,12 +46,12 @@ export const useBlockEditor = (reportId: string, content: Content) => {
 
   const supabase = createClient();
 
-  const { data: citedDocuments } = useQuery(
-    fetchCitedDocuments(supabase, reportId),
-  );
-  const { data: citationSnippets } = useQuery(
-    fetchCitationSnippets(supabase, reportId),
-  );
+  // const { data: citedDocuments } = useQuery(
+  //   fetchCitedDocuments(supabase, reportId),
+  // );
+  // const { data: citationSnippets } = useQuery(
+  //   fetchCitationSnippets(supabase, reportId),
+  // );
 
   const { mutateAsync: updateReport } = useUpdateMutation(
     supabase.from('reports'),
@@ -63,29 +59,29 @@ export const useBlockEditor = (reportId: string, content: Content) => {
     null,
   );
 
-  const { mutateAsync: updateCitedDoc } = useUpdateMutation(
-    supabase.from('cited_documents'),
-    ['id'],
-    null,
-  );
+  // const { mutateAsync: updateCitedDoc } = useUpdateMutation(
+  //   supabase.from('cited_documents'),
+  //   ['id'],
+  //   null,
+  // );
 
-  const { mutateAsync: updateCitationSnippet } = useUpdateMutation(
-    supabase.from('citation_snippets'),
-    ['id'],
-    null,
-  );
+  // const { mutateAsync: updateCitationSnippet } = useUpdateMutation(
+  //   supabase.from('citation_snippets'),
+  //   ['id'],
+  //   null,
+  // );
 
-  const { mutateAsync: deleteCitedDoc } = useDeleteMutation(
-    supabase.from('cited_documents'),
-    ['id'],
-    'id',
-  );
+  // const { mutateAsync: deleteCitedDoc } = useDeleteMutation(
+  //   supabase.from('cited_documents'),
+  //   ['id'],
+  //   'id',
+  // );
 
-  const { mutateAsync: deleteCitationSnippet } = useDeleteMutation(
-    supabase.from('citation_snippets'),
-    ['id'],
-    'id',
-  );
+  // const { mutateAsync: deleteCitationSnippet } = useDeleteMutation(
+  //   supabase.from('citation_snippets'),
+  //   ['id'],
+  //   'id',
+  // );
 
   // FIX: the reports don't update
   const editor = useEditor({
@@ -99,20 +95,20 @@ export const useBlockEditor = (reportId: string, content: Content) => {
             .toString()
             .split('.');
 
-          if (!citedDocSourceNum || !citationSnippetSourceNum) return;
+          // if (!citedDocSourceNum || !citationSnippetSourceNum) return;
 
-          const citedDoc = citedDocuments?.find(
-            (doc) => doc.source_num.toString() === citedDocSourceNum,
-          );
-          const citationSnippet = citationSnippets?.find(
-            (snippet) =>
-              snippet.source_num.toString() === citationSnippetSourceNum &&
-              snippet.cited_documents?.id === citedDoc?.id,
-          );
+          // const citedDoc = citedDocuments?.find(
+          //   (doc) => doc.source_num.toString() === citedDocSourceNum,
+          // );
+          // const citationSnippet = citationSnippets?.find(
+          //   (snippet) =>
+          //     snippet.source_num.toString() === citationSnippetSourceNum &&
+          //     snippet.cited_documents?.id === citedDoc?.id,
+          // );
 
-          if (!citationSnippet || !citedDoc) return;
+          // if (!citationSnippet || !citedDoc) return;
 
-          setCitation(citationSnippet?.id, citedDoc?.doc_id ?? '');
+          // setCitation(citationSnippet?.id, citedDoc?.doc_id ?? '');
           // const doc_id = citations?.find(
           //   (c) => c.source_num === node.attrs.sourceNum,
           // )?.doc_id;
@@ -137,80 +133,80 @@ export const useBlockEditor = (reportId: string, content: Content) => {
         setIsEmpty(true);
       }
 
-      const adjustCitations = debounce(() => {
-        if (!citedDocuments || !citationSnippets) return;
+      // const adjustCitations = debounce(() => {
+      //   if (!citedDocuments || !citationSnippets) return;
 
-        const doc = editor.state.doc;
-        const citationNodes = findChildren(
-          doc,
-          (node) => node.type.name === 'citation',
-        );
-        const citations = new Set(
-          citationNodes.map((node) => node.node.attrs.sourceNum.toString()),
-        );
-        const dbCitations = new Set(
-          citedDocuments
-            .map((doc) =>
-              citationSnippets
-                .filter((snippet) => snippet.cited_documents?.id === doc.id)
-                .map(
-                  (snippet) =>
-                    doc.source_num + '.' + snippet.source_num.toString(),
-                ),
-            )
-            .flat(),
-        );
+      //   const doc = editor.state.doc;
+      //   const citationNodes = findChildren(
+      //     doc,
+      //     (node) => node.type.name === 'citation',
+      //   );
+      //   const citations = new Set(
+      //     citationNodes.map((node) => node.node.attrs.sourceNum.toString()),
+      //   );
+      //   const dbCitations = new Set(
+      //     citedDocuments
+      //       .map((doc) =>
+      //         citationSnippets
+      //           .filter((snippet) => snippet.cited_documents?.id === doc.id)
+      //           .map(
+      //             (snippet) =>
+      //               doc.source_num + '.' + snippet.source_num.toString(),
+      //           ),
+      //       )
+      //       .flat(),
+      //   );
 
-        // TODO: ctrl + z doesn't work. I need a way to undo the citation deletes
+      // TODO: ctrl + z doesn't work. I need a way to undo the citation deletes
 
-        const diff = [...dbCitations].filter(
-          (c) => ![...citations].includes(c),
-        );
-        diff.forEach(async (c) => {
-          if (!c) return;
-          const [citedDocSourceNum, citationSnippetSourceNum] = c.split('.');
-          const foundCitedDoc = citedDocuments.find(
-            (doc) => doc.source_num.toString() === citedDocSourceNum,
-          );
-          const citedDocSnippets = citationSnippets.filter(
-            (snippet) => snippet.cited_documents?.id === foundCitedDoc?.id,
-          );
-          const foundCitationSnippet = citedDocSnippets.find(
-            (snippet) =>
-              snippet.source_num.toString() === citationSnippetSourceNum,
-          );
+      //   const diff = [...dbCitations].filter(
+      //     (c) => ![...citations].includes(c),
+      //   );
+      //   diff.forEach(async (c) => {
+      //     if (!c) return;
+      //     const [citedDocSourceNum, citationSnippetSourceNum] = c.split('.');
+      //     const foundCitedDoc = citedDocuments.find(
+      //       (doc) => doc.source_num.toString() === citedDocSourceNum,
+      //     );
+      //     const citedDocSnippets = citationSnippets.filter(
+      //       (snippet) => snippet.cited_documents?.id === foundCitedDoc?.id,
+      //     );
+      //     const foundCitationSnippet = citedDocSnippets.find(
+      //       (snippet) =>
+      //         snippet.source_num.toString() === citationSnippetSourceNum,
+      //     );
 
-          if (!foundCitedDoc || !foundCitationSnippet) return;
+      //     if (!foundCitedDoc || !foundCitationSnippet) return;
 
-          if (citedDocSnippets.length === 1) {
-            await deleteCitedDoc(foundCitedDoc);
-            const citedDocsToAdjust = citedDocuments.filter(
-              (doc) => doc.source_num > foundCitedDoc.source_num,
-            );
-            citedDocsToAdjust.forEach(async (doc) => {
-              await updateCitedDoc({
-                id: doc.id,
-                source_num: doc.source_num - 1,
-              });
-            });
-          } else {
-            await deleteCitationSnippet(foundCitationSnippet);
-            const snippetsToAdjust = citedDocSnippets.filter(
-              (snippet) => snippet.source_num > foundCitationSnippet.source_num,
-            );
-            console.log(snippetsToAdjust);
-            snippetsToAdjust.forEach(async (snippet) => {
-              await updateCitationSnippet({
-                id: snippet.id,
-                source_num: snippet.source_num - 1,
-              });
-            });
-          }
-        });
-        console.log(diff);
-      }, 10000);
+      //     if (citedDocSnippets.length === 1) {
+      //       await deleteCitedDoc(foundCitedDoc);
+      //       const citedDocsToAdjust = citedDocuments.filter(
+      //         (doc) => doc.source_num > foundCitedDoc.source_num,
+      //       );
+      //       citedDocsToAdjust.forEach(async (doc) => {
+      //         await updateCitedDoc({
+      //           id: doc.id,
+      //           source_num: doc.source_num - 1,
+      //         });
+      //       });
+      //     } else {
+      //       await deleteCitationSnippet(foundCitationSnippet);
+      //       const snippetsToAdjust = citedDocSnippets.filter(
+      //         (snippet) => snippet.source_num > foundCitationSnippet.source_num,
+      //       );
+      //       console.log(snippetsToAdjust);
+      //       snippetsToAdjust.forEach(async (snippet) => {
+      //         await updateCitationSnippet({
+      //           id: snippet.id,
+      //           source_num: snippet.source_num - 1,
+      //         });
+      //       });
+      //     }
+      //   });
+      //   console.log(diff);
+      // }, 10000);
 
-      adjustCitations();
+      // adjustCitations();
 
       // TODO: update citations and sources
       const saveContent = debounce(() => {

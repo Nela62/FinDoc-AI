@@ -6,14 +6,6 @@ import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCallback, useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import {
-  DailyStockData,
-  Earnings,
-  IncomeStatement,
-} from '@/types/alphaVantageApi';
-import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
-import { fetchAPICacheByReportId, fetchTemplateConfig } from '@/lib/queries';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import { useImageData } from '@/hooks/useImageData';

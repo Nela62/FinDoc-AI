@@ -48,6 +48,48 @@ export type Database = {
         }
         Relationships: []
       }
+      api_cache: {
+        Row: {
+          created_at: string
+          id: string
+          overview: Json
+          report_id: string
+          stock: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          overview: Json
+          report_id: string
+          stock: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          overview?: Json
+          report_id?: string
+          stock?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_cache_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: true
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_cache_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           cik: string
@@ -96,24 +138,33 @@ export type Database = {
       metrics_cache: {
         Row: {
           created_at: string
-          data: Json
           id: string
+          polygon_annual: Json
+          polygon_quarterly: Json
+          polygon_ttm: Json
           ticker: string
-          timescale: string
+          yf_annual: Json
+          yf_quarterly: Json
         }
         Insert: {
           created_at?: string
-          data: Json
           id?: string
+          polygon_annual: Json
+          polygon_quarterly: Json
+          polygon_ttm: Json
           ticker: string
-          timescale: string
+          yf_annual: Json
+          yf_quarterly: Json
         }
         Update: {
           created_at?: string
-          data?: Json
           id?: string
+          polygon_annual?: Json
+          polygon_quarterly?: Json
+          polygon_ttm?: Json
           ticker?: string
-          timescale?: string
+          yf_annual?: Json
+          yf_quarterly?: Json
         }
         Relationships: []
       }
@@ -209,6 +260,7 @@ export type Database = {
           section_ids: string[]
           status: string
           targetprice: number | null
+          tiptap_content: Json | null
           title: string
           type: string
           updated_at: string
@@ -228,6 +280,7 @@ export type Database = {
           section_ids: string[]
           status: string
           targetprice?: number | null
+          tiptap_content?: Json | null
           title: string
           type: string
           updated_at?: string
@@ -247,6 +300,7 @@ export type Database = {
           section_ids?: string[]
           status?: string
           targetprice?: number | null
+          tiptap_content?: Json | null
           title?: string
           type?: string
           updated_at?: string

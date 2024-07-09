@@ -7,13 +7,7 @@ import { prefetchQuery } from '@supabase-cache-helpers/postgrest-react-query';
 
 import '@/styles/index.css';
 import { createClient } from '@/lib/supabase/server';
-import {
-  fetchCitationSnippets,
-  fetchCitedDocuments,
-  fetchDocuments,
-  fetchReportById,
-  getReportIdByUrl,
-} from '@/lib/queries';
+import { fetchReportById, getReportIdByUrl } from '@/lib/queries';
 import { redirect } from 'next/navigation';
 import { ReportPage } from './components/ReportPage';
 import { Metadata } from 'next';
@@ -44,9 +38,9 @@ export default async function Report({ params }: { params: { url: string } }) {
   // TODO: setup library list of documents
 
   await prefetchQuery(queryClient, fetchReportById(supabase, data.id));
-  await prefetchQuery(queryClient, fetchCitedDocuments(supabase, data.id));
-  await prefetchQuery(queryClient, fetchCitationSnippets(supabase, data.id));
-  await prefetchQuery(queryClient, fetchDocuments(supabase));
+  // await prefetchQuery(queryClient, fetchCitedDocuments(supabase, data.id));
+  // await prefetchQuery(queryClient, fetchCitationSnippets(supabase, data.id));
+  // await prefetchQuery(queryClient, fetchDocuments(supabase));
   await prefetchQuery(queryClient, getReportIdByUrl(supabase, params.url));
 
   return (

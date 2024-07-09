@@ -6,20 +6,17 @@ import { Loader2Icon } from 'lucide-react';
 import { z } from 'zod';
 import { v4 as uuid } from 'uuid';
 import toast from 'react-hot-toast';
-import {
-  useInsertMutation,
-  useQuery,
-} from '@supabase-cache-helpers/postgrest-react-query';
+import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 
 import { Icon } from '@/components/ui/Icon';
-import { markdownToHtml, markdownToJson } from '@/lib/utils/formatText';
+import { markdownToHtml } from '@/lib/utils/formatText';
 import { createClient } from '@/lib/supabase/client';
 import { getReportIdByUrl } from '@/lib/queries';
 import { usePathname } from 'next/navigation';
-import {
-  getCitationMapAndInsertNew,
-  getCleanText,
-} from '@/lib/utils/citations';
+// import {
+//   getCitationMapAndInsertNew,
+//   getCleanText,
+// } from '@/lib/utils/citations';
 import {
   Form,
   FormControl,
@@ -113,35 +110,35 @@ export const AiGeneratorView = ({
 
   const { data: report } = useQuery(getReportIdByUrl(supabase, reportUrl));
 
-  const { mutateAsync: insertDocuments } = useInsertMutation(
-    supabase.from('documents_reports'),
-    ['id'],
-    null,
-  );
+  // const { mutateAsync: insertDocuments } = useInsertMutation(
+  //   supabase.from('documents_reports'),
+  //   ['id'],
+  //   null,
+  // );
 
-  const { mutateAsync: insertCitedDocuments } = useInsertMutation(
-    supabase.from('cited_documents'),
-    ['id'],
-    'id',
-  );
+  // const { mutateAsync: insertCitedDocuments } = useInsertMutation(
+  //   supabase.from('cited_documents'),
+  //   ['id'],
+  //   'id',
+  // );
 
-  const { mutateAsync: insertCitationSnippets } = useInsertMutation(
-    supabase.from('citation_snippets'),
-    ['id'],
-    'id',
-  );
+  // const { mutateAsync: insertCitationSnippets } = useInsertMutation(
+  //   supabase.from('citation_snippets'),
+  //   ['id'],
+  //   'id',
+  // );
 
-  const { mutateAsync: insertPDFCitations } = useInsertMutation(
-    supabase.from('pdf_citations'),
-    ['id'],
-    'id',
-  );
+  // const { mutateAsync: insertPDFCitations } = useInsertMutation(
+  //   supabase.from('pdf_citations'),
+  //   ['id'],
+  //   'id',
+  // );
 
-  const { mutateAsync: insertAPICitations } = useInsertMutation(
-    supabase.from('api_citations'),
-    ['id'],
-    'id',
-  );
+  // const { mutateAsync: insertAPICitations } = useInsertMutation(
+  //   supabase.from('api_citations'),
+  //   ['id'],
+  //   'id',
+  // );
 
   const textareaId = useMemo(() => uuid(), []);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -284,35 +281,35 @@ export const AiGeneratorView = ({
 
   const insertContent = useCallback(async () => {
     if (!user || !report) return;
-    const oldToNewCitationsMap = await getCitationMapAndInsertNew(
-      originalText,
-      tempCitations.current,
-      report.id,
-      user,
-      insertCitedDocuments,
-      insertCitationSnippets,
-      insertPDFCitations,
-      insertAPICitations,
-    );
+    // const oldToNewCitationsMap = await getCitationMapAndInsertNew(
+    //   originalText,
+    //   tempCitations.current,
+    //   report.id,
+    //   user,
+    //   insertCitedDocuments,
+    //   insertCitationSnippets,
+    //   insertPDFCitations,
+    //   insertAPICitations,
+    // );
 
-    const cleanText = getCleanText(originalText, oldToNewCitationsMap);
-    editor
-      .chain()
-      .focus()
-      .insertContentAt({ from, to }, markdownToJson(cleanText))
-      .run();
-    setPreviewText('');
+    // const cleanText = getCleanText(originalText, oldToNewCitationsMap);
+    // editor
+    //   .chain()
+    //   .focus()
+    //   .insertContentAt({ from, to }, markdownToJson(cleanText))
+    //   .run();
+    // setPreviewText('');
   }, [
     editor,
     from,
     to,
     user,
     report,
-    insertAPICitations,
-    insertCitationSnippets,
-    insertCitedDocuments,
+    // insertAPICitations,
+    // insertCitationSnippets,
+    // insertCitedDocuments,
     originalText,
-    insertPDFCitations,
+    // insertPDFCitations,
   ]);
 
   const discard = useCallback(() => {

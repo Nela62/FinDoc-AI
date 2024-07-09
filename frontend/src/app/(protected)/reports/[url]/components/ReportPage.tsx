@@ -68,7 +68,7 @@ export const ReportPage = ({ reportId }: { reportId: string }) => {
       </Card>
       <div className="flex gap-3 h-[calc(100vh-80px)]">
         <EditorComponent editor={editor} />
-        <Sidebar reportId={reportId} />
+        {/* <Sidebar reportId={reportId} /> */}
       </div>
     </Tabs>
   ) : (

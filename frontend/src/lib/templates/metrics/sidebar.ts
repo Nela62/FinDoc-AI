@@ -18,7 +18,8 @@ import {
 } from 'docx';
 import { bordersNone, displayImage } from '../docx/utils';
 import { Rating, displayRatings } from './components/ratings';
-import { SidebarMetrics, displayStatistics } from './components/statistics';
+import { displayStatistics } from './components/statistics';
+import { SidebarMetrics } from '@/lib/utils/financialAPI';
 
 export const metricsSidebar = async (
   metrics: SidebarMetrics,

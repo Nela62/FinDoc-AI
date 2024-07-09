@@ -1,19 +1,8 @@
 import { getDocxBlob } from '@/app/(protected)/reports/utils/getDocxBlob';
-import {
-  fetchAPICacheByReportId,
-  fetchReportById,
-  fetchTemplateConfig,
-} from '@/lib/queries';
+import { fetchReportById, fetchTemplateConfig } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
 import { AnalysisMetrics } from '@/lib/templates/docxTables/financialAnalysisTable';
-import { SidebarMetrics } from '@/lib/templates/metrics/components/statistics';
-import { TopBarMetric, getNWeeksStock } from '@/lib/utils/financialAPI';
-import {
-  DailyStockData,
-  Earnings,
-  IncomeStatement,
-  Overview,
-} from '@/types/alphaVantageApi';
+import { Metric, SidebarMetrics } from '@/lib/utils/financialAPI';
 import { FinancialStrength, Recommendation } from '@/types/report';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import {
@@ -23,11 +12,10 @@ import {
   useUpload,
 } from '@supabase-cache-helpers/storage-react-query';
 import { JSONContent } from '@tiptap/core';
-import { toPng } from 'html-to-image';
 import { useCallback, useEffect, useState } from 'react';
 
 type Metrics = {
-  topBarMetrics: TopBarMetric[];
+  topBarMetrics: Metric[];
   sidebarMetrics: SidebarMetrics;
   growthAndValuationAnalysisMetrics: AnalysisMetrics;
   financialAndRiskAnalysisMetrics: AnalysisMetrics;
@@ -90,17 +78,16 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
     }
   }, [docxFileData, pdfFileData]);
 
-  // TODO: remove apiCache from here and move overview and closing price to fin api utils
-  const { data: apiCache } = useQuery(
-    fetchAPICacheByReportId(supabase, reportId ?? ''),
-    { enabled: !!reportId },
-  );
+  // // TODO: remove apiCache from here and move overview and closing price to fin api utils
+  // const { data: apiCache } = useQuery(
+  //   getApiCacheByReportId(supabase, reportId ?? ''),
+  //   { enabled: !!reportId },
+  // );
 
   const { mutateAsync: uploadDocx } = useUpload(
     supabase.storage.from('saved-templates'),
     {
-      buildFileName: ({ fileName, path }) =>
-        `${userId}/${templateConfig?.id}/docx`,
+      buildFileName: () => `${userId}/${templateConfig?.id}/docx`,
       upsert: true,
     },
   );
@@ -108,8 +95,7 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
   const { mutateAsync: uploadPdf } = useUpload(
     supabase.storage.from('saved-templates'),
     {
-      buildFileName: ({ fileName, path }) =>
-        `${userId}/${templateConfig?.id}/pdf`,
+      buildFileName: () => `${userId}/${templateConfig?.id}/pdf`,
       upsert: true,
     },
   );
@@ -158,8 +144,8 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
   }, [images]);
 
   useEffect(() => {
-    if (logoName && companyLogoUrl && apiCache) setLoading(false);
-  }, [logoName, companyLogoUrl, apiCache]);
+    if (logoName && companyLogoUrl) setLoading(false);
+  }, [logoName, companyLogoUrl]);
 
   const generateDocxBlob = useCallback(
     async (images: Blob[]): Promise<Blob> => {
@@ -205,7 +191,7 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
         authorName: templateConfig.author_name,
         authorCompanyName: templateConfig.author_company_name,
         colorScheme: templateConfig.color_scheme,
-        content: report.json_content as JSONContent,
+        content: report.tiptap_content as JSONContent,
         companyName: report.companies.company_name,
         companyTicker: report.company_ticker,
         topBarMetrics: metrics.topBarMetrics,

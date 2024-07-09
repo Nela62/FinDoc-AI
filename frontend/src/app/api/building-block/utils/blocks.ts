@@ -6,25 +6,34 @@ import {
   IncomeStatement,
   Overview,
 } from '@/types/alphaVantageApi';
-import { Inputs, generateBlock } from './generateBlock';
+import { Inputs, SummaryInputs, generateBlock } from './generateBlock';
 import { SubscriptionPlan } from '@/types/subscription';
 import {
   get10KItem,
   get10KSection,
 } from '@/app/(protected)/reports/utils/parseXml';
+import { MetricsData } from '@/types/metrics';
 
 export type ApiProp = {
   overview: Overview;
-  balanceSheet: BalanceSheet;
-  cashflow: Cashflow;
-  incomeStatement: IncomeStatement;
   dailyStock: DailyStockData;
-  earnings: Earnings;
+  yfAnnual: MetricsData;
+  yfQuarterly: MetricsData;
 };
 
-export type Params = {
+export type Block =
+  | 'company_overview'
+  | 'investment_thesis'
+  | 'business_description'
+  | 'recent_developments'
+  | 'management'
+  | 'risks'
+  | 'financial_analysis'
+  | 'valuation';
+
+export type GeneralBlock = {
   plan: SubscriptionPlan;
-  blockId: string;
+  blockId: Block;
   companyName: string;
   apiData: ApiProp;
   xmlData: string;
@@ -34,6 +43,14 @@ export type Params = {
   targetPrice?: string;
 };
 
+export type ExecSummary = {
+  plan: SubscriptionPlan;
+  blockId: 'executive_summary';
+  generatedReport: string;
+};
+
+export type Params = ExecSummary | GeneralBlock;
+
 const getCompanyOverviewContext = (
   apiData: ApiProp,
   xmlData: string,
@@ -41,10 +58,7 @@ const getCompanyOverviewContext = (
 ) => {
   const context = {
     description: apiData.overview.Description,
-    incomeStatements: [
-      apiData.incomeStatement.annualReports[0],
-      apiData.incomeStatement.annualReports[1],
-    ],
+    incomeStatements: apiData.yfAnnual.incomeStatement,
   };
 
   return JSON.stringify(context);
@@ -57,8 +71,8 @@ const getInvestmentThesisContext = (
 ): string => {
   const context = {
     incomeStatements: {
-      annual: apiData.incomeStatement.annualReports.slice(0, 2),
-      quarterly: apiData.incomeStatement.quarterlyReports.slice(0, 2),
+      annual: apiData.yfAnnual.incomeStatement,
+      quarterly: apiData.yfQuarterly.incomeStatement,
     },
   };
 
@@ -76,8 +90,8 @@ const getBusinessDescriptionContext = (
     '10-K Item 1. Business': item,
     description: apiData.overview.Description,
     incomeStatements: {
-      annual: apiData.incomeStatement.annualReports.slice(0, 2),
-      quarterly: apiData.incomeStatement.quarterlyReports.slice(0, 2),
+      annual: apiData.yfAnnual.incomeStatement,
+      quarterly: apiData.yfQuarterly.incomeStatement,
     },
   };
 
@@ -126,16 +140,16 @@ const getFinancialAnalysisContext = (
 ): string => {
   const context = {
     incomeStatements: {
-      annual: apiData.incomeStatement.annualReports.slice(0, 5),
-      quarterly: apiData.incomeStatement.quarterlyReports.slice(0, 5),
+      annual: apiData.yfAnnual.incomeStatement,
+      quarterly: apiData.yfQuarterly.incomeStatement,
     },
     balanceSheet: {
-      annual: apiData.balanceSheet.annualReports.slice(0, 5),
-      quarterly: apiData.balanceSheet.quarterlyReports.slice(0, 5),
+      annual: apiData.yfAnnual.balanceSheet,
+      quarterly: apiData.yfQuarterly.balanceSheet,
     },
     cashflow: {
-      annual: apiData.cashflow.annualReports.slice(0, 5),
-      quarterly: apiData.cashflow.quarterlyReports.slice(0, 5),
+      annual: apiData.yfAnnual.cashFlow,
+      quarterly: apiData.yfQuarterly.cashFlow,
     },
   };
 
@@ -149,8 +163,8 @@ const getValuationContext = (
 ): string => {
   const context = {
     incomeStatements: {
-      annual: apiData.incomeStatement.annualReports.slice(0, 2),
-      quarterly: apiData.incomeStatement.quarterlyReports.slice(0, 2),
+      annual: apiData.yfAnnual.incomeStatement,
+      quarterly: apiData.yfQuarterly.incomeStatement,
     },
   };
   return JSON.stringify(context);
@@ -168,17 +182,24 @@ const contextMap = {
 };
 
 export const getBlock = async (params: Params) => {
-  // @ts-ignore
-  const contextFn = contextMap[params.blockId];
-  const context = contextFn(params.apiData, params.xmlData, params.newsData);
-  const inputs: Inputs = {
-    CONTEXT: context,
-    COMPANY_NAME: params.companyName,
-    CUSTOM_PROMPT: '',
-  };
-  params.recommendation && (inputs['RECOMMENDATION'] = params.recommendation);
-  params.targetPrice && (inputs['TARGET_PRICE'] = params.targetPrice);
+  if (params.blockId === 'executive_summary') {
+    const inputs: SummaryInputs = { REPORT: params.generatedReport };
 
-  const res = await generateBlock(params.blockId, inputs, params.plan);
-  return res;
+    const res = await generateBlock(params.blockId, inputs, params.plan);
+    return res;
+  } else {
+    // @ts-ignore
+    const contextFn = contextMap[params.blockId];
+    const context = contextFn(params.apiData, params.xmlData, params.newsData);
+    const inputs: Inputs = {
+      CONTEXT: context,
+      COMPANY_NAME: params.companyName,
+      CUSTOM_PROMPT: '',
+    };
+    params.recommendation && (inputs['RECOMMENDATION'] = params.recommendation);
+    params.targetPrice && (inputs['TARGET_PRICE'] = params.targetPrice);
+
+    const res = await generateBlock(params.blockId, inputs, params.plan);
+    return res;
+  }
 };

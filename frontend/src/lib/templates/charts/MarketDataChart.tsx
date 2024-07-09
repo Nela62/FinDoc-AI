@@ -19,21 +19,22 @@ import {
   IncomeStatement,
 } from '@/types/alphaVantageApi';
 import {
-  getHighestClosingStockPrice,
+  getHighestStockPrice,
   getLatestStockDataPoint,
-  getLowestClosingStockPrice,
+  getLowestStockPrice,
   getMeanClosingStockPrice,
   getNYearsStock,
 } from '@/lib/utils/financialAPI';
 import { format, getQuarter, getYear, toDate } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
+import { MetricsData, PolygonData } from '@/types/metrics';
 
 type ChartProps = {
   colors: string[];
   targetPrice: number;
-  incomeStatement: IncomeStatement;
-  earnings: Earnings;
   dailyStock: DailyStockData;
+  polygonQuarterly: PolygonData;
+  polygonAnnual: PolygonData;
 };
 
 const renderCustomizedLabel = (props: any) => {
@@ -95,37 +96,42 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     day: dataPoint.day,
     data: dataPoint.data['5. adjusted close'],
   }));
-  const stockMin = getLowestClosingStockPrice(stockData);
-  const stockMax = getHighestClosingStockPrice(stockData);
+  const stockMin = getLowestStockPrice(stockData);
+  const stockMax = getHighestStockPrice(stockData);
   const stockMean = getMeanClosingStockPrice(stockData);
 
   // TODO: add ability to handle revenue in millions
-  const revenueData = props.incomeStatement['quarterlyReports']
+  const revenueData = props.polygonQuarterly
     .slice(0, 16)
     .map((quarter: any) => ({
-      x: quarter.fiscalDateEnding as string,
-      y: (Number(quarter.totalRevenue) / 1000000000.0).toFixed(2),
+      x: quarter.end_date,
+      y: Number(
+        (
+          Number(quarter.financials.income_statement.revenues.value) /
+          1000000000.0
+        ).toFixed(2),
+      ),
     }))
     .reverse();
 
-  const earningsData = props.earnings.quarterlyEarnings
+  const earningsData = props.polygonQuarterly
     .slice(0, 16)
     .map((quarter: any) => ({
-      x: quarter.fiscalDateEnding,
-      y: Number(quarter.reportedEPS),
+      x: quarter.end_date,
+      y: Number(
+        quarter.financials.income_statement.basic_earnings_per_share.value.toFixed(
+          2,
+        ),
+      ),
     }))
     .reverse();
+
+  console.log(earningsData);
 
   const quarters =
-    props.incomeStatement.quarterlyReports.length > 16
-      ? 16
-      : props.incomeStatement.quarterlyReports.length;
-  const latestQuarter = getQuarter(
-    toDate(props.incomeStatement.quarterlyReports[0].fiscalDateEnding),
-  );
-  const latestYear = getYear(
-    toDate(props.incomeStatement.quarterlyReports[0].fiscalDateEnding),
-  );
+    props.polygonQuarterly.length > 16 ? 16 : props.polygonQuarterly.length;
+  const latestQuarter = getQuarter(toDate(props.polygonQuarterly[0].end_date));
+  const latestYear = getYear(toDate(props.polygonQuarterly[0].end_date));
 
   let quartersList = [];
 
@@ -339,7 +345,10 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
               key={uuidv4()}
             >
               <p className="font-semibold">
-                {props.earnings.annualEarnings[i].reportedEPS}
+                {
+                  props.polygonAnnual[i].financials.income_statement
+                    .basic_earnings_per_share.value
+                }
               </p>
             </div>
           ))
@@ -388,10 +397,11 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
               key={uuidv4()}
             >
               <p className="font-semibold">
-                {props.incomeStatement.annualReports.length > i
+                {props.polygonAnnual.length > i
                   ? (
                       Number(
-                        props.incomeStatement.annualReports[i].totalRevenue,
+                        props.polygonAnnual[i].financials.income_statement
+                          .revenues.value,
                       ) / 1.0e9
                     ).toFixed(2)
                   : 0}

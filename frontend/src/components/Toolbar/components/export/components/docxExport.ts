@@ -1,9 +1,8 @@
-import { BALANCE_SHEET_IBM } from '@/lib/data/balance_sheet_ibm';
-import { CASHFLOW_IBM } from '@/lib/data/cashflow_ibm';
-import { EARNINGS_IBM } from '@/lib/data/earnings_ibm';
+import { ANNUAL_FUNDAMENTALS } from '@/lib/data/annual_fundamentals';
 import { DAILY_IBM } from '@/lib/data/daily_imb';
-import { INCOME_STATEMENT_IBM } from '@/lib/data/income_statement_ibm';
 import { OVERVIEW } from '@/lib/data/overview_ibm';
+import { POLYGON_ANNUAL } from '@/lib/data/polygon_annual';
+import { QUARTERLY_FUNDAMENTALS } from '@/lib/data/quarterly_fundamentals';
 import { TEMPLATES } from '@/lib/templates';
 import {
   getFinancialAndRiskAnalysisMetrics,
@@ -562,27 +561,25 @@ export const generateDocxFile = async (
       companyLogo: companyLogo,
       summary: templateData.summary ?? [],
       businessDescription: templateData.businessDescription ?? '',
-      topBarMetrics: getTopBarMetrics(OVERVIEW, 182, getNWeeksStock(DAILY_IBM)),
+      topBarMetrics: getTopBarMetrics(
+        OVERVIEW,
+        182,
+        getNWeeksStock(DAILY_IBM),
+        QUARTERLY_FUNDAMENTALS,
+      ),
       sidebarMetrics: getSidebarMetrics(
         OVERVIEW,
-        BALANCE_SHEET_IBM,
-        INCOME_STATEMENT_IBM,
         getNWeeksStock(DAILY_IBM),
         182,
         'HIGH',
+        QUARTERLY_FUNDAMENTALS,
       ),
       growthAndValuationAnalysisMetrics: getGrowthAndValuationAnalysisMetrics(
-        BALANCE_SHEET_IBM,
-        CASHFLOW_IBM,
-        INCOME_STATEMENT_IBM,
-        EARNINGS_IBM,
+        ANNUAL_FUNDAMENTALS,
         DAILY_IBM,
       ),
-      financialAndRiskAnalysisMetrics: getFinancialAndRiskAnalysisMetrics(
-        BALANCE_SHEET_IBM,
-        CASHFLOW_IBM,
-        INCOME_STATEMENT_IBM,
-      ),
+      financialAndRiskAnalysisMetrics:
+        getFinancialAndRiskAnalysisMetrics(ANNUAL_FUNDAMENTALS),
       ratings: [
         {
           name: '12-month',

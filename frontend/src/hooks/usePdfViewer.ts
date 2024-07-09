@@ -5,7 +5,7 @@ import { type Document } from '@/types/document';
 import { createClient } from '@/lib/supabase/client';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
-import { fetchPDFCitation, getReportIdByUrl } from '@/lib/queries';
+import { getReportIdByUrl } from '@/lib/queries';
 import { type PDFCitation } from '@/types/citation';
 
 export const zoomLevels = [
@@ -37,14 +37,14 @@ const usePDFViewer = (fileId: string) => {
   const { data: report } = useQuery(
     getReportIdByUrl(supabase, pathname.split('/').pop() as string),
   );
-  const { data: citations, error: citationsError } = useQuery(
-    fetchPDFCitation(supabase, citationSnippetId ?? ''),
-  );
+  // const { data: citations, error: citationsError } = useQuery(
+  //   fetchPDFCitation(supabase, citationSnippetId ?? ''),
+  // );
 
-  const selectedCitation: PDFCitation | undefined = useMemo(
-    () => (citations ? citations[0] : undefined),
-    [citations],
-  );
+  // const selectedCitation: PDFCitation | undefined = useMemo(
+  //   () => (citations ? citations[0] : undefined),
+  //   [citations],
+  // );
 
   const pdfFocusRef = useRef<PdfFocusHandler | null>(null);
 
@@ -54,16 +54,16 @@ const usePDFViewer = (fileId: string) => {
     }
   };
 
-  useEffect(() => {
-    if (!selectedCitation || !documentId) return;
+  // useEffect(() => {
+  //   if (!selectedCitation || !documentId) return;
 
-    const activeDocumentId = documentId;
-    if (activeDocumentId === fileId) {
-      if (selectedCitation && selectedCitation.page) {
-        goToPage(selectedCitation.page - 1);
-      }
-    }
-  }, [fileId, documentId, selectedCitation]);
+  //   const activeDocumentId = documentId;
+  //   if (activeDocumentId === fileId) {
+  //     if (selectedCitation && selectedCitation.page) {
+  //       goToPage(selectedCitation.page - 1);
+  //     }
+  //   }
+  // }, [fileId, documentId, selectedCitation]);
 
   const setCurrentPageNumber = useCallback((n: number) => {
     setScrolledIndex(n);

@@ -10,6 +10,10 @@ export type Inputs = {
   TARGET_PRICE?: string;
 };
 
+export type SummaryInputs = {
+  REPORT: string;
+};
+
 const humanloopIdsMap: Record<string, string> = {
   company_overview: 'pr_eEsRLn1ueHYu2ohtbLfz8',
   investment_thesis: 'pr_InocnkalxtNTfsiEuFycf',
@@ -38,7 +42,7 @@ function findReplaceString(string: string, find: string, replace: string) {
 
 export const generateBlock = async (
   blockId: string,
-  inputs: Inputs,
+  inputs: Inputs | SummaryInputs,
   plan: SubscriptionPlan,
 ) => {
   if (!process.env.HUMANLOOP_API_KEY) {

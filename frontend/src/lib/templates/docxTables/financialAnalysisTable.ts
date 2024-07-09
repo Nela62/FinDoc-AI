@@ -56,7 +56,12 @@ const displayCategoryTable = (
             ],
           }),
           ...stat.numbers.map((num) => {
-            const n = typeof num === 'number' ? num : parseFloat(num);
+            const n =
+              typeof num === 'number'
+                ? num
+                : num.includes('(')
+                ? -parseFloat(num.slice(1, -1))
+                : parseFloat(num);
 
             return new TableCell({
               borders: bordersNone,
@@ -64,13 +69,17 @@ const displayCategoryTable = (
                 fill:
                   i % 2 === (showHeaders ? 1 : 0) ? undefined : secondaryColor,
               },
+              width: {
+                size: (100 - firstColumnWidth) / (years?.length ?? 4),
+                type: WidthType.PERCENTAGE,
+              },
               children: [
                 new Paragraph({
                   style: 'small-narrow',
                   children: [
                     new TextRun({
                       text: num.toString(),
-                      ...(n < 0 && { color: accentColor }),
+                      ...(n < 0 && { color: 'ab0434' }),
                     }),
                   ],
                 }),
@@ -131,7 +140,7 @@ const displayCategoryTable = (
   ];
 };
 
-const leftColumnWidth = 7100;
+const leftColumnWidth = 6700;
 
 const leftColumn = (
   metrics: AnalysisMetrics,

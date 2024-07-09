@@ -1,12 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
 import {
-  fetchAPICacheByReportId,
   fetchReportById,
   fetchTemplateConfig,
+  getApiCacheByReportId,
 } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
-import { Json } from '@/lib/supabase/database.types';
 import {
   getFinancialAndRiskAnalysisMetrics,
   getGrowthAndValuationAnalysisMetrics,
@@ -15,11 +14,11 @@ import {
   getTopBarMetrics,
 } from '@/lib/utils/financialAPI';
 import { useBoundStore } from '@/providers/store-provider';
+import { DailyStockData, Overview } from '@/types/alphaVantageApi';
 import { SubscriptionPlan } from '@/types/subscription';
 import {
   useQuery,
   useUpdateMutation,
-  useUpsertMutation,
 } from '@supabase-cache-helpers/postgrest-react-query';
 import { format } from 'date-fns';
 import { Loader2Icon } from 'lucide-react';
@@ -56,6 +55,8 @@ export const ReportInfo = ({
     fetchTemplateConfig(supabase, reportId),
   );
 
+  const { data: cache } = useQuery(getApiCacheByReportId(supabase, reportId));
+
   const { mutateAsync: updateTemplateConfig } = useUpdateMutation(
     supabase.from('report_template'),
     ['id'],
@@ -67,128 +68,60 @@ export const ReportInfo = ({
     reportId,
   );
 
-  const { data: apiCache } = useQuery(
-    fetchAPICacheByReportId(supabase, reportId),
-  );
-
-  const { mutateAsync: updateApiCache } = useUpsertMutation(
-    supabase.from('api_cache'),
-    ['id'],
-    'id',
-  );
-
-  const updateTemplate = useCallback(() => {
-    if (!apiCache || !report || !templateConfig) return;
+  const updateTemplate = useCallback(async () => {
+    if (!report || !templateConfig || !cache) return;
 
     setLoading(true);
 
-    const newCache:
-      | {
-          accessed_at?: string | undefined;
-          api_provider: string;
-          endpoint: string;
-          id?: string | undefined;
-          json_data: Json;
-          report_id: string;
-          user_id: string;
-        }[]
-      | {
-          json_data: any;
-          accessed_at: string;
-          id: string;
-          endpoint: string;
-          api_provider: string;
-          user_id: string;
-          report_id: string;
-        }[] = [];
+    const { yfAnnual, yfQuarterly } = await fetch(
+      `/api/metrics/${report.company_ticker}`,
+    )
+      .then((res) => res.ok && res.json())
+      .catch((err) => console.error(err));
 
-    Promise.all(
-      apiCache.map(async (row) => {
-        const res = await fetch(
-          row.endpoint +
-            '&apikey=' +
-            process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY,
-        );
-        const json = await res.json();
-        newCache.push({
-          ...row,
-          json_data: json,
-          accessed_at: new Date().toISOString().toLocaleString(),
-        });
-      }),
-    ).then(async () => {
-      const overview = newCache.find((p) =>
-        p.endpoint.includes('OVERVIEW'),
-      )?.json_data;
-      const dailyStock = newCache.find((p) =>
-        p.endpoint.includes('TIME_SERIES_DAILY'),
-      )?.json_data;
-      const balanceSheet = newCache.find((p) =>
-        p.endpoint.includes('BALANCE_SHEET'),
-      )?.json_data;
-      const incomeStatement = newCache.find((p) =>
-        p.endpoint.includes('INCOME_STATEMENT'),
-      )?.json_data;
-      const cashflow = newCache.find((p) =>
-        p.endpoint.includes('CASH_FLOW'),
-      )?.json_data;
-      const earnings = newCache.find((p) =>
-        p.endpoint.includes('EARNINGS'),
-      )?.json_data;
+    const overview = cache.overview as Overview;
+    const dailyStock = cache.stock as DailyStockData;
 
-      const topBarMetrics = getTopBarMetrics(
-        overview,
-        report.targetprice || 182,
-        getNWeeksStock(dailyStock),
-      );
+    const topBarMetrics = getTopBarMetrics(
+      overview,
+      report.targetprice || 182,
+      getNWeeksStock(dailyStock),
+      yfQuarterly,
+    );
 
-      // Generate metrics
-      const sidebarMetrics = getSidebarMetrics(
-        overview,
-        balanceSheet,
-        incomeStatement,
-        getNWeeksStock(dailyStock),
-        report.targetprice || 182,
-        report.financial_strength || 'HIGH',
-      );
-      const growthAndValuationAnalysisMetrics =
-        getGrowthAndValuationAnalysisMetrics(
-          balanceSheet,
-          cashflow,
-          incomeStatement,
-          earnings,
-          dailyStock,
-        );
-      const financialAndRiskAnalysisMetrics =
-        getFinancialAndRiskAnalysisMetrics(
-          balanceSheet,
-          cashflow,
-          incomeStatement,
-        );
+    // Generate metrics
+    const sidebarMetrics = getSidebarMetrics(
+      overview,
+      getNWeeksStock(dailyStock),
+      report.targetprice || 182,
+      report.financial_strength || 'HIGH',
+      yfQuarterly,
+    );
+    const growthAndValuationAnalysisMetrics =
+      getGrowthAndValuationAnalysisMetrics(yfAnnual, dailyStock);
+    const financialAndRiskAnalysisMetrics =
+      getFinancialAndRiskAnalysisMetrics(yfAnnual);
 
-      await updateApiCache(newCache);
-      await updateReport({
-        id: report.id,
-        updated_at: new Date().toISOString().toLocaleString(),
-      });
-      console.log(templateConfig.metrics);
-      await updateTemplateConfig({
-        id: templateConfig.id,
-        metrics: {
-          // @ts-ignore
-          sources: templateConfig.metrics?.sources ?? [],
-          sidebarMetrics,
-          growthAndValuationAnalysisMetrics,
-          financialAndRiskAnalysisMetrics,
-          topBarMetrics,
-        },
-      });
-      setLoading(false);
-      initGeneration();
+    await updateReport({
+      id: report.id,
+      updated_at: new Date().toISOString().toLocaleString(),
     });
+
+    await updateTemplateConfig({
+      id: templateConfig.id,
+      metrics: {
+        // @ts-ignore
+        sources: templateConfig.metrics?.sources ?? [],
+        sidebarMetrics,
+        growthAndValuationAnalysisMetrics,
+        financialAndRiskAnalysisMetrics,
+        topBarMetrics,
+      },
+    });
+    setLoading(false);
+    initGeneration();
   }, [
-    apiCache,
-    updateApiCache,
+    cache,
     report,
     updateReport,
     templateConfig,

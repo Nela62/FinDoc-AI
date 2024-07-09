@@ -10,11 +10,10 @@ import {
   WidthType,
 } from 'docx';
 import { bordersNone } from '../../docx/utils';
-
-export type SidebarMetrics = Record<string, Record<string, string | number>>;
+import { SidebarMetrics } from '@/lib/utils/financialAPI';
 
 const metricsArr = (metrics: SidebarMetrics, secondaryColor: string) =>
-  Object.keys(metrics).map((category) => [
+  metrics.map((category) => [
     new TableRow({
       children: [
         new TableCell({
@@ -26,13 +25,16 @@ const metricsArr = (metrics: SidebarMetrics, secondaryColor: string) =>
           },
           shading: { fill: secondaryColor },
           children: [
-            new Paragraph({ heading: HeadingLevel.HEADING_3, text: category }),
+            new Paragraph({
+              heading: HeadingLevel.HEADING_3,
+              text: category.title,
+            }),
           ],
         }),
       ],
     }),
-    ...Object.entries(metrics[category]).map(
-      ([key, value]) =>
+    ...category.metrics.map(
+      (metric) =>
         new TableRow({
           height: { value: '0.15in', rule: 'exact' },
           children: [
@@ -44,7 +46,7 @@ const metricsArr = (metrics: SidebarMetrics, secondaryColor: string) =>
               children: [
                 new Paragraph({
                   style: 'small-narrow',
-                  text: key,
+                  text: metric.title,
                 }),
               ],
             }),
@@ -56,7 +58,7 @@ const metricsArr = (metrics: SidebarMetrics, secondaryColor: string) =>
                 new Paragraph({
                   style: 'bold-narrow',
                   alignment: AlignmentType.RIGHT,
-                  text: String(value),
+                  text: String(metric.value),
                 }),
               ],
             }),

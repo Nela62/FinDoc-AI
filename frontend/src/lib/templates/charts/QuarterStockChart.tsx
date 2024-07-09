@@ -9,9 +9,9 @@ import {
   IncomeStatement,
 } from '@/types/alphaVantageApi';
 import {
-  getHighestClosingStockPrice,
+  getHighestStockPrice,
   getLatestStockDataPoint,
-  getLowestClosingStockPrice,
+  getLowestStockPrice,
   getMeanClosingStockPrice,
   getNMonthsStock,
 } from '@/lib/utils/financialAPI';
@@ -54,8 +54,8 @@ export const QuarterStockChart = forwardRef((props: ChartProps, ref: any) => {
     day: dataPoint.day.slice(5),
     data: Number(dataPoint.data['5. adjusted close']),
   }));
-  const stockMin = getLowestClosingStockPrice(stockData);
-  const stockMax = getHighestClosingStockPrice(stockData);
+  const stockMin = getLowestStockPrice(stockData);
+  const stockMax = getHighestStockPrice(stockData);
   const stockMean = getMeanClosingStockPrice(stockData);
 
   return (

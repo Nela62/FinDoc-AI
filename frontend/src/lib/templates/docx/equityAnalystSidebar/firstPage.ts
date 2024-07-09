@@ -2,23 +2,21 @@ import {
   BorderStyle,
   Header,
   HeadingLevel,
-  HorizontalPositionRelativeFrom,
   ISectionOptions,
   Paragraph,
   Table,
   TableCell,
   TableRow,
   TextRun,
-  VerticalPositionRelativeFrom,
   WidthType,
 } from 'docx';
 import { bordersNone, defaultMargins, displayImage } from '../utils';
 import { classicFooter } from '../../footers/classicFooter';
 import { format } from 'date-fns';
 import { metricsSidebar } from '../../metrics/sidebar';
-import { SidebarMetrics } from '../../metrics/components/statistics';
 import { Rating } from '../../metrics/components/ratings';
 import { topHeaderLine } from '../../headers/base';
+import { SidebarMetrics } from '@/lib/utils/financialAPI';
 
 export const firstPageSection = async (
   authorCompanyName: string,

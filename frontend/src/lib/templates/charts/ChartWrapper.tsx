@@ -13,20 +13,21 @@ import {
 import { QuarterStockChart } from './QuarterStockChart';
 import { MarketDataChart } from './MarketDataChart';
 import { toPng } from 'html-to-image';
+import { PolygonData } from '@/types/metrics';
 
 export const ChartWrapper = ({
   colors,
   targetPrice,
   dailyStock,
-  incomeStatement,
-  earnings,
   setCharts,
+  polygonAnnual,
+  polygonQuarterly,
 }: {
   colors: string[];
   targetPrice: number;
   dailyStock: DailyStockData;
-  incomeStatement: IncomeStatement;
-  earnings: Earnings;
+  polygonAnnual: PolygonData;
+  polygonQuarterly: PolygonData;
   setCharts: Dispatch<SetStateAction<Blob[] | null>>;
 }) => {
   const [stockChart, setStockChart] = useState<HTMLDivElement | null>(null);
@@ -75,8 +76,8 @@ export const ChartWrapper = ({
       <MarketDataChart
         colors={colors}
         targetPrice={targetPrice}
-        incomeStatement={incomeStatement}
-        earnings={earnings}
+        polygonQuarterly={polygonQuarterly}
+        polygonAnnual={polygonAnnual}
         dailyStock={dailyStock}
         ref={onMarketRefChange}
       />

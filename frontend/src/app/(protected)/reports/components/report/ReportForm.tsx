@@ -21,11 +21,7 @@ import {
   VirtualizedCombobox,
   Option,
 } from '@/components/ui/virtualized-combobox';
-import {
-  fetchAPICacheByReportId,
-  fetchAllReports,
-  fetchTickers,
-} from '@/lib/queries';
+import { fetchAllReports, fetchTickers } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
 import { getNanoId } from '@/lib/utils/nanoId';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,24 +30,19 @@ import {
   useQuery,
   useUpdateMutation,
 } from '@supabase-cache-helpers/postgrest-react-query';
-import { format, isAfter, startOfWeek, subWeeks } from 'date-fns';
+import { format, isAfter, startOfWeek } from 'date-fns';
 import { SquarePen, Wand2Icon } from 'lucide-react';
-import {
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import {
   downloadPublicCompanyImgs,
-  fetchCacheAPIData,
-  fetchCacheNews,
+  fetchAllNews,
   getRecommendation,
 } from '../../utils/fetchAPI';
 import {
+  fetchDailyStock,
+  fetchOverview,
   getFinancialAndRiskAnalysisMetrics,
   getGrowthAndValuationAnalysisMetrics,
   getNWeeksStock,
@@ -72,29 +63,21 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
-import {
-  DailyStockData,
-  Earnings,
-  IncomeStatement,
-  Feed,
-} from '@/types/alphaVantageApi';
-import { data } from '@/lib/data/structuredData';
+import { Feed } from '@/types/alphaVantageApi';
 import { fetchNewsContent } from './actions';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import {
   useFileUrl,
   useUpload,
 } from '@supabase-cache-helpers/storage-react-query';
-import { Params } from '@/app/api/building-block/utils/blocks';
+import {
+  GeneralBlock,
+  Params,
+  Block,
+} from '@/app/api/building-block/utils/blocks';
 import { SubscriptionPlan } from '@/types/subscription';
 
 const defaultCompanyLogo = '/default_finpanel_logo.png';
-
-type apiCacheData = {
-  incomeStatement: IncomeStatement;
-  earnings: Earnings;
-  dailyStock: DailyStockData;
-};
 
 export const reportFormSchema = z.object({
   reportType: z.string(),
@@ -151,7 +134,11 @@ export const ReportForm = ({
   const [isOpen, setOpen] = useState(false);
   const [curReportId, setReportId] = useState<string | null>(null);
   const [images, setImages] = useState<Blob[] | null>(null);
-  const [apiCacheData, setApiCacheData] = useState<apiCacheData | null>(null);
+  const [polygonApi, setPolygonApi] = useState({
+    annual: null,
+    quarterly: null,
+    stock: null,
+  });
 
   const [jobs, setJobs] = useState<Record<string, Job>>({});
   const [error, setError] = useState<string | null>(null);
@@ -181,6 +168,12 @@ export const ReportForm = ({
   const supabase = createClient();
 
   const { data: reportsData } = useQuery(fetchAllReports(supabase));
+
+  const { mutateAsync: insertCache } = useInsertMutation(
+    supabase.from('api_cache'),
+    ['id'],
+    'id',
+  );
 
   const createJob = async (params: Params) => {
     try {
@@ -223,7 +216,7 @@ export const ReportForm = ({
 
   const waitForSecJobCompletion = async (jobId: string) => {
     while (true) {
-      const { status, block } = await fetch(
+      const { status, error } = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/sec-filing/status/${jobId}`,
       )
         .then((res) => res.json())
@@ -232,10 +225,13 @@ export const ReportForm = ({
           throw error;
         });
 
+      console.log('status', status);
       if (status === 'completed') {
-        return block;
+        return status;
       } else if (status === 'failed') {
         throw new Error('Job failed');
+      } else if (error) {
+        throw new Error(error);
       }
 
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
@@ -251,20 +247,23 @@ export const ReportForm = ({
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       let data = await response.json();
-      console.log(data);
 
-      if (data.status === 'processing') {
+      if (data.status === 'processing' || data.status === 'pending') {
         await waitForSecJobCompletion(data.job_id);
         // Fetch again after job completion
         response = await fetch(apiUrl);
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
+
         data = await response.json();
       }
 
+      console.log(data);
+
       if (data.status === 'available') {
-        return data.xmlPath;
+        return data.xml_path;
       } else {
         throw new Error(`Unexpected status: ${data.status}`);
       }
@@ -324,11 +323,6 @@ export const ReportForm = ({
     }
   }, [reportsData]);
 
-  const { data: apiCache } = useQuery(
-    fetchAPICacheByReportId(supabase, curReportId ?? ''),
-    { enabled: !!curReportId },
-  );
-
   const { data: pdfUrl } = useFileUrl(
     supabase.storage.from('saved-templates'),
     `${userId}/default/equity-analyst`,
@@ -358,30 +352,6 @@ export const ReportForm = ({
     }
   }, [pdfUrl, uploadTemplate]);
 
-  useEffect(() => {
-    if (!apiCache) return;
-
-    const incomeStatement = apiCache.find((cache) =>
-      cache.endpoint.includes('INCOME_STATEMENT'),
-    );
-
-    const earnings = apiCache.find((cache) =>
-      cache.endpoint.includes('EARNINGS'),
-    );
-
-    const dailyStock = apiCache.find((cache) =>
-      cache.endpoint.includes('TIME_SERIES_DAILY'),
-    );
-
-    if (incomeStatement && earnings && dailyStock) {
-      setApiCacheData({
-        incomeStatement: incomeStatement.json_data as IncomeStatement,
-        earnings: earnings.json_data as Earnings,
-        dailyStock: dailyStock.json_data as DailyStockData,
-      });
-    }
-  }, [apiCache]);
-
   const { data: tickersData } = useQuery(fetchTickers(supabase));
 
   const { mutateAsync: updateTickers } = useUpdateMutation(
@@ -402,12 +372,6 @@ export const ReportForm = ({
     supabase.from('reports'),
     ['id'],
     'id, url',
-  );
-
-  const { mutateAsync: insertCache } = useInsertMutation(
-    supabase.from('api_cache'),
-    ['id'],
-    'id',
   );
 
   const { mutateAsync: insertTemplate } = useInsertMutation(
@@ -467,23 +431,36 @@ export const ReportForm = ({
     const reportId = res[0].id;
 
     // Fetch and cache API
-    // TODO: split fetch and insert and move it to backend api
-    const apiData = await fetchCacheAPIData(
-      reportId,
-      values.companyTicker.value,
-      supabase,
-      userId,
-      insertCache,
-    );
+    const apiData = await fetch(`/api/metrics/${values.companyTicker.value}`)
+      .then((res) => res.ok && res.json())
+      .catch((err) => console.error(err));
+
+    const overview = await fetchOverview(values.companyTicker.value);
+
+    const dailyStock = await fetchDailyStock(values.companyTicker.value);
 
     const {
-      overview,
-      incomeStatement,
-      balanceSheet,
-      earnings,
-      dailyStock,
-      cashflow,
+      yfAnnual,
+      yfQuarterly,
+      ttmData,
+      polygonAnnualData,
+      polygonQuarterlyData,
     } = apiData;
+
+    await insertCache([
+      {
+        user_id: userId,
+        overview: overview,
+        stock: dailyStock,
+        report_id: reportId,
+      },
+    ]);
+
+    setPolygonApi({
+      annual: polygonAnnualData,
+      quarterly: polygonQuarterlyData,
+      stock: dailyStock,
+    });
 
     // If rec and/or fin strength are auto, assign them from api
     const recommendation =
@@ -501,7 +478,7 @@ export const ReportForm = ({
         : 'Medium';
 
     // Update the report with rec and fin strength
-    updateReport({
+    await updateReport({
       id: reportId,
       recommendation: recommendation,
       targetprice: targetPrice,
@@ -512,30 +489,21 @@ export const ReportForm = ({
       overview,
       targetPrice,
       getNWeeksStock(dailyStock),
+      yfQuarterly,
     );
 
     // Generate metrics
     const sidebarMetrics = getSidebarMetrics(
       overview,
-      balanceSheet,
-      incomeStatement,
       getNWeeksStock(dailyStock),
       targetPrice,
       financialStrength,
+      yfQuarterly,
     );
     const growthAndValuationAnalysisMetrics =
-      getGrowthAndValuationAnalysisMetrics(
-        balanceSheet,
-        cashflow,
-        incomeStatement,
-        earnings,
-        dailyStock,
-      );
-    const financialAndRiskAnalysisMetrics = getFinancialAndRiskAnalysisMetrics(
-      balanceSheet,
-      cashflow,
-      incomeStatement,
-    );
+      getGrowthAndValuationAnalysisMetrics(yfAnnual, dailyStock);
+    const financialAndRiskAnalysisMetrics =
+      getFinancialAndRiskAnalysisMetrics(yfAnnual);
 
     const tickerData = tickersData?.find(
       (company) => company.ticker === values.companyTicker.value,
@@ -560,13 +528,7 @@ export const ReportForm = ({
     // Fetch web data
     setProgress((state) => state + progressValue);
     setProgressMessage('Fetching web news...');
-    const news = await fetchCacheNews(
-      reportId,
-      values.companyTicker.value,
-      supabase,
-      userId,
-      insertCache,
-    );
+    const news = await fetchAllNews(values.companyTicker.value);
 
     const getRecentDevelopmentsContext = async (news: any) => {
       let context: Record<string, string>[] = [];
@@ -609,10 +571,15 @@ export const ReportForm = ({
       });
     });
 
-    const params: Omit<Params, 'blockId'> = {
+    const params: Omit<GeneralBlock, 'blockId'> = {
       plan,
       companyName: tickerData.company_name,
-      apiData: apiData,
+      apiData: {
+        overview,
+        yfAnnual: apiData.yfAnnual,
+        yfQuarterly: apiData.yfQuarterly,
+        dailyStock: dailyStock,
+      },
       xmlData: xml ?? '',
       newsData: newsContext,
       customPrompt: '',
@@ -625,14 +592,6 @@ export const ReportForm = ({
       blockId: 'company_overview',
       ...params,
     });
-
-    // const { block: companyOverview } = await fetch('/api/building-block/', {
-    //   method: 'POST',
-    //   body: JSON.stringify({
-    //     blockId: 'company_overview',
-    //     ...params,
-    //   }),
-    // }).then((res) => res.json());
 
     const companyOverview = await waitForJobCompletion(companyOverviewJobId);
 
@@ -675,6 +634,8 @@ export const ReportForm = ({
     // Get necessary documents and add them to the report library
     return {
       apiData,
+      overview,
+      dailyStock,
       tickerData,
       reportId,
       templateId: data[0].id,
@@ -693,104 +654,116 @@ export const ReportForm = ({
     if (!templateConfig) {
       throw new Error('Template config is not available.');
     }
-    // baseActions
-    const {
-      apiData,
-      tickerData,
-      reportId,
-      templateId,
-      recommendation,
-      targetPrice,
-      news,
-      newsContext,
-      xml,
-    } = await baseActions(values);
 
-    const generatedJson: JSONContent = { type: 'doc', content: [] };
-    let generatedContent = '';
+    try {
+      // baseActions
+      const {
+        apiData,
+        overview,
+        dailyStock,
+        tickerData,
+        reportId,
+        templateId,
+        recommendation,
+        targetPrice,
+        news,
+        newsContext,
+        xml,
+      } = await baseActions(values);
 
-    setProgress((state) => state + progressValue);
-    setProgressMessage('Writing report...');
+      const generatedJson: JSONContent = { type: 'doc', content: [] };
+      let generatedContent = '';
 
-    const params: Omit<Params, 'blockId'> = {
-      plan,
-      companyName: tickerData.company_name,
-      apiData: apiData,
-      xmlData: xml ?? '',
-      newsData: newsContext,
-      customPrompt: '',
-    };
+      setProgress((state) => state + progressValue);
+      setProgressMessage('Writing report...');
 
-    const jobIds = await Promise.all(
-      section_ids.map(async (id: string) => {
-        const jobId = await createJob({
-          blockId: id,
-          recommendation: recommendation,
-          targetPrice: targetPrice.toString(),
-          ...params,
-        });
-        return { blockId: id, id: jobId };
-      }),
-    );
+      const params: Omit<GeneralBlock, 'blockId'> = {
+        plan,
+        companyName: tickerData.company_name,
+        apiData: {
+          overview,
+          yfAnnual: apiData.yfAnnual,
+          yfQuarterly: apiData.yfQuarterly,
+          dailyStock: dailyStock,
+        },
+        xmlData: xml ?? '',
+        newsData: newsContext,
+        customPrompt: '',
+      };
 
-    const generatedBlocks = await waitForAllJobs(jobIds);
+      const jobIds = await Promise.all(
+        section_ids.map(async (id: string) => {
+          const jobId = await createJob({
+            blockId: id as Block,
+            recommendation: recommendation,
+            targetPrice: targetPrice.toString(),
+            ...params,
+          });
+          return { blockId: id, id: jobId };
+        }),
+      );
 
-    console.log('generated all sections');
+      const generatedBlocks = await waitForAllJobs(jobIds);
 
-    section_ids.forEach((id) => {
-      generatedContent += `##${titles[id as keyof typeof titles]}\
+      console.log('generated all sections');
+
+      section_ids.forEach((id) => {
+        generatedContent += `##${titles[id as keyof typeof titles]}\
       ${generatedBlocks[id]}`;
 
-      const json = markdownToJson(generatedBlocks[id]);
-      // console.log(json);
-      generatedJson.content?.push(
-        {
-          type: 'heading',
-          attrs: {
-            id: '220f43a9-c842-4178-b5b4-5ed8a33c6192',
-            level: 2,
-            'data-toc-id': '220f43a9-c842-4178-b5b4-5ed8a33c6192',
-          },
-          content: [
-            {
-              text: titles[id as keyof typeof titles],
-              type: 'text',
+        const json = markdownToJson(generatedBlocks[id]);
+        // console.log(json);
+        generatedJson.content?.push(
+          {
+            type: 'heading',
+            attrs: {
+              id: '220f43a9-c842-4178-b5b4-5ed8a33c6192',
+              level: 2,
+              'data-toc-id': '220f43a9-c842-4178-b5b4-5ed8a33c6192',
             },
-          ],
-        },
-        ...json.content,
-      );
-    });
+            content: [
+              {
+                text: titles[id as keyof typeof titles],
+                type: 'text',
+              },
+            ],
+          },
+          ...json.content,
+        );
+      });
 
-    console.log(generatedContent);
+      console.log(generatedContent);
 
-    // generate a summary if required
-    setProgress((state) => state + progressValue);
-    setProgressMessage('Generating a summary...');
-    const summary = await fetch('/api/building-block/summary', {
-      method: 'POST',
-      body: JSON.stringify({ reportContent: generatedContent }),
-    })
-      .then((res) => res.json())
-      .then((res) =>
-        res.summary
-          .split('- ')
-          .map((point: string) => point.trim())
-          .slice(1),
-      );
-    console.log(summary);
+      // generate a summary if required
+      setProgress((state) => state + progressValue);
+      setProgressMessage('Generating a summary...');
+      const summaryJobId = await createJob({
+        blockId: 'executive_summary',
+        generatedReport: generatedContent,
+        plan: plan,
+      });
 
-    // update report and template
-    updateReport({ id: reportId, json_content: generatedJson });
-    updateTemplate({
-      id: templateId,
-      summary: summary,
-    });
+      const summary = await waitForJobCompletion(summaryJobId);
 
-    setProgress((state) => state + progressValue);
-    setProgressMessage('Creating pdf file...');
+      // update report and template
+      updateReport({
+        id: reportId,
+        tiptap_content: generatedJson,
+        json_content: generatedBlocks,
+      });
+      updateTemplate({
+        id: templateId,
+        summary: summary,
+      });
 
-    setReportId(reportId);
+      setProgress((state) => state + progressValue);
+      setProgressMessage('Creating pdf file...');
+
+      setReportId(reportId);
+    } catch (err) {
+      setError((err as Error).message);
+      console.error(err);
+    }
   };
 
   useEffect(() => {
@@ -837,26 +810,38 @@ export const ReportForm = ({
               sizes="100vw"
               unoptimized
             />
-            <Progress value={progress} className="w-full" />
-            <AlertDialogDescription className="text-base pt-6">
-              {progressMessage}
-            </AlertDialogDescription>
+            {error ? (
+              <AlertDialogDescription className="text-base pt-6">
+                Sorry, something went wrong. We&apos;ve been notified.
+              </AlertDialogDescription>
+            ) : (
+              <>
+                <Progress value={progress} className="w-full" />
+                <AlertDialogDescription className="text-base pt-6">
+                  {progressMessage}
+                </AlertDialogDescription>
+              </>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {apiCache && templateConfig && targetPrice && apiCacheData && (
-        <ChartWrapper
-          colors={templateConfig.colorScheme.colors}
-          targetPrice={targetPrice}
-          incomeStatement={apiCacheData.incomeStatement}
-          earnings={apiCacheData.earnings}
-          dailyStock={apiCacheData.dailyStock}
-          setCharts={setImages}
-        />
-      )}
+      {templateConfig &&
+        targetPrice &&
+        polygonApi.annual &&
+        polygonApi.quarterly &&
+        polygonApi.stock && (
+          <ChartWrapper
+            colors={templateConfig.colorScheme.colors}
+            targetPrice={targetPrice}
+            polygonAnnual={polygonApi.annual}
+            polygonQuarterly={polygonApi.quarterly}
+            dailyStock={polygonApi.stock}
+            setCharts={setImages}
+          />
+        )}
       <div className="w-[360px] mx-auto flex flex-col py-4 gap-4 h-full">
         <h2 className="font-semibold text-primary/80">Configurations</h2>
         <Form {...form}>

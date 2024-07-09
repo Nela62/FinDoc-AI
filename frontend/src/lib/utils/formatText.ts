@@ -2,6 +2,16 @@ import markdownit from 'markdown-it';
 import { generateJSON } from '@tiptap/html';
 import { ExtensionKit } from '@/extensions/extension-kit';
 
+export function capitalizeWords(str: string) {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(function (word) {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
 export const markdownToHtml = (markdown: string) => {
   const md = markdownit('commonmark');
   const html = md.render(markdown);

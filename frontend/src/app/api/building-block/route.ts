@@ -3,20 +3,9 @@ import { getBlock } from './utils/blocks';
 import { serviceClient } from '@/lib/supabase/service';
 import { createClient } from '@/lib/supabase/server';
 
-// TODO: check if this is authenticated
-// export async function POST(req: Request) {
-//   const json = await req.json();
-
-//   console.log('generating block ' + json.blockId);
-
-//   const block = await getBlock(json);
-
-//   return NextResponse.json({ block: block });
-// }
-
 const supabase = serviceClient();
 
-const MAX_CONCURRENT_TASKS = 5; // Maximum number of concurrent tasks
+const MAX_CONCURRENT_TASKS = 5;
 
 export async function POST(req: Request) {
   const client = createClient();

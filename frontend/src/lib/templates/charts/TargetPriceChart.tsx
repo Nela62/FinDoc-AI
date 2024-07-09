@@ -21,9 +21,9 @@ import {
   IncomeStatement,
 } from '@/types/alphaVantageApi';
 import {
-  getHighestClosingStockPrice,
+  getHighestStockPrice,
   getLatestStockDataPoint,
-  getLowestClosingStockPrice,
+  getLowestStockPrice,
   getMeanClosingStockPrice,
   getNWeeksStock,
   getNYearsStock,
@@ -83,8 +83,8 @@ export const TargetPriceChart = forwardRef((props: ChartProps, ref: any) => {
     target: ratings.find((p) => p.day === dataPoint.day)?.data ?? null,
     raw: dataPoint.data['4. close'],
   }));
-  const stockMin = getLowestClosingStockPrice(stockData);
-  const stockMax = getHighestClosingStockPrice(stockData);
+  const stockMin = getLowestStockPrice(stockData);
+  const stockMax = getHighestStockPrice(stockData);
   const stockMean = getMeanClosingStockPrice(stockData);
 
   // TODO: add ability to handle revenue in millions
