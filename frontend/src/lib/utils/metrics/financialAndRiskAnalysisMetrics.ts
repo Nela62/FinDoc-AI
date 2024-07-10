@@ -84,64 +84,69 @@ export const getFinancialAndRiskAnalysisMetrics = (
         statistics: [
           {
             name: 'Gross Profit Margin',
-            numbers: annualFundamentals.incomeStatement.GrossProfit.slice(
-              -years,
-            ).map((y, i) =>
-              calculateRatio(
-                y.value * 100,
-                annualFundamentals.incomeStatement.TotalRevenue.slice(-years)[i]
-                  .value,
-              ),
-            ),
+            numbers:
+              annualFundamentals.incomeStatement.GrossProfit?.slice(-years).map(
+                (y, i) =>
+                  calculateRatio(
+                    y.value * 100,
+                    annualFundamentals.incomeStatement.TotalRevenue.slice(
+                      -years,
+                    )[i].value,
+                  ),
+              ) ?? Array.from({ length: years }, () => '--'),
           },
           {
             name: 'Operating Margin',
-            numbers: annualFundamentals.incomeStatement.OperatingIncome.slice(
-              -years,
-            ).map((y, i) =>
-              calculateRatio(
-                y.value * 100,
-                annualFundamentals.incomeStatement.TotalRevenue.slice(-years)[i]
-                  .value,
-              ),
-            ),
+            numbers:
+              annualFundamentals.incomeStatement.OperatingIncome?.slice(
+                -years,
+              ).map((y, i) =>
+                calculateRatio(
+                  y.value * 100,
+                  annualFundamentals.incomeStatement.TotalRevenue.slice(-years)[
+                    i
+                  ].value,
+                ),
+              ) ?? Array.from({ length: years }, () => '--'),
           },
           {
             name: 'Net Margin',
-            numbers: annualFundamentals.incomeStatement.NetIncome.slice(
-              -years,
-            ).map((y, i) =>
-              calculateRatio(
-                y.value * 100,
-                annualFundamentals.incomeStatement.TotalRevenue.slice(-years)[i]
-                  .value,
-              ),
-            ),
+            numbers:
+              annualFundamentals.incomeStatement.NetIncome?.slice(-years).map(
+                (y, i) =>
+                  calculateRatio(
+                    y.value * 100,
+                    annualFundamentals.incomeStatement.TotalRevenue.slice(
+                      -years,
+                    )[i].value,
+                  ),
+              ) ?? Array.from({ length: years }, () => '--'),
           },
           {
             name: 'Return on Assets',
-            numbers: annualFundamentals.incomeStatement.NetIncome.slice(
-              -years,
-            ).map((y, i) =>
-              calculateRatio(
-                y.value * 100,
-                annualFundamentals.balanceSheet.TotalAssets?.slice(-years)[i]
-                  .value,
-              ),
-            ),
+            numbers:
+              annualFundamentals.incomeStatement.NetIncome?.slice(-years).map(
+                (y, i) =>
+                  calculateRatio(
+                    y.value * 100,
+                    annualFundamentals.balanceSheet.TotalAssets?.slice(-years)[
+                      i
+                    ].value,
+                  ),
+              ) ?? Array.from({ length: years }, () => '--'),
           },
           {
             name: 'Return on Equity',
-            numbers: annualFundamentals.incomeStatement.NetIncome.slice(
-              -years,
-            ).map((y, i) =>
-              calculateRatio(
-                y.value * 100,
-                annualFundamentals.balanceSheet.StockholdersEquity.slice(
-                  -years,
-                )[i].value,
-              ),
-            ),
+            numbers:
+              annualFundamentals.incomeStatement.NetIncome?.slice(-years).map(
+                (y, i) =>
+                  calculateRatio(
+                    y.value * 100,
+                    annualFundamentals.balanceSheet.StockholdersEquity.slice(
+                      -years,
+                    )[i].value,
+                  ),
+              ) ?? Array.from({ length: years }, () => '--'),
           },
         ],
       },
@@ -150,29 +155,30 @@ export const getFinancialAndRiskAnalysisMetrics = (
         statistics: [
           {
             name: 'Cash Flow/Cap Ex',
-            numbers: annualFundamentals.cashFlow.OperatingCashFlow.slice(
-              -years,
-            ).map((y, i) =>
-              calculateRatio(
-                y.value * 100,
-                -annualFundamentals.cashFlow.CapitalExpenditure?.slice(-years)[
-                  i
-                ].value,
-              ),
-            ),
+            numbers:
+              annualFundamentals.cashFlow.OperatingCashFlow?.slice(-years).map(
+                (y, i) =>
+                  calculateRatio(
+                    y.value * 100,
+                    -annualFundamentals.cashFlow.CapitalExpenditure?.slice(
+                      -years,
+                    )[i].value,
+                  ),
+              ) ?? Array.from({ length: years }, () => '--'),
           },
           {
             name: 'Oper. Income/Int. Exp. (ratio)',
-            numbers: annualFundamentals.incomeStatement.OperatingIncome.slice(
-              -years,
-            ).map((y, i) =>
-              calculateRatio(
-                y.value * 100,
-                annualFundamentals.incomeStatement.InterestExpense.slice(
-                  -years,
-                )[i].value,
-              ),
-            ),
+            numbers:
+              annualFundamentals.incomeStatement.OperatingIncome?.slice(
+                -years,
+              ).map((y, i) =>
+                calculateRatio(
+                  y.value * 100,
+                  annualFundamentals.incomeStatement.InterestExpense?.slice(
+                    -years,
+                  )[i].value,
+                ),
+              ) ?? Array.from({ length: years }, () => '--'),
           },
           {
             name: 'Payout Ratio',
