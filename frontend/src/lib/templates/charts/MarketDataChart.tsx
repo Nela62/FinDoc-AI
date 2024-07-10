@@ -117,11 +117,12 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     .slice(0, 16)
     .map((quarter: any) => ({
       x: quarter.end_date,
-      y: Number(
-        (
-          Number(quarter.financials.income_statement.revenues.value) / 1.0e9
-        ).toFixed(2),
-      ),
+      y:
+        Number(
+          (
+            Number(quarter.financials.income_statement.revenues?.value) / 1.0e9
+          ).toFixed(2),
+        ) ?? null,
     }))
     .reverse();
 
@@ -129,11 +130,12 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     .slice(0, 16)
     .map((quarter: any) => ({
       x: quarter.end_date,
-      y: Number(
-        quarter.financials.income_statement.basic_earnings_per_share.value.toFixed(
-          2,
-        ),
-      ),
+      y:
+        Number(
+          quarter.financials.income_statement.basic_earnings_per_share?.value.toFixed(
+            2,
+          ),
+        ) ?? null,
     }))
     .reverse();
 
@@ -168,7 +170,8 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
   const annualRevenue = annualSlicedArray.map((arr) =>
     (
       arr.reduce(
-        (prev, cur) => prev + cur.financials.income_statement.revenues.value,
+        (prev, cur) =>
+          prev + cur.financials.income_statement.revenues?.value ?? 0,
         0,
       ) / 1.0e9
     ).toFixed(2),
@@ -178,7 +181,9 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     arr
       .reduce(
         (prev, cur) =>
-          prev + cur.financials.income_statement.basic_earnings_per_share.value,
+          prev +
+          cur.financials.income_statement.basic_earnings_per_share?.value +
+          0,
         0,
       )
       .toFixed(2),
