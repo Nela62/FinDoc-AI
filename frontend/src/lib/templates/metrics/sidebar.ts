@@ -19,7 +19,7 @@ import {
 import { bordersNone, displayImage } from '../docx/utils';
 import { Rating, displayRatings } from './components/ratings';
 import { displayStatistics } from './components/statistics';
-import { SidebarMetrics } from '@/lib/utils/financialAPI';
+import { SidebarMetrics } from '@/lib/utils/metrics/sidebarMetrics';
 
 export const metricsSidebar = async (
   metrics: SidebarMetrics,

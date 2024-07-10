@@ -4,13 +4,11 @@ import { OVERVIEW } from '@/lib/data/overview_ibm';
 import { POLYGON_ANNUAL } from '@/lib/data/polygon_annual';
 import { QUARTERLY_FUNDAMENTALS } from '@/lib/data/quarterly_fundamentals';
 import { TEMPLATES } from '@/lib/templates';
-import {
-  getFinancialAndRiskAnalysisMetrics,
-  getGrowthAndValuationAnalysisMetrics,
-  getNWeeksStock,
-  getSidebarMetrics,
-  getTopBarMetrics,
-} from '@/lib/utils/financialAPI';
+import { getFinancialAndRiskAnalysisMetrics } from '@/lib/utils/metrics/financialAndRiskAnalysisMetrics';
+import { getGrowthAndValuationAnalysisMetrics } from '@/lib/utils/metrics/growthAndValuationAnalysisMetrics';
+import { getSidebarMetrics } from '@/lib/utils/metrics/sidebarMetrics';
+import { getNWeeksStock } from '@/lib/utils/metrics/stock';
+import { getTopBarMetrics } from '@/lib/utils/metrics/topBarMetrics';
 import { format } from 'date-fns';
 
 export const generateDocxFile = async (

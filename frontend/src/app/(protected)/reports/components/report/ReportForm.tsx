@@ -43,12 +43,7 @@ import {
 import {
   fetchDailyStock,
   fetchOverview,
-  getFinancialAndRiskAnalysisMetrics,
-  getGrowthAndValuationAnalysisMetrics,
-  getNWeeksStock,
-  getSidebarMetrics,
-  getTopBarMetrics,
-} from '@/lib/utils/financialAPI';
+} from '@/lib/utils/metrics/financialAPI';
 import { TemplateConfig } from '../../Component';
 import { JSONContent } from '@tiptap/core';
 import { markdownToJson } from '@/lib/utils/formatText';
@@ -76,6 +71,11 @@ import {
   Block,
 } from '@/app/api/building-block/utils/blocks';
 import { SubscriptionPlan } from '@/types/subscription';
+import { getTopBarMetrics } from '@/lib/utils/metrics/topBarMetrics';
+import { getNWeeksStock } from '@/lib/utils/metrics/stock';
+import { getSidebarMetrics } from '@/lib/utils/metrics/sidebarMetrics';
+import { getGrowthAndValuationAnalysisMetrics } from '@/lib/utils/metrics/growthAndValuationAnalysisMetrics';
+import { getFinancialAndRiskAnalysisMetrics } from '@/lib/utils/metrics/financialAndRiskAnalysisMetrics';
 
 const defaultCompanyLogo = '/default_finpanel_logo.png';
 
@@ -92,11 +92,11 @@ export const reportFormSchema = z.object({
 const section_ids = [
   'investment_thesis',
   'business_description',
-  'recent_developments',
-  'management',
-  'risks',
-  'financial_analysis',
-  'valuation',
+  // 'recent_developments',
+  // 'management',
+  // 'risks',
+  // 'financial_analysis',
+  // 'valuation',
 ];
 
 const titles = {
@@ -259,8 +259,6 @@ export const ReportForm = ({
 
         data = await response.json();
       }
-
-      console.log(data);
 
       if (data.status === 'available') {
         return data.xml_path;
@@ -439,13 +437,8 @@ export const ReportForm = ({
 
     const dailyStock = await fetchDailyStock(values.companyTicker.value);
 
-    const {
-      yfAnnual,
-      yfQuarterly,
-      ttmData,
-      polygonAnnualData,
-      polygonQuarterlyData,
-    } = apiData;
+    const { yfAnnual, yfQuarterly, ttmData, polygonAnnual, polygonQuarterly } =
+      apiData;
 
     await insertCache([
       {
@@ -457,8 +450,8 @@ export const ReportForm = ({
     ]);
 
     setPolygonApi({
-      annual: polygonAnnualData,
-      quarterly: polygonQuarterlyData,
+      annual: polygonAnnual,
+      quarterly: polygonQuarterly,
       stock: dailyStock,
     });
 
@@ -732,8 +725,6 @@ export const ReportForm = ({
         );
       });
 
-      console.log(generatedContent);
-
       // generate a summary if required
       setProgress((state) => state + progressValue);
       setProgressMessage('Generating a summary...');
@@ -743,7 +734,11 @@ export const ReportForm = ({
         plan: plan,
       });
 
-      const summary = await waitForJobCompletion(summaryJobId);
+      const summaryRes = await waitForJobCompletion(summaryJobId);
+      const summary = summaryRes
+        .split('- ')
+        .map((point: string) => point.trim())
+        .slice(1);
 
       // update report and template
       updateReport({
@@ -777,6 +772,8 @@ export const ReportForm = ({
         });
     } else {
       console.log('still loading');
+      console.log('images ', images?.length);
+      console.log(images);
     }
   }, [
     isLoading,

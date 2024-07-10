@@ -2,7 +2,6 @@ import { serviceClient } from '@/lib/supabase/service';
 import { METRIC_KEYS } from './metricKeys';
 import { createClient } from '@/lib/supabase/server';
 import { MetricsData } from '@/types/metrics';
-import { TypedSupabaseClient } from '@/types/supabase';
 
 const downloadYfinanceData = async (ticker: string, timescale: string) => {
   const keys = Object.values(METRIC_KEYS)
@@ -13,6 +12,8 @@ const downloadYfinanceData = async (ticker: string, timescale: string) => {
   const apiUrl = `https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/${ticker}?symbol=${ticker}&type=${keys.join(
     ',',
   )}&period1=1483142400&period2=${Math.floor(Date.now() / 1000)}`;
+
+  console.log(apiUrl);
 
   const res = await fetch(apiUrl);
 
@@ -52,32 +53,7 @@ const downloadYfinanceData = async (ticker: string, timescale: string) => {
   return cleanedData;
 };
 
-const downloadPolygonData = async (
-  ticker: string,
-  refetch: boolean,
-  supabase: TypedSupabaseClient,
-) => {
-  if (!refetch) {
-    const { data: cachedData, error } = await supabase
-      .from('metrics_cache')
-      .select('*')
-      .eq('ticker', ticker);
-
-    if (error) {
-      throw new Error(
-        `Something went wrong when fetching data from cache: ${error}`,
-      );
-    }
-
-    if (cachedData && cachedData.length > 0) {
-      return {
-        ttmData: cachedData[0].polygon_ttm,
-        annualData: cachedData[0].polygon_annual,
-        quarterlyData: cachedData[0].polygon_quarterly,
-      };
-    }
-  }
-
+const downloadPolygonData = async (ticker: string) => {
   const apiUrl = `https://api.polygon.io/vX/reference/financials?ticker=${ticker}&limit=30&apiKey=${process.env.POLYGON_API_KEY}`;
 
   const res = await fetch(apiUrl);
@@ -124,7 +100,7 @@ export async function GET(
 
     const userRes = await supabase.auth.getUser();
 
-    if (!userRes.data.user) {
+    if (!userRes.data.user && process.env.NODE_ENV !== 'development') {
       return Response.json(
         {
           error: 'Unauthorized access',
@@ -163,26 +139,24 @@ export async function GET(
     const quarterly = await downloadYfinanceData(ticker, 'quarterly');
     const { ttmData, annualData, quarterlyData } = await downloadPolygonData(
       ticker,
-      !!refetch,
-      supabase,
     );
 
     // Cache data
     const serviceSupabase = serviceClient();
 
-    const { error } = await serviceSupabase.from('metrics_cache').insert([
-      {
-        ticker: ticker,
-        yf_annual: annual,
-        yf_quarterly: quarterly,
-        polygon_ttm: ttmData,
-        polygon_annual: annualData,
-        polygon_quarterly: quarterlyData,
-      },
-    ]);
+    const { error } = await serviceSupabase.from('metrics_cache').insert({
+      ticker: ticker,
+      yf_annual: annual,
+      yf_quarterly: quarterly,
+      polygon_ttm: ttmData,
+      polygon_annual: annualData,
+      polygon_quarterly: quarterlyData,
+    });
 
     if (error) {
-      throw new Error(`Something went wrong when inserting into db: ${error}`);
+      throw new Error(
+        `Something went wrong when inserting into db: ${error.message}`,
+      );
     }
 
     return Response.json({

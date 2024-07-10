@@ -3,19 +3,15 @@
 import { AreaChart, XAxis, YAxis, Area, ReferenceLine } from 'recharts';
 
 import { forwardRef, useEffect, useState } from 'react';
-import {
-  DailyStockData,
-  Earnings,
-  IncomeStatement,
-} from '@/types/alphaVantageApi';
+import { DailyStockData } from '@/types/alphaVantageApi';
+import { format } from 'date-fns';
 import {
   getHighestStockPrice,
   getLatestStockDataPoint,
   getLowestStockPrice,
   getMeanClosingStockPrice,
   getNMonthsStock,
-} from '@/lib/utils/financialAPI';
-import { format } from 'date-fns';
+} from '@/lib/utils/metrics/stock';
 
 type ChartProps = {
   colors: string[];

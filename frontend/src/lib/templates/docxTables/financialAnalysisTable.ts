@@ -13,7 +13,7 @@ import { bordersNone } from '../docx/utils';
 
 type Statistic = {
   name: string;
-  numbers: string[] | number[];
+  numbers: (string | number)[];
 };
 
 type Category = {

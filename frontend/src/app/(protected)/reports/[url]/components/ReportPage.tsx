@@ -26,7 +26,7 @@ export const ReportPage = ({ reportId }: { reportId: string }) => {
 
   const { editor } = useBlockEditor(
     data?.id ?? '',
-    (data?.json_content as Content) ?? '',
+    (data?.tiptap_content as Content) ?? '',
   );
 
   const { selectedTab, setSelectedTab } = useBoundStore((state) => state);

@@ -13,21 +13,17 @@ import {
 } from 'recharts';
 
 import { forwardRef, useEffect, useState } from 'react';
-import {
-  DailyStockData,
-  Earnings,
-  IncomeStatement,
-} from '@/types/alphaVantageApi';
+import { DailyStockData } from '@/types/alphaVantageApi';
+import { format, getQuarter, getYear, toDate } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
+import { PolygonData } from '@/types/metrics';
 import {
   getHighestStockPrice,
   getLatestStockDataPoint,
   getLowestStockPrice,
   getMeanClosingStockPrice,
   getNYearsStock,
-} from '@/lib/utils/financialAPI';
-import { format, getQuarter, getYear, toDate } from 'date-fns';
-import { v4 as uuidv4 } from 'uuid';
-import { MetricsData, PolygonData } from '@/types/metrics';
+} from '@/lib/utils/metrics/stock';
 
 type ChartProps = {
   colors: string[];
@@ -64,6 +60,22 @@ const renderCustomizedLabel = (props: any) => {
     </g>
   );
 };
+
+export function sliceArrayByProportions<T>(
+  proportions: number[],
+  data: T[],
+): T[][] {
+  const totalProportion = proportions.reduce((sum, prop) => sum + prop, 0);
+  let startIndex = 0;
+
+  return proportions.map((proportion) => {
+    const sliceSize = Math.round((proportion / totalProportion) * data.length);
+    const endIndex = Math.min(startIndex + sliceSize, data.length);
+    const slice = data.slice(startIndex, endIndex);
+    startIndex = endIndex;
+    return slice;
+  });
+}
 
 // const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 // TODO: generate quarters and columns automatically based on date
@@ -107,8 +119,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
       x: quarter.end_date,
       y: Number(
         (
-          Number(quarter.financials.income_statement.revenues.value) /
-          1000000000.0
+          Number(quarter.financials.income_statement.revenues.value) / 1.0e9
         ).toFixed(2),
       ),
     }))
@@ -125,8 +136,6 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
       ),
     }))
     .reverse();
-
-  console.log(earningsData);
 
   const quarters =
     props.polygonQuarterly.length > 16 ? 16 : props.polygonQuarterly.length;
@@ -150,6 +159,31 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
       left = 0;
     }
   }
+
+  const annualSlicedArray = sliceArrayByProportions(
+    quartersList,
+    props.polygonQuarterly.slice(0, 16).reverse(),
+  );
+
+  const annualRevenue = annualSlicedArray.map((arr) =>
+    (
+      arr.reduce(
+        (prev, cur) => prev + cur.financials.income_statement.revenues.value,
+        0,
+      ) / 1.0e9
+    ).toFixed(2),
+  );
+
+  const annualEPS = annualSlicedArray.map((arr) =>
+    arr
+      .reduce(
+        (prev, cur) =>
+          prev + cur.financials.income_statement.basic_earnings_per_share.value,
+        0,
+      )
+      .toFixed(2),
+  );
+
   const columnsClass = `50px ${quartersList
     .map((q) => q + 'fr')
     .join(' ')}`.trim();
@@ -344,12 +378,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
               className="flex items-center w-full justify-center"
               key={uuidv4()}
             >
-              <p className="font-semibold">
-                {
-                  props.polygonAnnual[i].financials.income_statement
-                    .basic_earnings_per_share.value
-                }
-              </p>
+              <p className="font-semibold">{annualEPS[i]}</p>
             </div>
           ))
           .reverse()}
@@ -397,14 +426,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
               key={uuidv4()}
             >
               <p className="font-semibold">
-                {props.polygonAnnual.length > i
-                  ? (
-                      Number(
-                        props.polygonAnnual[i].financials.income_statement
-                          .revenues.value,
-                      ) / 1.0e9
-                    ).toFixed(2)
-                  : 0}
+                {(Number(annualRevenue[i]) / 1.0e9).toFixed(2)}
               </p>
             </div>
           ))

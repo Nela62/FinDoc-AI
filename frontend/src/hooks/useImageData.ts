@@ -4,11 +4,7 @@ import {
   getApiCacheByReportId,
 } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
-import {
-  DailyStockData,
-  Earnings,
-  IncomeStatement,
-} from '@/types/alphaVantageApi';
+import { DailyStockData } from '@/types/alphaVantageApi';
 import { PolygonData } from '@/types/metrics';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { useEffect, useState } from 'react';

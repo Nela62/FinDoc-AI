@@ -1,14 +1,9 @@
 'use client';
 
 import {
-  AreaChart,
   XAxis,
   YAxis,
-  Area,
-  BarChart,
-  Bar,
   ReferenceLine,
-  ReferenceDot,
   LineChart,
   Line,
   ResponsiveContainer,
@@ -20,18 +15,14 @@ import {
   Earnings,
   IncomeStatement,
 } from '@/types/alphaVantageApi';
+import { COMPANY_RATINGS } from '@/lib/data/company_ratings';
+import { AMAZON_DAILY } from '@/lib/data/amzn_daily';
 import {
   getHighestStockPrice,
-  getLatestStockDataPoint,
   getLowestStockPrice,
   getMeanClosingStockPrice,
-  getNWeeksStock,
   getNYearsStock,
-} from '@/lib/utils/financialAPI';
-import { format } from 'date-fns';
-import { COMPANY_RATINGS } from '@/lib/data/company_ratings';
-import { APPLE_DAILY_ADJUSTED } from '@/lib/data/apple_daily_adjusted';
-import { AMAZON_DAILY } from '@/lib/data/amzn_daily';
+} from '@/lib/utils/metrics/stock';
 
 type ChartProps = {
   colors: string[];

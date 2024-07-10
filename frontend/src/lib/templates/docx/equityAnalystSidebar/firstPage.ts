@@ -16,7 +16,7 @@ import { format } from 'date-fns';
 import { metricsSidebar } from '../../metrics/sidebar';
 import { Rating } from '../../metrics/components/ratings';
 import { topHeaderLine } from '../../headers/base';
-import { SidebarMetrics } from '@/lib/utils/financialAPI';
+import { SidebarMetrics } from '@/lib/utils/metrics/sidebarMetrics';
 
 export const firstPageSection = async (
   authorCompanyName: string,

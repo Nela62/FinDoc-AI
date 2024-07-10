@@ -1,4 +1,4 @@
-type DataPoint = {
+export type FinancialDataPoint = {
   asOfDate: string;
   periodType: string;
   currency?: string;
@@ -6,9 +6,9 @@ type DataPoint = {
 };
 
 export type MetricsData = {
-  incomeStatement: Record<string, DataPoint[]>;
-  balanceSheet: Record<string, DataPoint[]>;
-  cashFlow: Record<string, DataPoint[]>;
+  incomeStatement: Record<string, FinancialDataPoint[]>;
+  balanceSheet: Record<string, FinancialDataPoint[]>;
+  cashFlow: Record<string, FinancialDataPoint[]>;
 };
 
 type PolygonDataPoint = {
@@ -43,3 +43,10 @@ type PolygonEndpoint = {
 };
 
 export type PolygonData = PolygonEndpoint[];
+
+export type Metric = { title: string; value: string };
+
+export type MetricSection = {
+  title: string;
+  metrics: Metric[];
+};

@@ -25,10 +25,11 @@ import {
   financialAnalysisTable,
 } from '../../docxTables/financialAnalysisTable';
 import { DisclaimerSection } from '../../disclaimer/standard';
-import { Metric, SidebarMetrics } from '@/lib/utils/financialAPI';
 import { sourcesHeader } from '../../headers/sourcesHeader';
 import { SourcesSection } from '../../sources/standard';
 import { topHeaderLine } from '../../headers/base';
+import { Metric } from '@/types/metrics';
+import { SidebarMetrics } from '@/lib/utils/metrics/sidebarMetrics';
 
 const ratingsList = [
   {

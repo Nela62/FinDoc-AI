@@ -1,4 +1,4 @@
-import { fetchDailyStock, fetchNews } from '@/lib/utils/financialAPI';
+import { fetchNews } from '@/lib/utils/metrics/financialAPI';
 import {
   BalanceSheet,
   Cashflow,

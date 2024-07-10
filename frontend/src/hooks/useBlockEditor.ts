@@ -213,7 +213,7 @@ export const useBlockEditor = (reportId: string, content: Content) => {
         updateReport({
           id: reportId,
           html_content: editor.getHTML(),
-          json_content: editor.getJSON(),
+          tiptap_content: editor.getJSON(),
         });
       }, 2000);
 

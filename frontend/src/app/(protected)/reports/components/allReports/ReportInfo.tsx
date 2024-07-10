@@ -6,13 +6,11 @@ import {
   getApiCacheByReportId,
 } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
-import {
-  getFinancialAndRiskAnalysisMetrics,
-  getGrowthAndValuationAnalysisMetrics,
-  getNWeeksStock,
-  getSidebarMetrics,
-  getTopBarMetrics,
-} from '@/lib/utils/financialAPI';
+import { getFinancialAndRiskAnalysisMetrics } from '@/lib/utils/metrics/financialAndRiskAnalysisMetrics';
+import { getGrowthAndValuationAnalysisMetrics } from '@/lib/utils/metrics/growthAndValuationAnalysisMetrics';
+import { getSidebarMetrics } from '@/lib/utils/metrics/sidebarMetrics';
+import { getNWeeksStock } from '@/lib/utils/metrics/stock';
+import { getTopBarMetrics } from '@/lib/utils/metrics/topBarMetrics';
 import { useBoundStore } from '@/providers/store-provider';
 import { DailyStockData, Overview } from '@/types/alphaVantageApi';
 import { SubscriptionPlan } from '@/types/subscription';

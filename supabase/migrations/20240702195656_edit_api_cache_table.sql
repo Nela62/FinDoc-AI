@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS public.metrics_cache(
   "ticker" text UNIQUE NOT NULL,
   "yf_annual" jsonb NOT NULL,
   "yf_quarterly" jsonb NOT NULL,
-  "polygon_ttm" jsonb NOT NULL,
+  "polygon_ttm" jsonb,
   "polygon_annual" jsonb NOT NULL,
   "polygon_quarterly" jsonb NOT NULL
 );

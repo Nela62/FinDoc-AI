@@ -2,7 +2,8 @@ import { getDocxBlob } from '@/app/(protected)/reports/utils/getDocxBlob';
 import { fetchReportById, fetchTemplateConfig } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
 import { AnalysisMetrics } from '@/lib/templates/docxTables/financialAnalysisTable';
-import { Metric, SidebarMetrics } from '@/lib/utils/financialAPI';
+import { SidebarMetrics } from '@/lib/utils/metrics/sidebarMetrics';
+import { Metric } from '@/types/metrics';
 import { FinancialStrength, Recommendation } from '@/types/report';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import {
@@ -111,7 +112,7 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
     },
   );
 
-  const { data: images } = useDirectory(
+  const { data: logos } = useDirectory(
     supabase.storage.from('public-company-logos'),
     report?.companies?.cik ?? '',
     { refetchOnWindowFocus: false, enabled: !!report && !!report.companies },
@@ -129,22 +130,28 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
   );
 
   useEffect(() => {
-    if (!images) return;
+    if (!logos) return;
     const logo =
-      images.find((image) => image.name === 'dark-logo') ??
-      images.find((image) => image.name === 'light-logo') ??
-      images.find((image) => image.name === 'dark-icon') ??
-      images.find((image) => image.name === 'light-icon') ??
-      images.find((image) => image.name === 'dark-symbol') ??
-      images.find((image) => image.name === 'light-symbol');
+      logos.find((image) => image.name === 'dark-logo') ??
+      logos.find((image) => image.name === 'light-logo') ??
+      logos.find((image) => image.name === 'dark-icon') ??
+      logos.find((image) => image.name === 'light-icon') ??
+      logos.find((image) => image.name === 'dark-symbol') ??
+      logos.find((image) => image.name === 'light-symbol');
+    console.log(logos);
 
     console.log('set logo ', logo);
 
     setLogoName(logo?.name ?? null);
-  }, [images]);
+  }, [logos]);
 
   useEffect(() => {
-    if (logoName && companyLogoUrl) setLoading(false);
+    if (logoName && companyLogoUrl) {
+      console.log('finished loading');
+      setLoading(false);
+    }
+    console.log(logoName);
+    console.log(companyLogoUrl);
   }, [logoName, companyLogoUrl]);
 
   const generateDocxBlob = useCallback(

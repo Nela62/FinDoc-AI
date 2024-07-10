@@ -10,7 +10,7 @@ import {
   WidthType,
 } from 'docx';
 import { bordersNone } from '../../docx/utils';
-import { SidebarMetrics } from '@/lib/utils/financialAPI';
+import { SidebarMetrics } from '@/lib/utils/metrics/sidebarMetrics';
 
 const metricsArr = (metrics: SidebarMetrics, secondaryColor: string) =>
   metrics.map((category) => [

@@ -1,23 +1,22 @@
 import { TEMPLATES } from '@/lib/templates';
 import { TemplateConfig, TemplateData } from '../Component';
-import {
-  Metric,
-  SidebarMetrics,
-  getFinancialAndRiskAnalysisMetrics,
-  getGrowthAndValuationAnalysisMetrics,
-  getNWeeksStock,
-  getSidebarMetrics,
-  getTopBarMetrics,
-} from '@/lib/utils/financialAPI';
 import { OVERVIEW } from '@/lib/data/overview_ibm';
 import { JSONContent } from '@tiptap/core';
 import { AnalysisMetrics } from '@/lib/templates/docxTables/financialAnalysisTable';
 import { FinancialStrength, Recommendation } from '@/types/report';
-import { Overview } from '@/types/alphaVantageApi';
 import { DAILY_IBM } from '@/lib/data/daily_imb';
 import { format } from 'date-fns';
 import { QUARTERLY_FUNDAMENTALS } from '@/lib/data/quarterly_fundamentals';
 import { ANNUAL_FUNDAMENTALS } from '@/lib/data/annual_fundamentals';
+import { getTopBarMetrics } from '@/lib/utils/metrics/topBarMetrics';
+import { getNWeeksStock } from '@/lib/utils/metrics/stock';
+import {
+  getSidebarMetrics,
+  SidebarMetrics,
+} from '@/lib/utils/metrics/sidebarMetrics';
+import { getGrowthAndValuationAnalysisMetrics } from '@/lib/utils/metrics/growthAndValuationAnalysisMetrics';
+import { getFinancialAndRiskAnalysisMetrics } from '@/lib/utils/metrics/financialAndRiskAnalysisMetrics';
+import { Metric } from '@/types/metrics';
 
 // TODO: Is this buffer page really needed?
 

@@ -1,8 +1,4 @@
-import {
-  DailyStockData,
-  Earnings,
-  IncomeStatement,
-} from '@/types/alphaVantageApi';
+import { DailyStockData } from '@/types/alphaVantageApi';
 import {
   Dispatch,
   SetStateAction,

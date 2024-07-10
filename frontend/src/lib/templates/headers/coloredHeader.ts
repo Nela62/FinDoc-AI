@@ -1,7 +1,7 @@
 import { BorderStyle, Paragraph, TableCell, TableRow } from 'docx';
 import { bordersNone } from '../docx/utils';
 import { headerBase } from './base';
-import { Metric } from '@/lib/utils/financialAPI';
+import { Metric } from '@/types/metrics';
 
 export const coloredHeader = async (
   authorCompanyLogo: Blob,
