@@ -13,11 +13,10 @@ const downloadYfinanceData = async (ticker: string, timescale: string) => {
     ',',
   )}&period1=1483142400&period2=${Math.floor(Date.now() / 1000)}`;
 
-  console.log(apiUrl);
-
   const res = await fetch(apiUrl);
 
   if (!res.ok) {
+    console.log(res);
     throw new Error(`HTTP error! status: ${res.status}`);
   }
 
@@ -57,6 +56,7 @@ const downloadPolygonData = async (ticker: string) => {
   const apiUrl = `https://api.polygon.io/vX/reference/financials?ticker=${ticker}&limit=30&apiKey=${process.env.POLYGON_API_KEY}`;
 
   const res = await fetch(apiUrl);
+  console.log(res);
 
   if (!res.ok) {
     throw new Error(`HTTP error! status: ${res.status}`);
