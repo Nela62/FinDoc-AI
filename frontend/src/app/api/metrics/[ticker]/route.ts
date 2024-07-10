@@ -8,7 +8,6 @@ const downloadYfinanceData = async (ticker: string, timescale: string) => {
     .map((value) => value.map((v) => timescale + v))
     .flat();
 
-  // If data is not in cache, fetch it
   const apiUrl = `https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/${ticker}?symbol=${ticker}&type=${keys.join(
     ',',
   )}&period1=1483142400&period2=${Math.floor(Date.now() / 1000)}`;
@@ -56,9 +55,9 @@ const downloadPolygonData = async (ticker: string) => {
   const apiUrl = `https://api.polygon.io/vX/reference/financials?ticker=${ticker}&limit=30&apiKey=${process.env.POLYGON_API_KEY}`;
 
   const res = await fetch(apiUrl);
-  console.log(res);
 
   if (!res.ok) {
+    console.log(res);
     throw new Error(`HTTP error! status: ${res.status}`);
   }
 
