@@ -735,10 +735,15 @@ export const ReportForm = ({
       });
 
       const summaryRes = await waitForJobCompletion(summaryJobId);
-      const summary = summaryRes
-        .split('- ')
-        .map((point: string) => point.trim())
-        .slice(1);
+      const summary = summaryRes.includes('•')
+        ? summaryRes
+            .split('• ')
+            .map((point: string) => point.trim())
+            .slice(1)
+        : summaryRes
+            .split('- ')
+            .map((point: string) => point.trim())
+            .slice(1);
 
       // update report and template
       updateReport({
