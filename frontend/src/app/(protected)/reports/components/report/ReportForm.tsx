@@ -92,11 +92,11 @@ export const reportFormSchema = z.object({
 const section_ids = [
   'investment_thesis',
   'business_description',
-  // 'recent_developments',
-  // 'management',
-  // 'risks',
-  // 'financial_analysis',
-  // 'valuation',
+  'recent_developments',
+  'management',
+  'risks',
+  'financial_analysis',
+  'valuation',
 ];
 
 const titles = {
