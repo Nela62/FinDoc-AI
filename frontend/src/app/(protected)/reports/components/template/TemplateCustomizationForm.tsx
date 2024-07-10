@@ -54,7 +54,7 @@ const templateFormSchema = z.object({
   colorScheme: z.string(),
 });
 
-const defaultCompanyLogo = '/default_finpanel_logo.png';
+const defaultCompanyLogo = '/default_findoc_logo.png';
 
 export const TemplateCustomizationForm = ({
   userId,

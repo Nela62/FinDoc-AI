@@ -529,7 +529,7 @@ export const generateDocxFile = async (
     componentId: 'equity-analyst-sidebar',
   };
 
-  const defaultCompanyLogo = '/default_finpanel_logo.png';
+  const defaultCompanyLogo = '/default_findoc_logo.png';
 
   const templateFn = TEMPLATES[templateData.componentId];
 

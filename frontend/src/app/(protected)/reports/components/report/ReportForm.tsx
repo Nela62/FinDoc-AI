@@ -77,7 +77,7 @@ import { getSidebarMetrics } from '@/lib/utils/metrics/sidebarMetrics';
 import { getGrowthAndValuationAnalysisMetrics } from '@/lib/utils/metrics/growthAndValuationAnalysisMetrics';
 import { getFinancialAndRiskAnalysisMetrics } from '@/lib/utils/metrics/financialAndRiskAnalysisMetrics';
 
-const defaultCompanyLogo = '/default_finpanel_logo.png';
+const defaultCompanyLogo = '/default_findoc_logo.png';
 
 export const reportFormSchema = z.object({
   reportType: z.string(),

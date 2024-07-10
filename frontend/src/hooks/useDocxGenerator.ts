@@ -23,7 +23,7 @@ type Metrics = {
   sources: string[];
 };
 
-const defaultCompanyLogo = '/default_finpanel_logo.png';
+const defaultCompanyLogo = '/default_findoc_logo.png';
 
 export const useDocxGenerator = (userId: string, reportId: string | null) => {
   const [logoName, setLogoName] = useState<string | null>(null);

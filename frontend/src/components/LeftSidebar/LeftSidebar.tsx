@@ -127,7 +127,7 @@ export const LeftSidebar = () => {
       <nav className="flex flex-col items-center gap-4 px-2 py-4">
         <Link href="#" className="">
           <Image
-            src="/default_finpanel_logo.png"
+            src="/default_findoc_logo.png"
             className="transition-all h-10 w-fit"
             alt="coreline logo"
             height={0}
