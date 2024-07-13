@@ -242,7 +242,7 @@ export const ReportForm = ({
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/sec-filing/${ticker}/10-K`;
 
     try {
-      let response = await fetch(apiUrl);
+      const response = await fetch(apiUrl, { cache: 'no-store' });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -250,15 +250,19 @@ export const ReportForm = ({
 
       if (data.status === 'processing' || data.status === 'pending') {
         await waitForSecJobCompletion(data.job_id);
-        // Fetch again after job completion
-        response = await fetch(apiUrl);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        // Fetch again after job completion
+        const newResponse = await fetch(apiUrl, { cache: 'no-store' });
+
+        if (!newResponse.ok) {
+          throw new Error(`HTTP error! status: ${newResponse.status}`);
         }
 
-        data = await response.json();
+        data = await newResponse.json();
+        console.log('new data ', JSON.stringify(data));
       }
+
+      console.log('data here ', JSON.stringify(data));
 
       if (data.status === 'available') {
         return data.xml_path;
@@ -580,7 +584,7 @@ export const ReportForm = ({
 
     // Generate a company overview if any
     setProgress((state) => state + progressValue);
-    setProgressMessage('Generating a company overview...');
+    setProgressMessage('Generating company overview...');
     const companyOverviewJobId = await createJob({
       blockId: 'company_overview',
       ...params,
@@ -727,7 +731,7 @@ export const ReportForm = ({
 
       // generate a summary if required
       setProgress((state) => state + progressValue);
-      setProgressMessage('Generating a summary...');
+      setProgressMessage('Generating summary...');
       const summaryJobId = await createJob({
         blockId: 'executive_summary',
         generatedReport: generatedContent,
