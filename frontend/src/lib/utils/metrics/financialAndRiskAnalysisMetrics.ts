@@ -162,7 +162,7 @@ export const getFinancialAndRiskAnalysisMetrics = (
                     y.value * 100,
                     -annualFundamentals.cashFlow.CapitalExpenditure?.slice(
                       -years,
-                    )[i].value,
+                    )[i]?.value ?? 0,
                   ),
               ) ?? Array.from({ length: years }, () => '--'),
           },

@@ -144,64 +144,80 @@ export const downloadPublicCompanyImgs = async (
   orgId: string | null,
   supabase: TypedSupabaseClient,
 ) => {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-  if (!session) throw new Error('Session not found');
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public-company-logos/${cik}/exists`,
-    {
-      method: 'HEAD',
-      headers: {
-        authorization: session.access_token,
+    if (!session) throw new Error('Session not found');
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public-company-logos/${cik}/exists`,
+      {
+        method: 'HEAD',
+        headers: {
+          authorization: session.access_token,
+        },
       },
-    },
-  );
+    );
 
-  console.log(response);
+    if (response.ok) return;
 
-  if (response.ok) return;
+    if (!orgId) {
+      orgId = await fetch(
+        `https://api.brandfetch.io/v2/search/${tickers[0].company_name}`,
+        {
+          method: 'GET',
+          headers: {
+            accept: 'application/json',
+            Authorization:
+              'Bearer ' + process.env.NEXT_PUBLIC_BRANDFETCH_API_KEY,
+          },
+        },
+      )
+        .then((res) => res.json())
+        .then((data) => data[0].domain)
+        .catch((err) => console.error(err));
 
-  if (!orgId) {
-    orgId = await fetch(`https://api.brandfetch.io/v2/search/${orgId}`, {
-      method: 'GET',
-      headers: {
-        accept: 'application/json',
-        Authorization: 'Bearer ' + process.env.NEXT_PUBLIC_BRANDFETCH_API_KEY,
+      const newTickers = tickers.map((ticker) => ({
+        id: ticker.id,
+        website: orgId,
+      }));
+      console.log(orgId);
+      console.log(newTickers);
+
+      await updateTickers({ id: tickers[0].id, website: orgId });
+    }
+
+    console.log(orgId);
+
+    const images = await fetch(
+      `https://api.brandfetch.io/v2/brands/${cleanLink(orgId || '')}`,
+      {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+          Authorization: 'Bearer ' + process.env.NEXT_PUBLIC_BRANDFETCH_API_KEY,
+        },
       },
-    })
+    )
       .then((res) => res.json())
-      .then((data) => data[0].domain)
       .catch((err) => console.error(err));
 
-    updateTickers(tickers.map((ticker) => ({ id: ticker.id, website: orgId })));
+    images.logos.forEach(async (img: any, index: number) => {
+      if (img.type === 'other') return;
+
+      const format =
+        img.formats.find((format: any) => format.format === 'png') ??
+        img.formats[0];
+      await uploadPublicCompanyImg(
+        format.src,
+        cik,
+        format.format,
+        `${img.theme}-${img.type}`,
+        index,
+      );
+    });
+  } catch (err) {
+    console.error(err);
   }
-  const images = await fetch(
-    `https://api.brandfetch.io/v2/brands/${cleanLink(orgId || '')}`,
-    {
-      method: 'GET',
-      headers: {
-        accept: 'application/json',
-        Authorization: 'Bearer ' + process.env.NEXT_PUBLIC_BRANDFETCH_API_KEY,
-      },
-    },
-  )
-    .then((res) => res.json())
-    .catch((err) => console.error(err));
-
-  images.logos.forEach(async (img: any, index: number) => {
-    if (img.type === 'other') return;
-
-    const format =
-      img.formats.find((format: any) => format.format === 'png') ??
-      img.formats[0];
-    await uploadPublicCompanyImg(
-      format.src,
-      cik,
-      format.format,
-      `${img.theme}-${img.type}`,
-      index,
-    );
-  });
 };

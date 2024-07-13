@@ -117,12 +117,12 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     .slice(0, 16)
     .map((quarter: any) => ({
       x: quarter.end_date,
-      y:
-        Number(
-          (
-            Number(quarter.financials.income_statement.revenues?.value) / 1.0e9
-          ).toFixed(2),
-        ) ?? null,
+      y: Number(
+        (
+          Number(quarter.financials.income_statement.revenues?.value ?? 0) /
+          1.0e9
+        ).toFixed(2),
+      ),
     }))
     .reverse();
 
@@ -130,12 +130,12 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     .slice(0, 16)
     .map((quarter: any) => ({
       x: quarter.end_date,
-      y:
-        Number(
-          quarter.financials.income_statement.basic_earnings_per_share?.value.toFixed(
-            2,
-          ),
-        ) ?? null,
+      y: Number(
+        (
+          quarter.financials.income_statement.basic_earnings_per_share?.value ??
+          0
+        ).toFixed(2),
+      ),
     }))
     .reverse();
 
@@ -167,6 +167,8 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     props.polygonQuarterly.slice(0, 16).reverse(),
   );
 
+  console.log(annualSlicedArray);
+
   const annualRevenue = annualSlicedArray.map((arr) =>
     (
       arr.reduce(
@@ -177,12 +179,14 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     ).toFixed(2),
   );
 
+  console.log(annualRevenue);
+
   const annualEPS = annualSlicedArray.map((arr) =>
     arr
       .reduce(
         (prev, cur) =>
           prev +
-          cur.financials.income_statement.basic_earnings_per_share?.value +
+            cur.financials.income_statement.basic_earnings_per_share?.value ??
           0,
         0,
       )

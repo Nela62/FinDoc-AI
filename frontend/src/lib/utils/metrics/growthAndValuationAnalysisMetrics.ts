@@ -268,13 +268,14 @@ export const getGrowthAndValuationAnalysisMetrics = (
                 } else {
                   const curDividend = calculateRatio(
                     cur.value,
-                    annualFundamentals.balanceSheet.ShareIssued[i].value,
+                    annualFundamentals.balanceSheet.ShareIssued[i]?.value ?? 0,
                   );
 
                   const prevDividend = calculateRatio(
                     annualFundamentals.cashFlow.CommonStockDividendPaid[i - 1]
-                      .value,
-                    annualFundamentals.balanceSheet.ShareIssued[i - 1].value,
+                      ?.value ?? 0,
+                    annualFundamentals.balanceSheet.ShareIssued[i - 1]?.value ??
+                      0,
                   );
 
                   return calculateGrowthRate(
@@ -299,7 +300,7 @@ export const getGrowthAndValuationAnalysisMetrics = (
 
                     const payoutRatio = calculateRatio(
                       annualFundamentals.cashFlow.CommonStockDividendPaid[i]
-                        .value,
+                        ?.value ?? 0,
                       annualFundamentals.incomeStatement.NetIncome[i].value,
                     );
 

@@ -225,7 +225,6 @@ export const ReportForm = ({
           throw error;
         });
 
-      console.log('status', status);
       if (status === 'completed') {
         return status;
       } else if (status === 'failed') {
@@ -259,10 +258,7 @@ export const ReportForm = ({
         }
 
         data = await newResponse.json();
-        console.log('new data ', JSON.stringify(data));
       }
-
-      console.log('data here ', JSON.stringify(data));
 
       if (data.status === 'available') {
         return data.xml_path;
@@ -772,6 +768,7 @@ export const ReportForm = ({
 
   useEffect(() => {
     if (!isLoading && images) {
+      console.log('generating pdf...');
       generateDocxBlob(images)
         .then((blob: Blob) => generatePdf(blob))
         .then(() => {
@@ -781,8 +778,14 @@ export const ReportForm = ({
         });
     } else {
       console.log('still loading');
+      console.log(
+        templateConfig &&
+          targetPrice &&
+          polygonApi.annual &&
+          polygonApi.quarterly &&
+          polygonApi.stock,
+      );
       console.log('images ', images?.length);
-      console.log(images);
     }
   }, [
     isLoading,

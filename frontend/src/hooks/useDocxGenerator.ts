@@ -150,8 +150,8 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
       console.log('finished loading');
       setLoading(false);
     }
-    console.log(logoName);
-    console.log(companyLogoUrl);
+    console.log('logoName ', logoName);
+    console.log('companyLogoUrl ', companyLogoUrl);
   }, [logoName, companyLogoUrl]);
 
   const generateDocxBlob = useCallback(
