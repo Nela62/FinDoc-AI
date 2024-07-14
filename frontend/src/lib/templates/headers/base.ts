@@ -68,7 +68,7 @@ export const headerBase = async (
             children: [
               new TextRun({
                 text: title,
-                size: 46,
+                size: title.length < 26 ? 46 : 36,
                 color: 'ffffff',
                 font: 'Arial Narrow',
                 bold: true,
