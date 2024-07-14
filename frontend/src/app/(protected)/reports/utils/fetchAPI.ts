@@ -188,7 +188,7 @@ export const downloadPublicCompanyImgs = async (
       });
     }
 
-    console.log(orgId);
+    console.log('orgId ', orgId);
 
     const images = await fetch(
       `https://api.brandfetch.io/v2/brands/${cleanLink(orgId || '')}`,

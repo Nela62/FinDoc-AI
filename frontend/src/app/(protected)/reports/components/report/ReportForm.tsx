@@ -85,6 +85,7 @@ import {
   waitForSecJobCompletion,
   waitForAllJobs,
 } from '@/lib/utils/jobs';
+import { useRouter } from 'next/router';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -149,6 +150,8 @@ export const ReportForm = ({
   const [error, setError] = useState<string | null>(null);
 
   const [reportsNum, setReportsNum] = useState(0);
+
+  const router = useRouter();
 
   const progressValue = 100 / 7;
 
@@ -823,7 +826,9 @@ export const ReportForm = ({
             )}
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => router.reload()}>
+              Cancel
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

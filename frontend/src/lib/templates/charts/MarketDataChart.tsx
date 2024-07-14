@@ -119,7 +119,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
       x: quarter.end_date,
       y: Number(
         (
-          Number(quarter.financials.income_statement.revenues?.value ?? 0) /
+          Number(quarter.financials.income_statement?.revenues?.value ?? 0) /
           1.0e9
         ).toFixed(2),
       ),
@@ -132,8 +132,8 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
       x: quarter.end_date,
       y: Number(
         (
-          quarter.financials.income_statement.basic_earnings_per_share?.value ??
-          0
+          quarter.financials.income_statement?.basic_earnings_per_share
+            ?.value ?? 0
         ).toFixed(2),
       ),
     }))
@@ -173,7 +173,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     (
       arr.reduce(
         (prev, cur) =>
-          prev + cur.financials.income_statement.revenues?.value ?? 0,
+          prev + cur.financials.income_statement?.revenues?.value ?? 0,
         0,
       ) / 1.0e9
     ).toFixed(2),
@@ -186,7 +186,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
       .reduce(
         (prev, cur) =>
           prev +
-            cur.financials.income_statement.basic_earnings_per_share?.value ??
+            cur.financials.income_statement?.basic_earnings_per_share?.value ??
           0,
         0,
       )
@@ -289,8 +289,8 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
                 Number(stockMax.toFixed(2)),
               ]}
               domain={[
-                (dataMin: number) => dataMin - 10,
-                (dataMax: number) => dataMax + 10,
+                (dataMin: number) => dataMin - 0.1 * (stockMax - stockMin),
+                (dataMax: number) => dataMax + 0.1 * (stockMax - stockMin),
               ]}
             />
             <Area

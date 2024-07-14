@@ -104,10 +104,8 @@ export const QuarterStockChart = forwardRef((props: ChartProps, ref: any) => {
               width={50}
               ticks={[stockMin.toFixed(2), stockMean, stockMax.toFixed(2)]}
               domain={[
-                // (dataMin: number) => dataMin - 0.1 * (stockMax - stockMin),
-                // (dataMax: number) => dataMax + 0.1 * (stockMax - stockMin),
-                (dataMin: number) => dataMin - 2,
-                (dataMax: number) => dataMax + 2,
+                (dataMin: number) => dataMin - 0.1 * (stockMax - stockMin),
+                (dataMax: number) => dataMax + 0.1 * (stockMax - stockMin),
               ]}
             />
             <Area
