@@ -98,11 +98,13 @@ export const displayImage = async ({
   image,
   height,
   width,
+  maxWidth,
   floating,
 }: {
   image: Blob;
   height?: number;
   width?: number;
+  maxWidth?: number;
   floating?: IFloating;
 }): Promise<ImageRun> => {
   const { width: visualWidth, height: visualHeight } = await getImageSize(
@@ -114,10 +116,25 @@ export const displayImage = async ({
   if (height && width) {
     transformation = { height: height, width: width };
   } else if (height && !width) {
-    transformation = {
-      height: height,
-      width: (height / visualHeight) * visualWidth,
-    };
+    if (maxWidth) {
+      const w = (height / visualHeight) * visualWidth;
+      if (w > maxWidth) {
+        transformation = {
+          height: (maxWidth / visualWidth) * visualHeight,
+          width: maxWidth,
+        };
+      } else {
+        transformation = {
+          height: height,
+          width: (height / visualHeight) * visualWidth,
+        };
+      }
+    } else {
+      transformation = {
+        height: height,
+        width: (height / visualHeight) * visualWidth,
+      };
+    }
   } else if (!height && width) {
     transformation = {
       height: (width / visualWidth) * visualHeight,
