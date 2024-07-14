@@ -43,10 +43,11 @@ import {
 import {
   fetchDailyStock,
   fetchOverview,
+  fetchWeeklyStock,
 } from '@/lib/utils/metrics/financialAPI';
 import { TemplateConfig } from '../../Component';
 import { JSONContent } from '@tiptap/core';
-import { markdownToJson } from '@/lib/utils/formatText';
+import { capitalizeWords, markdownToJson } from '@/lib/utils/formatText';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -58,7 +59,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
-import { Feed } from '@/types/alphaVantageApi';
+import { Feed, Overview } from '@/types/alphaVantageApi';
 import { fetchNewsContent } from './actions';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import {
@@ -76,6 +77,14 @@ import { getNWeeksStock } from '@/lib/utils/metrics/stock';
 import { getSidebarMetrics } from '@/lib/utils/metrics/sidebarMetrics';
 import { getGrowthAndValuationAnalysisMetrics } from '@/lib/utils/metrics/growthAndValuationAnalysisMetrics';
 import { getFinancialAndRiskAnalysisMetrics } from '@/lib/utils/metrics/financialAndRiskAnalysisMetrics';
+import {
+  JobStatus,
+  Job,
+  createJob,
+  waitForJobCompletion,
+  waitForSecJobCompletion,
+  waitForAllJobs,
+} from '@/lib/utils/jobs';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -109,10 +118,6 @@ const titles = {
   valuation: 'Valuation',
   management_and_risks: 'Management and Risks',
 };
-
-type JobStatus = 'processing' | 'completed' | 'failed' | 'queued';
-
-type Job = { blockId: string; status: JobStatus; block: string };
 
 export const ReportForm = ({
   setIsTemplateCustomization,
@@ -175,68 +180,6 @@ export const ReportForm = ({
     'id',
   );
 
-  const createJob = async (params: Params) => {
-    try {
-      const { jobId } = await fetch(`/api/building-block`, {
-        method: 'POST',
-        body: JSON.stringify(params),
-      }).then((res) => res.json());
-
-      setJobs((prevJobs) => ({
-        ...prevJobs,
-        [jobId]: { blockId: params.blockId, status: 'processing' },
-      }));
-      return jobId;
-    } catch (error) {
-      setError('Failed to create job');
-      throw error;
-    }
-  };
-
-  const waitForJobCompletion = async (jobId: string) => {
-    while (true) {
-      const { status, block } = await fetch(
-        `/api/building-block?jobId=${jobId}`,
-      )
-        .then((res) => res.json())
-        .catch((e) => {
-          console.error(e);
-          throw error;
-        });
-
-      if (status === 'completed') {
-        return block;
-      } else if (status === 'failed') {
-        throw new Error('Job failed');
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
-    }
-  };
-
-  const waitForSecJobCompletion = async (jobId: string) => {
-    while (true) {
-      const { status, error } = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/sec-filing/status/${jobId}`,
-      )
-        .then((res) => res.json())
-        .catch((e) => {
-          console.error(e);
-          throw error;
-        });
-
-      if (status === 'completed') {
-        return status;
-      } else if (status === 'failed') {
-        throw new Error('Job failed');
-      } else if (error) {
-        throw new Error(error);
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
-    }
-  };
-
   const getSecFiling = async (ticker: string): Promise<string> => {
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/sec-filing/${ticker}/10-K`;
 
@@ -271,15 +214,50 @@ export const ReportForm = ({
     }
   };
 
-  const waitForAllJobs = async (jobs: Record<string, string>[]) => {
-    let results: Record<string, any> = {};
-    await Promise.all(
-      jobs.map(async (job) => {
-        const res = await waitForJobCompletion(job.id);
-        results[job.blockId] = res;
-      }),
-    );
-    return results;
+  const getRecAndTargetPrice = async (
+    providedRec: string | undefined,
+    providedTP: number | undefined,
+    overview: Overview,
+    params: Params,
+  ) => {
+    let recommendation;
+    let targetPrice;
+
+    if (providedRec && providedRec !== 'Auto') {
+      recommendation = providedRec;
+
+      if (providedTP) {
+        targetPrice = providedTP;
+
+        return { recommendation, targetPrice };
+      } else {
+        const recAndTargetPriceJob = await createJob(params, setJobs, setError);
+
+        const res = await waitForJobCompletion(recAndTargetPriceJob);
+
+        const data = JSON.parse(res);
+
+        return {
+          recommendation: capitalizeWords(data.recommendation),
+          targetPrice: data.target_price,
+        };
+      }
+    } else if (overview.AnalystTargetPrice !== 'None') {
+      recommendation = getRecommendation(overview);
+      targetPrice = Number(overview.AnalystTargetPrice);
+      return { recommendation, targetPrice };
+    } else {
+      const recAndTargetPriceJob = await createJob(params, setJobs, setError);
+
+      const res = await waitForJobCompletion(recAndTargetPriceJob);
+
+      const data = JSON.parse(res);
+
+      return {
+        recommendation: capitalizeWords(data.recommendation),
+        targetPrice: data.target_price,
+      };
+    }
   };
 
   useEffect(() => {
@@ -351,12 +329,6 @@ export const ReportForm = ({
   }, [pdfUrl, uploadTemplate]);
 
   const { data: tickersData } = useQuery(fetchTickers(supabase));
-
-  const { mutateAsync: updateTickers } = useUpdateMutation(
-    supabase.from('companies'),
-    ['id'],
-    'id',
-  );
 
   // TODO: sort by cap instead
 
@@ -437,8 +409,9 @@ export const ReportForm = ({
 
     const dailyStock = await fetchDailyStock(values.companyTicker.value);
 
-    const { yfAnnual, yfQuarterly, ttmData, polygonAnnual, polygonQuarterly } =
-      apiData;
+    const weeklyStock = await fetchWeeklyStock(values.companyTicker.value);
+
+    const { yfAnnual, yfQuarterly, polygonAnnual, polygonQuarterly } = apiData;
 
     await insertCache([
       {
@@ -454,49 +427,6 @@ export const ReportForm = ({
       quarterly: polygonQuarterly,
       stock: dailyStock,
     });
-
-    // If rec and/or fin strength are auto, assign them from api
-    const recommendation =
-      values.recommendation !== 'Auto'
-        ? values.recommendation
-        : getRecommendation(overview);
-
-    const targetPrice = values.targetPrice
-      ? values.targetPrice
-      : Number(overview.AnalystTargetPrice);
-
-    const financialStrength =
-      values.financialStrength && values.financialStrength !== 'Auto'
-        ? values.financialStrength
-        : 'Medium';
-
-    // Update the report with rec and fin strength
-    await updateReport({
-      id: reportId,
-      recommendation: recommendation,
-      targetprice: targetPrice,
-      financial_strength: financialStrength,
-    });
-
-    const topBarMetrics = getTopBarMetrics(
-      overview,
-      targetPrice,
-      getNWeeksStock(dailyStock),
-      yfQuarterly,
-    );
-
-    // Generate metrics
-    const sidebarMetrics = getSidebarMetrics(
-      overview,
-      getNWeeksStock(dailyStock),
-      targetPrice,
-      financialStrength,
-      yfQuarterly,
-    );
-    const growthAndValuationAnalysisMetrics =
-      getGrowthAndValuationAnalysisMetrics(yfAnnual, dailyStock);
-    const financialAndRiskAnalysisMetrics =
-      getFinancialAndRiskAnalysisMetrics(yfAnnual);
 
     const tickerData = tickersData?.find(
       (company) => company.ticker === values.companyTicker.value,
@@ -572,25 +502,81 @@ export const ReportForm = ({
         yfAnnual: apiData.yfAnnual,
         yfQuarterly: apiData.yfQuarterly,
         dailyStock: dailyStock,
+        weeklyStock: weeklyStock,
       },
       xmlData: xml ?? '',
       newsData: newsContext,
       customPrompt: '',
     };
 
+    const { recommendation, targetPrice } = await getRecAndTargetPrice(
+      values.recommendation,
+      values.targetPrice,
+      overview,
+      {
+        blockId: 'targetprice_recommendation',
+        plan,
+        apiData: {
+          overview,
+          yfAnnual: apiData.yfAnnual,
+          yfQuarterly: apiData.yfQuarterly,
+          dailyStock: dailyStock,
+          weeklyStock: weeklyStock,
+        },
+        recommendation: values.recommendation,
+        companyName: tickerData.company_name,
+      },
+    );
+
+    const financialStrength =
+      values.financialStrength && values.financialStrength !== 'Auto'
+        ? values.financialStrength
+        : 'Medium';
+
+    // Update the report with rec and fin strength
+    await updateReport({
+      id: reportId,
+      recommendation: recommendation,
+      targetprice: targetPrice,
+      financial_strength: financialStrength,
+    });
+
+    const topBarMetrics = getTopBarMetrics(
+      overview,
+      targetPrice,
+      getNWeeksStock(dailyStock),
+      yfQuarterly,
+    );
+
+    // Generate metrics
+    const sidebarMetrics = getSidebarMetrics(
+      overview,
+      getNWeeksStock(dailyStock),
+      targetPrice,
+      financialStrength,
+      yfQuarterly,
+    );
+    const growthAndValuationAnalysisMetrics =
+      getGrowthAndValuationAnalysisMetrics(yfAnnual, dailyStock);
+    const financialAndRiskAnalysisMetrics =
+      getFinancialAndRiskAnalysisMetrics(yfAnnual);
+
     // Generate a company overview if any
     setProgress((state) => state + progressValue);
     setProgressMessage('Generating company overview...');
-    const companyOverviewJobId = await createJob({
-      blockId: 'company_overview',
-      ...params,
-    });
+    const companyOverviewJobId = await createJob(
+      {
+        blockId: 'company_overview',
+        ...params,
+      },
+      setJobs,
+      setError,
+    );
 
     const companyOverview = await waitForJobCompletion(companyOverviewJobId);
 
     await downloadPublicCompanyImgs(
       tickerData.cik,
-      updateTickers,
       tickersData.filter((ticker) => ticker.cik === tickerData.cik),
       tickerData.website,
       supabase,
@@ -629,6 +615,7 @@ export const ReportForm = ({
       apiData,
       overview,
       dailyStock,
+      weeklyStock,
       tickerData,
       reportId,
       templateId: data[0].id,
@@ -654,6 +641,7 @@ export const ReportForm = ({
         apiData,
         overview,
         dailyStock,
+        weeklyStock,
         tickerData,
         reportId,
         templateId,
@@ -678,6 +666,7 @@ export const ReportForm = ({
           yfAnnual: apiData.yfAnnual,
           yfQuarterly: apiData.yfQuarterly,
           dailyStock: dailyStock,
+          weeklyStock: weeklyStock,
         },
         xmlData: xml ?? '',
         newsData: newsContext,
@@ -686,12 +675,16 @@ export const ReportForm = ({
 
       const jobIds = await Promise.all(
         section_ids.map(async (id: string) => {
-          const jobId = await createJob({
-            blockId: id as Block,
-            recommendation: recommendation,
-            targetPrice: targetPrice.toString(),
-            ...params,
-          });
+          const jobId = await createJob(
+            {
+              blockId: id as Block,
+              recommendation: recommendation,
+              targetPrice: targetPrice.toString(),
+              ...params,
+            },
+            setJobs,
+            setError,
+          );
           return { blockId: id, id: jobId };
         }),
       );
@@ -728,11 +721,15 @@ export const ReportForm = ({
       // generate a summary if required
       setProgress((state) => state + progressValue);
       setProgressMessage('Generating summary...');
-      const summaryJobId = await createJob({
-        blockId: 'executive_summary',
-        generatedReport: generatedContent,
-        plan: plan,
-      });
+      const summaryJobId = await createJob(
+        {
+          blockId: 'executive_summary',
+          generatedReport: generatedContent,
+          plan: plan,
+        },
+        setJobs,
+        setError,
+      );
 
       const summaryRes = await waitForJobCompletion(summaryJobId);
       const summary = summaryRes.includes('•')

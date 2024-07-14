@@ -14,6 +14,11 @@ export type SummaryInputs = {
   REPORT: string;
 };
 
+export type RecAndTargetPriceInputs = {
+  CONTEXT: string;
+  RECOMMENDATION?: string;
+};
+
 const humanloopIdsMap: Record<string, string> = {
   company_overview: 'pr_eEsRLn1ueHYu2ohtbLfz8',
   investment_thesis: 'pr_InocnkalxtNTfsiEuFycf',
@@ -25,7 +30,26 @@ const humanloopIdsMap: Record<string, string> = {
   risks: 'pr_TkzimL1MD7xJUMA0wp7yz',
   environment_and_sustainability_governance: 'pr_Hp3kSGo0vlOaS5Yo6pkor',
   executive_summary: 'pr_U4jwcfdNjstPSeWE56IFS',
+  targetprice_recommendation: 'pr_8AHpHaePbdFGO13qOemFe',
 };
+
+function extractOutput(response: string) {
+  // Regular expression to match content between <output> tags
+  const pattern = /<output>\s*([\s\S]*?)\s*<\/output>/;
+  const match = response.match(pattern);
+
+  if (match) {
+    try {
+      return match[1];
+    } catch (error) {
+      console.error('Error: Unable to parse JSON', error);
+      // @ts-ignore
+      throw new Error(error.message);
+    }
+  } else {
+    throw new Error('Error: No <output> tags found');
+  }
+}
 
 function findReplaceString(string: string, find: string, replace: string) {
   if (/[a-zA-Z\_]+/g.test(string)) {
@@ -42,7 +66,7 @@ function findReplaceString(string: string, find: string, replace: string) {
 
 export const generateBlock = async (
   blockId: string,
-  inputs: Inputs | SummaryInputs,
+  inputs: Inputs | SummaryInputs | RecAndTargetPriceInputs,
   plan: SubscriptionPlan,
 ) => {
   if (!process.env.HUMANLOOP_API_KEY) {
@@ -87,19 +111,22 @@ export const generateBlock = async (
 
   // https://github.com/anthropics/anthropic-sdk-typescript/issues/432
   if (message.content[0].type === 'text') {
+    console.log(message.content[0].text);
     humanloop.log({
       project_id: humanloopIdsMap[blockId],
       config_id: config.id,
       inputs: inputs,
-      output: message.content[0].text
-        .replace(/(.*?)<output>/gs, '')
-        .replace('</output>', ''),
+      // output: message.content[0].text
+      //   .replace(/(.*?)<output>/gs, '')
+      //   .replace('</output>', ''),
+      output: extractOutput(message.content[0].text),
     });
 
     return {
-      content: message.content[0].text
-        .replace(/(.*?)<output>/gs, '')
-        .replace('</output>', ''),
+      // content: message.content[0].text
+      //   .replace(/(.*?)<output>/gs, '')
+      //   .replace('</output>', ''),
+      content: extractOutput(message.content[0].text),
       inputTokens: message.usage.input_tokens,
       outputTokens: message.usage.output_tokens,
     };

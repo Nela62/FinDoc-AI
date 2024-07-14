@@ -125,12 +125,13 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
     {
       ensureExistence: true,
       refetchOnWindowFocus: false,
-      enabled: !!report && !!logoName,
+      enabled: !!report && !!logoName && logoName !== 'default',
     },
   );
 
   useEffect(() => {
     if (!logos) return;
+
     const logo =
       logos.find((image) => image.name === 'dark-logo') ??
       logos.find((image) => image.name === 'light-logo') ??
@@ -138,20 +139,24 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
       logos.find((image) => image.name === 'light-icon') ??
       logos.find((image) => image.name === 'dark-symbol') ??
       logos.find((image) => image.name === 'light-symbol');
-    console.log(logos);
 
-    console.log('set logo ', logo);
+    console.log('set logo ', logo?.name ?? 'default');
 
-    setLogoName(logo?.name ?? null);
+    if (logo?.name) {
+      setLogoName(logo.name);
+    } else {
+      setLogoName('default');
+    }
   }, [logos]);
 
   useEffect(() => {
-    if (logoName && companyLogoUrl) {
+    console.log('logoName ', logoName);
+    console.log('companyLogoUrl ', companyLogoUrl);
+
+    if ((logoName && logoName !== 'default' && companyLogoUrl) || logoName) {
       console.log('finished loading');
       setLoading(false);
     }
-    console.log('logoName ', logoName);
-    console.log('companyLogoUrl ', companyLogoUrl);
   }, [logoName, companyLogoUrl]);
 
   const generateDocxBlob = useCallback(
@@ -178,16 +183,18 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
         );
       }
 
-      if (!companyLogoUrl) {
-        console.log(logoName);
-        throw new Error('Could not find company logos.');
-      }
+      // if (!companyLogoUrl) {
+      //   console.log(logoName);
+      //   throw new Error('Could not find company logos.');
+      // }
 
       const authorCompanyLogo = await fetch(
         authorCompanyLogoUrl ?? defaultCompanyLogo,
       ).then((res) => res.blob());
 
-      const companyLogo = await fetch(companyLogoUrl).then((res) => res.blob());
+      const companyLogo = await fetch(
+        companyLogoUrl ?? '/white_square.png',
+      ).then((res) => res.blob());
 
       const metrics = templateConfig.metrics as Metrics;
 

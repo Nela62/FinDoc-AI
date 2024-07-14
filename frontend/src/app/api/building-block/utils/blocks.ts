@@ -1,12 +1,14 @@
 import {
-  BalanceSheet,
-  Cashflow,
   DailyStockData,
-  Earnings,
-  IncomeStatement,
   Overview,
+  WeeklyStockData,
 } from '@/types/alphaVantageApi';
-import { Inputs, SummaryInputs, generateBlock } from './generateBlock';
+import {
+  Inputs,
+  RecAndTargetPriceInputs,
+  SummaryInputs,
+  generateBlock,
+} from './generateBlock';
 import { SubscriptionPlan } from '@/types/subscription';
 import {
   get10KItem,
@@ -17,6 +19,7 @@ import { MetricsData } from '@/types/metrics';
 export type ApiProp = {
   overview: Overview;
   dailyStock: DailyStockData;
+  weeklyStock: WeeklyStockData;
   yfAnnual: MetricsData;
   yfQuarterly: MetricsData;
 };
@@ -29,7 +32,8 @@ export type Block =
   | 'management'
   | 'risks'
   | 'financial_analysis'
-  | 'valuation';
+  | 'valuation'
+  | 'targetprice_recommendation';
 
 export type GeneralBlock = {
   plan: SubscriptionPlan;
@@ -49,7 +53,27 @@ export type ExecSummary = {
   generatedReport: string;
 };
 
-export type Params = ExecSummary | GeneralBlock;
+export type RecAndTargetPrice = {
+  plan: SubscriptionPlan;
+  blockId: 'targetprice_recommendation';
+  companyName: string;
+  apiData: ApiProp;
+  recommendation?: string;
+};
+
+export type Params = ExecSummary | RecAndTargetPrice | GeneralBlock;
+
+const getRecAndTargetPriceContext = (apiData: ApiProp) => {
+  const context = {
+    annualData: apiData.yfAnnual,
+    quarterlyData: apiData.yfQuarterly,
+    stock: apiData.weeklyStock['Weekly Adjusted Time Series'],
+    forwardPE: apiData.overview.ForwardPE,
+    trailingPE: apiData.overview.TrailingPE,
+  };
+
+  return JSON.stringify(context);
+};
 
 const getCompanyOverviewContext = (
   apiData: ApiProp,
@@ -184,6 +208,15 @@ const contextMap = {
 export const getBlock = async (params: Params) => {
   if (params.blockId === 'executive_summary') {
     const inputs: SummaryInputs = { REPORT: params.generatedReport };
+
+    const res = await generateBlock(params.blockId, inputs, params.plan);
+    return res;
+  }
+  if (params.blockId === 'targetprice_recommendation') {
+    const inputs: RecAndTargetPriceInputs = {
+      CONTEXT: getRecAndTargetPriceContext(params.apiData),
+      RECOMMENDATION: params.recommendation,
+    };
 
     const res = await generateBlock(params.blockId, inputs, params.plan);
     return res;

@@ -131,7 +131,6 @@ const uploadPublicCompanyImg = async (
 
 export const downloadPublicCompanyImgs = async (
   cik: string,
-  updateTickers: any,
   tickers: {
     id: string;
     cik: string;
@@ -182,10 +181,11 @@ export const downloadPublicCompanyImgs = async (
         id: ticker.id,
         website: orgId,
       }));
-      console.log(orgId);
-      console.log(newTickers);
 
-      await updateTickers({ id: tickers[0].id, website: orgId });
+      await fetch('/api/images/logo/website', {
+        method: 'POST',
+        body: JSON.stringify({ tickers: newTickers }),
+      });
     }
 
     console.log(orgId);

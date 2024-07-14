@@ -26,6 +26,16 @@ export async function fetchDailyStock(ticker: string) {
   return res.json();
 }
 
+export async function fetchWeeklyStock(ticker: string) {
+  const endpoint = `https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=${ticker}&apikey=${process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY}&outputsize=full`;
+
+  const res = await fetch(endpoint);
+
+  if (!res.ok) throw new Error('Could not fetch stock data');
+
+  return res.json();
+}
+
 export async function fetchOverview(ticker: string): Promise<Overview> {
   const endpoint = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${ticker}&apikey=${process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY}`;
 

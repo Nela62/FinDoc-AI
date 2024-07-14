@@ -78,6 +78,11 @@ export type DailyStockData = {
   'Time Series (Daily)': DailyTimeSeries;
 };
 
+export type WeeklyStockData = {
+  'Meta Data': StockMetadata;
+  'Weekly Adjusted Time Series': DailyTimeSeries;
+};
+
 export type DailyStockDataPoint = {
   day: string;
   data: DailyData;
