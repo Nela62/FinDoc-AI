@@ -85,7 +85,7 @@ import {
   waitForSecJobCompletion,
   waitForAllJobs,
 } from '@/lib/utils/jobs';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -826,7 +826,7 @@ export const ReportForm = ({
             )}
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => router.reload()}>
+            <AlertDialogCancel onClick={() => router.refresh()}>
               Cancel
             </AlertDialogCancel>
           </AlertDialogFooter>
