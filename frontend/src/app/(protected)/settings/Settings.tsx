@@ -41,14 +41,14 @@ export const Settings = ({
           </Link>
           {/* <Link href="#">Notifications</Link> */}
           {/* <Link href="#">Workspaces</Link> */}
-          <Link
+          {/* <Link
             href="/settings/billing"
             className={
               section === 'billing' ? 'font-semibold text-primary' : ''
             }
           >
             Billing
-          </Link>
+          </Link> */}
           <Link
             href="#"
             className={

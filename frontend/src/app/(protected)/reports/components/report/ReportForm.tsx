@@ -775,13 +775,6 @@ export const ReportForm = ({
         });
     } else {
       console.log('still loading');
-      console.log(
-        templateConfig &&
-          targetPrice &&
-          polygonApi.annual &&
-          polygonApi.quarterly &&
-          polygonApi.stock,
-      );
       console.log('images ', images?.length);
     }
   }, [

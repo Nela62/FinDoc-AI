@@ -61,7 +61,7 @@ export const LeftSidebar = () => {
           </TooltipTrigger>
           <TooltipContent side="right">Reports</TooltipContent>
         </Tooltip>
-        <Tooltip>
+        {/* <Tooltip>
           <TooltipTrigger asChild>
             <Link
               href="#"
@@ -98,7 +98,7 @@ export const LeftSidebar = () => {
           <TooltipContent side="right">
             Data Sources - coming soon!
           </TooltipContent>
-        </Tooltip>
+        </Tooltip> */}
       </nav>
       <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
         <Tooltip>
