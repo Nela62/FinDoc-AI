@@ -2,41 +2,65 @@ import { NextResponse } from 'next/server';
 import { getBlock } from './utils/blocks';
 import { serviceClient } from '@/lib/supabase/service';
 import { createClient } from '@/lib/supabase/server';
+import { Logger } from 'next-axiom';
 
 const supabase = serviceClient();
 
 const MAX_CONCURRENT_TASKS = 5;
 
 export async function POST(req: Request) {
-  const client = createClient();
+  const log = new Logger();
 
-  const userRes = await client.auth.getUser();
+  try {
+    const client = createClient();
 
-  if (!userRes.data.user) {
-    return Response.json(
-      {
-        error: 'Unauthorized access',
-        message: 'User not found or invalid credentials',
-      },
-      { status: 401 },
-    );
-  }
+    const userRes = await client.auth.getUser();
 
-  const json = await req.json();
+    if (!userRes.data.user) {
+      return Response.json(
+        {
+          error: 'Unauthorized access',
+          message: 'User not found or invalid credentials',
+        },
+        { status: 401 },
+      );
+    }
 
-  // Check if the maximum number of concurrent tasks is reached
-  const { count } = await supabase
-    .from('ai_jobs')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'processing');
+    const json = await req.json();
 
-  if (count && count >= MAX_CONCURRENT_TASKS) {
-    // If the limit is reached, add the task to the queue
+    // Check if the maximum number of concurrent tasks is reached
+    const { count } = await supabase
+      .from('ai_jobs')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'processing');
+
+    if (count && count >= MAX_CONCURRENT_TASKS) {
+      // If the limit is reached, add the task to the queue
+      const { data, error } = await supabase
+        .from('ai_jobs')
+        .insert({
+          block_id: json.blockId,
+          status: 'queued',
+        })
+        .select();
+
+      if (error) {
+        console.error('Error creating task:', error);
+        return NextResponse.json(
+          { error: 'Failed to create task' },
+          { status: 500 },
+        );
+      }
+
+      return NextResponse.json({ jobId: data[0].id });
+    }
+
+    // If the limit is not reached, start processing the task immediately
     const { data, error } = await supabase
       .from('ai_jobs')
       .insert({
         block_id: json.blockId,
-        status: 'queued',
+        status: 'processing',
       })
       .select();
 
@@ -48,33 +72,32 @@ export async function POST(req: Request) {
       );
     }
 
+    // Start processing the task asynchronously
+    processTask(data[0].id, json);
+
     return NextResponse.json({ jobId: data[0].id });
-  }
-
-  // If the limit is not reached, start processing the task immediately
-  const { data, error } = await supabase
-    .from('ai_jobs')
-    .insert({
-      block_id: json.blockId,
-      status: 'processing',
-    })
-    .select();
-
-  if (error) {
-    console.error('Error creating task:', error);
+  } catch (err) {
+    if (err instanceof Error) {
+      log.error('Failed to process the block', err);
+      return NextResponse.json(
+        {
+          error: 'Failed to process the block: ' + err.message,
+        },
+        { status: 500 },
+      );
+    }
     return NextResponse.json(
-      { error: 'Failed to create task' },
+      {
+        error: 'Failed to process the block',
+      },
       { status: 500 },
     );
   }
-
-  // Start processing the task asynchronously
-  processTask(data[0].id, json);
-
-  return NextResponse.json({ jobId: data[0].id });
 }
 
 async function processTask(jobId: string, json: any) {
+  const log = new Logger();
+
   try {
     const { content, inputTokens, outputTokens } = await getBlock(json);
 
@@ -103,31 +126,38 @@ async function processTask(jobId: string, json: any) {
     }
 
     if (queuedTasks.length > 0) {
-      const queuedTask = queuedTasks[0];
+      try {
+        const queuedTask = queuedTasks[0];
 
-      // Update the queued task status to 'processing'
-      await supabase
-        .from('ai_jobs')
-        .update({ status: 'processing' })
-        .eq('id', queuedTask.id);
+        // Update the queued task status to 'processing'
+        await supabase
+          .from('ai_jobs')
+          .update({ status: 'processing' })
+          .eq('id', queuedTask.id);
 
-      // Process the next queued task
-      processTask(queuedTask.id, { ...json, blockId: queuedTask.block_id });
+        // Process the next queued task
+        processTask(queuedTask.id, { ...json, blockId: queuedTask.block_id });
+      } catch (err) {
+        log.error('Error removing a queued task', { id: queuedTasks[0].id });
+        throw new Error('Error removing a queued task');
+      }
     }
   } catch (error) {
-    console.error('Error processing task:', error);
-    // @ts-ignore
-    if (error?.status === 429) {
-      await supabase
-        .from('ai_jobs')
-        .update({ status: 'queued' })
-        .eq('id', jobId);
-    } else {
-      // Update the task status to 'failed' if an error occurs
-      await supabase
-        .from('ai_jobs')
-        .update({ status: 'failed', error: error })
-        .eq('id', jobId);
+    if (error instanceof Error) {
+      log.error('Error processing ai task', error);
+
+      if (JSON.parse(error.message)?.status === 429) {
+        await supabase
+          .from('ai_jobs')
+          .update({ status: 'queued' })
+          .eq('id', jobId);
+      } else {
+        // Update the task status to 'failed' if an error occurs
+        await supabase
+          .from('ai_jobs')
+          .update({ status: 'failed', error: error.message })
+          .eq('id', jobId);
+      }
     }
   }
 }
