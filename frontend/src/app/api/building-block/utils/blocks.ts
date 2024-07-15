@@ -206,33 +206,42 @@ const contextMap = {
 };
 
 export const getBlock = async (params: Params) => {
-  if (params.blockId === 'executive_summary') {
-    const inputs: SummaryInputs = { REPORT: params.generatedReport };
+  try {
+    if (params.blockId === 'executive_summary') {
+      const inputs: SummaryInputs = { REPORT: params.generatedReport };
 
-    const res = await generateBlock(params.blockId, inputs, params.plan);
-    return res;
-  }
-  if (params.blockId === 'targetprice_recommendation') {
-    const inputs: RecAndTargetPriceInputs = {
-      CONTEXT: getRecAndTargetPriceContext(params.apiData),
-      RECOMMENDATION: params.recommendation,
-    };
+      const res = await generateBlock(params.blockId, inputs, params.plan);
+      return res;
+    }
+    if (params.blockId === 'targetprice_recommendation') {
+      const inputs: RecAndTargetPriceInputs = {
+        CONTEXT: getRecAndTargetPriceContext(params.apiData),
+        RECOMMENDATION: params.recommendation,
+      };
 
-    const res = await generateBlock(params.blockId, inputs, params.plan);
-    return res;
-  } else {
-    // @ts-ignore
-    const contextFn = contextMap[params.blockId];
-    const context = contextFn(params.apiData, params.xmlData, params.newsData);
-    const inputs: Inputs = {
-      CONTEXT: context,
-      COMPANY_NAME: params.companyName,
-      CUSTOM_PROMPT: '',
-    };
-    params.recommendation && (inputs['RECOMMENDATION'] = params.recommendation);
-    params.targetPrice && (inputs['TARGET_PRICE'] = params.targetPrice);
+      const res = await generateBlock(params.blockId, inputs, params.plan);
+      return res;
+    } else {
+      // @ts-ignore
+      const contextFn = contextMap[params.blockId];
+      const context = contextFn(
+        params.apiData,
+        params.xmlData,
+        params.newsData,
+      );
+      const inputs: Inputs = {
+        CONTEXT: context,
+        COMPANY_NAME: params.companyName,
+        CUSTOM_PROMPT: '',
+      };
+      params.recommendation &&
+        (inputs['RECOMMENDATION'] = params.recommendation);
+      params.targetPrice && (inputs['TARGET_PRICE'] = params.targetPrice);
 
-    const res = await generateBlock(params.blockId, inputs, params.plan);
-    return res;
+      const res = await generateBlock(params.blockId, inputs, params.plan);
+      return res;
+    }
+  } catch (err) {
+    throw err;
   }
 };

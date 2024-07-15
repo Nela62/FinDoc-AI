@@ -76,17 +76,7 @@ export async function POST(req: Request) {
 
 async function processTask(jobId: string, json: any) {
   try {
-    const {
-      content,
-      inputTokens,
-      outputTokens,
-      error: generationError,
-    } = await getBlock(json);
-
-    if (generationError) {
-      console.error('Error generating the block:', generationError);
-      return;
-    }
+    const { content, inputTokens, outputTokens } = await getBlock(json);
 
     // Update the task status to 'completed' and store the block data
     await supabase
@@ -109,8 +99,7 @@ async function processTask(jobId: string, json: any) {
       .limit(1);
 
     if (error) {
-      console.error('Error retrieving queued tasks:', error);
-      return;
+      throw new Error('Error retrieving queued tasks: ' + error);
     }
 
     if (queuedTasks.length > 0) {
@@ -128,18 +117,18 @@ async function processTask(jobId: string, json: any) {
   } catch (error) {
     console.error('Error processing task:', error);
     // @ts-ignore
-    if (error.status === 529) {
+    if (error?.status === 429) {
       await supabase
         .from('ai_jobs')
         .update({ status: 'queued' })
         .eq('id', jobId);
+    } else {
+      // Update the task status to 'failed' if an error occurs
+      await supabase
+        .from('ai_jobs')
+        .update({ status: 'failed', error: error })
+        .eq('id', jobId);
     }
-
-    // Update the task status to 'failed' if an error occurs
-    await supabase
-      .from('ai_jobs')
-      .update({ status: 'failed', error: error })
-      .eq('id', jobId);
   }
 }
 

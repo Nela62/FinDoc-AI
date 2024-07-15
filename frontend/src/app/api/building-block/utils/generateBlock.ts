@@ -69,68 +69,72 @@ export const generateBlock = async (
   inputs: Inputs | SummaryInputs | RecAndTargetPriceInputs,
   plan: SubscriptionPlan,
 ) => {
-  if (!process.env.HUMANLOOP_API_KEY) {
-    throw new Error('Humanloop api key is required.');
-  }
+  try {
+    if (!process.env.HUMANLOOP_API_KEY) {
+      throw new Error('Humanloop api key is required.');
+    }
 
-  const anthropic = new Anthropic();
+    const anthropic = new Anthropic();
 
-  const humanloop = new Humanloop({
-    apiKey: process.env.HUMANLOOP_API_KEY,
-  });
-
-  const formatInstructions = `\nAfter you've outlined your key points in the scratchpad, write out your response inside <output> tags.`;
-
-  const config = await humanloop.projects
-    .getActiveConfig({
-      id: humanloopIdsMap[blockId],
-    })
-    .then((res) => res.data.config);
-
-  // @ts-ignore
-  let template = config.chat_template[0].content;
-
-  Object.entries(inputs).map(([key, value]) => {
-    template = findReplaceString(template, key, value);
-  });
-
-  let model = 'claude-3-5-sonnet-20240620';
-
-  if (plan === 'dev') {
-    model = 'claude-3-haiku-20240307';
-  } else if (plan === 'professional' || plan === 'enterprise') {
-    model = 'claude-3-opus-20240229';
-  }
-
-  const message = await anthropic.messages.create({
-    temperature: 0.2,
-    max_tokens: 4096,
-    messages: [{ role: 'user', content: template + formatInstructions }],
-    model: model,
-  });
-
-  // https://github.com/anthropics/anthropic-sdk-typescript/issues/432
-  if (message.content[0].type === 'text') {
-    console.log(message.content[0].text);
-    humanloop.log({
-      project_id: humanloopIdsMap[blockId],
-      config_id: config.id,
-      inputs: inputs,
-      // output: message.content[0].text
-      //   .replace(/(.*?)<output>/gs, '')
-      //   .replace('</output>', ''),
-      output: extractOutput(message.content[0].text),
+    const humanloop = new Humanloop({
+      apiKey: process.env.HUMANLOOP_API_KEY,
     });
 
-    return {
-      // content: message.content[0].text
-      //   .replace(/(.*?)<output>/gs, '')
-      //   .replace('</output>', ''),
-      content: extractOutput(message.content[0].text),
-      inputTokens: message.usage.input_tokens,
-      outputTokens: message.usage.output_tokens,
-    };
-  } else {
-    return { error: 'error' };
+    const formatInstructions = `\nAfter you've outlined your key points in the scratchpad, write out your response inside <output> tags.`;
+
+    const config = await humanloop.projects
+      .getActiveConfig({
+        id: humanloopIdsMap[blockId],
+      })
+      .then((res) => res.data.config);
+
+    // @ts-ignore
+    let template = config.chat_template[0].content;
+
+    Object.entries(inputs).map(([key, value]) => {
+      template = findReplaceString(template, key, value);
+    });
+
+    let model = 'claude-3-5-sonnet-20240620';
+
+    if (plan === 'dev') {
+      model = 'claude-3-haiku-20240307';
+    } else if (plan === 'professional' || plan === 'enterprise') {
+      model = 'claude-3-opus-20240229';
+    }
+
+    const message = await anthropic.messages.create({
+      temperature: 0.2,
+      max_tokens: 4096,
+      messages: [{ role: 'user', content: template + formatInstructions }],
+      model: model,
+    });
+
+    // https://github.com/anthropics/anthropic-sdk-typescript/issues/432
+    if (message.content[0].type === 'text') {
+      console.log(message.content[0].text);
+      humanloop.log({
+        project_id: humanloopIdsMap[blockId],
+        config_id: config.id,
+        inputs: inputs,
+        // output: message.content[0].text
+        //   .replace(/(.*?)<output>/gs, '')
+        //   .replace('</output>', ''),
+        output: extractOutput(message.content[0].text),
+      });
+
+      return {
+        // content: message.content[0].text
+        //   .replace(/(.*?)<output>/gs, '')
+        //   .replace('</output>', ''),
+        content: extractOutput(message.content[0].text),
+        inputTokens: message.usage.input_tokens,
+        outputTokens: message.usage.output_tokens,
+      };
+    } else {
+      throw new Error('Wrong Claude output');
+    }
+  } catch (err) {
+    throw err;
   }
 };
