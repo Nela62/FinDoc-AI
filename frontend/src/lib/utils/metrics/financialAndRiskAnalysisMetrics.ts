@@ -7,9 +7,9 @@ export const getFinancialAndRiskAnalysisMetrics = (
 ): AnalysisMetrics => {
   const curYear = new Date().getFullYear();
   const years =
-    annualFundamentals.incomeStatement.TotalRevenue.length > 3
+    annualFundamentals.incomeStatement.TotalRevenue?.length > 3
       ? 3
-      : annualFundamentals.incomeStatement.TotalRevenue.length;
+      : annualFundamentals.incomeStatement.TotalRevenue?.length ?? 0;
 
   return {
     years: Array.from({ length: years }, (_, i) => curYear - i - 1).reverse(),
@@ -58,9 +58,9 @@ export const getFinancialAndRiskAnalysisMetrics = (
               ).map((y, i) =>
                 calculateRatio(
                   y.value * 100,
-                  annualFundamentals.balanceSheet.StockholdersEquity.slice(
+                  annualFundamentals.balanceSheet.StockholdersEquity?.slice(
                     -years,
-                  )[i].value,
+                  )[i]?.value,
                 ),
               ) ?? Array.from({ length: years }, () => '--'),
           },
@@ -71,9 +71,9 @@ export const getFinancialAndRiskAnalysisMetrics = (
                 (y, i) =>
                   calculateRatio(
                     y.value * 100,
-                    annualFundamentals.balanceSheet.StockholdersEquity.slice(
+                    annualFundamentals.balanceSheet.StockholdersEquity?.slice(
                       -years,
-                    )[i].value,
+                    )[i]?.value,
                   ),
               ) ?? Array.from({ length: years }, () => '--'),
           },
@@ -89,9 +89,9 @@ export const getFinancialAndRiskAnalysisMetrics = (
                 (y, i) =>
                   calculateRatio(
                     y.value * 100,
-                    annualFundamentals.incomeStatement.TotalRevenue.slice(
+                    annualFundamentals.incomeStatement.TotalRevenue?.slice(
                       -years,
-                    )[i].value,
+                    )[i]?.value,
                   ),
               ) ?? Array.from({ length: years }, () => '--'),
           },
@@ -105,7 +105,7 @@ export const getFinancialAndRiskAnalysisMetrics = (
                   y.value * 100,
                   annualFundamentals.incomeStatement.TotalRevenue.slice(-years)[
                     i
-                  ].value,
+                  ]?.value,
                 ),
               ) ?? Array.from({ length: years }, () => '--'),
           },
@@ -118,7 +118,7 @@ export const getFinancialAndRiskAnalysisMetrics = (
                     y.value * 100,
                     annualFundamentals.incomeStatement.TotalRevenue.slice(
                       -years,
-                    )[i].value,
+                    )[i]?.value,
                   ),
               ) ?? Array.from({ length: years }, () => '--'),
           },
@@ -142,9 +142,9 @@ export const getFinancialAndRiskAnalysisMetrics = (
                 (y, i) =>
                   calculateRatio(
                     y.value * 100,
-                    annualFundamentals.balanceSheet.StockholdersEquity.slice(
+                    annualFundamentals.balanceSheet.StockholdersEquity?.slice(
                       -years,
-                    )[i].value,
+                    )[i]?.value,
                   ),
               ) ?? Array.from({ length: years }, () => '--'),
           },
@@ -176,7 +176,7 @@ export const getFinancialAndRiskAnalysisMetrics = (
                   y.value * 100,
                   annualFundamentals.incomeStatement.InterestExpense?.slice(
                     -years,
-                  )[i].value,
+                  )[i]?.value,
                 ),
               ) ?? Array.from({ length: years }, () => '--'),
           },
@@ -189,7 +189,7 @@ export const getFinancialAndRiskAnalysisMetrics = (
                 calculateRatio(
                   y.value * 100,
                   annualFundamentals.incomeStatement.NetIncome.slice(-years)[i]
-                    .value,
+                    ?.value,
                 ),
               ) ?? Array.from({ length: years }, () => '--'),
           },
