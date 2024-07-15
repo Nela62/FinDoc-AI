@@ -59,8 +59,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
-import { Feed, Overview } from '@/types/alphaVantageApi';
-import { fetchNewsContent } from './actions';
+import { Feed } from '@/types/alphaVantageApi';
+import { fetchNewsContent, getSecFiling } from './actions';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import {
   useFileUrl,
@@ -86,6 +86,9 @@ import {
   waitForAllJobs,
 } from '@/lib/utils/jobs';
 import { useRouter } from 'next/navigation';
+import { useLogger } from 'next-axiom';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { getRecAndTargetPrice } from './utils';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -147,7 +150,8 @@ export const ReportForm = ({
   });
 
   const [jobs, setJobs] = useState<Record<string, Job>>({});
-  const [error, setError] = useState<string | null>(null);
+
+  const { error, handleError, clearError } = useErrorHandler();
 
   const [reportsNum, setReportsNum] = useState(0);
 
@@ -173,6 +177,8 @@ export const ReportForm = ({
     },
   });
 
+  const log = useLogger();
+
   const supabase = createClient();
 
   const { data: reportsData } = useQuery(fetchAllReports(supabase));
@@ -182,86 +188,6 @@ export const ReportForm = ({
     ['id'],
     'id',
   );
-
-  const getSecFiling = async (ticker: string): Promise<string> => {
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/sec-filing/${ticker}/10-K`;
-
-    try {
-      const response = await fetch(apiUrl, { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      let data = await response.json();
-
-      if (data.status === 'processing' || data.status === 'pending') {
-        await waitForSecJobCompletion(data.job_id);
-
-        // Fetch again after job completion
-        const newResponse = await fetch(apiUrl, { cache: 'no-store' });
-
-        if (!newResponse.ok) {
-          throw new Error(`HTTP error! status: ${newResponse.status}`);
-        }
-
-        data = await newResponse.json();
-      }
-
-      if (data.status === 'available') {
-        return data.xml_path;
-      } else {
-        throw new Error(`Unexpected status: ${data.status}`);
-      }
-    } catch (error) {
-      console.error('Error fetching SEC filing:', error);
-      throw error; // Re-throw to allow caller to handle
-    }
-  };
-
-  const getRecAndTargetPrice = async (
-    providedRec: string | undefined,
-    providedTP: number | undefined,
-    overview: Overview,
-    params: Params,
-  ) => {
-    let recommendation;
-    let targetPrice;
-
-    if (providedRec && providedRec !== 'Auto') {
-      recommendation = providedRec;
-
-      if (providedTP) {
-        targetPrice = providedTP;
-
-        return { recommendation, targetPrice };
-      } else {
-        const recAndTargetPriceJob = await createJob(params, setJobs, setError);
-
-        const res = await waitForJobCompletion(recAndTargetPriceJob);
-
-        const data = JSON.parse(res);
-
-        return {
-          recommendation: capitalizeWords(data.recommendation),
-          targetPrice: data.target_price,
-        };
-      }
-    } else if (overview.AnalystTargetPrice !== 'None') {
-      recommendation = getRecommendation(overview);
-      targetPrice = Number(overview.AnalystTargetPrice);
-      return { recommendation, targetPrice };
-    } else {
-      const recAndTargetPriceJob = await createJob(params, setJobs, setError);
-
-      const res = await waitForJobCompletion(recAndTargetPriceJob);
-
-      const data = JSON.parse(res);
-
-      return {
-        recommendation: capitalizeWords(data.recommendation),
-        targetPrice: data.target_price,
-      };
-    }
-  };
 
   useEffect(() => {
     const pollJobStatuses = async () => {
@@ -371,154 +297,143 @@ export const ReportForm = ({
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   const baseActions = async (values: z.infer<typeof reportFormSchema>) => {
-    if (!templateConfig) {
-      throw new Error('Template is not ready yet.');
-    }
-    // launch the dialog
-    setOpen(true);
-    setProgressMessage('Fetching data from APIs...');
-    // Create a new report and save it to db
-    const nanoId = getNanoId();
+    try {
+      if (!templateConfig) {
+        throw new Error('Template is not ready yet.');
+      }
 
-    const res = await insertNewReport([
-      {
-        title: `${values.companyTicker.value} - ${values.reportType} - ${format(
-          new Date(),
-          'd MMM yyyy',
-        )}`,
-        company_ticker: values.companyTicker.value,
-        url: nanoId,
-        type: values.reportType,
-        recommendation: values.recommendation,
-        targetprice: values.targetPrice,
-        status: 'Draft',
-        user_id: userId,
-        section_ids: section_ids,
-      },
-    ]);
+      log.info('Generating new report', {
+        ticker: values.companyTicker.value,
+        userId: userId,
+      });
 
-    if (!res) {
-      throw new Error('An exception occurred when creating a new report.');
-    }
+      // launch the dialog
+      setOpen(true);
+      setProgressMessage('Fetching data from APIs...');
 
-    const reportId = res[0].id;
+      // Create a new report and save it to db
+      const nanoId = getNanoId();
 
-    // Fetch and cache API
-    const apiData = await fetch(`/api/metrics/${values.companyTicker.value}`)
-      .then((res) => res.ok && res.json())
-      .catch((err) => console.error(err));
+      const res = await insertNewReport([
+        {
+          title: `${values.companyTicker.value} - ${
+            values.reportType
+          } - ${format(new Date(), 'd MMM yyyy')}`,
+          company_ticker: values.companyTicker.value,
+          url: nanoId,
+          type: values.reportType,
+          recommendation: values.recommendation,
+          targetprice: values.targetPrice,
+          status: 'Draft',
+          user_id: userId,
+          section_ids: section_ids,
+        },
+      ]);
 
-    const overview = await fetchOverview(values.companyTicker.value);
+      if (!res) {
+        throw new Error('An exception occurred when creating a new report.');
+      }
 
-    const dailyStock = await fetchDailyStock(values.companyTicker.value);
+      const reportId = res[0].id;
 
-    const weeklyStock = await fetchWeeklyStock(values.companyTicker.value);
+      // Fetch and cache API
+      const apiData = await fetch(`/api/metrics/${values.companyTicker.value}`)
+        .then((res) => res.ok && res.json())
+        .catch((err) => console.error(err));
 
-    const { yfAnnual, yfQuarterly, polygonAnnual, polygonQuarterly } = apiData;
+      const overview = await fetchOverview(values.companyTicker.value);
 
-    await insertCache([
-      {
-        user_id: userId,
-        overview: overview,
+      const dailyStock = await fetchDailyStock(values.companyTicker.value);
+
+      const weeklyStock = await fetchWeeklyStock(values.companyTicker.value);
+
+      const { yfAnnual, yfQuarterly, polygonAnnual, polygonQuarterly } =
+        apiData;
+
+      await insertCache([
+        {
+          user_id: userId,
+          overview: overview,
+          stock: dailyStock,
+          report_id: reportId,
+        },
+      ]);
+
+      setPolygonApi({
+        annual: polygonAnnual,
+        quarterly: polygonQuarterly,
         stock: dailyStock,
-        report_id: reportId,
-      },
-    ]);
+      });
 
-    setPolygonApi({
-      annual: polygonAnnual,
-      quarterly: polygonQuarterly,
-      stock: dailyStock,
-    });
-
-    const tickerData = tickersData?.find(
-      (company) => company.ticker === values.companyTicker.value,
-    );
-
-    if (!tickerData || !tickersData) {
-      throw new Error(
-        `Company name for ticker ${values.companyTicker.value} was not found.`,
+      const tickerData = tickersData?.find(
+        (company) => company.ticker === values.companyTicker.value,
       );
-    }
 
-    setProgress((state) => state + progressValue);
-    setProgressMessage('Parsing SEC filings...');
-
-    const xmlPath = await getSecFiling(values.companyTicker.value);
-
-    const xml = await supabase.storage
-      .from('sec-filings')
-      .download(xmlPath)
-      .then((res) => res.data?.text());
-
-    // Fetch web data
-    setProgress((state) => state + progressValue);
-    setProgressMessage('Fetching web news...');
-    const news = await fetchAllNews(values.companyTicker.value);
-
-    const getRecentDevelopmentsContext = async (news: any) => {
-      let context: Record<string, string>[] = [];
-      const promises = Object.keys(news).map((key: string) => {
-        return Promise.all(
-          news[key as keyof typeof news].feed
-            .slice(0, 15)
-            .map(async (f: Feed) => {
-              const content = await fetchNewsContent(f.url);
-              const obj = {
-                title: f.title,
-                summary: f.summary,
-                time_published: f.time_published,
-                content: content ?? '',
-              };
-              context.push(obj);
-            }),
+      if (!tickerData || !tickersData) {
+        throw new Error(
+          `Company name for ticker ${values.companyTicker.value} was not found.`,
         );
+      }
+
+      setProgress((state) => state + progressValue);
+      setProgressMessage('Parsing SEC filings...');
+
+      const xmlPath = await getSecFiling(values.companyTicker.value);
+
+      const xml = await supabase.storage
+        .from('sec-filings')
+        .download(xmlPath)
+        .then((res) => res.data?.text());
+
+      // Fetch web data
+      setProgress((state) => state + progressValue);
+      setProgressMessage('Fetching web news...');
+      const news = await fetchAllNews(values.companyTicker.value);
+
+      const getRecentDevelopmentsContext = async (news: any) => {
+        let context: Record<string, string>[] = [];
+        const promises = Object.keys(news).map((key: string) => {
+          return Promise.all(
+            news[key as keyof typeof news].feed
+              .slice(0, 15)
+              .map(async (f: Feed) => {
+                const content = await fetchNewsContent(f.url);
+                const obj = {
+                  title: f.title,
+                  summary: f.summary,
+                  time_published: f.time_published,
+                  content: content ?? '',
+                };
+                context.push(obj);
+              }),
+          );
+        });
+
+        await Promise.all(promises);
+
+        return JSON.stringify(context);
+      };
+
+      const newsContext = await getRecentDevelopmentsContext(news);
+
+      const sources = [];
+      sources.push(
+        `[1] ${tickerData.company_name}, "Form 10-K," Securities and Exchance Comission, Washington, D.C., 2024.`,
+      );
+
+      Object.entries(news).map(([key, value]) => {
+        value.feed.slice(0, 15).forEach((n: Feed) => {
+          sources.push(
+            `[${sources.length + 1}] ${n.authors[0]}, "${n.title}", ${
+              n.source
+            }, ${n.time_published.slice(0, 4)}. Available at ${n.url}`,
+          );
+        });
       });
 
-      await Promise.all(promises);
-
-      return JSON.stringify(context);
-    };
-
-    const newsContext = await getRecentDevelopmentsContext(news);
-
-    const sources = [];
-    sources.push(
-      `[1] ${tickerData.company_name}, "Form 10-K," Securities and Exchance Comission, Washington, D.C., 2024.`,
-    );
-
-    Object.entries(news).map(([key, value]) => {
-      value.feed.slice(0, 15).forEach((n: Feed) => {
-        sources.push(
-          `[${sources.length + 1}] ${n.authors[0]}, "${n.title}", ${
-            n.source
-          }, ${n.time_published.slice(0, 4)}. Available at ${n.url}`,
-        );
-      });
-    });
-
-    const params: Omit<GeneralBlock, 'blockId'> = {
-      plan,
-      companyName: tickerData.company_name,
-      apiData: {
-        overview,
-        yfAnnual: apiData.yfAnnual,
-        yfQuarterly: apiData.yfQuarterly,
-        dailyStock: dailyStock,
-        weeklyStock: weeklyStock,
-      },
-      xmlData: xml ?? '',
-      newsData: newsContext,
-      customPrompt: '',
-    };
-
-    const { recommendation, targetPrice } = await getRecAndTargetPrice(
-      values.recommendation,
-      values.targetPrice,
-      overview,
-      {
-        blockId: 'targetprice_recommendation',
+      const params: Omit<GeneralBlock, 'blockId'> = {
         plan,
+        companyName: tickerData.company_name,
         apiData: {
           overview,
           yfAnnual: apiData.yfAnnual,
@@ -526,119 +441,141 @@ export const ReportForm = ({
           dailyStock: dailyStock,
           weeklyStock: weeklyStock,
         },
-        recommendation: values.recommendation,
-        companyName: tickerData.company_name,
-      },
-    );
+        xmlData: xml ?? '',
+        newsData: newsContext,
+        customPrompt: '',
+      };
 
-    const financialStrength =
-      values.financialStrength && values.financialStrength !== 'Auto'
-        ? values.financialStrength
-        : 'Medium';
-
-    // Update the report with rec and fin strength
-    await updateReport({
-      id: reportId,
-      recommendation: recommendation,
-      targetprice: targetPrice,
-      financial_strength: financialStrength,
-    });
-
-    const topBarMetrics = getTopBarMetrics(
-      overview,
-      targetPrice,
-      getNWeeksStock(dailyStock),
-      yfQuarterly,
-    );
-
-    // Generate metrics
-    const sidebarMetrics = getSidebarMetrics(
-      overview,
-      getNWeeksStock(dailyStock),
-      targetPrice,
-      financialStrength,
-      yfQuarterly,
-    );
-    const growthAndValuationAnalysisMetrics =
-      getGrowthAndValuationAnalysisMetrics(yfAnnual, dailyStock);
-    const financialAndRiskAnalysisMetrics =
-      getFinancialAndRiskAnalysisMetrics(yfAnnual);
-
-    // Generate a company overview if any
-    setProgress((state) => state + progressValue);
-    setProgressMessage('Generating company overview...');
-    const companyOverviewJobId = await createJob(
-      {
-        blockId: 'company_overview',
-        ...params,
-      },
-      setJobs,
-      setError,
-    );
-
-    const companyOverview = await waitForJobCompletion(companyOverviewJobId);
-
-    await downloadPublicCompanyImgs(
-      tickerData.cik,
-      tickersData.filter((ticker) => ticker.cik === tickerData.cik),
-      tickerData.website,
-      supabase,
-    );
-
-    // Store template config in db
-    const data = await insertTemplate([
-      {
-        user_id: userId,
-        report_id: reportId,
-        template_type: 'equity-analyst-sidebar',
-        business_description: companyOverview,
-        color_scheme: templateConfig.colorScheme.colors,
-        author_name: templateConfig.authorName,
-        author_company_name: templateConfig.authorCompanyName,
-        author_company_logo:
-          templateConfig.authorCompanyLogo === defaultCompanyLogo
-            ? null
-            : templateConfig.authorCompanyLogo,
-        metrics: {
-          topBarMetrics,
-          sidebarMetrics,
-          growthAndValuationAnalysisMetrics,
-          financialAndRiskAnalysisMetrics,
-          sources,
+      const { recommendation, targetPrice } = await getRecAndTargetPrice(
+        values.recommendation,
+        values.targetPrice,
+        overview,
+        {
+          blockId: 'targetprice_recommendation',
+          plan,
+          apiData: {
+            overview,
+            yfAnnual: apiData.yfAnnual,
+            yfQuarterly: apiData.yfQuarterly,
+            dailyStock: dailyStock,
+            weeklyStock: weeklyStock,
+          },
+          recommendation: values.recommendation,
+          companyName: tickerData.company_name,
         },
-      },
-    ]);
+        setJobs,
+      );
 
-    if (!data) {
-      throw new Error('Could not save new template.');
+      const financialStrength =
+        values.financialStrength && values.financialStrength !== 'Auto'
+          ? values.financialStrength
+          : 'Medium';
+
+      // Update the report with rec and fin strength
+      await updateReport({
+        id: reportId,
+        recommendation: recommendation,
+        targetprice: targetPrice,
+        financial_strength: financialStrength,
+      });
+
+      const topBarMetrics = getTopBarMetrics(
+        overview,
+        targetPrice,
+        getNWeeksStock(dailyStock),
+        yfQuarterly,
+      );
+
+      // Generate metrics
+      const sidebarMetrics = getSidebarMetrics(
+        overview,
+        getNWeeksStock(dailyStock),
+        targetPrice,
+        financialStrength,
+        yfQuarterly,
+      );
+      const growthAndValuationAnalysisMetrics =
+        getGrowthAndValuationAnalysisMetrics(yfAnnual, dailyStock);
+      const financialAndRiskAnalysisMetrics =
+        getFinancialAndRiskAnalysisMetrics(yfAnnual);
+
+      // Generate a company overview if any
+      setProgress((state) => state + progressValue);
+      setProgressMessage('Generating company overview...');
+      const companyOverviewJobId = await createJob(
+        {
+          blockId: 'company_overview',
+          ...params,
+        },
+        setJobs,
+      );
+
+      const companyOverview = await waitForJobCompletion(companyOverviewJobId);
+
+      await downloadPublicCompanyImgs(
+        tickerData.cik,
+        tickersData.filter((ticker) => ticker.cik === tickerData.cik),
+        tickerData.website,
+        supabase,
+      );
+
+      // Store template config in db
+      const data = await insertTemplate([
+        {
+          user_id: userId,
+          report_id: reportId,
+          template_type: 'equity-analyst-sidebar',
+          business_description: companyOverview,
+          color_scheme: templateConfig.colorScheme.colors,
+          author_name: templateConfig.authorName,
+          author_company_name: templateConfig.authorCompanyName,
+          author_company_logo:
+            templateConfig.authorCompanyLogo === defaultCompanyLogo
+              ? null
+              : templateConfig.authorCompanyLogo,
+          metrics: {
+            topBarMetrics,
+            sidebarMetrics,
+            growthAndValuationAnalysisMetrics,
+            financialAndRiskAnalysisMetrics,
+            sources,
+          },
+        },
+      ]);
+
+      if (!data) {
+        throw new Error('Could not save new template.');
+      }
+
+      // Get necessary documents and add them to the report library
+      return {
+        apiData,
+        overview,
+        dailyStock,
+        weeklyStock,
+        tickerData,
+        reportId,
+        templateId: data[0].id,
+        companyOverview: companyOverview,
+        recommendation,
+        targetPrice,
+        news,
+        newsContext,
+        xml,
+      };
+    } catch (err) {
+      if (err instanceof Error) handleError(err);
+      throw err;
     }
-
-    // Get necessary documents and add them to the report library
-    return {
-      apiData,
-      overview,
-      dailyStock,
-      weeklyStock,
-      tickerData,
-      reportId,
-      templateId: data[0].id,
-      companyOverview: companyOverview,
-      recommendation,
-      targetPrice,
-      news,
-      newsContext,
-      xml,
-    };
   };
 
   const onGenerateAndFormSubmit = async (
     values: z.infer<typeof reportFormSchema>,
   ) => {
-    if (!templateConfig) {
-      throw new Error('Template config is not available.');
-    }
-
     try {
+      if (!templateConfig) {
+        throw new Error('Template config is not available.');
+      }
       // baseActions
       const {
         apiData,
@@ -686,7 +623,6 @@ export const ReportForm = ({
               ...params,
             },
             setJobs,
-            setError,
           );
           return { blockId: id, id: jobId };
         }),
@@ -694,14 +630,13 @@ export const ReportForm = ({
 
       const generatedBlocks = await waitForAllJobs(jobIds);
 
-      console.log('generated all sections');
+      log.info('Generated all sections', { ticker: tickerData.ticker });
 
       section_ids.forEach((id) => {
         generatedContent += `##${titles[id as keyof typeof titles]}\
       ${generatedBlocks[id]}`;
 
         const json = markdownToJson(generatedBlocks[id]);
-        // console.log(json);
         generatedJson.content?.push(
           {
             type: 'heading',
@@ -731,7 +666,6 @@ export const ReportForm = ({
           plan: plan,
         },
         setJobs,
-        setError,
       );
 
       const summaryRes = await waitForJobCompletion(summaryJobId);
@@ -761,8 +695,8 @@ export const ReportForm = ({
 
       setReportId(reportId);
     } catch (err) {
-      setError((err as Error).message);
-      console.error(err);
+      if (err instanceof Error) handleError(err);
+      throw err;
     }
   };
 
@@ -812,7 +746,7 @@ export const ReportForm = ({
               sizes="100vw"
               unoptimized
             />
-            {error ? (
+            {error.hasError ? (
               <AlertDialogDescription className="text-base pt-6">
                 Sorry, something went wrong. We&apos;ve been notified.
               </AlertDialogDescription>
@@ -826,7 +760,12 @@ export const ReportForm = ({
             )}
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => router.refresh()}>
+            <AlertDialogCancel
+              onClick={() => {
+                clearError();
+                router.refresh();
+              }}
+            >
               Cancel
             </AlertDialogCancel>
           </AlertDialogFooter>

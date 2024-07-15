@@ -23,7 +23,6 @@ export async function POST(req: Request) {
   }
 
   const json = await req.json();
-  console.log('generating block ' + json.blockId);
 
   // Check if the maximum number of concurrent tasks is reached
   const { count } = await supabase
@@ -68,8 +67,6 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
-
-  console.log(json.blockId + ' ' + data[0].id);
 
   // Start processing the task asynchronously
   processTask(data[0].id, json);

@@ -1,25 +1,8 @@
 import { fetchNews } from '@/lib/utils/metrics/financialAPI';
-import {
-  BalanceSheet,
-  Cashflow,
-  DailyStockData,
-  Earnings,
-  IncomeStatement,
-  NewsData,
-  Overview,
-} from '@/types/alphaVantageApi';
+import { NewsData, Overview } from '@/types/alphaVantageApi';
 import { Recommendation } from '@/types/report';
 import { TypedSupabaseClient } from '@/types/supabase';
 import { format, subMonths } from 'date-fns';
-
-type ApiData = {
-  overview: Overview;
-  incomeStatement: IncomeStatement;
-  cashflow: Cashflow;
-  balanceSheet: BalanceSheet;
-  earnings: Earnings;
-  dailyStock: DailyStockData;
-};
 
 type NewsDataRes = {
   last3Months: NewsData;
@@ -32,29 +15,33 @@ const formatDate = (date: Date) => {
 };
 
 export const fetchAllNews = async (ticker: string): Promise<NewsDataRes> => {
-  const last3Months = await fetchNews(
-    ticker,
-    formatDate(new Date()),
-    formatDate(subMonths(new Date(), 3)),
-  );
+  try {
+    const last3Months = await fetchNews(
+      ticker,
+      formatDate(new Date()),
+      formatDate(subMonths(new Date(), 3)),
+    );
 
-  const last6Months = await fetchNews(
-    ticker,
-    formatDate(subMonths(new Date(), 3)),
-    formatDate(subMonths(new Date(), 6)),
-  );
+    const last6Months = await fetchNews(
+      ticker,
+      formatDate(subMonths(new Date(), 3)),
+      formatDate(subMonths(new Date(), 6)),
+    );
 
-  const last12Months = await fetchNews(
-    ticker,
-    formatDate(subMonths(new Date(), 6)),
-    formatDate(subMonths(new Date(), 12)),
-  );
+    const last12Months = await fetchNews(
+      ticker,
+      formatDate(subMonths(new Date(), 6)),
+      formatDate(subMonths(new Date(), 12)),
+    );
 
-  return {
-    last3Months,
-    last6Months,
-    last12Months,
-  };
+    return {
+      last3Months,
+      last6Months,
+      last12Months,
+    };
+  } catch (err) {
+    throw err;
+  }
 };
 
 export const getRecommendation = (overview: Overview): Recommendation => {
@@ -188,10 +175,12 @@ export const downloadPublicCompanyImgs = async (
       });
     }
 
-    console.log('orgId ', orgId);
+    if (!orgId) {
+      throw new Error('orgId is missing');
+    }
 
     const images = await fetch(
-      `https://api.brandfetch.io/v2/brands/${cleanLink(orgId || '')}`,
+      `https://api.brandfetch.io/v2/brands/${cleanLink(orgId)}`,
       {
         method: 'GET',
         headers: {
@@ -201,7 +190,11 @@ export const downloadPublicCompanyImgs = async (
       },
     )
       .then((res) => res.json())
-      .catch((err) => console.error(err));
+      .catch((err: Error) => {
+        throw new Error(
+          "Error when fetching public company's logos: " + err.message,
+        );
+      });
 
     images.logos.forEach(async (img: any, index: number) => {
       if (img.type === 'other') return;
@@ -218,6 +211,9 @@ export const downloadPublicCompanyImgs = async (
       );
     });
   } catch (err) {
-    console.error(err);
+    if (err instanceof Error)
+      throw new Error(
+        "Error when fetching public company's logos: " + err.message,
+      );
   }
 };

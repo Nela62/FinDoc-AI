@@ -8,13 +8,17 @@ export type Job = { blockId: string; status: JobStatus; block: string };
 export const createJob = async (
   params: Params,
   setJobs: Dispatch<SetStateAction<Record<string, Job>>>,
-  setError: Dispatch<SetStateAction<string | null>>,
 ) => {
   try {
     const { jobId } = await fetch(`/api/building-block`, {
       method: 'POST',
       body: JSON.stringify(params),
-    }).then((res) => res.json());
+    }).then((res) => {
+      if (!res.ok) {
+        throw new Error('Error generating a building block: ' + params.blockId);
+      }
+      return res.json();
+    });
 
     setJobs((prevJobs) => ({
       ...prevJobs,
@@ -22,7 +26,6 @@ export const createJob = async (
     }));
     return jobId;
   } catch (error) {
-    setError('Failed to create job');
     throw error;
   }
 };
@@ -30,52 +33,70 @@ export const createJob = async (
 export const waitForJobCompletion = async (jobId: string) => {
   while (true) {
     const { status, block } = await fetch(`/api/building-block?jobId=${jobId}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Error fetching a job status: ' + jobId);
+        }
+        return res.json();
+      })
       .catch((e) => {
-        console.error(e);
         throw e;
       });
 
     if (status === 'completed') {
       return block;
     } else if (status === 'failed') {
-      throw new Error('Job failed');
+      throw new Error('Job failed: ' + jobId);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 };
 
 export const waitForSecJobCompletion = async (jobId: string) => {
-  while (true) {
-    const { status, error } = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/sec-filing/status/${jobId}`,
-    )
-      .then((res) => res.json())
-      .catch((e) => {
-        console.error(e);
-        throw error;
-      });
+  try {
+    while (true) {
+      const { status, error } = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/sec-filing/status/${jobId}`,
+      )
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error('Error fetching SEC job status: ' + jobId);
+          }
+          return res.json();
+        })
+        .catch((error) => {
+          throw error;
+        });
 
-    if (status === 'completed') {
-      return status;
-    } else if (status === 'failed') {
-      throw new Error('Job failed');
-    } else if (error) {
-      throw new Error(error);
+      if (status === 'completed') {
+        return status;
+      } else if (status === 'failed') {
+        throw new Error('Job failed: ' + jobId);
+      } else if (error) {
+        throw new Error(error);
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
     }
-
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second before polling again
+  } catch (err) {
+    throw err;
   }
 };
 
 export const waitForAllJobs = async (jobs: Record<string, string>[]) => {
   let results: Record<string, any> = {};
-  await Promise.all(
-    jobs.map(async (job) => {
-      const res = await waitForJobCompletion(job.id);
-      results[job.blockId] = res;
-    }),
-  );
-  return results;
+
+  try {
+    await Promise.all(
+      jobs.map(async (job) => {
+        const res = await waitForJobCompletion(job.id);
+        results[job.blockId] = res;
+      }),
+    );
+
+    return results;
+  } catch (err) {
+    throw err;
+  }
 };
