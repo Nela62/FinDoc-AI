@@ -15,6 +15,7 @@ import {
   get10KSection,
 } from '@/app/(protected)/reports/utils/parseXml';
 import { MetricsData } from '@/types/metrics';
+import { Logger } from 'next-axiom';
 
 export type ApiProp = {
   overview: Overview;
@@ -135,15 +136,26 @@ const getManagementContext = (
   xmlData: string,
   newsData: string,
 ): string => {
-  const leadership = get10KSection(xmlData, 'leadership');
-  const item = get10KItem(xmlData, '7', '8');
+  const log = new Logger();
+  try {
+    const leadership = get10KSection(xmlData, 'leadership');
+    const item = get10KItem(xmlData, '7', '8');
 
-  const context = {
-    'Leadership Sections': leadership,
-    "Item 7. Management's Discussion and Analysis": item,
-  };
+    const context = {
+      'Leadership Sections': leadership,
+      "Item 7. Management's Discussion and Analysis": item,
+    };
 
-  return JSON.stringify(context);
+    return JSON.stringify(context);
+  } catch (err) {
+    if (err instanceof Error) {
+      log.error('Error when getting management context', err);
+    }
+    return JSON.stringify({
+      'Leadership Sections': '',
+      "Item 7. Management's Discussion and Analysis": '',
+    });
+  }
 };
 
 const getRisksContext = (
@@ -151,10 +163,20 @@ const getRisksContext = (
   xmlData: string,
   newsData: string,
 ): string => {
-  const item = get10KItem(xmlData, '1a', '2');
-  const context = { 'Item 1A. Risk Factors': item };
+  const log = new Logger();
 
-  return JSON.stringify(context);
+  try {
+    const item = get10KItem(xmlData, '1a', '2');
+    const context = { 'Item 1A. Risk Factors': item };
+
+    console.log(context);
+    return JSON.stringify(context);
+  } catch (err) {
+    if (err instanceof Error) {
+      log.error('Error when getting risks context', err);
+    }
+    return JSON.stringify({ 'Item 1A. Risk Factors': '' });
+  }
 };
 
 const getFinancialAnalysisContext = (
