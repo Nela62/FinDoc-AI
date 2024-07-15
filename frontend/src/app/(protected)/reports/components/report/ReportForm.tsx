@@ -679,6 +679,19 @@ export const ReportForm = ({
             .map((point: string) => point.trim())
             .slice(1);
 
+      log.info('Generated the summary of a report', {
+        ticker: tickerData.ticker,
+        summary: summary,
+        summaryRes: summaryRes,
+      });
+
+      if (summary === '') {
+        log.error('Summary is empty', {
+          ticker: tickerData.ticker,
+          summary: summary,
+          summaryRes: summaryRes,
+        });
+      }
       // update report and template
       updateReport({
         id: reportId,
