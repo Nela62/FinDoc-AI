@@ -12,74 +12,80 @@ const isUpperCase = (text?: string) =>
   text?.split('').every((c) => c === c.toUpperCase());
 
 export const get10KSection = (xml: string, section: string) => {
-  const parser = new XMLParser({ ignoreAttributes: false });
+  try {
+    const parser = new XMLParser({ ignoreAttributes: false });
 
-  const parsedXml = parser.parse(xml);
-  const body = parsedXml.html.body;
+    const parsedXml = parser.parse(xml);
+    const body = parsedXml.html.body;
 
-  let text = '';
-  let start = false;
-  let end = false;
-  let style = { underline: true };
+    let text = '';
+    let start = false;
+    let end = false;
+    let style = { underline: true };
 
-  const searchObject = (object: any) => {
-    Object.entries(object).forEach(([key, value]: [string, any]) => {
-      if (end) return;
-      if (
-        !start &&
-        key === 'span' &&
-        typeof value['#text'] === 'string' &&
-        value['#text'].toLowerCase().includes(section) &&
-        isBold(value['@_style'])
-      ) {
-        start = true;
-        text += value['#text'] ? value['#text'] + '\n' : '';
-        style = {
-          underline: isUnderlined(value['@_style']) ?? false,
-        };
-      } else if (key === 'span') {
-        if (start && !end) {
-          if (Array.isArray(value)) {
-            value.forEach((val) => {
+    const searchObject = (object: any) => {
+      Object.entries(object).forEach(([key, value]: [string, any]) => {
+        if (end) return;
+        if (
+          !start &&
+          key === 'span' &&
+          typeof value['#text'] === 'string' &&
+          value['#text'].toLowerCase().includes(section) &&
+          isBold(value['@_style'])
+        ) {
+          start = true;
+          text += value['#text'] ? value['#text'] + '\n' : '';
+          style = {
+            underline: isUnderlined(value['@_style']) ?? false,
+          };
+        } else if (key === 'span') {
+          if (start && !end) {
+            if (Array.isArray(value)) {
+              value.forEach((val) => {
+                if (
+                  isBold(val['@_style']) &&
+                  style.underline === isUnderlined(val['@_style']) &&
+                  !isItalic(val['@_style']) &&
+                  !isUpperCase(val['#text'])
+                ) {
+                  end = true;
+                  return;
+                } else {
+                  text += val['#text'] ? val['#text'] + '\n' : '';
+                }
+              });
+            } else {
               if (
-                isBold(val['@_style']) &&
-                style.underline === isUnderlined(val['@_style']) &&
-                !isItalic(val['@_style']) &&
-                !isUpperCase(val['#text'])
+                isBold(value['@_style']) &&
+                style.underline === isUnderlined(value['@_style']) &&
+                !isItalic(value['@_style']) &&
+                !isUpperCase(value['#text'])
               ) {
                 end = true;
                 return;
               } else {
-                text += val['#text'] ? val['#text'] + '\n' : '';
+                text += value['#text'] ? value['#text'] + '\n' : '';
               }
-            });
-          } else {
-            if (
-              isBold(value['@_style']) &&
-              style.underline === isUnderlined(value['@_style']) &&
-              !isItalic(value['@_style']) &&
-              !isUpperCase(value['#text'])
-            ) {
-              end = true;
-              return;
-            } else {
-              text += value['#text'] ? value['#text'] + '\n' : '';
             }
           }
+        } else if (key === 'div' || key === 'p') {
+          if (Array.isArray(value)) {
+            value.forEach((item) => searchObject(item));
+          } else if (typeof value === 'object') {
+            searchObject(value);
+          }
         }
-      } else if (key === 'div' || key === 'p') {
-        if (Array.isArray(value)) {
-          value.forEach((item) => searchObject(item));
-        } else if (typeof value === 'object') {
-          searchObject(value);
-        }
-      }
-    });
-  };
+      });
+    };
 
-  searchObject(body);
+    searchObject(body);
 
-  return text.length > 40000 ? text.slice(0, 40000) : text;
+    return text.length > 40000 ? text.slice(0, 40000) : text;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw new Error('Error parsing 10K: ' + err.message);
+    }
+  }
 };
 
 export const get10KItem = (
@@ -179,8 +185,9 @@ export const get10KItem = (
           }
         }
       } catch (err) {
-        console.log(err);
-        console.log(value);
+        if (err instanceof Error) {
+          throw new Error('Error parsing 10K: ' + err.message);
+        }
       }
     });
   };
