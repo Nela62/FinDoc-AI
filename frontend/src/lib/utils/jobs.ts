@@ -1,4 +1,6 @@
 import { Params } from '@/app/api/building-block/utils/blocks';
+import { log } from 'console';
+import { Logger } from 'next-axiom';
 import { Dispatch, SetStateAction } from 'react';
 
 export type JobStatus = 'processing' | 'completed' | 'failed' | 'queued';
@@ -86,12 +88,21 @@ export const waitForSecJobCompletion = async (jobId: string) => {
 
 export const waitForAllJobs = async (jobs: Record<string, string>[]) => {
   let results: Record<string, any> = {};
+  const log = new Logger();
 
   try {
     await Promise.all(
       jobs.map(async (job) => {
-        const res = await waitForJobCompletion(job.id);
-        results[job.blockId] = res;
+        try {
+          const res = await waitForJobCompletion(job.id);
+          results[job.blockId] = res;
+        } catch (err) {
+          log.error('Failed to generate the block', {
+            blockId: job.blockId,
+            jobId: job.id,
+          });
+          results[job.blockId] = '';
+        }
       }),
     );
 

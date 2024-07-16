@@ -66,11 +66,7 @@ import {
   useFileUrl,
   useUpload,
 } from '@supabase-cache-helpers/storage-react-query';
-import {
-  GeneralBlock,
-  Params,
-  Block,
-} from '@/app/api/building-block/utils/blocks';
+import { GeneralBlock, Block } from '@/app/api/building-block/utils/blocks';
 import { SubscriptionPlan } from '@/types/subscription';
 import { getTopBarMetrics } from '@/lib/utils/metrics/topBarMetrics';
 import { getNWeeksStock } from '@/lib/utils/metrics/stock';
@@ -78,11 +74,9 @@ import { getSidebarMetrics } from '@/lib/utils/metrics/sidebarMetrics';
 import { getGrowthAndValuationAnalysisMetrics } from '@/lib/utils/metrics/growthAndValuationAnalysisMetrics';
 import { getFinancialAndRiskAnalysisMetrics } from '@/lib/utils/metrics/financialAndRiskAnalysisMetrics';
 import {
-  JobStatus,
   Job,
   createJob,
   waitForJobCompletion,
-  waitForSecJobCompletion,
   waitForAllJobs,
 } from '@/lib/utils/jobs';
 import { useRouter } from 'next/navigation';
@@ -120,7 +114,8 @@ const titles = {
     'Industry Overview and Competitive Positioning',
   financial_analysis: 'Financial Analysis',
   valuation: 'Valuation',
-  management_and_risks: 'Management and Risks',
+  management: 'Management Analysis',
+  risks: 'Risk Analysis',
 };
 
 export const ReportForm = ({
@@ -431,21 +426,6 @@ export const ReportForm = ({
         });
       });
 
-      const params: Omit<GeneralBlock, 'blockId'> = {
-        plan,
-        companyName: tickerData.company_name,
-        apiData: {
-          overview,
-          yfAnnual: apiData.yfAnnual,
-          yfQuarterly: apiData.yfQuarterly,
-          dailyStock: dailyStock,
-          weeklyStock: weeklyStock,
-        },
-        xmlData: xml ?? '',
-        newsData: newsContext,
-        customPrompt: '',
-      };
-
       const { recommendation, targetPrice } = await getRecAndTargetPrice(
         values.recommendation,
         values.targetPrice,
@@ -465,6 +445,21 @@ export const ReportForm = ({
         },
         setJobs,
       );
+
+      const params: Omit<GeneralBlock, 'blockId'> = {
+        plan,
+        companyName: tickerData.company_name,
+        apiData: {
+          overview,
+          yfAnnual: apiData.yfAnnual,
+          yfQuarterly: apiData.yfQuarterly,
+          dailyStock: dailyStock,
+          weeklyStock: weeklyStock,
+        },
+        xmlData: xml ?? '',
+        newsData: newsContext,
+        customPrompt: '',
+      };
 
       const financialStrength =
         values.financialStrength && values.financialStrength !== 'Auto'
@@ -633,6 +628,7 @@ export const ReportForm = ({
       log.info('Generated all sections', { ticker: tickerData.ticker });
 
       section_ids.forEach((id) => {
+        if (!generatedBlocks[id]) return;
         generatedContent += `##${titles[id as keyof typeof titles]}\
       ${generatedBlocks[id]}`;
 
