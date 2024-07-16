@@ -146,18 +146,24 @@ async function processTask(jobId: string, json: any) {
     if (error instanceof Error) {
       log.error('Error processing ai task', error);
 
-      if (JSON.parse(error.message)?.status === 429) {
-        await supabase
-          .from('ai_jobs')
-          .update({ status: 'queued' })
-          .eq('id', jobId);
-      } else {
-        // Update the task status to 'failed' if an error occurs
-        await supabase
-          .from('ai_jobs')
-          .update({ status: 'failed', error: error.message })
-          .eq('id', jobId);
-      }
+      try {
+        const e = JSON.parse(error.message);
+        if (e?.status === 429) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * e.headers['retry-after']),
+          );
+          await supabase
+            .from('ai_jobs')
+            .update({ status: 'queued' })
+            .eq('id', jobId);
+        }
+      } catch (err) {}
+
+      // Update the task status to 'failed' if an error occurs
+      await supabase
+        .from('ai_jobs')
+        .update({ status: 'failed', error: error.message })
+        .eq('id', jobId);
     }
   }
 }
