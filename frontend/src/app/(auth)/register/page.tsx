@@ -75,7 +75,7 @@ export default async function Login() {
       <div className="bg-white w-[310px] rounded-md overflow-hidden">
         <div className="py-5 bg-azure flex justify-center items-center">
           <Image
-            src="/stacked_finpanel_logo.png"
+            src="/stacked_findoc_logo.png"
             alt="Finpanel logo"
             className="h-16 w-auto"
             width={0}
