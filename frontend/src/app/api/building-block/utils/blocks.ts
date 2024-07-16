@@ -97,12 +97,12 @@ const calculatePE = (apiData: ApiProp) => {
     .reverse();
 
   const pe =
-    apiData.yfAnnual.incomeStatement.BasicEPS?.slice(-5).map(
-      (y, i) =>
-        `${formatSafeNumber(
-          calculateRatio(highestStock[i], y.value),
-        )} - ${formatSafeNumber(calculateRatio(lowestStock[i], y.value))}`,
-    ) ?? Array.from({ length: 5 }, () => '--');
+    apiData.yfAnnual.incomeStatement.BasicEPS?.slice(-5).map((y, i) => ({
+      asOfDate: y.asOfDate,
+      value: `${formatSafeNumber(
+        calculateRatio(highestStock[i], y.value),
+      )} - ${formatSafeNumber(calculateRatio(lowestStock[i], y.value))}`,
+    })) ?? Array.from({ length: 5 }, () => '--');
 
   return pe;
 };
@@ -242,7 +242,7 @@ const getFinancialAnalysisContext = (
       annual: apiData.yfAnnual.cashFlow,
       quarterly: apiData.yfQuarterly.cashFlow,
     },
-    pe: calculatePE(apiData),
+    'P/E: High-Lowf': calculatePE(apiData),
   };
 
   return JSON.stringify(context);
@@ -259,7 +259,7 @@ const getValuationContext = (
       annual: apiData.yfAnnual.incomeStatement,
       quarterly: apiData.yfQuarterly.incomeStatement,
     },
-    pe: calculatePE(apiData),
+    'P/E: High-Low': calculatePE(apiData),
   };
   return JSON.stringify(context);
 };
