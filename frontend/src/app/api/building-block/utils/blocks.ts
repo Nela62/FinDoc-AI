@@ -16,6 +16,13 @@ import {
 } from '@/app/(protected)/reports/utils/parseXml';
 import { MetricsData } from '@/types/metrics';
 import { Logger } from 'next-axiom';
+import {
+  getHighestStockPrice,
+  getLowestStockPrice,
+  getYearsStock,
+} from '@/lib/utils/metrics/stock';
+import { calculateRatio } from '@/lib/utils/metrics/financialUtils';
+import { formatSafeNumber } from '@/lib/utils/metrics/safeCalculations';
 
 export type ApiProp = {
   overview: Overview;
@@ -63,6 +70,42 @@ export type RecAndTargetPrice = {
 };
 
 export type Params = ExecSummary | RecAndTargetPrice | GeneralBlock;
+
+const calculatePE = (apiData: ApiProp) => {
+  const curYear = new Date().getFullYear();
+  const years =
+    apiData.yfAnnual.incomeStatement.TotalRevenue.length > 5
+      ? 5
+      : apiData.yfAnnual.incomeStatement.TotalRevenue.length;
+
+  const highestStock = [...Array(years).keys()]
+    .map((_, i) =>
+      Number(
+        getHighestStockPrice(
+          getYearsStock(apiData.dailyStock, curYear - i - 1),
+        ),
+      ),
+    )
+    .reverse();
+
+  const lowestStock = [...Array(years).keys()]
+    .map((_, i) =>
+      Number(
+        getLowestStockPrice(getYearsStock(apiData.dailyStock, curYear - i - 1)),
+      ),
+    )
+    .reverse();
+
+  const pe =
+    apiData.yfAnnual.incomeStatement.BasicEPS?.slice(-5).map(
+      (y, i) =>
+        `${formatSafeNumber(
+          calculateRatio(highestStock[i], y.value),
+        )} - ${formatSafeNumber(calculateRatio(lowestStock[i], y.value))}`,
+    ) ?? Array.from({ length: 5 }, () => '--');
+
+  return pe;
+};
 
 const getRecAndTargetPriceContext = (apiData: ApiProp) => {
   const context = {
@@ -128,7 +171,9 @@ const getRecentDevelopmentsContext = (
   xmlData: string,
   newsData: string,
 ): string => {
-  return newsData;
+  const leadership = get10KSection(xmlData, 'leadership');
+
+  return JSON.stringify({ newsData, leadership });
 };
 
 const getManagementContext = (
@@ -197,6 +242,7 @@ const getFinancialAnalysisContext = (
       annual: apiData.yfAnnual.cashFlow,
       quarterly: apiData.yfQuarterly.cashFlow,
     },
+    pe: calculatePE(apiData),
   };
 
   return JSON.stringify(context);
@@ -208,10 +254,12 @@ const getValuationContext = (
   newsData: string,
 ): string => {
   const context = {
+    overview: apiData.overview,
     incomeStatements: {
       annual: apiData.yfAnnual.incomeStatement,
       quarterly: apiData.yfQuarterly.incomeStatement,
     },
+    pe: calculatePE(apiData),
   };
   return JSON.stringify(context);
 };
