@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import Spline from '@splinetool/react-spline';
 
 export const Cover = () => {
   return (
@@ -19,9 +18,6 @@ export const Cover = () => {
       <div className="flex flex-col gap-1 absolute top-[18%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <p className="text-4xl">Supercharge your</p>
         <p className="text-4xl">financial reporting</p>
-      </div>
-      <div className="">
-        <Spline scene="https://prod.spline.design/BYb72iMN6Osp-Civ/scene.splinecode" />
       </div>
     </div>
   );

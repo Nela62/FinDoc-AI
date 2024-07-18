@@ -41,7 +41,6 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.2",
     "@sentry/nextjs": "^7.118.0",
-    "@splinetool/runtime": "^1.9.0",
     "@supabase-cache-helpers/postgrest-react-query": "^1.8.1",
     "@supabase-cache-helpers/storage-react-query": "^1.2.2",
     "@supabase/ssr": "^0.4.0",

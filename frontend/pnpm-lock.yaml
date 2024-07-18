@@ -92,9 +92,6 @@ importers:
       '@sentry/nextjs':
         specifier: ^7.118.0
         version: 7.118.0(next@14.1.2(@babel/core@7.24.9)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
-      '@splinetool/runtime':
-        specifier: ^1.9.0
-        version: 1.9.0
       '@supabase-cache-helpers/postgrest-react-query':
         specifier: ^1.8.1
         version: 1.8.1(@supabase/postgrest-js@1.15.8)(@supabase/supabase-js@2.44.4)(@tanstack/react-query@5.51.3(react@18.3.1))(react@18.3.1)
@@ -2087,9 +2084,6 @@ packages:
 
   '@sinonjs/fake-timers@10.3.0':
     resolution: {integrity: sha512-V4BG07kuYSUkTCSBHG8G8TNhM+F19jXFWnQtzj+we8DrkpSBCee9Z3Ms8yiGer/dlmhe35/Xdgyo3/0rQKg7YA==}
-
-  '@splinetool/runtime@1.9.0':
-    resolution: {integrity: sha512-g5BCH2FpvjAIgnarCwok3BdLL92nN3Xxk9tGr+abF6HROAWjyfQh2DtZi/atBTGik6CFYESIRjWjjXkRi9TdGw==}
 
   '@supabase-cache-helpers/postgrest-core@0.6.1':
     resolution: {integrity: sha512-zGLKmqTJkJj0THBLq2nJFe8cSDLeBsIuUpVY95kpMYDmq/Khq4Oro9q19+O3xMVCkcKLDwmagcJHt6xq56d8Ag==}
@@ -4741,10 +4735,6 @@ packages:
     resolution: {integrity: sha512-yBYjY9QX2hnRmZHAjG/f13MzmBzxzYgQhFrke06TTyKY5zSTEqkOeukBzIdVA3j3ulu8Qa3MbVFShV7T2RmGtQ==}
     engines: {node: '>= 0.4'}
 
-  on-change@4.0.2:
-    resolution: {integrity: sha512-cMtCyuJmTx/bg2HCpHo3ZLeF7FZnBOapLqZHr2AlLeJ5Ul0Zu2mUJJz051Fdwu/Et2YW04ZD+TtU+gVy0ACNCA==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
 
@@ -5319,9 +5309,6 @@ packages:
 
   selderee@0.11.0:
     resolution: {integrity: sha512-5TF+l7p4+OsnP8BCCvSyZiSPc4x4//p5uPwK8TCnVPJYRmU2aYKMpOXvw8zM5a5JvuuCGN1jmsMwuU2W02ukfA==}
-
-  semver-compare@1.0.0:
-    resolution: {integrity: sha512-YM3/ITh2MJ5MtzaM429anh+x2jiLVjqILF4m4oyQB18W7Ggea7BfqdH/wGMK7dDiMghv/6WG7znWMwUDzJiXow==}
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
@@ -7815,11 +7802,6 @@ snapshots:
   '@sinonjs/fake-timers@10.3.0':
     dependencies:
       '@sinonjs/commons': 3.0.1
-
-  '@splinetool/runtime@1.9.0':
-    dependencies:
-      on-change: 4.0.2
-      semver-compare: 1.0.0
 
   '@supabase-cache-helpers/postgrest-core@0.6.1(@supabase/postgrest-js@1.15.8)(@supabase/supabase-js@2.44.4)':
     dependencies:
@@ -11043,8 +11025,6 @@ snapshots:
       define-properties: 1.2.1
       es-object-atoms: 1.0.0
 
-  on-change@4.0.2: {}
-
   once@1.4.0:
     dependencies:
       wrappy: 1.0.2
@@ -11693,8 +11673,6 @@ snapshots:
   selderee@0.11.0:
     dependencies:
       parseley: 0.12.1
-
-  semver-compare@1.0.0: {}
 
   semver@6.3.1: {}
 
