@@ -1,6 +1,7 @@
 import { Humanloop } from 'humanloop';
 import Anthropic from '@anthropic-ai/sdk';
 import { SubscriptionPlan } from '@/types/subscription';
+import { Logger } from 'next-axiom';
 
 export type Inputs = {
   CONTEXT: string;
@@ -34,6 +35,7 @@ const humanloopIdsMap: Record<string, string> = {
 };
 
 function extractOutput(response: string) {
+  const log = new Logger();
   // Regular expression to match content between <output> tags
   const pattern = /<output>\s*([\s\S]*?)\s*<\/output>/;
   const match = response.match(pattern);
@@ -47,7 +49,8 @@ function extractOutput(response: string) {
       throw new Error(error.message);
     }
   } else {
-    throw new Error('Error: No <output> tags found');
+    log.error('No <output> tags found', { response: response });
+    return response;
   }
 }
 
