@@ -50,7 +50,7 @@ function extractOutput(response: string) {
     }
   } else {
     log.error('No <output> tags found', { response: response });
-    return response;
+    return response.replace(/(.*?)<output>/gs, '').replace('</output>', '');
   }
 }
 
@@ -123,7 +123,7 @@ export const generateBlock = async (
         // output: message.content[0].text
         //   .replace(/(.*?)<output>/gs, '')
         //   .replace('</output>', ''),
-        output: extractOutput(message.content[0].text),
+        output: message.content[0].text,
       });
 
       return {
