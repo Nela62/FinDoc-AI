@@ -72,6 +72,8 @@ export const generateBlock = async (
   inputs: Inputs | SummaryInputs | RecAndTargetPriceInputs,
   plan: SubscriptionPlan,
 ) => {
+  const log = new Logger();
+
   try {
     if (!process.env.HUMANLOOP_API_KEY) {
       throw new Error('Humanloop api key is required.');
@@ -113,8 +115,12 @@ export const generateBlock = async (
       model: model,
     });
 
+    if (!message || !message.content) {
+      log.error('No content', { blockId, inputs });
+    }
+
     // https://github.com/anthropics/anthropic-sdk-typescript/issues/432
-    if (message.content[0].type === 'text') {
+    if (message?.content[0]?.type === 'text') {
       console.log(message.content[0].text);
       humanloop.log({
         project_id: humanloopIdsMap[blockId],
@@ -130,12 +136,17 @@ export const generateBlock = async (
         // content: message.content[0].text
         //   .replace(/(.*?)<output>/gs, '')
         //   .replace('</output>', ''),
-        content: extractOutput(message.content[0].text),
-        inputTokens: message.usage.input_tokens,
-        outputTokens: message.usage.output_tokens,
+        content: extractOutput(message?.content[0]?.text),
+        inputTokens: message?.usage?.input_tokens,
+        outputTokens: message?.usage?.output_tokens,
       };
     } else {
-      throw new Error('Wrong Claude output');
+      log.error('Wrong Claude output', { blockId, inputs });
+      return {
+        content: '',
+        inputTokens: message?.usage?.input_tokens,
+        outputTokens: message?.usage?.output_tokens,
+      };
     }
   } catch (err) {
     throw err;
