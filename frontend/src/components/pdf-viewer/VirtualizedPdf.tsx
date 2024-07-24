@@ -41,7 +41,10 @@ import { usePathname } from 'next/navigation';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { PDFCitation } from '@/types/citation';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 interface PageType {
   getViewport: (arg0: { scale: number }) => { width: number };
