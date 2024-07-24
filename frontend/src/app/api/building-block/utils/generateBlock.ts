@@ -142,6 +142,12 @@ export const generateBlock = async (
       };
     } else {
       log.error('Wrong Claude output', { blockId, inputs, message });
+      humanloop.log({
+        project_id: humanloopIdsMap[blockId],
+        config_id: config.id,
+        inputs: inputs,
+        output: JSON.stringify(message),
+      });
       return {
         content: '',
         inputTokens: message?.usage?.input_tokens,
