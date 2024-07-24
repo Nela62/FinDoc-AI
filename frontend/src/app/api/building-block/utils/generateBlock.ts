@@ -116,7 +116,7 @@ export const generateBlock = async (
     });
 
     if (!message || !message.content) {
-      log.error('No content', { blockId, inputs });
+      log.error('No content', { blockId, inputs, message });
     }
 
     // https://github.com/anthropics/anthropic-sdk-typescript/issues/432
@@ -141,7 +141,7 @@ export const generateBlock = async (
         outputTokens: message?.usage?.output_tokens,
       };
     } else {
-      log.error('Wrong Claude output', { blockId, inputs });
+      log.error('Wrong Claude output', { blockId, inputs, message });
       return {
         content: '',
         inputTokens: message?.usage?.input_tokens,
