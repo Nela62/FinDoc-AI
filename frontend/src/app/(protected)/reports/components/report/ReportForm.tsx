@@ -390,7 +390,7 @@ export const ReportForm = ({
         const promises = Object.keys(news).map((key: string) => {
           return Promise.all(
             news[key as keyof typeof news].feed
-              .slice(0, 15)
+              ?.slice(0, 15)
               .map(async (f: Feed) => {
                 const content = await fetchNewsContent(f.url);
                 const obj = {
@@ -408,8 +408,17 @@ export const ReportForm = ({
 
         return JSON.stringify(context);
       };
+      console.log(news);
 
-      const newsContext = await getRecentDevelopmentsContext(news);
+      let newsContext = '';
+
+      try {
+        newsContext = await getRecentDevelopmentsContext(news);
+      } catch (err) {
+        log.error('Error when generating news context', {
+          error: err instanceof Error ? err.message : '',
+        });
+      }
 
       const sources = [];
       sources.push(
@@ -417,7 +426,7 @@ export const ReportForm = ({
       );
 
       Object.entries(news).map(([key, value]) => {
-        value.feed.slice(0, 15).forEach((n: Feed) => {
+        value.feed?.slice(0, 15).forEach((n: Feed) => {
           sources.push(
             `[${sources.length + 1}] ${n.authors[0]}, "${n.title}", ${
               n.source
@@ -669,11 +678,11 @@ export const ReportForm = ({
         ? summaryRes
             .split('• ')
             .map((point: string) => point.trim())
-            .slice(1)
+            ?.slice(1)
         : summaryRes
             .split('- ')
             .map((point: string) => point.trim())
-            .slice(1);
+            ?.slice(1);
 
       log.info('Generated the summary of a report', {
         ticker: tickerData.ticker,

@@ -11,6 +11,8 @@ export const createJob = async (
   params: Params,
   setJobs: Dispatch<SetStateAction<Record<string, Job>>>,
 ) => {
+  const log = new Logger();
+
   try {
     const { jobId } = await fetch(`/api/building-block`, {
       method: 'POST',
@@ -28,6 +30,10 @@ export const createJob = async (
     }));
     return jobId;
   } catch (error) {
+    log.error('Error creating a job', {
+      error: error instanceof Error ? error.message : '',
+      ...params,
+    });
     throw error;
   }
 };
