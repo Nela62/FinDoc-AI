@@ -10,7 +10,13 @@ import { useFileUrl } from '@supabase-cache-helpers/storage-react-query';
 import { createClient } from '@/lib/supabase/client';
 import { TemplateData } from '../../Component';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+//   'pdfjs-dist/build/pdf.worker.min.mjs',
+//   import.meta.url,
+// ).toString();
+
+console.log();
 
 const options = {
   cMapUrl: '/cmaps/',
