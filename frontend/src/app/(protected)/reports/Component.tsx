@@ -18,6 +18,13 @@ import { AllReportsColumn } from './components/allReports/AllReportsColumn';
 import { ReportInfo } from './components/allReports/ReportInfo';
 import { ReportPreview } from './components/allReports/ReportPreview';
 import { SubscriptionPlan } from '@/types/subscription';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 type ColorScheme = { id: string; colors: string[] };
 
@@ -111,7 +118,7 @@ export const NewReport = ({ userId }: { userId: string }) => {
   }, [templates, reportType]);
 
   return (
-    <div className="w-full border-t flex gap-8 bg-muted/40">
+    <div className="w-full border-t flex bg-muted/40">
       <div className="grow">
         <AllReportsColumn
           userId={userId}
@@ -119,35 +126,81 @@ export const NewReport = ({ userId }: { userId: string }) => {
           setSelectedReportId={setSelectedReportId}
         />
       </div>
-      <div className="min-w-[360px] w-[20%]">
-        {selectedReportId ? (
-          <ReportInfo
-            reportId={selectedReportId}
-            userId={userId}
-            plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
-          />
-        ) : isTemplateCustomization ? (
-          templateConfig && templateData ? (
-            <TemplateCustomizationForm
+      <div className="min-w-[420px] w-[28%] flex flex-col gap-4 h-full">
+        <div className="h-[41px] border-b w-full px-8 flex gap-2 items-center">
+          <TooltipProvider delayDuration={100}>
+            <Tooltip>
+              <TooltipTrigger className="grow">
+                <Button size="sm" variant="outline" className="w-full" disabled>
+                  Sections
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Your plan doesn&apos;t support this feature.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider delayDuration={100}>
+            <Tooltip>
+              <TooltipTrigger className="grow">
+                <Button size="sm" variant="outline" className="w-full" disabled>
+                  Sources
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Your plan doesn&apos;t support this feature.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider delayDuration={100}>
+            <Tooltip>
+              <TooltipTrigger className="grow">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setIsTemplateCustomization(true)}
+                  disabled
+                >
+                  Customize Template
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Your plan doesn&apos;t support this feature.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <div className="h-[calc(100svh-58px)]">
+          {selectedReportId ? (
+            <ReportInfo
+              reportId={selectedReportId}
               userId={userId}
-              templateData={templateData}
-              templateConfig={templateConfig}
-              setTemplateConfig={setTemplateConfig}
-              setIsTemplateCustomization={setIsTemplateCustomization}
+              plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
             />
+          ) : isTemplateCustomization ? (
+            templateConfig && templateData ? (
+              <TemplateCustomizationForm
+                userId={userId}
+                templateData={templateData}
+                templateConfig={templateConfig}
+                setTemplateConfig={setTemplateConfig}
+                setIsTemplateCustomization={setIsTemplateCustomization}
+              />
+            ) : (
+              <Skeleton />
+            )
           ) : (
-            <Skeleton />
-          )
-        ) : (
-          <ReportForm
-            setIsTemplateCustomization={setIsTemplateCustomization}
-            setSelectedReportId={setSelectedReportId}
-            templateConfig={templateConfig}
-            setReportType={setReportType}
-            userId={userId}
-            plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
-          />
-        )}
+            <ReportForm
+              setIsTemplateCustomization={setIsTemplateCustomization}
+              setSelectedReportId={setSelectedReportId}
+              templateConfig={templateConfig}
+              setReportType={setReportType}
+              userId={userId}
+              plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
+            />
+          )}
+        </div>
       </div>
       {selectedReportId ? (
         <ReportPreview userId={userId} reportId={selectedReportId} />

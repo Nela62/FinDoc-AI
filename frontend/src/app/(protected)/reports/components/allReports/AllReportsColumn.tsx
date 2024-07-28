@@ -52,9 +52,19 @@ export const AllReportsColumn = ({
 
   return (
     <div className="flex flex-col border-r-[0.5px] h-full">
-      <div
+      <div className="h-[41px] flex items-center px-4 border-b">
+        <Button
+          size="sm"
+          className="bg-azure hover:bg-azure/95 w-fit"
+          onClick={() => setSelectedReportId(null)}
+        >
+          + Create new report
+        </Button>
+      </div>
+
+      {/* <div
         className={cn(
-          'flex gap-3 py-6 hover:bg-azure/10 justify-center items-center cursor-pointer',
+          'flex gap-3 h-10 hover:bg-azure/10 justify-center items-center cursor-pointer',
           !selectedReportId && 'bg-azure/20',
         )}
         onClick={() => setSelectedReportId(null)}
@@ -63,12 +73,12 @@ export const AllReportsColumn = ({
           <Plus className="h-4 w-4" />
         </div>
         <p className="font-semibold">Create new report</p>
-      </div>
-      <div className="pt-4 pb-2 flex gap-2 w-full items-center">
+      </div> */}
+      {/* <div className="pt-4 pb-2 flex gap-2 w-full items-center">
         <Separator className="shrink"></Separator>
         <p className="text-primary/30 text-sm">REPORTS</p>
         <Separator className="shrink"></Separator>
-      </div>
+      </div> */}
       {isLoading || !reports ? (
         <Skeleton className="w-full h-4" />
       ) : (

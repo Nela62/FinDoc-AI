@@ -83,6 +83,8 @@ import { useRouter } from 'next/navigation';
 import { useLogger } from 'next-axiom';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { getRecAndTargetPrice } from './utils';
+import { Montserrat } from 'next/font/google';
+import { cn } from '@/lib/utils';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -803,12 +805,14 @@ export const ReportForm = ({
             setCharts={setImages}
           />
         )}
-      <div className="w-[360px] mx-auto flex flex-col py-4 gap-4 h-full">
-        <h2 className="font-semibold text-primary/80">Configurations</h2>
+      <div className="w-full flex flex-col gap-4 h-full grow">
+        <h2 className={cn('font-semibold text-primary/80 px-8')}>
+          Configurations
+        </h2>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onGenerateAndFormSubmit)}
-            className="space-y-4 grow justify-between flex flex-col"
+            className="space-y-4 grow justify-between flex pb-6 flex-col px-8"
           >
             <div className="flex flex-col space-y-4">
               <FormField
@@ -938,24 +942,6 @@ export const ReportForm = ({
                   </FormItem>
                 )}
               />
-
-              {/* <div className="flex flex-col space-y-3">
-                    <Label>Data Sources</Label>
-                    <Button variant="outline" className="w-1/2">
-                      Edit Sources
-                    </Button>
-                  </div> */}
-              {plan !== 'free' && plan !== 'starter' && (
-                <Button
-                  variant="ghost"
-                  className="text-xs w-fit mt-2 mb-4 font-normal px-2"
-                  onClick={() => {
-                    setIsTemplateCustomization(true);
-                  }}
-                >
-                  Customize Template -{'>'}
-                </Button>
-              )}
             </div>
 
             {/* <div className="flex gap-5 w-full mt-14">

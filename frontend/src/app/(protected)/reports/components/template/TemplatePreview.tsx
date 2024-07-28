@@ -33,7 +33,7 @@ export const TemplatePreview = ({
 
   return (
     <div className="w-[50%] relative">
-      <div className="h-[calc(100svh-2px)]">
+      <div className="h-[calc(100svh-1px)]">
         {pdfUrl && (
           <Viewer
             defaultScale={SpecialZoomLevel.PageWidth}
