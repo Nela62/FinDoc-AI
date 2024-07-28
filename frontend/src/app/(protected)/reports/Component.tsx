@@ -126,135 +126,35 @@ export const NewReport = ({ userId }: { userId: string }) => {
           setSelectedReportId={setSelectedReportId}
         />
       </div>
-      <div className="min-w-[420px] w-[28%] flex flex-col gap-4 h-full ">
-        <div className="h-[41px] border-b w-full px-8 flex gap-2 items-center bg-white">
-          {selectedReportId ? (
-            <>
-              {/* <TooltipProvider delayDuration={100}>
-                <Tooltip>
-                  <TooltipTrigger className="grow" disabled> */}
-              <Button size="sm" variant="outline" className="w-full">
-                Update
-              </Button>
-              {/* </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Your plan doesn&apos;t support this feature.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider> */}
-              <TooltipProvider delayDuration={100}>
-                <Tooltip>
-                  <TooltipTrigger className="grow">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full"
-                      disabled
-                    >
-                      Download DOCX
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Your plan doesn&apos;t support this feature.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <Button
-                size="sm"
-                variant="outline"
-                className="grow"
-                onClick={() => setIsTemplateCustomization(true)}
-              >
-                Download PDF
-              </Button>
-            </>
-          ) : (
-            <>
-              <TooltipProvider delayDuration={100}>
-                <Tooltip>
-                  <TooltipTrigger className="grow">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full"
-                      disabled
-                    >
-                      Sections
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Your plan doesn&apos;t support this feature.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider delayDuration={100}>
-                <Tooltip>
-                  <TooltipTrigger className="grow">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full"
-                      disabled
-                    >
-                      Sources
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Your plan doesn&apos;t support this feature.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider delayDuration={100}>
-                <Tooltip>
-                  <TooltipTrigger className="grow">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => setIsTemplateCustomization(true)}
-                      disabled
-                    >
-                      Customize Template
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Your plan doesn&apos;t support this feature.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </>
-          )}
-        </div>
-        <div className="h-[calc(100svh-58px)]">
-          {selectedReportId ? (
-            <ReportInfo
-              reportId={selectedReportId}
+      <div className="min-w-[420px] w-[28%]">
+        {selectedReportId ? (
+          <ReportInfo
+            reportId={selectedReportId}
+            userId={userId}
+            plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
+          />
+        ) : isTemplateCustomization ? (
+          templateConfig && templateData ? (
+            <TemplateCustomizationForm
               userId={userId}
-              plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
-            />
-          ) : isTemplateCustomization ? (
-            templateConfig && templateData ? (
-              <TemplateCustomizationForm
-                userId={userId}
-                templateData={templateData}
-                templateConfig={templateConfig}
-                setTemplateConfig={setTemplateConfig}
-                setIsTemplateCustomization={setIsTemplateCustomization}
-              />
-            ) : (
-              <Skeleton />
-            )
-          ) : (
-            <ReportForm
-              setIsTemplateCustomization={setIsTemplateCustomization}
-              setSelectedReportId={setSelectedReportId}
+              templateData={templateData}
               templateConfig={templateConfig}
-              setReportType={setReportType}
-              userId={userId}
-              plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
+              setTemplateConfig={setTemplateConfig}
+              setIsTemplateCustomization={setIsTemplateCustomization}
             />
-          )}
-        </div>
+          ) : (
+            <Skeleton />
+          )
+        ) : (
+          <ReportForm
+            setIsTemplateCustomization={setIsTemplateCustomization}
+            setSelectedReportId={setSelectedReportId}
+            templateConfig={templateConfig}
+            setReportType={setReportType}
+            userId={userId}
+            plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
+          />
+        )}
       </div>
       {selectedReportId ? (
         <ReportPreview userId={userId} reportId={selectedReportId} />

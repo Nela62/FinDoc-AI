@@ -1,4 +1,10 @@
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
 import {
   fetchReportById,
@@ -20,6 +26,7 @@ import {
 } from '@supabase-cache-helpers/postgrest-react-query';
 import { format } from 'date-fns';
 import { Loader2Icon } from 'lucide-react';
+import { useLogger } from 'next-axiom';
 import { useCallback, useMemo, useState } from 'react';
 
 type ReportInfoType = {
@@ -38,6 +45,8 @@ export const ReportInfo = ({
 }) => {
   const [isLoading, setLoading] = useState(false);
   const { initGeneration } = useBoundStore((state) => state);
+
+  const log = useLogger();
 
   const supabase = createClient();
 
@@ -127,15 +136,44 @@ export const ReportInfo = ({
     initGeneration,
   ]);
 
-  const downloadPdf = () => {
+  const downloadPdf = async () => {
     if (!pdfFileData || !report) return;
-    const link = document.createElement('a');
-    link.href = pdfFileData;
-    link.target = '_blank'; // Open the link in a new tab
-    link.rel = 'noopener noreferrer'; // Recommended for security reasons
-    link.download = report.title;
-    link.click();
-    URL.revokeObjectURL(pdfFileData);
+
+    try {
+      // Fetch the file content
+      const response = await fetch(pdfFileData);
+      const blob = await response.blob();
+
+      // Create a temporary URL for the blob
+      const url = window.URL.createObjectURL(blob);
+
+      // Create a temporary anchor element
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = report.title || 'report.pdf'; // Set the file name
+
+      // Append to the document, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Release the temporary URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      log.error('Could not download PDF', {
+        error: error instanceof Error ? error.message : '',
+        ...report,
+      });
+      // Handle the error (e.g., show an error message to the user)
+    }
+    // const link = document.createElement('a');
+    // link.href = pdfFileData;
+    // link.target = '_blank'; // Open the link in a new tab
+    // link.rel = 'noopener noreferrer'; // Recommended for security reasons
+    // link.download = report.title;
+    // link.click();
+    // URL.revokeObjectURL(pdfFileData);
   };
 
   const downloadDocx = () => {
@@ -180,31 +218,58 @@ export const ReportInfo = ({
   }, [report]);
 
   return (
-    <div className="w-[360px] py-4">
-      <div className="sr-only" id="hidden-container"></div>
-      <div className="flex w-full justify-between">
-        <Button variant="outline" onClick={updateTemplate} disabled={isLoading}>
+    <div className="flex flex-col gap-4">
+      <div className="h-[41px] border-b w-full px-8 flex gap-2 items-center bg-white">
+        {/* <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger className="grow" disabled> */}
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full"
+          onClick={updateTemplate}
+          disabled={isLoading}
+        >
           {isLoading && <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />}
           Update
         </Button>
-        {plan !== 'free' && plan !== 'starter' && (
-          <Button
-            variant="outline"
-            onClick={downloadDocx}
-            disabled={!report || !templateConfig || !docxFileData}
-          >
-            Download docx
-          </Button>
-        )}
+        {/* </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Your plan doesn&apos;t support this feature.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider> */}
+        <TooltipProvider delayDuration={100}>
+          <Tooltip>
+            <TooltipTrigger className="grow" asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                onClick={downloadDocx}
+                // disabled={!report || !templateConfig || !docxFileData}
+                disabled
+              >
+                Download DOCX
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Your plan doesn&apos;t support this feature.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <Button
+          size="sm"
           variant="outline"
+          className="grow"
           onClick={downloadPdf}
           disabled={!report || !templateConfig || !pdfFileData}
         >
-          Download pdf
+          Download PDF
         </Button>
       </div>
-      <div className="flex flex-col w-full mt-8 gap-6">
+      <h2 className="font-semibold text-primary/80 px-8">Report Info</h2>
+      <div className="flex flex-col w-full px-8 gap-6">
         {getReportInfo
           ? getReportInfo.map((row: ReportInfoType) => (
               <div key={row.title} className="flex items-center">

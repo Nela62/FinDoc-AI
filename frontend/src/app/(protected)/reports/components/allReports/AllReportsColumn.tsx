@@ -51,7 +51,7 @@ export const AllReportsColumn = ({
   );
 
   return (
-    <div className="flex flex-col border-r-[0.5px] h-full">
+    <div className="flex flex-col border-r-[0.5px] h-full gap-4">
       <div className="h-[41px] flex items-center px-4 border-b bg-white">
         <Button
           size="sm"
@@ -82,7 +82,8 @@ export const AllReportsColumn = ({
       {isLoading || !reports ? (
         <Skeleton className="w-full h-4" />
       ) : (
-        <div className="flex flex-col gap-1 h-[calc(100vh-118px)]">
+        <div className="flex flex-col gap-4 h-[calc(100svh-58px)]">
+          <h2 className={cn('font-semibold text-primary/80 px-4')}>Reports</h2>
           <ScrollArea>
             {...reports
               .sort((a, b) => {
@@ -93,12 +94,12 @@ export const AllReportsColumn = ({
               .map((report) => (
                 <div
                   key={report.id}
-                  className="group pr-2 cursor-pointer"
+                  className="group cursor-pointer"
                   onClick={() => setSelectedReportId(report.id)}
                 >
                   <div
                     className={cn(
-                      'text-sm group-hover:bg-azure/10 py-2 pl-4 pr-2 text-primary/70 font-medium flex my-0.5 gap-2',
+                      'text-sm group-hover:bg-azure/10 py-2 px-4 text-primary/70 font-medium flex my-2 gap-2',
                       selectedReportId === report.id && 'bg-azure/20',
                     )}
                   >

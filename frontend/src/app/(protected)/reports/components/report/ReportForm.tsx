@@ -85,6 +85,12 @@ import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { getRecAndTargetPrice } from './utils';
 import { Montserrat } from 'next/font/google';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -805,146 +811,195 @@ export const ReportForm = ({
             setCharts={setImages}
           />
         )}
-      <div className="w-full flex flex-col gap-4 h-full grow">
-        <h2 className={cn('font-semibold text-primary/80 px-8')}>
-          Configurations
-        </h2>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onGenerateAndFormSubmit)}
-            className="space-y-4 grow justify-between flex pb-6 flex-col px-8"
-          >
-            <div className="flex flex-col space-y-4">
-              <FormField
-                control={form.control}
-                name="reportType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Report Type</FormLabel>
-                    <Select
-                      onValueChange={(value: string) => {
-                        field.onChange(value);
-                        setReportType(value);
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Equity Analyst Report">
-                          Equity Analyst Report
-                        </SelectItem>
-                        {/* <SelectItem value="Earnings Call Note">
+      <div className="flex flex-col gap-4">
+        <div className="h-[41px] border-b w-full px-8 flex gap-2 items-center bg-white">
+          <TooltipProvider delayDuration={100}>
+            <Tooltip>
+              <TooltipTrigger asChild className="grow">
+                <Button size="sm" variant="outline" className="w-full" disabled>
+                  Sections
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Your plan doesn&apos;t support this feature.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider delayDuration={100}>
+            <Tooltip>
+              <TooltipTrigger asChild className="grow">
+                <Button size="sm" variant="outline" className="w-full" disabled>
+                  Sources
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Your plan doesn&apos;t support this feature.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider delayDuration={100}>
+            <Tooltip>
+              <TooltipTrigger asChild className="grow">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setIsTemplateCustomization(true)}
+                  disabled
+                >
+                  Customize Template
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Your plan doesn&apos;t support this feature.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <div className="w-full flex flex-col gap-4 h-[calc(100svh-58px)] grow">
+          <h2 className={cn('font-semibold text-primary/80 px-8')}>
+            Configurations
+          </h2>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onGenerateAndFormSubmit)}
+              className="space-y-4 grow justify-between flex pb-6 flex-col px-8"
+            >
+              <div className="flex flex-col space-y-4">
+                <FormField
+                  control={form.control}
+                  name="reportType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Report Type</FormLabel>
+                      <Select
+                        onValueChange={(value: string) => {
+                          field.onChange(value);
+                          setReportType(value);
+                        }}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full bg-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Equity Analyst Report">
+                            Equity Analyst Report
+                          </SelectItem>
+                          {/* <SelectItem value="Earnings Call Note">
                           Earnings Call Note
                         </SelectItem> */}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="companyTicker"
-                render={({ field }) => (
-                  <FormItem className="">
-                    <FormLabel>Company</FormLabel>
-                    <FormControl>
-                      <VirtualizedCombobox
-                        options={tickers}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="companyTicker"
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormLabel>Company</FormLabel>
+                      <FormControl>
+                        <VirtualizedCombobox
+                          options={tickers}
+                          onValueChange={field.onChange}
+                          searchPlaceholder="Select ticker..."
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="recommendation"
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormLabel>Recommendation</FormLabel>
+                      <Select
                         onValueChange={field.onChange}
-                        searchPlaceholder="Select ticker..."
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="recommendation"
-                render={({ field }) => (
-                  <FormItem className="">
-                    <FormLabel>Recommendation</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="bg-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Auto">Auto</SelectItem>
+                          <SelectItem value="Buy">Buy</SelectItem>
+                          <SelectItem value="Overweight">Overweight</SelectItem>
+                          <SelectItem value="Hold">Hold</SelectItem>
+                          <SelectItem value="Underweight">
+                            Underweight
+                          </SelectItem>
+                          <SelectItem value="Sell">Sell</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="targetPrice"
+                  disabled={form.watch('recommendation') === 'Auto'}
+                  render={({ field }) => (
+                    <FormItem className="relative">
+                      <FormLabel>Target Price</FormLabel>
+                      <div className="absolute l-0 ml-2 b-0 text-foreground/70">
+                        <p className="pt-1.5 text-sm">$</p>
+                      </div>
                       <FormControl>
-                        <SelectTrigger className="bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <Input
+                          className="pl-6 bg-white"
+                          type="number"
+                          {...field}
+                          min={0}
+                          value={field.value ?? ''}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Auto">Auto</SelectItem>
-                        <SelectItem value="Buy">Buy</SelectItem>
-                        <SelectItem value="Overweight">Overweight</SelectItem>
-                        <SelectItem value="Hold">Hold</SelectItem>
-                        <SelectItem value="Underweight">Underweight</SelectItem>
-                        <SelectItem value="Sell">Sell</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="targetPrice"
-                disabled={form.watch('recommendation') === 'Auto'}
-                render={({ field }) => (
-                  <FormItem className="relative">
-                    <FormLabel>Target Price</FormLabel>
-                    <div className="absolute l-0 ml-2 b-0 text-foreground/70">
-                      <p className="pt-1.5 text-sm">$</p>
-                    </div>
-                    <FormControl>
-                      <Input
-                        className="pl-6 bg-white"
-                        type="number"
-                        {...field}
-                        min={0}
-                        value={field.value ?? ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="financialStrength"
-                render={({ field }) => (
-                  <FormItem className="">
-                    <FormLabel>Financial Strength</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Auto">Auto</SelectItem>
-                        <SelectItem value="Low">Low</SelectItem>
-                        <SelectItem value="Low-Medium">Low-Medium</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="Medium-High">Medium-High</SelectItem>
-                        <SelectItem value="High">High</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="financialStrength"
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormLabel>Financial Strength</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="bg-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Auto">Auto</SelectItem>
+                          <SelectItem value="Low">Low</SelectItem>
+                          <SelectItem value="Low-Medium">Low-Medium</SelectItem>
+                          <SelectItem value="Medium">Medium</SelectItem>
+                          <SelectItem value="Medium-High">
+                            Medium-High
+                          </SelectItem>
+                          <SelectItem value="High">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-            {/* <div className="flex gap-5 w-full mt-14">
+              {/* <div className="flex gap-5 w-full mt-14">
             <Button
               variant="outline"
               type="submit"
@@ -968,20 +1023,21 @@ export const ReportForm = ({
               </div>
             </Button>
           </div> */}
-            <Button
-              type="submit"
-              onClick={form.handleSubmit(onGenerateAndFormSubmit)}
-              name="generate"
-              className="flex gap-2 h-11 mx-auto bg-azure hover:bg-azure/95 px-6"
-              disabled={plan === 'free' && reportsNum > 5}
-            >
-              <Wand2Icon className="h-5 w-5" />
-              <div className="flex flex-col w-fit justify-start">
-                <p>Generate Report</p>
-              </div>
-            </Button>
-          </form>
-        </Form>
+              <Button
+                type="submit"
+                onClick={form.handleSubmit(onGenerateAndFormSubmit)}
+                name="generate"
+                className="flex gap-2 h-11 mx-auto bg-azure hover:bg-azure/95 px-6"
+                disabled={plan === 'free' && reportsNum > 5}
+              >
+                <Wand2Icon className="h-5 w-5" />
+                <div className="flex flex-col w-fit justify-start">
+                  <p>Generate Report</p>
+                </div>
+              </Button>
+            </form>
+          </Form>
+        </div>
       </div>
     </>
   );
