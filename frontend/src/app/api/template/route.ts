@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
   const blob = await fetch(
-    'https://finpanel-media.nyc3.cdn.digitaloceanspaces.com/default-equity-analyst.pdf',
+    'https://finpanel-media.nyc3.cdn.digitaloceanspaces.com/default-equity-analyst-template.pdf',
   ).then((res) => res.blob());
 
   const headers = new Headers();

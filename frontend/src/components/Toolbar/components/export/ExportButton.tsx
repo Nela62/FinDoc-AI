@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { generateDocxFile } from './components/docxExport';
-import { DAILY_IBM } from '@/lib/data/daily_imb';
+import { DAILY_IBM } from '@/lib/data/daily_ibm';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import { POLYGON_ANNUAL } from '@/lib/data/polygon_annual';
 import { POLYGON_QUARTERLY } from '@/lib/data/polygon_quarterly';

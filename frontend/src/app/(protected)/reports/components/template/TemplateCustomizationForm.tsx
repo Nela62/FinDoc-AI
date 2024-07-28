@@ -41,7 +41,7 @@ import {
   AlertDialogHeader,
 } from '@/components/ui/alert-dialog';
 import { ArrowLeft } from 'lucide-react';
-import { DAILY_IBM } from '@/lib/data/daily_imb';
+import { DAILY_IBM } from '@/lib/data/daily_ibm';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import { getTemplateDocxBlob } from '../../utils/getDocxBlob';
 import { POLYGON_ANNUAL } from '@/lib/data/polygon_annual';
@@ -150,11 +150,9 @@ export const TemplateCustomizationForm = ({
   );
 
   useEffect(() => {
-    console.log(isLoading);
-    console.log(images);
-    console.log(templateConfig);
     if (isLoading && images) {
       console.log('generating pdf');
+      console.log(templateConfig);
       getPdfFile(templateConfig)
         .then((blob) => {
           const pdf = new File([blob], '', { type: 'application/pdf' });
@@ -185,7 +183,7 @@ export const TemplateCustomizationForm = ({
     };
 
     setTemplateConfig(newTemplateConfig);
-    setImages(null);
+    // setImages(null);
   };
 
   return (

@@ -45,6 +45,8 @@ export const QuarterStockChart = forwardRef((props: ChartProps, ref: any) => {
 
   const [primaryColor, secondaryColor, accentColor] = props.colors;
 
+  console.log('generating quarter stock chart');
+
   const stockData = getNMonthsStock(props.dailyStock, 1);
   const chartStockData = stockData.map((dataPoint) => ({
     day: dataPoint.day.slice(5),
@@ -53,6 +55,10 @@ export const QuarterStockChart = forwardRef((props: ChartProps, ref: any) => {
   const stockMin = getLowestStockPrice(stockData);
   const stockMax = getHighestStockPrice(stockData);
   const stockMean = getMeanClosingStockPrice(stockData);
+
+  console.log(props.dailyStock);
+  console.log(stockData);
+  console.log(chartStockData);
 
   return (
     <div className="bg-background w-[500px] h-fit" ref={ref}>

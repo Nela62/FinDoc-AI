@@ -28,6 +28,7 @@ export const getNMonthsStock = (
 ) => {
   const data = dailyStock['Time Series (Daily)'];
   const nMonthsAgo = sub(start, { months: months });
+
   const days = eachDayOfInterval({ start: nMonthsAgo, end: start });
   const stockData: DailyStockDataPoint[] = [];
 

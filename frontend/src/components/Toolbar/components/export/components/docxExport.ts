@@ -1,5 +1,5 @@
 import { ANNUAL_FUNDAMENTALS } from '@/lib/data/annual_fundamentals';
-import { DAILY_IBM } from '@/lib/data/daily_imb';
+import { DAILY_IBM } from '@/lib/data/daily_ibm';
 import { OVERVIEW } from '@/lib/data/overview_ibm';
 import { POLYGON_ANNUAL } from '@/lib/data/polygon_annual';
 import { QUARTERLY_FUNDAMENTALS } from '@/lib/data/quarterly_fundamentals';

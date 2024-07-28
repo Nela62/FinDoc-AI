@@ -14,7 +14,7 @@ import {
 
 import { useEffect, useState } from 'react';
 import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
-import { DAILY_IBM } from '@/lib/data/daily_imb';
+import { DAILY_IBM } from '@/lib/data/daily_ibm';
 import { TargetPriceChart } from '@/lib/templates/charts/TargetPriceChart';
 import { QuarterStockChart } from '@/lib/templates/charts/QuarterStockChart';
 import { POLYGON_ANNUAL } from '@/lib/data/polygon_annual';

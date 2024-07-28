@@ -4,7 +4,7 @@ import { OVERVIEW } from '@/lib/data/overview_ibm';
 import { JSONContent } from '@tiptap/core';
 import { AnalysisMetrics } from '@/lib/templates/docxTables/financialAnalysisTable';
 import { FinancialStrength, Recommendation } from '@/types/report';
-import { DAILY_IBM } from '@/lib/data/daily_imb';
+import { DAILY_IBM } from '@/lib/data/daily_ibm';
 import { format } from 'date-fns';
 import { QUARTERLY_FUNDAMENTALS } from '@/lib/data/quarterly_fundamentals';
 import { ANNUAL_FUNDAMENTALS } from '@/lib/data/annual_fundamentals';
@@ -28,6 +28,7 @@ export const getTemplateDocxBlob = async (
   topFirstPageVisual: Blob,
   bottomFirstPageVisual: Blob,
 ) => {
+  console.log('generating template');
   if (!TEMPLATES.hasOwnProperty(templateData.componentId)) {
     throw new Error("Template with this component id doesn't exist");
   }
@@ -42,6 +43,7 @@ export const getTemplateDocxBlob = async (
   )} | Reporting Currency: USD | Trading Currency: USD | Exchange: NASDAQ`;
 
   try {
+    console.log('getting docxBlob');
     const docxBlob = await templateFn({
       content: templateData.sampleText,
       colors: templateConfig.colorScheme.colors,
