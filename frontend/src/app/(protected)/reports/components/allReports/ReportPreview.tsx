@@ -17,6 +17,9 @@ import {
   AlertDialogHeader,
 } from '@/components/ui/alert-dialog';
 import Image from 'next/image';
+import { SpecialZoomLevel, Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import { PdfToolbar } from '@/components/pdf-viewer/Toolbar';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 // pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -100,13 +103,9 @@ export const ReportPreview = ({
     }
   }, [pdfFile]);
 
-  function onDocumentLoadSuccess({
-    numPages: nextNumPages,
-  }: {
-    numPages: number;
-  }): void {
-    setNumPages(nextNumPages);
-  }
+  const defaultLayoutPluginInstance = defaultLayoutPlugin({
+    renderToolbar: PdfToolbar,
+  });
 
   return (
     <>
@@ -133,29 +132,13 @@ export const ReportPreview = ({
         />
       )}
       <div className="w-[50%] relative">
-        <div
-          className="flex-col overflow-hidden bg-white border-l hidden md:flex"
-          ref={setContainerRef}
-        >
-          <div className="w-full flex justify-center items-center h-10 border-b">
-            <h2 className="font-semibold">Preview</h2>
-          </div>
+        <div className="h-[calc(100svh-2px)]">
           {file && (
-            <Document
-              file={file}
-              onLoadSuccess={onDocumentLoadSuccess}
-              options={options}
-            >
-              <ScrollArea className="h-[calc(100vh-42px)]">
-                {Array.from(new Array(numPages), (el, index) => (
-                  <Page
-                    key={`page_${index + 1}`}
-                    pageNumber={index + 1}
-                    width={containerWidth}
-                  />
-                ))}
-              </ScrollArea>
-            </Document>
+            <Viewer
+              defaultScale={SpecialZoomLevel.PageWidth}
+              fileUrl={file}
+              plugins={[defaultLayoutPluginInstance]}
+            />
           )}
         </div>
       </div>

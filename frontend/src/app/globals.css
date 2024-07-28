@@ -76,3 +76,7 @@
       @apply bg-background text-foreground;
     }
   }
+
+    span.rpv-page-navigation__current-page-input > input.rpv-core__textbox {
+      width: 45px;
+    }

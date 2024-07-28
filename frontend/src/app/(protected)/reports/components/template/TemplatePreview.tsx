@@ -1,5 +1,7 @@
 'use client';
 
+import { SpecialZoomLevel, Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { useResizeObserver } from '@wojtekmaj/react-hooks';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -9,21 +11,7 @@ import { useCallback, useState } from 'react';
 import { useFileUrl } from '@supabase-cache-helpers/storage-react-query';
 import { createClient } from '@/lib/supabase/client';
 import { TemplateData } from '../../Component';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-//   'pdfjs-dist/build/pdf.worker.min.mjs',
-//   import.meta.url,
-// ).toString();
-
-console.log();
-
-const options = {
-  cMapUrl: '/cmaps/',
-  standardFontDataUrl: '/standard_fonts/',
-};
-
-const resizeObserverOptions = {};
+import { PdfToolbar } from '@/components/pdf-viewer/Toolbar';
 
 export const TemplatePreview = ({
   userId,
@@ -32,20 +20,6 @@ export const TemplatePreview = ({
   userId: string;
   templateData: TemplateData;
 }) => {
-  const [numPages, setNumPages] = useState<number>();
-  const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
-  const [containerWidth, setContainerWidth] = useState<number>();
-
-  const onResize = useCallback<ResizeObserverCallback>((entries) => {
-    const [entry] = entries;
-
-    if (entry) {
-      setContainerWidth(entry.contentRect.width);
-    }
-  }, []);
-
-  useResizeObserver(containerRef, resizeObserverOptions, onResize);
-
   const supabase = createClient();
 
   const { data: pdfUrl } = useFileUrl(
@@ -57,39 +31,19 @@ export const TemplatePreview = ({
     },
   );
 
-  function onDocumentLoadSuccess({
-    numPages: nextNumPages,
-  }: {
-    numPages: number;
-  }): void {
-    setNumPages(nextNumPages);
-  }
+  const defaultLayoutPluginInstance = defaultLayoutPlugin({
+    renderToolbar: PdfToolbar,
+  });
 
   return (
     <div className="w-[50%] relative">
-      <div
-        className="flex-col overflow-hidden bg-white border-l hidden md:flex"
-        ref={setContainerRef}
-      >
-        <div className="w-full flex justify-center items-center h-10 border-b">
-          <h2 className="font-semibold">{templateData.name}</h2>
-        </div>
+      <div className="h-[calc(100svh-2px)]">
         {pdfUrl && (
-          <Document
-            file={pdfUrl}
-            onLoadSuccess={onDocumentLoadSuccess}
-            options={options}
-          >
-            <ScrollArea className="h-[calc(100vh-42px)]">
-              {Array.from(new Array(numPages), (el, index) => (
-                <Page
-                  key={`page_${index + 1}`}
-                  pageNumber={index + 1}
-                  width={containerWidth}
-                />
-              ))}
-            </ScrollArea>
-          </Document>
+          <Viewer
+            defaultScale={SpecialZoomLevel.PageWidth}
+            fileUrl={pdfUrl}
+            plugins={[defaultLayoutPluginInstance]}
+          />
         )}
       </div>
     </div>

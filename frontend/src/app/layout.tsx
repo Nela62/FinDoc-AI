@@ -2,12 +2,15 @@ import { AxiomWebVitals } from 'next-axiom';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 import 'cal-sans';
 import { StoreProvider } from '@/providers/store-provider';
 import { ReactQueryClientProvider } from '@/providers/ReactQueryClientProvider';
 import { CSPostHogProvider } from '@/providers/PostHogClientProvider';
 import { Toaster } from '@/components/ui/toaster';
+import { PdfWorkerProvider } from '@/providers/PdfWorkerProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -29,7 +32,9 @@ export default function RootLayout({
             className={`${inter.className} h-full flex flex-col bg-background`}
           >
             <main className="h-full">
-              <StoreProvider>{children}</StoreProvider>
+              <StoreProvider>
+                <PdfWorkerProvider>{children}</PdfWorkerProvider>
+              </StoreProvider>
             </main>
             <Toaster />
           </body>
