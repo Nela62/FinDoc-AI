@@ -36,10 +36,10 @@ export const LeftSidebar = () => {
 
   const CollapsedSidebar = (
     <aside className="hidden w-14 flex-col border-r bg-background sm:flex">
-      <nav className="flex flex-col items-center gap-4 px-2 py-4">
+      <nav className="flex flex-col items-center gap-4 px-2 py-2">
         <Link href="#" className="">
           <Image
-            src="/finpanel_logo_blue.png"
+            src="/findoc_square_logo_blue.png"
             className="group-hover:scale-110"
             alt="coreline logo"
             height={30}
@@ -53,7 +53,7 @@ export const LeftSidebar = () => {
           <TooltipTrigger asChild>
             <Link
               href="/reports/"
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+              className="flex h-9 w-9  items-center justify-center rounded-lg bg-accent text-accent-foreground/80 transition-colors hover:text-foreground md:h-8 md:w-8"
             >
               <Files className="h-5 w-5" />
               <span className="sr-only">Reports</span>
@@ -127,7 +127,7 @@ export const LeftSidebar = () => {
       <nav className="flex flex-col items-center gap-4 px-2 py-4">
         <Link href="#" className="">
           <Image
-            src="/default_findoc_logo.png"
+            src="/findoc_square_logo_blue.png"
             className="transition-all h-10 w-fit"
             alt="coreline logo"
             height={0}

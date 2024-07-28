@@ -52,7 +52,7 @@ export const AllReportsColumn = ({
 
   return (
     <div className="flex flex-col border-r-[0.5px] h-full">
-      <div className="h-[41px] flex items-center px-4 border-b">
+      <div className="h-[41px] flex items-center px-4 border-b bg-white">
         <Button
           size="sm"
           className="bg-azure hover:bg-azure/95 w-fit"
