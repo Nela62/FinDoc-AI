@@ -12,6 +12,7 @@ import {
   getApiCacheByReportId,
 } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
 import { getFinancialAndRiskAnalysisMetrics } from '@/lib/utils/metrics/financialAndRiskAnalysisMetrics';
 import { getGrowthAndValuationAnalysisMetrics } from '@/lib/utils/metrics/growthAndValuationAnalysisMetrics';
 import { getSidebarMetrics } from '@/lib/utils/metrics/sidebarMetrics';
@@ -241,11 +242,14 @@ export const ReportInfo = ({
               </TooltipProvider> */}
         <TooltipProvider delayDuration={100}>
           <Tooltip>
-            <TooltipTrigger className="grow" asChild>
+            <TooltipTrigger
+              asChild
+              className="grow disabled:pointer-events-auto"
+            >
               <Button
                 size="sm"
                 variant="outline"
-                className="w-full"
+                className={cn('w-full', 'cursor-not-allowed')}
                 onClick={downloadDocx}
                 // disabled={!report || !templateConfig || !docxFileData}
                 disabled

@@ -83,7 +83,6 @@ import { useRouter } from 'next/navigation';
 import { useLogger } from 'next-axiom';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { getRecAndTargetPrice } from './utils';
-import { Montserrat } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -815,8 +814,16 @@ export const ReportForm = ({
         <div className="h-[41px] border-b w-full px-8 flex gap-2 items-center bg-white">
           <TooltipProvider delayDuration={100}>
             <Tooltip>
-              <TooltipTrigger asChild className="grow">
-                <Button size="sm" variant="outline" className="w-full" disabled>
+              <TooltipTrigger
+                asChild
+                className="grow disabled:pointer-events-auto"
+              >
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={cn('w-full', 'cursor-not-allowed')}
+                  disabled
+                >
                   Sections
                 </Button>
               </TooltipTrigger>
@@ -827,8 +834,16 @@ export const ReportForm = ({
           </TooltipProvider>
           <TooltipProvider delayDuration={100}>
             <Tooltip>
-              <TooltipTrigger asChild className="grow">
-                <Button size="sm" variant="outline" className="w-full" disabled>
+              <TooltipTrigger
+                asChild
+                className="grow disabled:pointer-events-auto"
+              >
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={cn('w-full', 'cursor-not-allowed')}
+                  disabled
+                >
                   Sources
                 </Button>
               </TooltipTrigger>
@@ -839,11 +854,14 @@ export const ReportForm = ({
           </TooltipProvider>
           <TooltipProvider delayDuration={100}>
             <Tooltip>
-              <TooltipTrigger asChild className="grow">
+              <TooltipTrigger
+                asChild
+                className="grow disabled:pointer-events-auto"
+              >
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full"
+                  className="w-full cursor-not-allowed"
                   onClick={() => setIsTemplateCustomization(true)}
                   disabled
                 >
