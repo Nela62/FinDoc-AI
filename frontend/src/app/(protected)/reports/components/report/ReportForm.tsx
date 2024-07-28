@@ -858,7 +858,7 @@ export const ReportForm = ({
         </div>
         <div className="w-full flex flex-col gap-4 h-[calc(100svh-58px)] grow">
           <h2 className={cn('font-semibold text-primary/80 px-8')}>
-            Configurations
+            Create New Report
           </h2>
           <Form {...form}>
             <form
