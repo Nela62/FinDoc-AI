@@ -74,75 +74,82 @@ export const AllReportsColumn = ({
       ) : (
         <div className="flex flex-col gap-1 h-[calc(100vh-118px)]">
           <ScrollArea>
-            {...reports.map((report) => (
-              <div
-                key={report.id}
-                className="group pr-2 cursor-pointer"
-                onClick={() => setSelectedReportId(report.id)}
-              >
+            {...reports
+              .sort((a, b) => {
+                const dateA = new Date(a.created_at);
+                const dateB = new Date(b.created_at);
+                return dateB.getTime() - dateA.getTime();
+              })
+              .map((report) => (
                 <div
-                  className={cn(
-                    'text-sm group-hover:bg-azure/10 py-2 pl-4 pr-2 text-primary/70 font-medium flex my-0.5 gap-2',
-                    selectedReportId === report.id && 'bg-azure/20',
-                  )}
+                  key={report.id}
+                  className="group pr-2 cursor-pointer"
+                  onClick={() => setSelectedReportId(report.id)}
                 >
-                  {report.companies?.cik && report.companies?.company_name && (
-                    <DisplayIcon
-                      cik={report.companies?.cik}
-                      companyName={report.companies?.company_name}
-                    />
-                  )}
-                  <div className="flex flex-col gap-1 w-full">
-                    <div className="flex justify-between items-center w-full h-6">
-                      <p className="">
-                        {report.companies?.stock_name.split(' - ')[0]}
-                      </p>
+                  <div
+                    className={cn(
+                      'text-sm group-hover:bg-azure/10 py-2 pl-4 pr-2 text-primary/70 font-medium flex my-0.5 gap-2',
+                      selectedReportId === report.id && 'bg-azure/20',
+                    )}
+                  >
+                    {report.companies?.cik &&
+                      report.companies?.company_name && (
+                        <DisplayIcon
+                          cik={report.companies?.cik}
+                          companyName={report.companies?.company_name}
+                        />
+                      )}
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="flex justify-between items-center w-full h-6">
+                        <p className="">
+                          {report.companies?.stock_name.split(' - ')[0]}
+                        </p>
 
-                      <AlertDialog>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <DotsHorizontalIcon className="text-transparent h-6 w-6 group-hover:text-primary/70 hover:bg-azure/25 p-1 rounded-full" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem>Delete</DropdownMenuItem>
-                            </AlertDialogTrigger>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Are you sure you want to delete this report?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => {
-                                deleteReport({ id: report.id });
-                                setSelectedReportId(null);
-                              }}
-                            >
-                              Continue
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
+                        <AlertDialog>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <DotsHorizontalIcon className="text-transparent h-6 w-6 group-hover:text-primary/70 hover:bg-azure/25 p-1 rounded-full" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem>Delete</DropdownMenuItem>
+                              </AlertDialogTrigger>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Are you sure you want to delete this report?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => {
+                                  deleteReport({ id: report.id });
+                                  setSelectedReportId(null);
+                                }}
+                              >
+                                Continue
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
 
-                    <div className="flex justify-between text-xs text-primary/55">
-                      <p className="">
-                        {report.company_ticker} - {report.type}
-                      </p>
-                      <p>{format(report.created_at, 'd MMMM yyyy')}</p>
+                      <div className="flex justify-between text-xs text-primary/55">
+                        <p className="">
+                          {report.company_ticker} - {report.type}
+                        </p>
+                        <p>{format(report.created_at, 'd MMMM yyyy')}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </ScrollArea>
         </div>
       )}
