@@ -11,6 +11,7 @@ import { ReactQueryClientProvider } from '@/providers/ReactQueryClientProvider';
 import { CSPostHogProvider } from '@/providers/PostHogClientProvider';
 import { Toaster } from '@/components/ui/toaster';
 import { PdfWorkerProvider } from '@/providers/PdfWorkerProvider';
+import PageAnalytics from '@/components/analytics/pageAnalytics';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -25,22 +26,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <CSPostHogProvider>
-      <ReactQueryClientProvider>
-        <html lang="en" className="h-full font-sans">
-          <body
-            className={`${inter.className} h-full flex flex-col bg-background`}
-          >
-            <main className="h-full">
-              <StoreProvider>
-                <PdfWorkerProvider>{children}</PdfWorkerProvider>
-              </StoreProvider>
-            </main>
-            <Toaster />
-          </body>
-          {/* <AxiomWebVitals /> */}
-        </html>
-      </ReactQueryClientProvider>
-    </CSPostHogProvider>
+    // <CSPostHogProvider>
+    <ReactQueryClientProvider>
+      <html lang="en" className="h-full font-sans">
+        <body
+          className={`${inter.className} h-full flex flex-col bg-background`}
+        >
+          <main className="h-full">
+            <StoreProvider>
+              <PdfWorkerProvider>{children}</PdfWorkerProvider>
+            </StoreProvider>
+          </main>
+          <Toaster />
+        </body>
+        <PageAnalytics />
+        <AxiomWebVitals />
+      </html>
+    </ReactQueryClientProvider>
+    // </CSPostHogProvider>
   );
 }

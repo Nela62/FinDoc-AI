@@ -301,7 +301,7 @@ export const ReportForm = ({
   const baseActions = async (values: z.infer<typeof reportFormSchema>) => {
     try {
       if (!templateConfig) {
-        throw new Error('Template is not ready yet.');
+        throw new Error('Template config is not ready yet.');
       }
 
       log.info('Generating new report', {

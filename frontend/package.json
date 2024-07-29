@@ -42,6 +42,7 @@
     "@radix-ui/react-tooltip": "^1.1.2",
     "@react-pdf-viewer/core": "3.12.0",
     "@react-pdf-viewer/default-layout": "^3.12.0",
+    "@segment/analytics-next": "^1.72.1",
     "@sentry/nextjs": "^7.118.0",
     "@supabase-cache-helpers/postgrest-react-query": "^1.8.1",
     "@supabase-cache-helpers/storage-react-query": "^1.2.2",
