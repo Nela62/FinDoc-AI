@@ -56,7 +56,9 @@ export const registerWithOtp = async ({
 
   const { data, error: userError } = await supabase.auth.getUser();
   if (data && data.user) {
-    await supabase.from('profiles');
+    await supabase
+      .from('profiles')
+      .insert({ user_id: data.user.id, plan: 'free', name: name });
   }
 
   return { error: error ? error.message : null };
