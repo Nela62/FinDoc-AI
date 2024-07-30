@@ -5735,37 +5735,50 @@ INSERT INTO "public"."settings" ("id", "user_id", "author_name", "company_name")
 
 
 INSERT INTO
-  "public"."subscriptions" ("id", "user_id", "plan")
+  "public"."profiles" ("id", "user_id", "plan", "name", "role", "sec_filings_frequency")
 VALUES
   (
     'f34c85db-f63d-4bc7-b630-145186a43f93',
     '8a84f859-4958-4496-a740-bf0b67707af3',
-    'dev'
+    'dev',
+    'Name',
+    'Equity Analyst',
+    'Often'
   ),
   (
     'aab3a902-d370-467e-beed-161f7c16fcfd',
     '088f0e6f-185a-485f-9889-375acf023bad',
-    'professional'
+    'professional', 'Name',
+    'Equity Analyst',
+    'Often'
   ),
   (
     'b03f1a37-5e2b-400e-8a20-ffe919b54100',
     '75e866e6-7947-4bea-8ca8-3b463ac975ff',
-    'free'
+    'free', 'Name',
+    'Equity Analyst',
+    'Often'
   ),
   (
     '43e444de-aa61-44dd-924f-f9cef1913d5c',
     'b769adfc-a0ff-4bb5-86f7-19af24b33b4d',
-    'free'
+    'free', 'Name',
+    'Equity Analyst',
+    'Often'
   ),
   (
     'e55054e6-d8dc-437c-960b-84e9e7eee87d',
     '263bb57d-b565-47c9-b7a6-83260224032e',
-   'free'
+   'free', 'Name',
+    'Equity Analyst',
+    'Often'
   ),
   (
     '61b6b2e4-748a-4494-b01c-a6505e210344',
     '039b4507-751b-4cbd-930d-9556824b0597',
-    'free'
+    'free', 'Name',
+    'Equity Analyst',
+    'Often'
   );
 
 --

@@ -281,5 +281,5 @@ export function fetchTemplates(client: TypedSupabaseClient) {
 }
 
 export function fetchSubscription(client: TypedSupabaseClient) {
-  return client.from('subscriptions').select('user_id, plan').throwOnError();
+  return client.from('profiles').select('user_id, plan').throwOnError();
 }

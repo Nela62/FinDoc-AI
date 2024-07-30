@@ -141,7 +141,7 @@ export type Database = {
           id: string
           polygon_annual: Json
           polygon_quarterly: Json
-          polygon_ttm: Json
+          polygon_ttm: Json | null
           ticker: string
           yf_annual: Json
           yf_quarterly: Json
@@ -151,7 +151,7 @@ export type Database = {
           id?: string
           polygon_annual: Json
           polygon_quarterly: Json
-          polygon_ttm: Json
+          polygon_ttm?: Json | null
           ticker: string
           yf_annual: Json
           yf_quarterly: Json
@@ -161,7 +161,7 @@ export type Database = {
           id?: string
           polygon_annual?: Json
           polygon_quarterly?: Json
-          polygon_ttm?: Json
+          polygon_ttm?: Json | null
           ticker?: string
           yf_annual?: Json
           yf_quarterly?: Json
@@ -188,6 +188,41 @@ export type Database = {
           url?: string
         }
         Relationships: []
+      }
+      profiles: {
+        Row: {
+          id: string
+          name: string | null
+          plan: string
+          role: string | null
+          sec_filings_frequency: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          name?: string | null
+          plan: string
+          role?: string | null
+          sec_filings_frequency?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          name?: string | null
+          plan?: string
+          role?: string | null
+          sec_filings_frequency?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       report_template: {
         Row: {
@@ -433,32 +468,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "settings_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      subscriptions: {
-        Row: {
-          id: string
-          plan: string
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          plan: string
-          user_id: string
-        }
-        Update: {
-          id?: string
-          plan?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "subscriptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "users"

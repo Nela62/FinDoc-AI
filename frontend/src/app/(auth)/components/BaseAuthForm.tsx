@@ -27,6 +27,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { GoogleSignInButton } from './GoogleButton';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
 
 export type AuthFormType = {
   email: string;
@@ -37,14 +38,27 @@ export type AuthFormType = {
 
 type BaseAuthFormProps = {
   mode: 'login' | 'register';
-  onSubmit: (values: AuthFormType) => Promise<void>;
-  formSchema: z.ZodObject<any>;
+  signInWithPassword: (
+    values: AuthFormType,
+  ) => Promise<{ error: string | null }>;
+  signInWithOtp: (values: AuthFormType) => Promise<{ error: string | null }>;
+  registerWithOtp: (values: AuthFormType) => Promise<{ error: string | null }>;
+  verifyOtp: (values: AuthFormType) => Promise<{ error: string | null }>;
 };
+
+const formSchema = z.object({
+  email: z.string().email(),
+  password: z.string().optional(),
+  token: z.string().optional(),
+  name: z.string().optional(),
+});
 
 export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
   mode,
-  onSubmit,
-  formSchema,
+  signInWithPassword,
+  signInWithOtp,
+  registerWithOtp,
+  verifyOtp,
 }) => {
   const form = useForm<AuthFormType>({
     resolver: zodResolver(formSchema),
@@ -57,15 +71,20 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isOtp, setOtp] = useState(false);
   const [isPassword, setPassword] = useState(false);
+
+  const { error, handleError, clearError } = useErrorHandler();
 
   const router = useRouter();
 
   const resetState = () => {
     setOtp(false);
     setPassword(false);
+    clearError();
+    setIsLoading(false);
+    form.resetField('password');
+    form.resetField('token');
   };
 
   const buttonClick = async () => {
@@ -81,9 +100,52 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
   const handleSubmit = async (values: AuthFormType) => {
     setIsLoading(true);
     try {
-      await onSubmit(values);
+      if (
+        mode === 'login' && (values.email === 'user@findoc-ai.com' ||
+          values.email === 'user@coreline.ai') &&
+        !values.password
+      ) {
+        setPassword(true);
+      } else if (
+        mode === 'login' &&
+        (values.email === 'user@findoc-ai.com' ||
+          values.email === 'user@coreline.ai') &&
+        values.password
+      ) {
+        setIsLoading(true);
+        const { error: signInError } = await signInWithPassword(values);
+
+        if (signInError) {
+          throw new Error('Error signing in with password: ' + signInError);
+        } else {
+          router.push('/reports/');
+        }
+      } else if (values.token) {
+        setIsLoading(true);
+
+        const { error: signInError } = await verifyOtp(values);
+
+        if (signInError) {
+          throw new Error('Error verifying otp: ' + signInError);
+        } else {
+          router.push('/reports/');
+        }
+      } else {
+        setIsLoading(true);
+
+        const { error: signInError } = await(
+          mode === 'register' ? registerWithOtp(values) : signInWithOtp(values),
+        );
+
+        if (signInError) {
+          throw new Error('Error signing with OTP: ' + signInError);
+        } else {
+          setOtp(true);
+          setIsLoading(false);
+        }
+      }
     } catch (error) {
-      setError('Could not authenticate user');
+      error instanceof Error && handleError(error);
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +217,7 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
                 name="name"
                 render={({ field }) => (
                   <FormItem className="px-6">
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Full Name</FormLabel>
                     <FormControl>
                       <Input type="text" {...field} />
                     </FormControl>
@@ -205,7 +267,11 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
             )}
           </>
         )}
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error.hasError && (
+          <p className="text-sm px-6 text-red-600">
+            Could not authenticate user
+          </p>
+        )}
         <p className="text-xs text-primary/60 px-6">
           By clicking &quot;Continue with Google / Email&quot; you agree to our
           User{' '}

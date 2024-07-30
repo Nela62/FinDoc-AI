@@ -90,7 +90,7 @@ async function identifyUser(supabase: ReturnType<typeof createClient>) {
 
   if (userData && userData.user) {
     const { data: planData } = await supabase
-      .from('subscriptions')
+      .from('profiles')
       .select('*')
       .eq('user_id', userData.user.id)
       .single();
