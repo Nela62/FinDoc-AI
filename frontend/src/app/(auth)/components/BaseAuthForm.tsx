@@ -101,7 +101,8 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
     setIsLoading(true);
     try {
       if (
-        mode === 'login' && (values.email === 'user@findoc-ai.com' ||
+        mode === 'login' &&
+        (values.email === 'user@findoc-ai.com' ||
           values.email === 'user@coreline.ai') &&
         !values.password
       ) {
@@ -133,9 +134,9 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
       } else {
         setIsLoading(true);
 
-        const { error: signInError } = await(
-          mode === 'register' ? registerWithOtp(values) : signInWithOtp(values),
-        );
+        const { error: signInError } = await (mode === 'register'
+          ? registerWithOtp(values)
+          : signInWithOtp(values));
 
         if (signInError) {
           throw new Error('Error signing with OTP: ' + signInError);
