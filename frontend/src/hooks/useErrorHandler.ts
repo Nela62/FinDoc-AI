@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useLogger } from 'next-axiom';
+import { AuthApiError } from '@supabase/supabase-js';
 
 interface ErrorState {
   hasError: boolean;
@@ -16,7 +17,10 @@ export const useErrorHandler = () => {
   const handleError = useCallback(
     (error: Error) => {
       const errorMessage = error.message || 'An unexpected error occurred';
-      setError({ hasError: true, message: errorMessage });
+      setError({
+        hasError: true,
+        message: errorMessage,
+      });
 
       if (process.env.NODE_ENV === 'development') {
         console.error(error);
@@ -24,6 +28,7 @@ export const useErrorHandler = () => {
 
       // Log the error with additional context
       log.error('An error occurred', {
+        name: error.name,
         error: errorMessage,
         stack: error.stack,
         // Add any other relevant context here

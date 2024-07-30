@@ -28,6 +28,7 @@ import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { GoogleSignInButton } from './GoogleButton';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { analytics } from '@/lib/segment';
 
 export type AuthFormType = {
   email: string;
@@ -52,6 +53,28 @@ const formSchema = z.object({
   token: z.string().optional(),
   name: z.string().optional(),
 });
+
+async function identifyUser(
+  supabase: ReturnType<typeof createClient>,
+  name?: string,
+) {
+  const { data: userData } = await supabase.auth.getUser();
+
+  if (userData && userData.user) {
+    console.log(userData.user.identities);
+    const { data: planData } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userData.user.id)
+      .single();
+
+    analytics.identify(userData.user.id, {
+      name: name,
+      email: userData.user.email,
+      plan: planData?.plan,
+    });
+  }
+}
 
 export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
   mode,
@@ -78,6 +101,8 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
 
   const router = useRouter();
 
+  const supabase = createClient();
+
   const resetState = () => {
     setOtp(false);
     setPassword(false);
@@ -88,13 +113,13 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
   };
 
   const buttonClick = async () => {
-    const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${process.env.NEXT_PUBLIC_ORIGIN}/auth/callback`,
       },
     });
+    await identifyUser(supabase);
   };
 
   const handleSubmit = async (values: AuthFormType) => {
@@ -104,23 +129,31 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
         mode === 'login' &&
         (values.email === 'user@findoc-ai.com' ||
           values.email === 'user@coreline.ai') &&
-        !values.password
+        !isPassword
       ) {
         setPassword(true);
+        setIsLoading(false);
       } else if (
         mode === 'login' &&
         (values.email === 'user@findoc-ai.com' ||
           values.email === 'user@coreline.ai') &&
-        values.password
+        isPassword
       ) {
         setIsLoading(true);
-        const { error: signInError } = await signInWithPassword(values);
+
+        if (!values.password) {
+          throw new Error('Password required');
+        }
+
+        const { error: signInError } = await signInWithPassword(values.email, values.password);
 
         if (signInError) {
-          throw new Error('Error signing in with password: ' + signInError);
-        } else {
-          router.push('/reports/');
+          throw new Error(signInError);
         }
+
+        await identifyUser(supabase);
+        analytics.track('User logged in');
+        router.push('/reports');
       } else if (values.token) {
         setIsLoading(true);
 
@@ -128,9 +161,14 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
 
         if (signInError) {
           throw new Error('Error verifying otp: ' + signInError);
-        } else {
-          router.push('/reports/');
         }
+
+        await identifyUser(supabase, values.name);
+        analytics.track(
+          mode === 'register' ? 'User registered' : 'User logged in',
+        );
+        // router.push(mode === 'register' ? '/onboard' : '/reports');
+        router.push('/reports');
       } else {
         setIsLoading(true);
 
@@ -139,7 +177,7 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           : signInWithOtp(values));
 
         if (signInError) {
-          throw new Error('Error signing with OTP: ' + signInError);
+          throw new Error('Error signing in with OTP: ' + signInError);
         } else {
           setOtp(true);
           setIsLoading(false);
@@ -147,7 +185,6 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
       }
     } catch (error) {
       error instanceof Error && handleError(error);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -269,9 +306,7 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           </>
         )}
         {error.hasError && (
-          <p className="text-sm px-6 text-red-600">
-            Could not authenticate user
-          </p>
+          <p className="text-sm px-6 text-red-600">{error.message}</p>
         )}
         <p className="text-xs text-primary/60 px-6">
           By clicking &quot;Continue with Google / Email&quot; you agree to our

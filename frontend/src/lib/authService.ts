@@ -1,31 +1,39 @@
 import { createClient } from '@/lib/supabase/server';
-import { analytics } from '@/lib/segment';
 import { AuthFormType } from '@/app/(auth)/components/BaseAuthForm';
+import { Logger } from 'next-axiom';
 
 interface AuthResponse {
   error: string | null;
 }
 
-export const signInWithPassword = async ({
-  email,
-  password,
-}: AuthFormType): Promise<AuthResponse> => {
+export const signInWithPassword = async (
+  email: string,
+  password: string,
+): Promise<AuthResponse> => {
   'use server';
   const supabase = createClient();
-
-  if (!password) {
-    return { error: 'Password is required' };
-  }
+  const log = new Logger();
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (error) {
-    return { error: error.message };
+  if (!error) {
+    return { error };
+  } else {
+    switch (error.status) {
+      case 429:
+        return {
+          error:
+            'We are experiencing an unusually high load. Please try again later.',
+        };
+      case 400:
+        return {
+          error: 'Invalid credentials',
+        };
+      default:
+        log.error('Error when signing in with password', error);
+        return { error: 'Could not authenticate user' };
+    }
   }
-
-  await identifyUser(supabase);
-
-  return { error: null };
 };
 
 export const signInWithOtp = async ({
@@ -39,7 +47,9 @@ export const signInWithOtp = async ({
     options: { shouldCreateUser: false },
   });
 
-  return { error: error ? error.message : null };
+  return {
+    error,
+  };
 };
 
 export const registerWithOtp = async ({
@@ -54,19 +64,13 @@ export const registerWithOtp = async ({
     options: { shouldCreateUser: true },
   });
 
-  const { data, error: userError } = await supabase.auth.getUser();
-  if (data && data.user) {
-    await supabase
-      .from('profiles')
-      .insert({ user_id: data.user.id, plan: 'free', name: name });
-  }
-
   return { error: error ? error.message : null };
 };
 
 export const verifyOtp = async ({
   email,
   token,
+  name,
 }: AuthFormType): Promise<AuthResponse> => {
   'use server';
   const supabase = createClient();
@@ -82,25 +86,14 @@ export const verifyOtp = async ({
   });
 
   if (!error) {
-    await identifyUser(supabase);
+    const { data, error } = await supabase.auth.getUser();
+
+    if (data && data.user) {
+      await supabase
+        .from('profiles')
+        .insert({ user_id: data.user.id, plan: 'free', name: name });
+    }
   }
 
   return { error: error ? error.message : null };
 };
-
-async function identifyUser(supabase: ReturnType<typeof createClient>) {
-  const { data: userData } = await supabase.auth.getUser();
-
-  if (userData && userData.user) {
-    const { data: planData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userData.user.id)
-      .single();
-
-    analytics.identify(userData.user.id, {
-      email: userData.user.email,
-      plan: planData?.plan,
-    });
-  }
-}
