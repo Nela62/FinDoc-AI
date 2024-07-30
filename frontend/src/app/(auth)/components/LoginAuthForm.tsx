@@ -4,7 +4,7 @@ import {
   signInWithOtp,
   signInWithPassword,
   verifyOtp,
-} from '@/lib/authService';
+} from '@/lib/authService/authService';
 
 export const LoginAuthForm = () => {
   return (

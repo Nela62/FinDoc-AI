@@ -15,24 +15,26 @@ export const useErrorHandler = () => {
   const log = useLogger();
 
   const handleError = useCallback(
-    (error: Error) => {
-      const errorMessage = error.message || 'An unexpected error occurred';
-      setError({
-        hasError: true,
-        message: errorMessage,
-      });
+    (error: Error | any) => {
+      if (error instanceof Error) {
+        const errorMessage = error.message || 'An unexpected error occurred';
+        setError({
+          hasError: true,
+          message: errorMessage,
+        });
 
-      if (process.env.NODE_ENV === 'development') {
-        console.error(error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error(error);
+        }
+
+        // Log the error with additional context
+        log.error('An error occurred', {
+          name: error.name,
+          error: errorMessage,
+          stack: error.stack,
+          // Add any other relevant context here
+        });
       }
-
-      // Log the error with additional context
-      log.error('An error occurred', {
-        name: error.name,
-        error: errorMessage,
-        stack: error.stack,
-        // Add any other relevant context here
-      });
     },
     [log],
   );

@@ -32,13 +32,8 @@ SET row_security = off;
 --
 
 INSERT INTO "auth"."users" ("instance_id", "id", "aud", "role", "email", "encrypted_password", "email_confirmed_at", "invited_at", "confirmation_token", "confirmation_sent_at", "recovery_token", "recovery_sent_at", "email_change_token_new", "email_change", "email_change_sent_at", "last_sign_in_at", "raw_app_meta_data", "raw_user_meta_data", "is_super_admin", "created_at", "updated_at", "phone", "phone_confirmed_at", "phone_change", "phone_change_token", "phone_change_sent_at", "email_change_token_current", "email_change_confirm_status", "banned_until", "reauthentication_token", "reauthentication_sent_at", "is_sso_user", "deleted_at", "is_anonymous") VALUES
-	('00000000-0000-0000-0000-000000000000', 'b769adfc-a0ff-4bb5-86f7-19af24b33b4d', 'authenticated', 'authenticated', 'nela62@berkeley.edu', '$2a$10$6rkrT/Kus4ggcKN8B3Yml.9XiKok8A5yE9Jln1OcoH/27QSxpMkTu', '2024-06-21 19:54:05.540311+00', NULL, '', '2024-06-21 19:53:47.596253+00', '', NULL, '', '', NULL, '2024-06-21 19:54:05.542796+00', '{"provider": "email", "providers": ["email"]}', '{"sub": "b769adfc-a0ff-4bb5-86f7-19af24b33b4d", "email": "nela62@berkeley.edu", "email_verified": false, "phone_verified": false}', NULL, '2024-06-21 19:53:47.577899+00', '2024-06-21 22:42:11.560284+00', NULL, NULL, '', '', NULL, '', 0, NULL, '', NULL, false, NULL, false),
 	('00000000-0000-0000-0000-000000000000', '8a84f859-4958-4496-a740-bf0b67707af3', 'authenticated', 'authenticated', 'user@coreline.ai', '$2a$10$B0LFqcXJqXnwUPaKhLmAtejx3kuvZ8ifR8Oa.YQFq0xY4kTX9/EUS', '2024-04-26 17:27:19.364068+00', NULL, '', '2024-04-26 17:27:10.104807+00', '', NULL, '', '', NULL, '2024-06-23 19:08:56.486606+00', '{"provider": "email", "providers": ["email"]}', '{"sub": "8a84f859-4958-4496-a740-bf0b67707af3", "email": "user@coreline.ai", "email_verified": false, "phone_verified": false}', NULL, '2024-04-26 17:23:03.627855+00', '2024-06-24 06:34:22.497441+00', NULL, NULL, '', '', NULL, '', 0, NULL, '', NULL, false, NULL, false),
-	('00000000-0000-0000-0000-000000000000', '088f0e6f-185a-485f-9889-375acf023bad', 'authenticated', 'authenticated', 'user@finpanel.com', '$2a$10$iqKH3FAfWaRgmI9VqC3M.OZoCaq92BezUAyOn/Fi4m0G35nH2gnK2', '2024-06-12 04:31:51.20866+00', NULL, '', '2024-06-12 04:31:19.456307+00', '', NULL, '', '', NULL, '2024-06-21 19:18:41.483918+00', '{"provider": "email", "providers": ["email"]}', '{"sub": "088f0e6f-185a-485f-9889-375acf023bad", "email": "user@finpanel.com", "email_verified": false, "phone_verified": false}', NULL, '2024-06-12 04:31:19.428553+00', '2024-06-21 19:18:41.487597+00', NULL, NULL, '', '', NULL, '', 0, NULL, '', NULL, false, NULL, false),
-	('00000000-0000-0000-0000-000000000000', '75e866e6-7947-4bea-8ca8-3b463ac975ff', 'authenticated', 'authenticated', 'helkochetkova@gmail.com', '$2a$10$G7ReH88D/yocVp13R6DIvuN/yccK5vX4JP0PEm6cha2KE9agS559i', '2024-06-21 19:52:46.995901+00', NULL, '', '2024-06-21 19:52:33.333299+00', '', '2024-06-22 06:47:40.496632+00', '', '', NULL, '2024-06-22 06:49:24.602267+00', '{"provider": "email", "providers": ["email"]}', '{"sub": "75e866e6-7947-4bea-8ca8-3b463ac975ff", "email": "helkochetkova@gmail.com", "email_verified": false, "phone_verified": false}', NULL, '2024-06-21 19:52:33.324691+00', '2024-06-22 06:49:24.609127+00', NULL, NULL, '', '', NULL, '', 0, NULL, '', NULL, false, NULL, false),
-	('00000000-0000-0000-0000-000000000000', '19d72d32-8f7c-4988-aa9a-f68c89e4319d', 'authenticated', 'authenticated', 'helen@finpanel.com', '', '2024-06-22 20:06:51.019648+00', NULL, '', NULL, '', NULL, '', '', NULL, '2024-06-23 04:20:00.843839+00', '{"provider": "google", "providers": ["google"]}', '{"iss": "https://accounts.google.com", "sub": "113968757014663236601", "name": "Helen Kochetkova", "email": "helen@finpanel.com", "picture": "https://lh3.googleusercontent.com/a/ACg8ocJ2-XHDNQbqlkoyJNv2VVHFrAcanGBUgVp-U1LOt-aU1qNZjA=s96-c", "full_name": "Helen Kochetkova", "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocJ2-XHDNQbqlkoyJNv2VVHFrAcanGBUgVp-U1LOt-aU1qNZjA=s96-c", "provider_id": "113968757014663236601", "custom_claims": {"hd": "finpanel.com"}, "email_verified": true, "phone_verified": false}', NULL, '2024-06-22 20:06:51.005993+00', '2024-06-24 21:06:46.377691+00', NULL, NULL, '', '', NULL, '', 0, NULL, '', NULL, false, NULL, false),
-	('00000000-0000-0000-0000-000000000000', '263bb57d-b565-47c9-b7a6-83260224032e', 'authenticated', 'authenticated', 'heltonarata@gmail.com', '$2a$10$djYc5UDQT5FDWqED1zh9Furgp1eM25d9tS1efeUMw6RTwfElHYKRa', '2024-06-21 23:17:04.47744+00', NULL, '', '2024-06-21 23:16:37.284204+00', '', NULL, '', '', NULL, '2024-06-22 20:35:36.864637+00', '{"provider": "email", "providers": ["email", "google"]}', '{"iss": "https://accounts.google.com", "sub": "115110340332429426861", "name": "Helton Suzuki", "email": "heltonarata@gmail.com", "picture": "https://lh3.googleusercontent.com/a/ACg8ocLmNI9BQVWQe5jNhXBn_Uw6FTkhonYEHUT4LC2X_j92xPQcAg0B=s96-c", "full_name": "Helton Suzuki", "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocLmNI9BQVWQe5jNhXBn_Uw6FTkhonYEHUT4LC2X_j92xPQcAg0B=s96-c", "provider_id": "115110340332429426861", "email_verified": true, "phone_verified": false}', NULL, '2024-06-21 23:16:37.268225+00', '2024-06-23 03:53:07.637791+00', NULL, NULL, '', '', NULL, '', 0, NULL, '', NULL, false, NULL, false),
-	('00000000-0000-0000-0000-000000000000', '039b4507-751b-4cbd-930d-9556824b0597', 'authenticated', 'authenticated', 'altan@finpanel.com', '', '2024-06-23 00:32:35.723806+00', NULL, '', NULL, '', NULL, '', '', NULL, NULL, '{"provider": "google", "providers": ["google"]}', '{"iss": "https://accounts.google.com", "sub": "107846479772776970296", "name": "Altan Arata", "email": "altan@finpanel.com", "picture": "https://lh3.googleusercontent.com/a/ACg8ocJG3vYLTOS4Ginkvlk03n8HD6o3rJpjWiDHYuH4UsfH6202aA=s96-c", "full_name": "Altan Arata", "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocJG3vYLTOS4Ginkvlk03n8HD6o3rJpjWiDHYuH4UsfH6202aA=s96-c", "provider_id": "107846479772776970296", "custom_claims": {"hd": "finpanel.com"}, "email_verified": true, "phone_verified": false}', NULL, '2024-06-23 00:32:35.706201+00', '2024-06-23 00:32:35.724012+00', NULL, NULL, '', '', NULL, '', 0, NULL, '', NULL, false, NULL, false);
+	('00000000-0000-0000-0000-000000000000', '088f0e6f-185a-485f-9889-375acf023bad', 'authenticated', 'authenticated', 'user@findoc-ai.com', '$2a$10$iqKH3FAfWaRgmI9VqC3M.OZoCaq92BezUAyOn/Fi4m0G35nH2gnK2', '2024-06-12 04:31:51.20866+00', NULL, '', '2024-06-12 04:31:19.456307+00', '', NULL, '', '', NULL, '2024-06-21 19:18:41.483918+00', '{"provider": "email", "providers": ["email"]}', '{"sub": "088f0e6f-185a-485f-9889-375acf023bad", "email": "user@findoc-ai.com", "email_verified": false, "phone_verified": false}', NULL, '2024-06-12 04:31:19.428553+00', '2024-06-21 19:18:41.487597+00', NULL, NULL, '', '', NULL, '', 0, NULL, '', NULL, false, NULL, false);
 
 
 --
@@ -47,7 +42,7 @@ INSERT INTO "auth"."users" ("instance_id", "id", "aud", "role", "email", "encryp
 
 INSERT INTO "auth"."identities" ("provider_id", "user_id", "identity_data", "provider", "last_sign_in_at", "created_at", "updated_at", "id") VALUES
 	('8a84f859-4958-4496-a740-bf0b67707af3', '8a84f859-4958-4496-a740-bf0b67707af3', '{"sub": "8a84f859-4958-4496-a740-bf0b67707af3", "email": "user@coreline.ai", "email_verified": false, "phone_verified": false}', 'email', '2024-04-26 17:23:03.635884+00', '2024-04-26 17:23:03.63594+00', '2024-04-26 17:23:03.63594+00', 'a96b8bf9-a9fe-4204-abb2-cb99ddbdd1e8'),
-	('088f0e6f-185a-485f-9889-375acf023bad', '088f0e6f-185a-485f-9889-375acf023bad', '{"sub": "088f0e6f-185a-485f-9889-375acf023bad", "email": "user@finpanel.com", "email_verified": false, "phone_verified": false}', 'email', '2024-06-12 04:31:19.441384+00', '2024-06-12 04:31:19.441442+00', '2024-06-12 04:31:19.441442+00', 'f2bc3c65-cc87-425b-a00d-5c72864a4fb7'),
+	('088f0e6f-185a-485f-9889-375acf023bad', '088f0e6f-185a-485f-9889-375acf023bad', '{"sub": "088f0e6f-185a-485f-9889-375acf023bad", "email": "user@findoc-ai.com", "email_verified": false, "phone_verified": false}', 'email', '2024-06-12 04:31:19.441384+00', '2024-06-12 04:31:19.441442+00', '2024-06-12 04:31:19.441442+00', 'f2bc3c65-cc87-425b-a00d-5c72864a4fb7'),
 	('75e866e6-7947-4bea-8ca8-3b463ac975ff', '75e866e6-7947-4bea-8ca8-3b463ac975ff', '{"sub": "75e866e6-7947-4bea-8ca8-3b463ac975ff", "email": "helkochetkova@gmail.com", "email_verified": false, "phone_verified": false}', 'email', '2024-06-21 19:52:33.328472+00', '2024-06-21 19:52:33.328525+00', '2024-06-21 19:52:33.328525+00', '179a545f-aa27-460e-ae86-83bbe2b5b19d'),
 	('b769adfc-a0ff-4bb5-86f7-19af24b33b4d', 'b769adfc-a0ff-4bb5-86f7-19af24b33b4d', '{"sub": "b769adfc-a0ff-4bb5-86f7-19af24b33b4d", "email": "nela62@berkeley.edu", "email_verified": false, "phone_verified": false}', 'email', '2024-06-21 19:53:47.586225+00', '2024-06-21 19:53:47.586282+00', '2024-06-21 19:53:47.586282+00', 'd4fa4a08-1fac-4622-80d0-308cd2192982'),
 	('263bb57d-b565-47c9-b7a6-83260224032e', '263bb57d-b565-47c9-b7a6-83260224032e', '{"sub": "263bb57d-b565-47c9-b7a6-83260224032e", "email": "heltonarata@gmail.com", "email_verified": false, "phone_verified": false}', 'email', '2024-06-21 23:16:37.277131+00', '2024-06-21 23:16:37.277194+00', '2024-06-21 23:16:37.277194+00', '4e2be6eb-53d5-4b27-ada2-25d736786e53'),
@@ -5726,57 +5721,26 @@ INSERT INTO "public"."companies" ("id", "company_name", "stock_name", "ticker", 
 --
 
 INSERT INTO "public"."settings" ("id", "user_id", "author_name", "company_name") VALUES
-	('afc1f0af-24bd-4049-97fc-970c1ae32302', '8a84f859-4958-4496-a740-bf0b67707af3', 'Findoc AI', 'Findoc Inc.'),
 	('05cc99b1-592e-41f2-aaa5-252fd2820226', '088f0e6f-185a-485f-9889-375acf023bad', 'Findoc AI', 'Findoc Inc.'),
-	('b03f1a37-5e2b-400e-8a20-ffe919b54100', '75e866e6-7947-4bea-8ca8-3b463ac975ff', 'Findoc AI', 'Findoc Inc.'),
-	('43e444de-aa61-44dd-924f-f9cef1913d5c', 'b769adfc-a0ff-4bb5-86f7-19af24b33b4d', 'Findoc AI', 'Findoc Inc.'),
-	('e55054e6-d8dc-437c-960b-84e9e7eee87d', '263bb57d-b565-47c9-b7a6-83260224032e', 'Findoc AI', 'Findoc Inc.'),
-	('61b6b2e4-748a-4494-b01c-a6505e210344', '039b4507-751b-4cbd-930d-9556824b0597', 'Findoc AI', 'Findoc Inc.');
+	('b03f1a37-5e2b-400e-8a20-ffe919b54100', '75e866e6-7947-4bea-8ca8-3b463ac975ff', 'Findoc AI', 'Findoc Inc.');
 
 
 INSERT INTO
-  "public"."profiles" ("id", "user_id", "plan", "name", "role", "sec_filings_frequency")
+  "public"."profiles" ("id", "user_id", "plan", "email", "name", "role", "sec_filings_frequency")
 VALUES
   (
     'f34c85db-f63d-4bc7-b630-145186a43f93',
     '8a84f859-4958-4496-a740-bf0b67707af3',
     'dev',
-    'Name',
+    'user@coreline.ai',
+    'Findoc AI',
     'Equity Analyst',
     'Often'
   ),
   (
     'aab3a902-d370-467e-beed-161f7c16fcfd',
     '088f0e6f-185a-485f-9889-375acf023bad',
-    'professional', 'Name',
-    'Equity Analyst',
-    'Often'
-  ),
-  (
-    'b03f1a37-5e2b-400e-8a20-ffe919b54100',
-    '75e866e6-7947-4bea-8ca8-3b463ac975ff',
-    'free', 'Name',
-    'Equity Analyst',
-    'Often'
-  ),
-  (
-    '43e444de-aa61-44dd-924f-f9cef1913d5c',
-    'b769adfc-a0ff-4bb5-86f7-19af24b33b4d',
-    'free', 'Name',
-    'Equity Analyst',
-    'Often'
-  ),
-  (
-    'e55054e6-d8dc-437c-960b-84e9e7eee87d',
-    '263bb57d-b565-47c9-b7a6-83260224032e',
-   'free', 'Name',
-    'Equity Analyst',
-    'Often'
-  ),
-  (
-    '61b6b2e4-748a-4494-b01c-a6505e210344',
-    '039b4507-751b-4cbd-930d-9556824b0597',
-    'free', 'Name',
+    'professional', 'user@findoc-ai.com', 'Findoc AI',
     'Equity Analyst',
     'Often'
   );

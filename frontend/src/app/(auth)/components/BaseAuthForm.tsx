@@ -29,6 +29,7 @@ import Link from 'next/link';
 import { GoogleSignInButton } from './GoogleButton';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { analytics } from '@/lib/segment';
+import { AuthResponse } from '@/lib/authService/authService';
 
 export type AuthFormType = {
   email: string;
@@ -40,11 +41,16 @@ export type AuthFormType = {
 type BaseAuthFormProps = {
   mode: 'login' | 'register';
   signInWithPassword: (
-    values: AuthFormType,
-  ) => Promise<{ error: string | null }>;
-  signInWithOtp: (values: AuthFormType) => Promise<{ error: string | null }>;
-  registerWithOtp: (values: AuthFormType) => Promise<{ error: string | null }>;
-  verifyOtp: (values: AuthFormType) => Promise<{ error: string | null }>;
+    email: string,
+    password: string,
+  ) => Promise<AuthResponse>;
+  signInWithOtp: (email: string) => Promise<AuthResponse>;
+  registerWithOtp: (email: string) => Promise<AuthResponse>;
+  verifyOtp: (
+    email: string,
+    token: string,
+    name?: string,
+  ) => Promise<AuthResponse>;
 };
 
 const formSchema = z.object({
@@ -124,67 +130,73 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
 
   const handleSubmit = async (values: AuthFormType) => {
     setIsLoading(true);
+    clearError();
+
     try {
       if (
         mode === 'login' &&
         (values.email === 'user@findoc-ai.com' ||
-          values.email === 'user@coreline.ai') &&
-        !isPassword
+          values.email === 'user@coreline.ai')
       ) {
-        setPassword(true);
-        setIsLoading(false);
-      } else if (
-        mode === 'login' &&
-        (values.email === 'user@findoc-ai.com' ||
-          values.email === 'user@coreline.ai') &&
-        isPassword
-      ) {
-        setIsLoading(true);
+        if (isPassword) {
+          setIsLoading(true);
 
-        if (!values.password) {
-          throw new Error('Password required');
+          if (!values.password) {
+            throw new Error('Password required');
+          }
+
+          const { error: signInError } = await signInWithPassword(
+            values.email,
+            values.password,
+          );
+
+          if (signInError) {
+            throw new Error(signInError);
+          }
+
+          await identifyUser(supabase);
+          analytics.track('User logged in');
+          router.push('/reports');
+        } else {
+          setPassword(true);
+          setIsLoading(false);
+        }
+      } else if (isOtp) {
+        if (!values.token || values.token.length !== 6) {
+          throw new Error('Please check your email for the one-time password.');
         }
 
-        const { error: signInError } = await signInWithPassword(values.email, values.password);
+        const { error: signInError } = await verifyOtp(
+          values.email,
+          values.token,
+          values.name!,
+        );
 
         if (signInError) {
           throw new Error(signInError);
+        } else {
+          router.push(mode === 'register' ? '/onboard' : '/reports');
         }
-
-        await identifyUser(supabase);
-        analytics.track('User logged in');
-        router.push('/reports');
-      } else if (values.token) {
-        setIsLoading(true);
-
-        const { error: signInError } = await verifyOtp(values);
-
-        if (signInError) {
-          throw new Error('Error verifying otp: ' + signInError);
-        }
-
-        await identifyUser(supabase, values.name);
-        analytics.track(
-          mode === 'register' ? 'User registered' : 'User logged in',
-        );
-        // router.push(mode === 'register' ? '/onboard' : '/reports');
-        router.push('/reports');
       } else {
         setIsLoading(true);
 
+        if (mode === 'register' && !values.name) {
+          throw new Error('Name required');
+        }
+
         const { error: signInError } = await (mode === 'register'
-          ? registerWithOtp(values)
-          : signInWithOtp(values));
+          ? registerWithOtp(values.email)
+          : signInWithOtp(values.email));
 
         if (signInError) {
-          throw new Error('Error signing in with OTP: ' + signInError);
+          throw new Error(signInError);
         } else {
           setOtp(true);
           setIsLoading(false);
         }
       }
     } catch (error) {
-      error instanceof Error && handleError(error);
+      handleError(error);
       setIsLoading(false);
     }
   };
