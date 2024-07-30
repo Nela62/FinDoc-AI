@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/input-otp';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { GoogleSignInButton } from './GoogleButton';
+import { GoogleSignInButton } from '../../components/GoogleButton';
 // import { demoReports } from '@/stores/reports-store';
 
 const formSchema = z.object({
@@ -136,143 +136,131 @@ export const LoginAuthForm = ({
   // TODO: add isPending control
 
   return (
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6 w-full"
-        >
-          <div className="w-full justify-center flex text-center">
-            <Link href="/login" className="w-1/2 border-b border-azure pb-2">
-              Sign In
-            </Link>
-            <Link href="/register" className="w-1/2 pb-2 border-b">
-              Sign Up
-            </Link>
-          </div>
-          {(isOtp || isPassword) && (
-            <Button
-              className="mx-6"
-              variant="outline"
-              size="sm"
-              onClick={resetState}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-          )}
-          {isOtp ? (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
+        <div className="w-full justify-center flex text-center">
+          <Link href="/login" className="w-1/2 border-b border-azure pb-2">
+            Sign In
+          </Link>
+          <Link href="/register" className="w-1/2 pb-2 border-b">
+            Sign Up
+          </Link>
+        </div>
+        {(isOtp || isPassword) && (
+          <Button
+            className="mx-6"
+            variant="outline"
+            size="sm"
+            onClick={resetState}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        )}
+        {isOtp ? (
+          <FormField
+            control={form.control}
+            name="token"
+            render={({ field }) => (
+              <FormItem className="px-6">
+                <FormLabel>One-Time Password</FormLabel>
+                <FormControl>
+                  <InputOTP maxLength={6} {...field}>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </FormControl>
+                <FormDescription>
+                  Please enter the one-time password sent to your email.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : (
+          <>
             <FormField
               control={form.control}
-              name="token"
+              name="email"
               render={({ field }) => (
                 <FormItem className="px-6">
-                  <FormLabel>One-Time Password</FormLabel>
+                  <FormLabel>Email address</FormLabel>
                   <FormControl>
-                    <InputOTP maxLength={6} {...field}>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
+                    <Input type="email" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    Please enter the one-time password sent to your email.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          ) : (
-            <>
+            {isPassword ? (
               <FormField
                 control={form.control}
-                name="email"
+                name="password"
                 render={({ field }) => (
                   <FormItem className="px-6">
-                    <FormLabel>Email address</FormLabel>
+                    <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="email" {...field} />
+                      <Input type="password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              {isPassword ? (
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem className="px-6">
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : (
-                <>
-                  <div className="flex gap-2 w-full items-center">
-                    <Separator
-                      orientation="horizontal"
-                      className="grow shrink"
-                    />
-                    <p className="text-primary/70 text-sm font-semibold">or</p>
-                    <Separator
-                      orientation="horizontal"
-                      className="grow shrink"
-                    />
-                  </div>
-                  <div className="px-6 w-full">
-                    <GoogleSignInButton onClick={buttonClick} />
-                    {/* <Button
+            ) : (
+              <>
+                <div className="flex gap-2 w-full items-center">
+                  <Separator orientation="horizontal" className="grow shrink" />
+                  <p className="text-primary/70 text-sm font-semibold">or</p>
+                  <Separator orientation="horizontal" className="grow shrink" />
+                </div>
+                <div className="px-6 w-full">
+                  <GoogleSignInButton onClick={buttonClick} />
+                  {/* <Button
                     type="button"
                     onClick={buttonClick}
                     className="w-full"
                   >
                     Continue with Google
                   </Button> */}
-                  </div>
-                </>
-              )}
-            </>
-          )}
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <p className="text-xs text-primary/60 px-6">
-            By clicking &quot;Continue with Google / Email&quot; you agree to
-            our User{' '}
-            <Link href="/tos" className="underline">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/tos" className="underline">
-              Privacy Policy
-            </Link>
-          </p>
-          {isLoading ? (
-            <Button className="w-full py-4" type="submit" disabled>
-              <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-              Signing In
-            </Button>
-          ) : (
-            <Button
-              className="w-full py-6 rounded-none bg-azure hover:bg-azure/80"
-              size="lg"
-              type="submit"
-              // disabled={!form.watch('email')}
-            >
-              <IconCircleChevronRight
-                className="h-8 w-8 text-white"
-                stroke={1}
-              />
-            </Button>
-          )}
-        </form>
-      </Form>
+                </div>
+              </>
+            )}
+          </>
+        )}
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <p className="text-xs text-primary/60 px-6">
+          By clicking &quot;Continue with Google / Email&quot; you agree to our
+          User{' '}
+          <Link href="/tos" className="underline">
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link href="/tos" className="underline">
+            Privacy Policy
+          </Link>
+        </p>
+        {isLoading ? (
+          <Button className="w-full py-4" type="submit" disabled>
+            <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+            Signing In
+          </Button>
+        ) : (
+          <Button
+            className="w-full py-6 rounded-none bg-azure hover:bg-azure/80"
+            size="lg"
+            type="submit"
+            // disabled={!form.watch('email')}
+          >
+            <IconCircleChevronRight className="h-8 w-8 text-white" stroke={1} />
+          </Button>
+        )}
+      </form>
+    </Form>
   );
 };

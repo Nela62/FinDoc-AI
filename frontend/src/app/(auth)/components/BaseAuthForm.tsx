@@ -3,7 +3,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -28,33 +27,35 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { GoogleSignInButton } from './GoogleButton';
-// import { demoReports } from '@/stores/reports-store';
 
-const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string().optional(),
-  token: z.string().optional(),
-});
+export type AuthFormType = {
+  email: string;
+  password?: string;
+  token?: string;
+  name?: string;
+};
 
-export type formType = z.infer<typeof formSchema>;
+type BaseAuthFormProps = {
+  mode: 'login' | 'register';
+  onSubmit: (values: AuthFormType) => Promise<void>;
+  formSchema: z.ZodObject<any>;
+};
 
-export const RegisterAuthForm = ({
-  signInWithPassword,
-  signInWithOtp,
-  verifyOtp,
-}: {
-  signInWithPassword: (values: formType) => Promise<{ error: string | null }>;
-  signInWithOtp: (values: formType) => Promise<{ error: string | null }>;
-  verifyOtp: (values: formType) => Promise<{ error: string | null }>;
+export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
+  mode,
+  onSubmit,
+  formSchema,
 }) => {
-  const form = useForm<formType>({
+  const form = useForm<AuthFormType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
       password: '',
       token: '',
+      name: '',
     },
   });
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isOtp, setOtp] = useState(false);
@@ -68,9 +69,7 @@ export const RegisterAuthForm = ({
   };
 
   const buttonClick = async () => {
-    console.log(`${process.env.NEXT_PUBLIC_ORIGIN}/auth/callback`);
     const supabase = createClient();
-
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -79,70 +78,38 @@ export const RegisterAuthForm = ({
     });
   };
 
-  const onSubmit = async (values: formType) => {
-    console.log('submitted values: ', values);
-    if (
-      (values.email === 'user@finpanel.com' ||
-        values.email === 'user@coreline.ai') &&
-      !values.password
-    ) {
-      setPassword(true);
-    } else if (
-      (values.email === 'user@finpanel.com' ||
-        values.email === 'user@coreline.ai') &&
-      values.password
-    ) {
-      console.log('signing with password');
-      setIsLoading(true);
-      const { error } = await signInWithPassword(values);
-      // setIsLoading(false);
-
-      if (error) {
-        console.log(error);
-        setError('Could not authenticate user');
-        setIsLoading(false);
-      } else {
-        router.push('/reports/');
-      }
-    } else if (values.token) {
-      setIsLoading(true);
-      const { error } = await verifyOtp(values);
-      if (error) {
-        console.log(error);
-        setError('Could not authenticate user');
-        setIsLoading(false);
-      } else {
-        //  setIsLoading(false)
-        router.push('/reports/');
-      }
-    } else {
-      setIsLoading(true);
-      const { error } = await signInWithOtp(values);
-      if (error) {
-        console.log(error);
-        setIsLoading(false);
-        setError('Could not authenticate user');
-      } else {
-        setOtp(true);
-        setIsLoading(false);
-      }
+  const handleSubmit = async (values: AuthFormType) => {
+    setIsLoading(true);
+    try {
+      await onSubmit(values);
+    } catch (error) {
+      setError('Could not authenticate user');
+    } finally {
+      setIsLoading(false);
     }
-
-    // setIsLoading(true);
-    // const { error } = await signInWithPassword(values);
-    // // setIsLoading(false);
   };
-
-  // TODO: add isPending control
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-6 w-full"
+      >
         <div className="w-full justify-center flex text-center">
-          <Link href="/login" className="w-1/2 border-b pb-2">
+          <Link
+            href="/login"
+            className={`w-1/2 border-b pb-2 ${
+              mode === 'login' ? 'border-azure' : ''
+            }`}
+          >
             Sign In
           </Link>
-          <Link href="/register" className="w-1/2 pb-2 border-b border-azure">
+          <Link
+            href="/register"
+            className={`w-1/2 pb-2 border-b ${
+              mode === 'register' ? 'border-azure' : ''
+            }`}
+          >
             Sign Up
           </Link>
         </div>
@@ -167,12 +134,9 @@ export const RegisterAuthForm = ({
                 <FormControl>
                   <InputOTP maxLength={6} {...field}>
                     <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
+                      {[...Array(6)].map((_, index) => (
+                        <InputOTPSlot key={index} index={index} />
+                      ))}
                     </InputOTPGroup>
                   </InputOTP>
                 </FormControl>
@@ -185,6 +149,21 @@ export const RegisterAuthForm = ({
           />
         ) : (
           <>
+            {mode === 'register' && (
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="px-6">
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input type="text" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="email"
@@ -221,21 +200,12 @@ export const RegisterAuthForm = ({
                 </div>
                 <div className="px-6 w-full">
                   <GoogleSignInButton onClick={buttonClick} />
-                  {/* <Button
-                    type="button"
-                    onClick={buttonClick}
-                    className="w-full"
-                  >
-                    Continue with Google
-                  </Button> */}
                 </div>
               </>
             )}
           </>
         )}
-
         {error && <p className="text-sm text-red-600">{error}</p>}
-
         <p className="text-xs text-primary/60 px-6">
           By clicking &quot;Continue with Google / Email&quot; you agree to our
           User{' '}
@@ -250,14 +220,13 @@ export const RegisterAuthForm = ({
         {isLoading ? (
           <Button className="w-full py-4" type="submit" disabled>
             <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-            Signing In
+            {mode === 'login' ? 'Signing In' : 'Signing Up'}
           </Button>
         ) : (
           <Button
             className="w-full py-6 rounded-none bg-azure hover:bg-azure/80"
             size="lg"
             type="submit"
-            // disabled={!form.watch('email')}
           >
             <IconCircleChevronRight className="h-8 w-8 text-white" stroke={1} />
           </Button>

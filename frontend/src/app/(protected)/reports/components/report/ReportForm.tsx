@@ -90,6 +90,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { analytics } from '@/lib/segment';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -584,6 +585,10 @@ export const ReportForm = ({
     values: z.infer<typeof reportFormSchema>,
   ) => {
     try {
+      analytics.track('Report Generated', {
+        ...values,
+      });
+
       if (!templateConfig) {
         throw new Error('Template config is not available.');
       }
