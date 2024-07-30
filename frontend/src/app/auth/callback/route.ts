@@ -1,10 +1,13 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { type CookieOptions, createServerClient } from '@supabase/ssr';
 import { createClient } from '@/lib/supabase/server';
+import { Logger } from 'next-axiom';
+
+const log = new Logger();
+
+// Google OAuth not working locally
+// https://github.com/orgs/supabase/discussions/20353
 
 export async function GET(request: Request) {
-  console.log('auth/callback called');
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   // if "next" is in param, use it as the redirect URL
@@ -13,11 +16,13 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = createClient();
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { error, data } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_ORIGIN}/reports/`,
       );
+    } else {
+      log.error('Error when authenticating with Google', error);
     }
   }
 

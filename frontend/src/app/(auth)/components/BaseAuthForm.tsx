@@ -30,6 +30,7 @@ import { GoogleSignInButton } from './GoogleButton';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { analytics } from '@/lib/segment';
 import { AuthResponse } from '@/lib/authService/authService';
+import { useLogger } from 'next-axiom';
 
 export type AuthFormType = {
   email: string;
@@ -119,13 +120,33 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
   };
 
   const buttonClick = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_ORIGIN}/auth/callback`,
-      },
-    });
-    await identifyUser(supabase);
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${process.env.NEXT_PUBLIC_ORIGIN}/auth/callback`,
+        },
+      });
+      const { data, error } = await supabase.auth.getUser();
+
+      if (data?.user) {
+        const displayName = data.user.user_metadata.display_name;
+        await identifyUser(supabase, displayName);
+
+        await supabase.from('profiles').insert({
+          user_id: data.user.id,
+          plan: 'free',
+          name: displayName,
+          email: data.user.email,
+        });
+      }
+
+      if (error) {
+        throw new Error('Error fetching user: ' + error);
+      }
+    } catch (err) {
+      handleError(err);
+    }
   };
 
   const handleSubmit = async (values: AuthFormType) => {
