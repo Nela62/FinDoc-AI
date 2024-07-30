@@ -1,20 +1,15 @@
 import { createClient } from '@/lib/supabase/server';
 import { analytics } from '@/lib/segment';
+import { AuthFormType } from '@/app/(auth)/components/BaseAuthForm';
 
 interface AuthResponse {
   error: string | null;
 }
 
-interface FormType {
-  email: string;
-  password?: string;
-  token?: string;
-}
-
 export const signInWithPassword = async ({
   email,
   password,
-}: FormType): Promise<AuthResponse> => {
+}: AuthFormType): Promise<AuthResponse> => {
   'use server';
   const supabase = createClient();
 
@@ -35,7 +30,7 @@ export const signInWithPassword = async ({
 
 export const signInWithOtp = async ({
   email,
-}: FormType): Promise<AuthResponse> => {
+}: AuthFormType): Promise<AuthResponse> => {
   'use server';
   const supabase = createClient();
 
@@ -49,7 +44,8 @@ export const signInWithOtp = async ({
 
 export const registerWithOtp = async ({
   email,
-}: FormType): Promise<AuthResponse> => {
+  name,
+}: AuthFormType): Promise<AuthResponse> => {
   'use server';
   const supabase = createClient();
 
@@ -58,13 +54,18 @@ export const registerWithOtp = async ({
     options: { shouldCreateUser: true },
   });
 
+  const { data, error: userError } = await supabase.auth.getUser();
+  if (data && data.user) {
+    await supabase.from('profiles');
+  }
+
   return { error: error ? error.message : null };
 };
 
 export const verifyOtp = async ({
   email,
   token,
-}: FormType): Promise<AuthResponse> => {
+}: AuthFormType): Promise<AuthResponse> => {
   'use server';
   const supabase = createClient();
 
