@@ -8,6 +8,9 @@ WORKDIR /app
 
 ARG TIPTAP_PRO_TOKEN
 
+ARG NODE_ENV
+ENV NODE_ENV=production
+
 # Install dependencies based on the preferred package manager
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 RUN echo -en "@tiptap-pro:registry=https://registry.tiptap.dev/\n//registry.tiptap.dev/:_authToken=${TIPTAP_PRO_TOKEN}\npublic-hoist-pattern[]=pdfjs-dist" > /app/.npmrc
@@ -24,9 +27,6 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-ARG NODE_ENV
-ENV NODE_ENV=production
 
 
 ARG OPENAI_API_KEY
