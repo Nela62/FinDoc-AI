@@ -12,7 +12,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { MarketDataChart } from '@/lib/templates/charts/MarketDataChart';
 import { DAILY_IBM } from '@/lib/data/daily_ibm';
 import { TargetPriceChart } from '@/lib/templates/charts/TargetPriceChart';
@@ -23,12 +23,14 @@ import { POLYGON_QUARTERLY } from '@/lib/data/polygon_quarterly';
 // TODO: generate quarters and columns automatically based on date
 export default function ChartPage() {
   return (
-    <MarketDataChart
-      colors={['#1c4587', '#f4e9d3', '#006f3b']}
-      targetPrice={168}
-      dailyStock={DAILY_IBM}
-      polygonAnnual={POLYGON_ANNUAL}
-      polygonQuarterly={POLYGON_QUARTERLY}
-    />
+    <Suspense>
+      <MarketDataChart
+        colors={['#1c4587', '#f4e9d3', '#006f3b']}
+        targetPrice={168}
+        dailyStock={DAILY_IBM}
+        polygonAnnual={POLYGON_ANNUAL}
+        polygonQuarterly={POLYGON_QUARTERLY}
+      />
+    </Suspense>
   );
 }

@@ -8,10 +8,11 @@ import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import 'cal-sans';
 import { StoreProvider } from '@/providers/store-provider';
 import { ReactQueryClientProvider } from '@/providers/ReactQueryClientProvider';
-import { CSPostHogProvider } from '@/providers/PostHogClientProvider';
+// import { CSPostHogProvider } from '@/providers/PostHogClientProvider';
 import { Toaster } from '@/components/ui/toaster';
 import { PdfWorkerProvider } from '@/providers/PdfWorkerProvider';
 import PageAnalytics from '@/components/analytics/pageAnalytics';
+import ProgressBarProvider from '@/providers/ProgressBarProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -28,6 +29,7 @@ export default function RootLayout({
   return (
     // <CSPostHogProvider>
     <ReactQueryClientProvider>
+      {/* <ProgressBarProvider> */}
       <html lang="en" className="h-full font-sans">
         <body
           className={`${inter.className} h-full flex flex-col bg-background`}
@@ -42,6 +44,7 @@ export default function RootLayout({
         <PageAnalytics />
         <AxiomWebVitals />
       </html>
+      {/* </ProgressBarProvider> */}
     </ReactQueryClientProvider>
     // </CSPostHogProvider>
   );

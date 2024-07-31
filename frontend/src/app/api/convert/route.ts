@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import ConvertAPI from 'convertapi';
+// import ConvertAPI from 'convertapi';
 import {
   ServicePrincipalCredentials,
   PDFServices,
   MimeType,
   CreatePDFJob,
   CreatePDFResult,
-  SDKError,
-  ServiceUsageError,
-  ServiceApiError,
+  // SDKError,
+  // ServiceUsageError,
+  // ServiceApiError,
 } from '@adobe/pdfservices-node-sdk';
 import { Readable } from 'stream';
 

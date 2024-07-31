@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { ArrowLeft, Loader2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next-nprogress-bar';
 import { IconCircleChevronRight } from '@tabler/icons-react';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -30,7 +31,6 @@ import { GoogleSignInButton } from './GoogleButton';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { analytics } from '@/lib/segment';
 import { AuthResponse } from '@/lib/authService/authService';
-import { useLogger } from 'next-axiom';
 
 export type AuthFormType = {
   email: string;
