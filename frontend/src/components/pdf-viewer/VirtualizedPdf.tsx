@@ -344,20 +344,20 @@ const VirtualizedPDF = forwardRef<PdfFocusHandler, VirtualizedPDFProps>(
     const loadingDiv = () => {
       return (
         <div className={`h-full w-full flex items-center justify-center`}>
-          <l-line-spinner
+          {/* <l-line-spinner
             size="32"
             stroke="3"
             speed="1"
             color="black"
-          ></l-line-spinner>
+          ></l-line-spinner> */}
         </div>
       );
     };
 
     useEffect(() => {
       async function getLoader() {
-        const { lineSpinner } = await import('ldrs');
-        lineSpinner.register();
+        // const { lineSpinner } = await import('ldrs');
+        // lineSpinner.register();
       }
       getLoader();
     }, []);
