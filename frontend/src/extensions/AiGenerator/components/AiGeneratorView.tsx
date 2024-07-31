@@ -269,7 +269,7 @@ export const AiGeneratorView = ({
     if (promptType === 'investment_thesis' || promptType === 'valuation')
       return;
     else generateText();
-  }, [promptType]);
+  }, [promptType, generateText]);
 
   const formattedPreviewText = useMemo(
     () => markdownToHtml(previewText),
@@ -300,15 +300,15 @@ export const AiGeneratorView = ({
     //   .run();
     // setPreviewText('');
   }, [
-    editor,
-    from,
-    to,
+    // editor,
+    // from,
+    // to,
     user,
     report,
     // insertAPICitations,
     // insertCitationSnippets,
     // insertCitedDocuments,
-    originalText,
+    // originalText,
     // insertPDFCitations,
   ]);
 

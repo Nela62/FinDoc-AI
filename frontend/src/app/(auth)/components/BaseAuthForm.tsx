@@ -196,7 +196,8 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
         if (signInError) {
           throw new Error(signInError);
         } else {
-          router.push(mode === 'register' ? '/onboard' : '/reports');
+          // router.push(mode === 'register' ? '/onboard' : '/reports');
+          router.push('/reports');
         }
       } else {
         setIsLoading(true);
