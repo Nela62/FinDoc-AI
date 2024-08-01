@@ -166,14 +166,7 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
             throw new Error('Password required');
           }
 
-          const { error: signInError } = await signInWithPassword(
-            values.email,
-            values.password,
-          );
-
-          if (signInError) {
-            throw new Error(signInError);
-          }
+          await signInWithPassword(values.email, values.password);
 
           await identifyUser(supabase);
           analytics.track('User logged in');
@@ -187,18 +180,10 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           throw new Error('Please check your email for the one-time password.');
         }
 
-        const { error: signInError } = await verifyOtp(
-          values.email,
-          values.token,
-          values.name!,
-        );
+        await verifyOtp(values.email, values.token, values.name!);
 
-        if (signInError) {
-          throw new Error(signInError);
-        } else {
-          // router.push(mode === 'register' ? '/onboard' : '/reports');
-          router.push('/reports');
-        }
+        // router.push(mode === 'register' ? '/onboard' : '/reports');
+        router.push('/reports');
       } else {
         setIsLoading(true);
 
@@ -206,18 +191,15 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           throw new Error('Name required');
         }
 
-        const { error: signInError } = await (mode === 'register'
+        await (mode === 'register'
           ? registerWithOtp(values.email)
           : signInWithOtp(values.email));
 
-        if (signInError) {
-          throw new Error(signInError);
-        } else {
-          setOtp(true);
-          setIsLoading(false);
-        }
+        setOtp(true);
+        setIsLoading(false);
       }
     } catch (error) {
+      console.log(error?.constructor.name);
       handleError(error);
       setIsLoading(false);
     }

@@ -1,11 +1,28 @@
 import { useState, useCallback } from 'react';
 import { useLogger } from 'next-axiom';
 import { AuthApiError } from '@supabase/supabase-js';
+import { AuthenticationError } from '@/types/error';
 
-interface ErrorState {
+// export type BaseError = {
+//   message: string;
+//   functionName: string;
+//   functionInputs: Record<string, any>;
+//   stack: string;
+// };
+
+// export type AuthenticationError = BaseError & { status: number; code: string };
+
+const errorMessages: Record<number, string> = {
+  429: 'We are experiencing an unusually high load. Please try again later.',
+  400: 'Invalid credentials',
+  422: 'Account not found. Please sign up instead.',
+  403: 'Your code has expired or is invalid.',
+};
+
+export type ErrorState = {
   hasError: boolean;
   message: string;
-}
+};
 
 export const useErrorHandler = () => {
   const [error, setError] = useState<ErrorState>({
@@ -15,7 +32,21 @@ export const useErrorHandler = () => {
   const log = useLogger();
 
   const handleError = useCallback(
-    (error: Error | any) => {
+    (error: any, shouldLog: boolean = true) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.error(error);
+      }
+
+      console.log(error.constructor.name);
+      console.log(error instanceof AuthenticationError);
+
+      if (error instanceof AuthenticationError) {
+        setError({ hasError: true, message: error.message });
+        console.log('here');
+        console.log(error);
+
+        shouldLog && log.error('An error occurred', error);
+      }
       if (error instanceof Error) {
         const errorMessage = error.message || 'An unexpected error occurred';
         setError({
@@ -28,12 +59,13 @@ export const useErrorHandler = () => {
         }
 
         // Log the error with additional context
-        log.error('An error occurred', {
-          name: error.name,
-          error: errorMessage,
-          stack: error.stack,
-          // Add any other relevant context here
-        });
+        shouldLog &&
+          log.error('An error occurred', {
+            name: error.name,
+            error: errorMessage,
+            stack: error.stack,
+            // Add any other relevant context here
+          });
       }
     },
     [log],
