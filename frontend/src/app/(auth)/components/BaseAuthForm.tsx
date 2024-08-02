@@ -185,9 +185,9 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
         if (signInError) {
           throw new ServerError(signInError);
         } else {
-          router.push('/reports');
+          // router.push('/reports');
+          router.push(mode === 'register' ? '/onboard' : '/reports');
         }
-        // router.push(mode === 'register' ? '/onboard' : '/reports');
       } else {
         setIsLoading(true);
 
@@ -344,7 +344,7 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           </Link>
         </p>
         {isLoading ? (
-          <Button className="w-full py-4" type="submit" disabled>
+          <Button className="w-full rounded-none py-6" type="submit" disabled>
             <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
             {mode === 'login' ? 'Signing In' : 'Signing Up'}
           </Button>

@@ -141,6 +141,28 @@ export const registerWithOtp = async (email: string): Promise<AuthResponse> => {
   }
 };
 
+export const initUser = async (userId: string, name: string, email: string) => {
+  'use server';
+
+  try {
+    const supabase = createClient();
+
+    await supabase.auth.updateUser({ data: { finished_onboarding: false } });
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .insert({ user_id: userId, plan: 'free', name, email });
+
+    if (updateError) {
+      return { error: updateError };
+    }
+
+    return { error: null };
+  } catch (err) {
+    return { error: err };
+  }
+};
+
 export const verifyOtp = async (
   email: string,
   token: string,
@@ -172,14 +194,12 @@ export const verifyOtp = async (
         );
       }
 
-      if (data?.user) {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .insert({ user_id: data.user.id, plan: 'free', name });
+      if (data?.user && name) {
+        const { error } = await initUser(data.user.id, name);
 
-        if (updateError) {
+        if (error) {
           log.error('Error occurred', {
-            ...updateError,
+            error,
             fnName: 'verifyOtp',
             fnInputs: { email, token, name },
             sql: `await supabase.from('profiles').insert({ user_id: ${data.user.id}, plan: 'free', ${name} })`,

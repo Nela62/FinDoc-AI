@@ -5613,9 +5613,9 @@ INSERT INTO "public"."companies" ("id", "company_name", "stock_name", "ticker", 
 -- Data for Name: settings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."settings" ("id", "user_id", "author_name", "company_name") VALUES
-	('05cc99b1-592e-41f2-aaa5-252fd2820226', '088f0e6f-185a-485f-9889-375acf023bad', 'Findoc AI', 'Findoc Inc.'),
-	('b03f1a37-5e2b-400e-8a20-ffe919b54100', '75e866e6-7947-4bea-8ca8-3b463ac975ff', 'Findoc AI', 'Findoc Inc.');
+INSERT INTO "public"."settings" ("user_id", "author_name", "company_name") VALUES
+	('088f0e6f-185a-485f-9889-375acf023bad', 'Findoc AI', 'Findoc Inc.'),
+	('75e866e6-7947-4bea-8ca8-3b463ac975ff', 'Findoc AI', 'Findoc Inc.');
 
 
 INSERT INTO

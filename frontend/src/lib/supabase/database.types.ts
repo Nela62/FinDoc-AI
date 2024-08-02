@@ -191,7 +191,7 @@ export type Database = {
       }
       profiles: {
         Row: {
-          id: string
+          email: string | null
           name: string | null
           plan: string
           role: string | null
@@ -199,7 +199,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          id?: string
+          email?: string | null
           name?: string | null
           plan: string
           role?: string | null
@@ -207,7 +207,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          id?: string
+          email?: string | null
           name?: string | null
           plan?: string
           role?: string | null
@@ -450,19 +450,16 @@ export type Database = {
         Row: {
           author_name: string
           company_name: string
-          id: string
           user_id: string
         }
         Insert: {
           author_name: string
           company_name: string
-          id?: string
           user_id: string
         }
         Update: {
           author_name?: string
           company_name?: string
-          id?: string
           user_id?: string
         }
         Relationships: [
