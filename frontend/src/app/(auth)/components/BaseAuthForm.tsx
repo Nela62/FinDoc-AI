@@ -60,13 +60,6 @@ type BaseAuthFormProps = {
   ) => Promise<AuthResponse>;
 };
 
-const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string().optional(),
-  token: z.string().optional(),
-  name: z.string().optional(),
-});
-
 async function identifyUser(
   supabase: ReturnType<typeof createClient>,
   name?: string,
@@ -95,6 +88,13 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
   registerWithOtp,
   verifyOtp,
 }) => {
+  const formSchema = z.object({
+    email: z.string().email(),
+    password: z.string().optional(),
+    token: z.string().optional(),
+    name: z.string().optional(),
+  });
+
   const form = useForm<AuthFormType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
