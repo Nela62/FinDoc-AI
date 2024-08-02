@@ -31,6 +31,12 @@ import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { analytics } from '@/lib/segment';
 import { AuthResponse } from '@/lib/authService/authService';
 import { useLogger } from 'next-axiom';
+import { ServerError } from '@/types/error';
+
+// Error handling logic
+// Errors are caught and logged in the server actions \
+// to provide more information about the error
+// Only the error to be displayed is returned and shown to the user
 
 export type AuthFormType = {
   email: string;
@@ -172,7 +178,7 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           );
 
           if (signInError) {
-            throw new Error(signInError);
+            throw new ServerError(signInError);
           }
 
           await identifyUser(supabase);
@@ -194,11 +200,11 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
         );
 
         if (signInError) {
-          throw new Error(signInError);
+          throw new ServerError(signInError);
         } else {
-          // router.push(mode === 'register' ? '/onboard' : '/reports');
           router.push('/reports');
         }
+        // router.push(mode === 'register' ? '/onboard' : '/reports');
       } else {
         setIsLoading(true);
 
@@ -211,14 +217,15 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           : signInWithOtp(values.email));
 
         if (signInError) {
-          throw new Error(signInError);
+          throw new ServerError(signInError);
         } else {
           setOtp(true);
           setIsLoading(false);
         }
       }
     } catch (error) {
-      handleError(error);
+      // Server errors are logged server side
+      handleError(error, !(error instanceof ServerError));
       setIsLoading(false);
     }
   };
