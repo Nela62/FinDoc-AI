@@ -195,7 +195,7 @@ export const verifyOtp = async (
       }
 
       if (data?.user && name) {
-        const { error } = await initUser(data.user.id, name);
+        const { error } = await initUser(data.user.id, name, email);
 
         if (error) {
           log.error('Error occurred', {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { Logger } from 'next-axiom';
+import { initUser } from '@/lib/authService/authService';
 
 const log = new Logger();
 
@@ -17,12 +18,23 @@ export async function GET(request: Request) {
     const supabase = createClient();
 
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_ORIGIN}/reports/`,
-      );
+    if (!error && data.user.email) {
+      if (data.user.user_metadata?.finished_onboarding) {
+        return NextResponse.redirect(
+          `${process.env.NEXT_PUBLIC_ORIGIN}/reports/`,
+        );
+      } else {
+        initUser(
+          data.user.id,
+          data.user.user_metadata.full_name,
+          data.user.email,
+        );
+        return NextResponse.redirect(
+          `${process.env.NEXT_PUBLIC_ORIGIN}/onboard/`,
+        );
+      }
     } else {
-      log.error('Error when authenticating with Google', error);
+      log.error('Error when authenticating with Google', { error: error });
     }
   }
 
