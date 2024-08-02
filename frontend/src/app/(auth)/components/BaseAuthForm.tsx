@@ -56,6 +56,7 @@ type BaseAuthFormProps = {
   verifyOtp: (
     email: string,
     token: string,
+    register: boolean,
     name?: string,
   ) => Promise<AuthResponse>;
 };
@@ -133,23 +134,6 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           redirectTo: `${process.env.NEXT_PUBLIC_ORIGIN}/auth/callback`,
         },
       });
-      const { data, error } = await supabase.auth.getUser();
-
-      if (data?.user) {
-        const displayName = data.user.user_metadata.display_name;
-        await identifyUser(supabase, displayName);
-
-        await supabase.from('profiles').insert({
-          user_id: data.user.id,
-          plan: 'free',
-          name: displayName,
-          email: data.user.email,
-        });
-      }
-
-      if (error) {
-        throw new Error('Error fetching user: ' + error);
-      }
     } catch (err) {
       handleError(err);
     }
@@ -196,7 +180,8 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
         const { error: signInError } = await verifyOtp(
           values.email,
           values.token,
-          values.name!,
+          mode === 'register',
+          values.name,
         );
 
         if (signInError) {

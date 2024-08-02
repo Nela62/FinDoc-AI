@@ -147,6 +147,7 @@ export const registerWithOtp = async (email: string): Promise<AuthResponse> => {
 export const verifyOtp = async (
   email: string,
   token: string,
+  register: boolean,
   name?: string,
 ): Promise<AuthResponse> => {
   'use server';
@@ -163,33 +164,40 @@ export const verifyOtp = async (
       return handleAuthError(error, 'verifyOtp', { email, token, name });
     }
 
-    const { data, error: userError } = await supabase.auth.getUser();
+    if (register) {
+      const { data, error: userError } = await supabase.auth.getUser();
 
-    if (userError) {
-      return handleAuthError(userError, 'verifyOtp', { email, token, name });
-    }
+      if (userError) {
+        return handleAuthError(
+          userError,
+          'verifyOtp, supabase.auth.getUser()',
+          { email, token, name },
+        );
+      }
 
-    if (data?.user) {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .insert({ user_id: data.user.id, plan: 'free', name });
+      if (data?.user) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .insert({ user_id: data.user.id, plan: 'free', name });
 
-      if (updateError) {
+        if (updateError) {
+          log.error('Error occurred', {
+            ...updateError,
+            fnName: 'verifyOtp',
+            fnInputs: { email, token, name },
+            sql: `await supabase.from('profiles').insert({ user_id: ${data.user.id}, plan: 'free', ${name} })`,
+          });
+
+          return { error: 'Could not authenticate user' };
+        }
+      } else {
         log.error('Error occurred', {
-          ...updateError,
+          message: 'Could not find authenticated user after verifying Otp',
           fnName: 'verifyOtp',
           fnInputs: { email, token, name },
-          sql: `await supabase.from('profiles').insert({ user_id: ${data.user.id}, plan: 'free', ${name} })`,
         });
         return { error: 'Could not authenticate user' };
       }
-    } else {
-      log.error('Error occurred', {
-        message: 'Could not find authenticated user after verifying Otp',
-        fnName: 'verifyOtp',
-        fnInputs: { email, token, name },
-      });
-      return { error: 'Could not authenticate user' };
     }
 
     return { error: null };
