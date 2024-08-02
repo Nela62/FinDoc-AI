@@ -30,7 +30,6 @@ import { GoogleSignInButton } from './GoogleButton';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { analytics } from '@/lib/segment';
 import { AuthResponse } from '@/lib/authService/authService';
-import { useLogger } from 'next-axiom';
 import { ServerError } from '@/types/error';
 
 // Error handling logic

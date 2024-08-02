@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { Logger } from 'next-axiom';
 import { serviceClient } from '../supabase/service';
-import { AuthenticationError, DatabaseError } from '@/types/error';
 import { AuthError, isAuthError } from '@supabase/supabase-js';
 
 export interface AuthResponse {
@@ -24,8 +23,6 @@ const handleAuthError = (
     status: error.status,
     code: error.code,
   });
-
-  console.error(error);
 
   const errorMessages: Record<number, string> = {
     429: 'We are experiencing an unusually high load. Please try again later.',
