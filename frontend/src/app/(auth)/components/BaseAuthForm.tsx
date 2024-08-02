@@ -31,6 +31,12 @@ import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { analytics } from '@/lib/segment';
 import { AuthResponse } from '@/lib/authService/authService';
 import { useLogger } from 'next-axiom';
+import { ServerError } from '@/types/error';
+
+// Error handling logic
+// Errors are caught and logged in the server actions \
+// to provide more information about the error
+// Only the error to be displayed is returned and shown to the user
 
 export type AuthFormType = {
   email: string;
@@ -166,7 +172,14 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
             throw new Error('Password required');
           }
 
-          await signInWithPassword(values.email, values.password);
+          const { error: signInError } = await signInWithPassword(
+            values.email,
+            values.password,
+          );
+
+          if (signInError) {
+            throw new ServerError(signInError);
+          }
 
           await identifyUser(supabase);
           analytics.track('User logged in');
@@ -180,10 +193,18 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           throw new Error('Please check your email for the one-time password.');
         }
 
-        await verifyOtp(values.email, values.token, values.name!);
+        const { error: signInError } = await verifyOtp(
+          values.email,
+          values.token,
+          values.name!,
+        );
 
+        if (signInError) {
+          throw new ServerError(signInError);
+        } else {
+          router.push('/reports');
+        }
         // router.push(mode === 'register' ? '/onboard' : '/reports');
-        router.push('/reports');
       } else {
         setIsLoading(true);
 
@@ -191,16 +212,22 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           throw new Error('Name required');
         }
 
-        await (mode === 'register'
+        const { error: signInError } = await (mode === 'register'
           ? registerWithOtp(values.email)
           : signInWithOtp(values.email));
 
-        setOtp(true);
-        setIsLoading(false);
+        if (signInError) {
+          throw new ServerError(signInError);
+        } else {
+          setOtp(true);
+          setIsLoading(false);
+        }
       }
     } catch (error) {
-      console.log(error?.constructor.name);
-      handleError(error);
+      // Server errors are logged server side
+      if (!(error instanceof ServerError)) {
+        handleError(error, false);
+      }
       setIsLoading(false);
     }
   };

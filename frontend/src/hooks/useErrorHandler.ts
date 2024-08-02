@@ -42,10 +42,8 @@ export const useErrorHandler = () => {
 
       if (error instanceof AuthenticationError) {
         setError({ hasError: true, message: error.message });
-        console.log('here');
-        console.log(error);
 
-        shouldLog && log.error('An error occurred', error);
+        shouldLog && log.error('Error occurred', error);
       }
       if (error instanceof Error) {
         const errorMessage = error.message || 'An unexpected error occurred';

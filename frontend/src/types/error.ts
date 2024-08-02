@@ -17,6 +17,12 @@ export class BaseError extends Error {
   }
 }
 
+export class ServerError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 export class AuthenticationError extends BaseError {
   status?: number;
   code?: string;
@@ -43,15 +49,15 @@ export class AuthenticationError extends BaseError {
 
 export class DatabaseError extends BaseError {
   sql: string;
-  
+
   constructor(
     message: string,
     fnName: string,
     fnInputs: Record<string, any>,
     fnStack: string[],
-    sql: string
+    sql: string,
   ) {
     super(message, fnName, fnInputs, fnStack);
-    this.sql = sql
-  };
+    this.sql = sql;
+  }
 }
