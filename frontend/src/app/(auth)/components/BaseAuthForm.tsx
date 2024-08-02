@@ -225,9 +225,7 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
       }
     } catch (error) {
       // Server errors are logged server side
-      if (!(error instanceof ServerError)) {
-        handleError(error, false);
-      }
+      handleError(error, !(error instanceof ServerError));
       setIsLoading(false);
     }
   };
