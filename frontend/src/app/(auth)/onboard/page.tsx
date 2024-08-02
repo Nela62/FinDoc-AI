@@ -28,7 +28,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { IconCircleChevronRight } from '@tabler/icons-react';
 import { HelpCircle, Loader2Icon } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { ControllerProps, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 const roles = [
@@ -65,7 +65,7 @@ export default function OnboardPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       companyName: 'Findoc Inc.',
-      analystName: '',
+      analystName: 'Altan Arata',
       role: undefined,
       filing_reading_frequency: undefined,
     },
@@ -170,7 +170,9 @@ export default function OnboardPage() {
               name="filing_reading_frequency"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>What is your role?</FormLabel>
+                  <FormLabel>
+                    How often do you read SEC filings & transcripts?
+                  </FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
