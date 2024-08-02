@@ -115,7 +115,8 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
 
   const supabase = createClient();
 
-  const resetState = () => {
+  const resetState = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     setOtp(false);
     setPassword(false);
     clearError();
@@ -242,6 +243,7 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
             className="mx-6"
             variant="outline"
             size="sm"
+            type="button"
             onClick={resetState}
           >
             <ArrowLeft className="h-4 w-4" />
