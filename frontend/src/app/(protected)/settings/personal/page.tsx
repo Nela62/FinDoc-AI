@@ -54,8 +54,8 @@ export default function PersonalInformationPage() {
 
   const { mutateAsync: update } = useUpdateMutation(
     supabase.from('settings'),
-    ['id'],
-    'id',
+    ['user_id'],
+    'user_id',
   );
 
   const form = useForm<z.infer<typeof authorFormSchema>>({
