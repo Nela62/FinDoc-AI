@@ -256,7 +256,7 @@ export function fetchFile(client: TypedSupabaseClient, url: string) {
 export function fetchSettings(client: TypedSupabaseClient) {
   return client
     .from('settings')
-    .select('id, author_name, company_name')
+    .select('author_name, company_name')
     .throwOnError();
 }
 
