@@ -11,6 +11,7 @@ export const getTopBarMetrics = (
   stockData: DailyStockDataPoint[],
   quarterlyFundamentals: MetricsData,
 ): Metric[] => {
+  console.log(quarterlyFundamentals);
   const lastClosingPrice = Number(
     getLatestStockDataPoint(stockData).data['5. adjusted close'],
   );
