@@ -70,7 +70,7 @@ export default function PersonalInformationPage() {
   async function onSubmit(values: z.infer<typeof authorFormSchema>) {
     if (!userId || !data || data.length === 0) return;
 
-    await update({ id: data[0].id, author_name: values.authorName });
+    await update({ user_id: data[0].user_id, author_name: values.authorName });
 
     toast({ description: 'Successfully updated settings.' });
   }
