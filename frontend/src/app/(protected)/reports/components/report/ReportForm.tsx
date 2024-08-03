@@ -302,21 +302,7 @@ export const ReportForm = ({
   const baseActions = async (values: z.infer<typeof reportFormSchema>) => {
     try {
       if (!templateConfig) {
-        // throw new Error('Template config is not ready yet.');
-        templateConfig = {
-          authorName: 'Findoc AI',
-          authorCompanyName: 'Altan Arata',
-          colorScheme: {
-            id: 'blue',
-            colors: ['#1c4587', '#f4e9d3', '#006f3b'],
-          },
-          colorSchemesList: [
-            { id: 'blue', colors: ['#1c4587', '#f4e9d3', '#006f3b'] },
-            { id: 'red', colors: ['#7d1f1f', '#f4e9d3', '#006f3b'] },
-            { id: 'white', colors: ['#787878', '#cce8fb', '#0061d9'] },
-          ],
-          authorCompanyLogosList: [],
-        };
+        throw new Error('Template config is not ready yet.');
       }
 
       log.info('Generating new report', {
@@ -604,15 +590,20 @@ export const ReportForm = ({
       });
 
       if (!templateConfig) {
-        templateConfig = {authorName: 'Findoc AI',
-  authorCompanyName: 'Altan Arata',
-  colorScheme:  { id: 'blue', colors: ['#1c4587', '#f4e9d3', '#006f3b'] },
-  colorSchemesList: [
-  { id: 'blue', colors: ['#1c4587', '#f4e9d3', '#006f3b'] },
-  { id: 'red', colors: ['#7d1f1f', '#f4e9d3', '#006f3b'] },
-  { id: 'white', colors: ['#787878', '#cce8fb', '#0061d9'] },
-],
-  authorCompanyLogosList: []}
+        templateConfig = {
+          authorName: 'Findoc AI',
+          authorCompanyName: 'Altan Arata',
+          colorScheme: {
+            id: 'blue',
+            colors: ['#1c4587', '#f4e9d3', '#006f3b'],
+          },
+          colorSchemesList: [
+            { id: 'blue', colors: ['#1c4587', '#f4e9d3', '#006f3b'] },
+            { id: 'red', colors: ['#7d1f1f', '#f4e9d3', '#006f3b'] },
+            { id: 'white', colors: ['#787878', '#cce8fb', '#0061d9'] },
+          ],
+          authorCompanyLogosList: [],
+        };
       }
       // baseActions
       const {
