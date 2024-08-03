@@ -37,113 +37,6 @@ INSERT INTO "auth"."users" ("instance_id", "id", "aud", "role", "email", "encryp
 
 
 --
--- Data for Name: identities; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
-
-INSERT INTO "auth"."identities" ("provider_id", "user_id", "identity_data", "provider", "last_sign_in_at", "created_at", "updated_at", "id") VALUES
-	('8a84f859-4958-4496-a740-bf0b67707af3', '8a84f859-4958-4496-a740-bf0b67707af3', '{"sub": "8a84f859-4958-4496-a740-bf0b67707af3", "email": "user@coreline.ai", "email_verified": false, "phone_verified": false}', 'email', '2024-04-26 17:23:03.635884+00', '2024-04-26 17:23:03.63594+00', '2024-04-26 17:23:03.63594+00', 'a96b8bf9-a9fe-4204-abb2-cb99ddbdd1e8'),
-	('088f0e6f-185a-485f-9889-375acf023bad', '088f0e6f-185a-485f-9889-375acf023bad', '{"sub": "088f0e6f-185a-485f-9889-375acf023bad", "email": "user@findoc-ai.com", "email_verified": false, "phone_verified": false}', 'email', '2024-06-12 04:31:19.441384+00', '2024-06-12 04:31:19.441442+00', '2024-06-12 04:31:19.441442+00', 'f2bc3c65-cc87-425b-a00d-5c72864a4fb7'),
-	('75e866e6-7947-4bea-8ca8-3b463ac975ff', '75e866e6-7947-4bea-8ca8-3b463ac975ff', '{"sub": "75e866e6-7947-4bea-8ca8-3b463ac975ff", "email": "helkochetkova@gmail.com", "email_verified": false, "phone_verified": false}', 'email', '2024-06-21 19:52:33.328472+00', '2024-06-21 19:52:33.328525+00', '2024-06-21 19:52:33.328525+00', '179a545f-aa27-460e-ae86-83bbe2b5b19d'),
-	('b769adfc-a0ff-4bb5-86f7-19af24b33b4d', 'b769adfc-a0ff-4bb5-86f7-19af24b33b4d', '{"sub": "b769adfc-a0ff-4bb5-86f7-19af24b33b4d", "email": "nela62@berkeley.edu", "email_verified": false, "phone_verified": false}', 'email', '2024-06-21 19:53:47.586225+00', '2024-06-21 19:53:47.586282+00', '2024-06-21 19:53:47.586282+00', 'd4fa4a08-1fac-4622-80d0-308cd2192982'),
-	('263bb57d-b565-47c9-b7a6-83260224032e', '263bb57d-b565-47c9-b7a6-83260224032e', '{"sub": "263bb57d-b565-47c9-b7a6-83260224032e", "email": "heltonarata@gmail.com", "email_verified": false, "phone_verified": false}', 'email', '2024-06-21 23:16:37.277131+00', '2024-06-21 23:16:37.277194+00', '2024-06-21 23:16:37.277194+00', '4e2be6eb-53d5-4b27-ada2-25d736786e53'),
-	('115110340332429426861', '263bb57d-b565-47c9-b7a6-83260224032e', '{"iss": "https://accounts.google.com", "sub": "115110340332429426861", "name": "Helton Suzuki", "email": "heltonarata@gmail.com", "picture": "https://lh3.googleusercontent.com/a/ACg8ocLmNI9BQVWQe5jNhXBn_Uw6FTkhonYEHUT4LC2X_j92xPQcAg0B=s96-c", "full_name": "Helton Suzuki", "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocLmNI9BQVWQe5jNhXBn_Uw6FTkhonYEHUT4LC2X_j92xPQcAg0B=s96-c", "provider_id": "115110340332429426861", "email_verified": true, "phone_verified": false}', 'google', '2024-06-22 20:05:10.53621+00', '2024-06-22 20:05:10.536265+00', '2024-06-23 03:53:07.634811+00', '3ce5d211-b9ec-48e2-b6f1-9bc94cd2a190'),
-	('113968757014663236601', '19d72d32-8f7c-4988-aa9a-f68c89e4319d', '{"iss": "https://accounts.google.com", "sub": "113968757014663236601", "name": "Helen Kochetkova", "email": "helen@finpanel.com", "picture": "https://lh3.googleusercontent.com/a/ACg8ocJ2-XHDNQbqlkoyJNv2VVHFrAcanGBUgVp-U1LOt-aU1qNZjA=s96-c", "full_name": "Helen Kochetkova", "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocJ2-XHDNQbqlkoyJNv2VVHFrAcanGBUgVp-U1LOt-aU1qNZjA=s96-c", "provider_id": "113968757014663236601", "custom_claims": {"hd": "finpanel.com"}, "email_verified": true, "phone_verified": false}', 'google', '2024-06-22 20:06:51.014721+00', '2024-06-22 20:06:51.014768+00', '2024-06-23 04:20:00.203691+00', '0f707618-5033-44fc-b218-932c436d0828'),
-	('107846479772776970296', '039b4507-751b-4cbd-930d-9556824b0597', '{"iss": "https://accounts.google.com", "sub": "107846479772776970296", "name": "Altan Arata", "email": "altan@finpanel.com", "picture": "https://lh3.googleusercontent.com/a/ACg8ocJG3vYLTOS4Ginkvlk03n8HD6o3rJpjWiDHYuH4UsfH6202aA=s96-c", "full_name": "Altan Arata", "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocJG3vYLTOS4Ginkvlk03n8HD6o3rJpjWiDHYuH4UsfH6202aA=s96-c", "provider_id": "107846479772776970296", "custom_claims": {"hd": "finpanel.com"}, "email_verified": true, "phone_verified": false}', 'google', '2024-06-23 00:32:35.717365+00', '2024-06-23 00:32:35.717413+00', '2024-06-23 00:32:35.717413+00', '7292ea65-3433-499c-94a3-e780be327e70');
-
-
---
--- Data for Name: instances; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
-
-
-
---
--- Data for Name: sessions; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
-
-INSERT INTO "auth"."sessions" ("id", "user_id", "created_at", "updated_at", "factor_id", "aal", "not_after", "refreshed_at", "user_agent", "ip", "tag") VALUES
-	('cc9dee39-54d7-4898-9316-a58dc00b1d46', '8a84f859-4958-4496-a740-bf0b67707af3', '2024-06-23 19:08:56.486689+00', '2024-06-24 06:34:22.498727+00', NULL, 'aal1', NULL, '2024-06-24 06:34:22.498656', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:127.0) Gecko/20100101 Firefox/127.0', '198.54.133.149', NULL),
-	('41e3cbb0-7281-4f36-8cb6-278f50a4138c', '19d72d32-8f7c-4988-aa9a-f68c89e4319d', '2024-06-23 04:20:00.84393+00', '2024-06-24 21:06:52.063718+00', NULL, 'aal1', NULL, '2024-06-24 21:06:52.063641', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:127.0) Gecko/20100101 Firefox/127.0', '76.105.72.121', NULL),
-	('2e3452d2-d587-4788-abf8-8ec69830f1a4', '8a84f859-4958-4496-a740-bf0b67707af3', '2024-06-14 15:10:33.21153+00', '2024-06-14 15:10:33.21153+00', NULL, 'aal1', NULL, NULL, 'node', '159.89.49.35', NULL);
-
-
---
--- Data for Name: mfa_amr_claims; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
-
-INSERT INTO "auth"."mfa_amr_claims" ("session_id", "created_at", "updated_at", "authentication_method", "id") VALUES
-	('41e3cbb0-7281-4f36-8cb6-278f50a4138c', '2024-06-23 04:20:00.846728+00', '2024-06-23 04:20:00.846728+00', 'oauth', 'b91d1e95-e28f-4758-8cd9-d75dd3569ce1'),
-	('cc9dee39-54d7-4898-9316-a58dc00b1d46', '2024-06-23 19:08:56.497513+00', '2024-06-23 19:08:56.497513+00', 'password', '7cf9d6e4-1ec0-4a4d-9bef-edfba8a92c33'),
-	('2e3452d2-d587-4788-abf8-8ec69830f1a4', '2024-06-14 15:10:33.219702+00', '2024-06-14 15:10:33.219702+00', 'password', '23932503-a8fc-491e-9381-961fa6c53e9a');
-
-
---
--- Data for Name: mfa_factors; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
-
-
-
---
--- Data for Name: mfa_challenges; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
-
-
-
---
--- Data for Name: one_time_tokens; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
-
-
-
---
--- Data for Name: refresh_tokens; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
-
-INSERT INTO "auth"."refresh_tokens" ("instance_id", "id", "token", "user_id", "revoked", "created_at", "updated_at", "parent", "session_id") VALUES
-	('00000000-0000-0000-0000-000000000000', 361, 'HBpyhM0kVJP8VqyEbXLhyg', '19d72d32-8f7c-4988-aa9a-f68c89e4319d', true, '2024-06-23 04:20:00.844756+00', '2024-06-23 17:29:37.652995+00', NULL, '41e3cbb0-7281-4f36-8cb6-278f50a4138c'),
-	('00000000-0000-0000-0000-000000000000', 363, '2UZzGPnsQTRN8PjXPuictA', '8a84f859-4958-4496-a740-bf0b67707af3', true, '2024-06-23 19:08:56.493185+00', '2024-06-23 20:38:48.721152+00', NULL, 'cc9dee39-54d7-4898-9316-a58dc00b1d46'),
-	('00000000-0000-0000-0000-000000000000', 364, 'n_BreiWho08_xoHmK4xa4g', '8a84f859-4958-4496-a740-bf0b67707af3', true, '2024-06-23 20:38:48.72501+00', '2024-06-23 23:47:11.975216+00', '2UZzGPnsQTRN8PjXPuictA', 'cc9dee39-54d7-4898-9316-a58dc00b1d46'),
-	('00000000-0000-0000-0000-000000000000', 365, 'vuJ1sSLDL2Sut5KiUfCdnQ', '8a84f859-4958-4496-a740-bf0b67707af3', true, '2024-06-23 23:47:11.976501+00', '2024-06-24 00:56:54.226941+00', 'n_BreiWho08_xoHmK4xa4g', 'cc9dee39-54d7-4898-9316-a58dc00b1d46'),
-	('00000000-0000-0000-0000-000000000000', 366, 'dINLpkG5IFMUDk9BdGUlmA', '8a84f859-4958-4496-a740-bf0b67707af3', true, '2024-06-24 00:56:54.228704+00', '2024-06-24 01:58:58.941366+00', 'vuJ1sSLDL2Sut5KiUfCdnQ', 'cc9dee39-54d7-4898-9316-a58dc00b1d46'),
-	('00000000-0000-0000-0000-000000000000', 367, 'a8TDU9djPlxf7WCu0CTtFQ', '8a84f859-4958-4496-a740-bf0b67707af3', true, '2024-06-24 01:58:58.943005+00', '2024-06-24 05:24:11.453748+00', 'dINLpkG5IFMUDk9BdGUlmA', 'cc9dee39-54d7-4898-9316-a58dc00b1d46'),
-	('00000000-0000-0000-0000-000000000000', 368, 'nM2EK86OHU2pTed2fotUcg', '8a84f859-4958-4496-a740-bf0b67707af3', true, '2024-06-24 05:24:11.463121+00', '2024-06-24 06:34:22.495065+00', 'a8TDU9djPlxf7WCu0CTtFQ', 'cc9dee39-54d7-4898-9316-a58dc00b1d46'),
-	('00000000-0000-0000-0000-000000000000', 369, 'U023B8bC46kRXnVt0T9OAQ', '8a84f859-4958-4496-a740-bf0b67707af3', false, '2024-06-24 06:34:22.496441+00', '2024-06-24 06:34:22.496441+00', 'nM2EK86OHU2pTed2fotUcg', 'cc9dee39-54d7-4898-9316-a58dc00b1d46'),
-	('00000000-0000-0000-0000-000000000000', 362, 'rYSAG_j9EWrn6IXoUYkn7g', '19d72d32-8f7c-4988-aa9a-f68c89e4319d', true, '2024-06-23 17:29:37.65855+00', '2024-06-24 21:06:46.36683+00', 'HBpyhM0kVJP8VqyEbXLhyg', '41e3cbb0-7281-4f36-8cb6-278f50a4138c'),
-	('00000000-0000-0000-0000-000000000000', 297, '9mJzfJv5UbBKkDhxHAWvbA', '8a84f859-4958-4496-a740-bf0b67707af3', false, '2024-06-14 15:10:33.216263+00', '2024-06-14 15:10:33.216263+00', NULL, '2e3452d2-d587-4788-abf8-8ec69830f1a4'),
-	('00000000-0000-0000-0000-000000000000', 370, '9RvBBH0EG_2ZwymWc4fLng', '19d72d32-8f7c-4988-aa9a-f68c89e4319d', false, '2024-06-24 21:06:46.37463+00', '2024-06-24 21:06:46.37463+00', 'rYSAG_j9EWrn6IXoUYkn7g', '41e3cbb0-7281-4f36-8cb6-278f50a4138c');
-
-
---
--- Data for Name: sso_providers; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
-
-
-
---
--- Data for Name: saml_providers; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
-
-
-
---
--- Data for Name: saml_relay_states; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
-
-
-
---
--- Data for Name: sso_domains; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
---
-
-
-
---
--- Data for Name: key; Type: TABLE DATA; Schema: pgsodium; Owner: supabase_admin
---
-
-
-
---
 -- Data for Name: companies; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -5720,16 +5613,15 @@ INSERT INTO "public"."companies" ("id", "company_name", "stock_name", "ticker", 
 -- Data for Name: settings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."settings" ("id", "user_id", "author_name", "company_name") VALUES
-	('05cc99b1-592e-41f2-aaa5-252fd2820226', '088f0e6f-185a-485f-9889-375acf023bad', 'Findoc AI', 'Findoc Inc.'),
-	('b03f1a37-5e2b-400e-8a20-ffe919b54100', '75e866e6-7947-4bea-8ca8-3b463ac975ff', 'Findoc AI', 'Findoc Inc.');
+INSERT INTO "public"."settings" ("user_id", "author_name", "company_name") VALUES
+	('088f0e6f-185a-485f-9889-375acf023bad', 'Findoc AI', 'Findoc Inc.'),
+	('75e866e6-7947-4bea-8ca8-3b463ac975ff', 'Findoc AI', 'Findoc Inc.');
 
 
 INSERT INTO
-  "public"."profiles" ("id", "user_id", "plan", "email", "name", "role", "sec_filings_frequency")
+  "public"."profiles" ("user_id", "plan", "email", "name", "role", "sec_filings_frequency")
 VALUES
   (
-    'f34c85db-f63d-4bc7-b630-145186a43f93',
     '8a84f859-4958-4496-a740-bf0b67707af3',
     'dev',
     'user@coreline.ai',
@@ -5738,7 +5630,6 @@ VALUES
     'Often'
   ),
   (
-    'aab3a902-d370-467e-beed-161f7c16fcfd',
     '088f0e6f-185a-485f-9889-375acf023bad',
     'professional', 'user@findoc-ai.com', 'Findoc AI',
     'Equity Analyst',

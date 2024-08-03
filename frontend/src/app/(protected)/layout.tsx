@@ -18,6 +18,8 @@ export default async function Layout({
 
   if (!user) {
     return redirect('/login');
+  } else if (!user.user_metadata.finished_onboarding) {
+    return redirect('/onboard');
   }
 
   return (

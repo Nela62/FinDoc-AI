@@ -30,7 +30,12 @@ import { GoogleSignInButton } from './GoogleButton';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { analytics } from '@/lib/segment';
 import { AuthResponse } from '@/lib/authService/authService';
-import { useLogger } from 'next-axiom';
+import { ServerError } from '@/types/error';
+
+// Error handling logic
+// Errors are caught and logged in the server actions \
+// to provide more information about the error
+// Only the error to be displayed is returned and shown to the user
 
 export type AuthFormType = {
   email: string;
@@ -50,16 +55,10 @@ type BaseAuthFormProps = {
   verifyOtp: (
     email: string,
     token: string,
+    register: boolean,
     name?: string,
   ) => Promise<AuthResponse>;
 };
-
-const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string().optional(),
-  token: z.string().optional(),
-  name: z.string().optional(),
-});
 
 async function identifyUser(
   supabase: ReturnType<typeof createClient>,
@@ -68,7 +67,6 @@ async function identifyUser(
   const { data: userData } = await supabase.auth.getUser();
 
   if (userData && userData.user) {
-    console.log(userData.user.identities);
     const { data: planData } = await supabase
       .from('profiles')
       .select('*')
@@ -90,6 +88,13 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
   registerWithOtp,
   verifyOtp,
 }) => {
+  const formSchema = z.object({
+    email: z.string().email(),
+    password: z.string().optional(),
+    token: z.string().optional(),
+    name: z.string().optional(),
+  });
+
   const form = useForm<AuthFormType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -110,7 +115,8 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
 
   const supabase = createClient();
 
-  const resetState = () => {
+  const resetState = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     setOtp(false);
     setPassword(false);
     clearError();
@@ -127,23 +133,6 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           redirectTo: `${process.env.NEXT_PUBLIC_ORIGIN}/auth/callback`,
         },
       });
-      const { data, error } = await supabase.auth.getUser();
-
-      if (data?.user) {
-        const displayName = data.user.user_metadata.display_name;
-        await identifyUser(supabase, displayName);
-
-        await supabase.from('profiles').insert({
-          user_id: data.user.id,
-          plan: 'free',
-          name: displayName,
-          email: data.user.email,
-        });
-      }
-
-      if (error) {
-        throw new Error('Error fetching user: ' + error);
-      }
     } catch (err) {
       handleError(err);
     }
@@ -172,7 +161,7 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           );
 
           if (signInError) {
-            throw new Error(signInError);
+            throw new ServerError(signInError);
           }
 
           await identifyUser(supabase);
@@ -190,14 +179,15 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
         const { error: signInError } = await verifyOtp(
           values.email,
           values.token,
-          values.name!,
+          mode === 'register',
+          values.name,
         );
 
         if (signInError) {
-          throw new Error(signInError);
+          throw new ServerError(signInError);
         } else {
-          // router.push(mode === 'register' ? '/onboard' : '/reports');
-          router.push('/reports');
+          // router.push('/reports');
+          router.push(mode === 'register' ? '/onboard' : '/reports');
         }
       } else {
         setIsLoading(true);
@@ -211,14 +201,15 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           : signInWithOtp(values.email));
 
         if (signInError) {
-          throw new Error(signInError);
+          throw new ServerError(signInError);
         } else {
           setOtp(true);
           setIsLoading(false);
         }
       }
     } catch (error) {
-      handleError(error);
+      // Server errors are logged server side
+      handleError(error, !(error instanceof ServerError));
       setIsLoading(false);
     }
   };
@@ -252,6 +243,7 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
             className="mx-6"
             variant="outline"
             size="sm"
+            type="button"
             onClick={resetState}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -354,7 +346,7 @@ export const BaseAuthForm: React.FC<BaseAuthFormProps> = ({
           </Link>
         </p>
         {isLoading ? (
-          <Button className="w-full py-4" type="submit" disabled>
+          <Button className="w-full rounded-none py-6" type="submit" disabled>
             <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
             {mode === 'login' ? 'Signing In' : 'Signing Up'}
           </Button>
