@@ -91,6 +91,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { analytics } from '@/lib/segment';
+import { useReportProgress } from '@/hooks/useReportProgress';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -141,8 +142,6 @@ export const ReportForm = ({
   userId: string;
   plan: SubscriptionPlan;
 }) => {
-  const [progress, setProgress] = useState(0);
-  const [progressMessage, setProgressMessage] = useState('');
   const [isOpen, setOpen] = useState(false);
   const [curReportId, setReportId] = useState<string | null>(null);
   const [images, setImages] = useState<Blob[] | null>(null);
@@ -151,6 +150,8 @@ export const ReportForm = ({
     quarterly: null,
     stock: null,
   });
+  const { progress, progressMessage, nextStep, finalStep } =
+    useReportProgress();
 
   const [jobs, setJobs] = useState<Record<string, Job>>({});
 
@@ -159,8 +160,6 @@ export const ReportForm = ({
   const [reportsNum, setReportsNum] = useState(0);
 
   const router = useRouter();
-
-  const progressValue = 100 / 7;
 
   const {
     docxFile,
@@ -312,7 +311,6 @@ export const ReportForm = ({
 
       // launch the dialog
       setOpen(true);
-      setProgressMessage('Fetching data from APIs...');
 
       // Create a new report and save it to db
       const nanoId = getNanoId();
@@ -362,8 +360,7 @@ export const ReportForm = ({
         );
       }
 
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Parsing SEC filings...');
+      nextStep();
 
       const xmlPath = await getSecFiling(values.companyTicker.value);
 
@@ -373,8 +370,7 @@ export const ReportForm = ({
         .then((res) => res.data?.text());
 
       // Fetch web data
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Fetching web news...');
+      nextStep();
       const news = await fetchAllNews(values.companyTicker.value);
 
       const getRecentDevelopmentsContext = async (news: any) => {
@@ -496,8 +492,7 @@ export const ReportForm = ({
         getFinancialAndRiskAnalysisMetrics(yfAnnual);
 
       // Generate a company overview if any
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Generating company overview...');
+      nextStep();
       const companyOverviewJobId = await createJob(
         {
           blockId: 'company_overview',
@@ -608,8 +603,7 @@ export const ReportForm = ({
       const generatedJson: JSONContent = { type: 'doc', content: [] };
       let generatedContent = '';
 
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Writing report...');
+      nextStep();
 
       const params: Omit<GeneralBlock, 'blockId'> = {
         plan,
@@ -671,8 +665,7 @@ export const ReportForm = ({
       });
 
       // generate a summary if required
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Generating summary...');
+      nextStep();
       const summaryJobId = await createJob(
         {
           blockId: 'executive_summary',
@@ -717,8 +710,7 @@ export const ReportForm = ({
         summary: summary,
       });
 
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Creating pdf file...');
+      nextStep();
 
       setReportId(reportId);
     } catch (err) {
@@ -733,7 +725,7 @@ export const ReportForm = ({
       generateDocxBlob(images)
         .then((blob: Blob) => generatePdf(blob))
         .then(() => {
-          setProgress((state) => state + progressValue);
+          finalStep();
           setOpen(false);
           setSelectedReportId(curReportId);
         });
@@ -748,7 +740,6 @@ export const ReportForm = ({
     generateDocxBlob,
     generatePdf,
     setSelectedReportId,
-    progressValue,
   ]);
 
   const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
