@@ -2,6 +2,10 @@
 
 import { serviceClient } from '@/lib/supabase/service';
 import { waitForSecJobCompletion } from '@/lib/utils/jobs';
+import { fetchDailyStock, fetchOverview, fetchWeeklyStock } from '@/lib/utils/metrics/financialAPI';
+import { Logger } from 'next-axiom';
+
+const log = new Logger();
 
 export async function fetchNewsContent(url: string) {
   const jsdom = require('jsdom');
@@ -74,5 +78,30 @@ export const getSecFiling = async (ticker: string): Promise<string> => {
     }
   } catch (error) {
     throw error;
+  }
+};
+
+export const fetchApiData = async (ticker: string) => {
+  'use server';
+
+  try {
+    const res = await fetch(`/api/metrics/${ticker}`);
+
+    if (res.status !== 200) {
+      return { success: false };
+    } else {
+      const financialMetrics = await res.json();
+
+      const overview = await fetchOverview(ticker);
+
+      const dailyStock = await fetchDailyStock(ticker);
+
+      const weeklyStock = await fetchWeeklyStock(ticker);
+      
+      return { success: true, data: {...financialMetrics, overview, dailyStock, weeklyStock} };
+    }
+  } catch (err) {
+    log.error('Unexpected error', { error: err, fn: 'fetchApiData' });
+    return { success: false };
   }
 };

@@ -60,7 +60,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
 import { Feed } from '@/types/alphaVantageApi';
-import { fetchNewsContent, getSecFiling } from './actions';
+import { fetchApiData, fetchNewsContent, getSecFiling } from './actions';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import {
   useFileUrl,
@@ -339,34 +339,18 @@ export const ReportForm = ({
 
       const reportId = res[0].id;
 
-      // Fetch and cache API
-      const apiData = await fetch(`/api/metrics/${values.companyTicker.value}`)
-        .then((res) => res.ok && res.json())
-        .catch((err) => console.error(err));
+      // Fetch api data
+      const apiData = await handleApiData(values.companyTicker.value, reportId);
 
-      const overview = await fetchOverview(values.companyTicker.value);
-
-      const dailyStock = await fetchDailyStock(values.companyTicker.value);
-
-      const weeklyStock = await fetchWeeklyStock(values.companyTicker.value);
-
-      const { yfAnnual, yfQuarterly, polygonAnnual, polygonQuarterly } =
-        apiData;
-
-      await insertCache([
-        {
-          user_id: userId,
-          overview: overview,
-          stock: dailyStock,
-          report_id: reportId,
-        },
-      ]);
-
-      setPolygonApi({
-        annual: polygonAnnual,
-        quarterly: polygonQuarterly,
-        stock: dailyStock,
-      });
+      const {
+        yfAnnual,
+        yfQuarterly,
+        polygonAnnual,
+        polygonQuarterly,
+        overview,
+        dailyStock,
+        weeklyStock,
+      } = apiData;
 
       const tickerData = tickersData?.find(
         (company) => company.ticker === values.companyTicker.value,
@@ -1077,4 +1061,30 @@ export const ReportForm = ({
       </div>
     </>
   );
+
+  async function handleApiData(ticker: string, reportId: string) {
+    const { success, data: apiData } = await fetchApiData(ticker);
+
+    if (!success) {
+      throw new Error('Could not fetch api data');
+    }
+
+    const { polygonAnnual, polygonQuarterly, overview, dailyStock } = apiData;
+
+    await insertCache([
+      {
+        user_id: userId,
+        overview: overview,
+        stock: dailyStock,
+        report_id: reportId,
+      },
+    ]);
+
+    setPolygonApi({
+      annual: polygonAnnual,
+      quarterly: polygonQuarterly,
+      stock: dailyStock,
+    });
+    return apiData;
+  }
 };

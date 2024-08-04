@@ -87,6 +87,7 @@ export const OnboardingForm = ({ updateUser }: PageProps) => {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
+
     try {
       const { error } = await updateUser(
         values.companyName,

@@ -3,6 +3,7 @@ import { METRIC_KEYS } from './metricKeys';
 import { createClient } from '@/lib/supabase/server';
 import { MetricsData } from '@/types/metrics';
 import { NextResponse } from 'next/server';
+import { Logger } from 'next-axiom';
 
 const downloadYfinanceData = async (ticker: string, timescale: string) => {
   const keys = Object.values(METRIC_KEYS)
@@ -88,6 +89,8 @@ export async function GET(
   // Get the URL from the request
   const url = new URL(req.url);
 
+  const log = new Logger();
+
   // Get the search params
   const searchParams = new URLSearchParams(url.search);
 
@@ -118,6 +121,11 @@ export async function GET(
         .maybeSingle();
 
       if (error) {
+        log.error('Error occurred', {
+          error,
+          path: 'api/metrics/' + ticker,
+          fnName: 'fetching company by ticker from metrics_cache',
+        });
         throw new Error(
           `Something went wrong when fetching data from cache: ${error}`,
         );
@@ -154,6 +162,11 @@ export async function GET(
     });
 
     if (error) {
+      log.error('Error occurred', {
+        error,
+        path: '/api/metrics/' + ticker,
+        fnName: 'inserting fetched apiData into metrics_cache',
+      });
       throw new Error(
         `Something went wrong when inserting into db: ${error.message}`,
       );
@@ -167,6 +180,10 @@ export async function GET(
       polygonQuarterly: quarterlyData,
     });
   } catch (error) {
+    log.error('Unexpected error occurred', {
+      error,
+      path: '/api/metrics/' + ticker,
+    });
     console.error('Error in GET request:', error);
 
     return NextResponse.json(
