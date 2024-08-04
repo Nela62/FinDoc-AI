@@ -1,3 +1,5 @@
+'use server';
+
 import { Params } from '@/app/api/building-block/utils/blocks';
 import { log } from 'console';
 import { Logger } from 'next-axiom';
@@ -62,6 +64,8 @@ export const waitForJobCompletion = async (jobId: string) => {
 };
 
 export const waitForSecJobCompletion = async (jobId: string) => {
+  'use server';
+
   try {
     while (true) {
       const { status, error } = await fetch(

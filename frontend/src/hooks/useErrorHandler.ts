@@ -12,13 +12,6 @@ import { AuthenticationError } from '@/types/error';
 
 // export type AuthenticationError = BaseError & { status: number; code: string };
 
-const errorMessages: Record<number, string> = {
-  429: 'We are experiencing an unusually high load. Please try again later.',
-  400: 'Invalid credentials',
-  422: 'Account not found. Please sign up instead.',
-  403: 'Your code has expired or is invalid.',
-};
-
 export type ErrorState = {
   hasError: boolean;
   message: string;

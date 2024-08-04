@@ -60,7 +60,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
 import { Feed } from '@/types/alphaVantageApi';
-import { fetchNewsContent, getSecFiling } from './actions';
+import { fetchApiData, fetchNewsContent, getSecFiling } from './actions';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import {
   useFileUrl,
@@ -91,6 +91,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { analytics } from '@/lib/segment';
+import { useReportProgress } from '@/hooks/useReportProgress';
+import { ServerError } from '@/types/error';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -141,8 +143,6 @@ export const ReportForm = ({
   userId: string;
   plan: SubscriptionPlan;
 }) => {
-  const [progress, setProgress] = useState(0);
-  const [progressMessage, setProgressMessage] = useState('');
   const [isOpen, setOpen] = useState(false);
   const [curReportId, setReportId] = useState<string | null>(null);
   const [images, setImages] = useState<Blob[] | null>(null);
@@ -151,6 +151,8 @@ export const ReportForm = ({
     quarterly: null,
     stock: null,
   });
+  const { progress, progressMessage, nextStep, finalStep } =
+    useReportProgress();
 
   const [jobs, setJobs] = useState<Record<string, Job>>({});
 
@@ -160,16 +162,8 @@ export const ReportForm = ({
 
   const router = useRouter();
 
-  const progressValue = 100 / 7;
-
-  const {
-    docxFile,
-    pdfFile,
-    isLoading,
-    generateDocxBlob,
-    generatePdf,
-    targetPrice,
-  } = useDocxGenerator(userId, curReportId);
+  const { isLoading, generateDocxBlob, generatePdf, targetPrice } =
+    useDocxGenerator(userId, curReportId);
 
   const form = useForm<z.infer<typeof reportFormSchema>>({
     resolver: zodResolver(reportFormSchema),
@@ -297,8 +291,6 @@ export const ReportForm = ({
       .sort((a, b) => (a.label > b.label ? 1 : b.label > a.label ? -1 : 0)) ??
     [];
 
-  const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
-
   const baseActions = async (values: z.infer<typeof reportFormSchema>) => {
     try {
       if (!templateConfig) {
@@ -312,7 +304,6 @@ export const ReportForm = ({
 
       // launch the dialog
       setOpen(true);
-      setProgressMessage('Fetching data from APIs...');
 
       // Create a new report and save it to db
       const nanoId = getNanoId();
@@ -337,37 +328,6 @@ export const ReportForm = ({
         throw new Error('An exception occurred when creating a new report.');
       }
 
-      const reportId = res[0].id;
-
-      // Fetch and cache API
-      const apiData = await fetch(`/api/metrics/${values.companyTicker.value}`)
-        .then((res) => res.ok && res.json())
-        .catch((err) => console.error(err));
-
-      const overview = await fetchOverview(values.companyTicker.value);
-
-      const dailyStock = await fetchDailyStock(values.companyTicker.value);
-
-      const weeklyStock = await fetchWeeklyStock(values.companyTicker.value);
-
-      const { yfAnnual, yfQuarterly, polygonAnnual, polygonQuarterly } =
-        apiData;
-
-      await insertCache([
-        {
-          user_id: userId,
-          overview: overview,
-          stock: dailyStock,
-          report_id: reportId,
-        },
-      ]);
-
-      setPolygonApi({
-        annual: polygonAnnual,
-        quarterly: polygonQuarterly,
-        stock: dailyStock,
-      });
-
       const tickerData = tickersData?.find(
         (company) => company.ticker === values.companyTicker.value,
       );
@@ -378,19 +338,16 @@ export const ReportForm = ({
         );
       }
 
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Parsing SEC filings...');
+      const reportId = res[0].id;
 
-      const xmlPath = await getSecFiling(values.companyTicker.value);
+      const apiData = await handleApiData(values.companyTicker.value, reportId);
 
-      const xml = await supabase.storage
-        .from('sec-filings')
-        .download(xmlPath)
-        .then((res) => res.data?.text());
+      const { yfAnnual, yfQuarterly, overview, dailyStock, weeklyStock } =
+        apiData;
+
+      const xml = await handleSecFiling(values.companyTicker.value);
 
       // Fetch web data
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Fetching web news...');
       const news = await fetchAllNews(values.companyTicker.value);
 
       const getRecentDevelopmentsContext = async (news: any) => {
@@ -416,7 +373,6 @@ export const ReportForm = ({
 
         return JSON.stringify(context);
       };
-      console.log(news);
 
       let newsContext = '';
 
@@ -452,8 +408,8 @@ export const ReportForm = ({
           plan,
           apiData: {
             overview,
-            yfAnnual: apiData.yfAnnual,
-            yfQuarterly: apiData.yfQuarterly,
+            yfAnnual: yfAnnual,
+            yfQuarterly: yfQuarterly,
             dailyStock: dailyStock,
             weeklyStock: weeklyStock,
           },
@@ -468,10 +424,10 @@ export const ReportForm = ({
         companyName: tickerData.company_name,
         apiData: {
           overview,
-          yfAnnual: apiData.yfAnnual,
-          yfQuarterly: apiData.yfQuarterly,
-          dailyStock: dailyStock,
-          weeklyStock: weeklyStock,
+          yfAnnual,
+          yfQuarterly,
+          dailyStock,
+          weeklyStock,
         },
         xmlData: xml ?? '',
         newsData: newsContext,
@@ -512,8 +468,7 @@ export const ReportForm = ({
         getFinancialAndRiskAnalysisMetrics(yfAnnual);
 
       // Generate a company overview if any
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Generating company overview...');
+      nextStep();
       const companyOverviewJobId = await createJob(
         {
           blockId: 'company_overview',
@@ -562,9 +517,6 @@ export const ReportForm = ({
       // Get necessary documents and add them to the report library
       return {
         apiData,
-        overview,
-        dailyStock,
-        weeklyStock,
         tickerData,
         reportId,
         templateId: data[0].id,
@@ -608,9 +560,6 @@ export const ReportForm = ({
       // baseActions
       const {
         apiData,
-        overview,
-        dailyStock,
-        weeklyStock,
         tickerData,
         reportId,
         templateId,
@@ -624,18 +573,17 @@ export const ReportForm = ({
       const generatedJson: JSONContent = { type: 'doc', content: [] };
       let generatedContent = '';
 
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Writing report...');
+      nextStep();
 
       const params: Omit<GeneralBlock, 'blockId'> = {
         plan,
         companyName: tickerData.company_name,
         apiData: {
-          overview,
+          overview: apiData.overview,
           yfAnnual: apiData.yfAnnual,
           yfQuarterly: apiData.yfQuarterly,
-          dailyStock: dailyStock,
-          weeklyStock: weeklyStock,
+          dailyStock: apiData.dailyStock,
+          weeklyStock: apiData.weeklyStock,
         },
         xmlData: xml ?? '',
         newsData: newsContext,
@@ -687,8 +635,7 @@ export const ReportForm = ({
       });
 
       // generate a summary if required
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Generating summary...');
+      nextStep();
       const summaryJobId = await createJob(
         {
           blockId: 'executive_summary',
@@ -733,12 +680,12 @@ export const ReportForm = ({
         summary: summary,
       });
 
-      setProgress((state) => state + progressValue);
-      setProgressMessage('Creating pdf file...');
+      nextStep();
 
       setReportId(reportId);
     } catch (err) {
-      if (err instanceof Error) handleError(err);
+      if (err instanceof Error || err instanceof ServerError)
+        handleError(err, !(err instanceof ServerError));
       throw err;
     }
   };
@@ -749,7 +696,7 @@ export const ReportForm = ({
       generateDocxBlob(images)
         .then((blob: Blob) => generatePdf(blob))
         .then(() => {
-          setProgress((state) => state + progressValue);
+          finalStep();
           setOpen(false);
           setSelectedReportId(curReportId);
         });
@@ -764,7 +711,6 @@ export const ReportForm = ({
     generateDocxBlob,
     generatePdf,
     setSelectedReportId,
-    progressValue,
   ]);
 
   const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
@@ -1077,4 +1023,60 @@ export const ReportForm = ({
       </div>
     </>
   );
+
+  async function handleApiData(ticker: string, reportId: string) {
+    const res = await fetchApiData(ticker);
+
+    if (!res.success) {
+      throw new ServerError('Could not fetch api data');
+    }
+
+    const apiData = res.data;
+
+    await insertCache([
+      {
+        user_id: userId,
+        overview: apiData.overview,
+        stock: apiData.dailyStock,
+        report_id: reportId,
+      },
+    ]);
+
+    setPolygonApi({
+      annual: apiData.polygonAnnual,
+      quarterly: apiData.polygonQuarterly,
+      stock: apiData.dailyStock,
+    });
+
+    nextStep();
+
+    return apiData;
+  }
+
+  async function handleSecFiling(ticker: string) {
+    const res = await getSecFiling(ticker);
+
+    if (!res.success) {
+      throw new ServerError('Could not fetch SEC filings');
+    }
+
+    const xmlPath = res.data;
+
+    const xml = await supabase.storage
+      .from('sec-filings')
+      .download(xmlPath)
+      .then((res) => res.data?.text());
+
+    nextStep();
+
+    if (!xml) {
+      log.error('Error occurred', {
+        message: 'Sec filing text is empty',
+        ticker,
+        xmlPath,
+      });
+    }
+
+    return xml;
+  }
 };
