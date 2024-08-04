@@ -296,8 +296,6 @@ export const ReportForm = ({
       .sort((a, b) => (a.label > b.label ? 1 : b.label > a.label ? -1 : 0)) ??
     [];
 
-  const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
-
   const baseActions = async (values: z.infer<typeof reportFormSchema>) => {
     try {
       if (!templateConfig) {
@@ -340,15 +338,8 @@ export const ReportForm = ({
       // Fetch api data
       const apiData = await handleApiData(values.companyTicker.value, reportId);
 
-      const {
-        yfAnnual,
-        yfQuarterly,
-        polygonAnnual,
-        polygonQuarterly,
-        overview,
-        dailyStock,
-        weeklyStock,
-      } = apiData;
+      const { yfAnnual, yfQuarterly, overview, dailyStock, weeklyStock } =
+        apiData;
 
       const tickerData = tickersData?.find(
         (company) => company.ticker === values.companyTicker.value,
@@ -359,8 +350,6 @@ export const ReportForm = ({
           `Company name for ticker ${values.companyTicker.value} was not found.`,
         );
       }
-
-      nextStep();
 
       const xmlPath = await getSecFiling(values.companyTicker.value);
 
@@ -396,7 +385,6 @@ export const ReportForm = ({
 
         return JSON.stringify(context);
       };
-      console.log(news);
 
       let newsContext = '';
 
@@ -1060,22 +1048,23 @@ export const ReportForm = ({
       throw new Error('Could not fetch api data');
     }
 
-    const { polygonAnnual, polygonQuarterly, overview, dailyStock } = apiData;
-
     await insertCache([
       {
         user_id: userId,
-        overview: overview,
-        stock: dailyStock,
+        overview: apiData.overview,
+        stock: apiData.dailyStock,
         report_id: reportId,
       },
     ]);
 
     setPolygonApi({
-      annual: polygonAnnual,
-      quarterly: polygonQuarterly,
-      stock: dailyStock,
+      annual: apiData.polygonAnnual,
+      quarterly: apiData.polygonQuarterly,
+      stock: apiData.dailyStock,
     });
+
+    nextStep();
+
     return apiData;
   }
 };
