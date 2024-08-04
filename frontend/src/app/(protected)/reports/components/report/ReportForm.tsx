@@ -92,6 +92,7 @@ import {
 } from '@/components/ui/tooltip';
 import { analytics } from '@/lib/segment';
 import { useReportProgress } from '@/hooks/useReportProgress';
+import { ServerError } from '@/types/error';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -161,14 +162,8 @@ export const ReportForm = ({
 
   const router = useRouter();
 
-  const {
-    docxFile,
-    pdfFile,
-    isLoading,
-    generateDocxBlob,
-    generatePdf,
-    targetPrice,
-  } = useDocxGenerator(userId, curReportId);
+  const { isLoading, generateDocxBlob, generatePdf, targetPrice } =
+    useDocxGenerator(userId, curReportId);
 
   const form = useForm<z.infer<typeof reportFormSchema>>({
     resolver: zodResolver(reportFormSchema),
@@ -333,14 +328,6 @@ export const ReportForm = ({
         throw new Error('An exception occurred when creating a new report.');
       }
 
-      const reportId = res[0].id;
-
-      // Fetch api data
-      const apiData = await handleApiData(values.companyTicker.value, reportId);
-
-      const { yfAnnual, yfQuarterly, overview, dailyStock, weeklyStock } =
-        apiData;
-
       const tickerData = tickersData?.find(
         (company) => company.ticker === values.companyTicker.value,
       );
@@ -351,15 +338,16 @@ export const ReportForm = ({
         );
       }
 
-      const xmlPath = await getSecFiling(values.companyTicker.value);
+      const reportId = res[0].id;
 
-      const xml = await supabase.storage
-        .from('sec-filings')
-        .download(xmlPath)
-        .then((res) => res.data?.text());
+      const apiData = await handleApiData(values.companyTicker.value, reportId);
+
+      const { yfAnnual, yfQuarterly, overview, dailyStock, weeklyStock } =
+        apiData;
+
+      const xml = await handleSecFiling(values.companyTicker.value);
 
       // Fetch web data
-      nextStep();
       const news = await fetchAllNews(values.companyTicker.value);
 
       const getRecentDevelopmentsContext = async (news: any) => {
@@ -420,8 +408,8 @@ export const ReportForm = ({
           plan,
           apiData: {
             overview,
-            yfAnnual: apiData.yfAnnual,
-            yfQuarterly: apiData.yfQuarterly,
+            yfAnnual: yfAnnual,
+            yfQuarterly: yfQuarterly,
             dailyStock: dailyStock,
             weeklyStock: weeklyStock,
           },
@@ -436,10 +424,10 @@ export const ReportForm = ({
         companyName: tickerData.company_name,
         apiData: {
           overview,
-          yfAnnual: apiData.yfAnnual,
-          yfQuarterly: apiData.yfQuarterly,
-          dailyStock: dailyStock,
-          weeklyStock: weeklyStock,
+          yfAnnual,
+          yfQuarterly,
+          dailyStock,
+          weeklyStock,
         },
         xmlData: xml ?? '',
         newsData: newsContext,
@@ -529,9 +517,6 @@ export const ReportForm = ({
       // Get necessary documents and add them to the report library
       return {
         apiData,
-        overview,
-        dailyStock,
-        weeklyStock,
         tickerData,
         reportId,
         templateId: data[0].id,
@@ -575,9 +560,6 @@ export const ReportForm = ({
       // baseActions
       const {
         apiData,
-        overview,
-        dailyStock,
-        weeklyStock,
         tickerData,
         reportId,
         templateId,
@@ -597,11 +579,11 @@ export const ReportForm = ({
         plan,
         companyName: tickerData.company_name,
         apiData: {
-          overview,
+          overview: apiData.overview,
           yfAnnual: apiData.yfAnnual,
           yfQuarterly: apiData.yfQuarterly,
-          dailyStock: dailyStock,
-          weeklyStock: weeklyStock,
+          dailyStock: apiData.dailyStock,
+          weeklyStock: apiData.weeklyStock,
         },
         xmlData: xml ?? '',
         newsData: newsContext,
@@ -702,7 +684,8 @@ export const ReportForm = ({
 
       setReportId(reportId);
     } catch (err) {
-      if (err instanceof Error) handleError(err);
+      if (err instanceof Error || err instanceof ServerError)
+        handleError(err, !(err instanceof ServerError));
       throw err;
     }
   };
@@ -1042,11 +1025,13 @@ export const ReportForm = ({
   );
 
   async function handleApiData(ticker: string, reportId: string) {
-    const { success, data: apiData } = await fetchApiData(ticker);
+    const res = await fetchApiData(ticker);
 
-    if (!success) {
-      throw new Error('Could not fetch api data');
+    if (!res.success) {
+      throw new ServerError('Could not fetch api data');
     }
+
+    const apiData = res.data;
 
     await insertCache([
       {
@@ -1066,5 +1051,32 @@ export const ReportForm = ({
     nextStep();
 
     return apiData;
+  }
+
+  async function handleSecFiling(ticker: string) {
+    const res = await getSecFiling(ticker);
+
+    if (!res.success) {
+      throw new ServerError('Could not fetch SEC filings');
+    }
+
+    const xmlPath = res.data;
+
+    const xml = await supabase.storage
+      .from('sec-filings')
+      .download(xmlPath)
+      .then((res) => res.data?.text());
+
+    nextStep();
+
+    if (!xml) {
+      log.error('Error occurred', {
+        message: 'Sec filing text is empty',
+        ticker,
+        xmlPath,
+      });
+    }
+
+    return xml;
   }
 };

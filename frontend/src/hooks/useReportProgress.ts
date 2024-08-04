@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const messages = [
   'Fetching data from APIs...',
@@ -18,10 +18,13 @@ export const useReportProgress = () => {
   const [progressMessage, setProgressMessage] = useState(messages[0]);
 
   const nextStep = () => {
-    setStep((val) => (val += 1));
+    setStep((val) => ++val);
     setProgress((val) => val + progressValue);
-    setProgressMessage(messages[step]);
   };
+
+  useEffect(() => {
+    setProgressMessage(messages[step]);
+  }, [step]);
 
   const finalStep = () => {
     setProgress((val) => val + progressValue);
