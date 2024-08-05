@@ -4,13 +4,29 @@ import {
   fetchWeeklyStock,
 } from '@/lib/utils/metrics/financialAPI';
 import { METRIC_KEYS } from './metricKeys';
-import { MetricsData } from '@/types/metrics';
+import { MetricsData, PolygonData } from '@/types/metrics';
 import { TypedSupabaseClient } from '@/types/supabase';
 import { Logger } from 'next-axiom';
 import { ServerError } from '@/types/error';
 import { serviceClient } from '@/lib/supabase/service';
+import {
+  DailyStockData,
+  Overview,
+  WeeklyStockData,
+} from '@/types/alphaVantageApi';
 
 const log = new Logger();
+
+export type ApiData = {
+  yfAnnual: MetricsData;
+  yfQuarterly: MetricsData;
+  ttmData: PolygonData;
+  polygonAnnual: PolygonData;
+  polygonQuarterly: PolygonData;
+  overview: Overview;
+  dailyStock: DailyStockData;
+  weeklyStock: WeeklyStockData;
+};
 
 const downloadYfinanceData = async (ticker: string, timescale: string) => {
   const keys = Object.values(METRIC_KEYS)

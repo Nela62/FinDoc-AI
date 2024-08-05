@@ -1,16 +1,46 @@
 import { Params } from '@/app/api/building-block/utils/blocks';
+import { serviceClient } from '@/lib/supabase/service';
 import { ServerError } from '@/types/error';
 import { Logger } from 'next-axiom';
-import { Dispatch, SetStateAction } from 'react';
 
 export type JobStatus = 'processing' | 'completed' | 'failed' | 'queued';
 
 export type Job = { blockId: string; status: JobStatus; block: string };
 
 const log = new Logger();
+const supabase = serviceClient();
+
+const MAX_CONCURRENT_TASKS = 5;
 
 export const createJob = async (params: Params) => {
   try {
+    const { count } = await supabase
+      .from('ai_jobs')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'processing');
+
+    if (count && count >= MAX_CONCURRENT_TASKS) {
+      // If the limit is reached, add the task to the queue
+      const { data, error } = await supabase
+        .from('ai_jobs')
+        .insert({
+          block_id: params.blockId,
+          status: 'queued',
+        })
+        .select();
+
+      if (error || !data) {
+        log.error('Error creating task:', {
+          error,
+          fnName: 'Fetching ai_jobs in createJob',
+          fnInputs: { params },
+        });
+        throw new ServerError('Error creating an AI job');
+      }
+
+      return data[0].id;
+    }
+
     const { jobId } = await fetch(`/api/building-block`, {
       method: 'POST',
       body: JSON.stringify(params),
