@@ -1,6 +1,7 @@
 import { ServerError } from '@/types/error';
-import { fetchApiData, getSecFiling } from './actions';
+import { fetchApiData, fetchNews, getSecFiling } from './actions';
 import { createClient } from '@/lib/supabase/client';
+import { SearchResult } from 'exa-js';
 
 const supabase = createClient();
 
@@ -69,3 +70,37 @@ export const handleSecFiling = async (
 
   return xml;
 };
+
+export async function handleNews(companyName: string, nextStep: () => void) {
+  const res = await fetchNews(companyName);
+
+  if (!res.success) {
+    throw new ServerError('Could not fetch news');
+  }
+
+  const news = res.data;
+
+  const context = news.map((article: SearchResult) => ({
+    title: article.title,
+    content: article.text,
+    url: article.url,
+    published_date: article.publishedDate,
+  }));
+
+  const sources = [];
+  sources.push(
+    `[1] ${companyName}, "Form 10-K," Securities and Exchance Comission, Washington, D.C., 2024.`,
+  );
+
+  news.map((article: SearchResult) => {
+    sources.push(
+      `[${sources.length + 1}] ${article.author}, "${article.title}"${
+        article.publishedDate ? ', ' + article.publishedDate : ''
+      }. Available at ${article.url}`,
+    );
+  });
+
+  nextStep();
+
+  return { sources, context };
+}

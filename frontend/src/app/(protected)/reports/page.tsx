@@ -16,7 +16,7 @@ import {
 } from '@/lib/queries';
 import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
-import { NewReport } from './Component';
+import { NewReport } from './components/NewReport';
 
 export const metadata: Metadata = {
   title: 'Findoc - Create New Report',

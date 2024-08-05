@@ -35,17 +35,7 @@ import { SquarePen, Wand2Icon } from 'lucide-react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import {
-  downloadPublicCompanyImgs,
-  fetchAllNews,
-  getRecommendation,
-} from '../../utils/fetchAPI';
-import {
-  fetchDailyStock,
-  fetchOverview,
-  fetchWeeklyStock,
-} from '@/lib/utils/metrics/financialAPI';
-import { TemplateConfig } from '../../Component';
+import { TemplateConfig } from '../NewReport';
 import { JSONContent } from '@tiptap/core';
 import { capitalizeWords, markdownToJson } from '@/lib/utils/formatText';
 import {
@@ -59,13 +49,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
-import { Feed } from '@/types/alphaVantageApi';
-import {
-  fetchApiData,
-  fetchNews,
-  fetchNewsContent,
-  getSecFiling,
-} from './utils/actions';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import {
   useFileUrl,
@@ -73,11 +56,6 @@ import {
 } from '@supabase-cache-helpers/storage-react-query';
 import { GeneralBlock, Block } from '@/app/api/building-block/utils/blocks';
 import { SubscriptionPlan } from '@/types/subscription';
-import { getTopBarMetrics } from '@/lib/utils/metrics/topBarMetrics';
-import { getNWeeksStock } from '@/lib/utils/metrics/stock';
-import { getSidebarMetrics } from '@/lib/utils/metrics/sidebarMetrics';
-import { getGrowthAndValuationAnalysisMetrics } from '@/lib/utils/metrics/growthAndValuationAnalysisMetrics';
-import { getFinancialAndRiskAnalysisMetrics } from '@/lib/utils/metrics/financialAndRiskAnalysisMetrics';
 import {
   Job,
   createJob,
@@ -98,10 +76,16 @@ import {
 import { analytics } from '@/lib/segment';
 import { useReportProgress } from '@/hooks/useReportProgress';
 import { ServerError } from '@/types/error';
-import { SearchResult } from 'exa-js';
 import { createNewReport, getTickerData } from './utils/reportUtils';
 import { useReportMutations } from '@/hooks/useReportMutations';
-import { handleApiData, handleSecFiling } from './utils/apiHandlers';
+import {
+  handleApiData,
+  handleNews,
+  handleSecFiling,
+} from './utils/apiHandlers';
+import { generateMetrics } from '@/lib/utils/metrics/generateMetrics';
+import { section_ids } from './utils/generateReportSections';
+import { downloadPublicCompanyImgs } from './utils/actions';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -302,33 +286,28 @@ export const ReportForm = ({
         userId: userId,
       });
 
-      // launch the dialog
       setOpen(true);
 
       const reportId = await createNewReport(values, userId, insertNewReport);
-
       const tickerData = getTickerData(values.companyTicker.value, tickersData);
 
-      const apiData = await handleApiData(
-        values.companyTicker.value,
-        reportId,
-        userId,
-        setPolygonApi,
-        nextStep,
-      );
+      const [apiData, xml, { sources, context: newsContext }] =
+        await Promise.all([
+          handleApiData(
+            values.companyTicker.value,
+            reportId,
+            userId,
+            setPolygonApi,
+            nextStep,
+          ),
+          handleSecFiling(values.companyTicker.value, nextStep, log),
+          handleNews(tickerData.company_name, nextStep),
+        ]);
 
       const { yfAnnual, yfQuarterly, overview, dailyStock, weeklyStock } =
         apiData;
 
-      const xml = await handleSecFiling(
-        values.companyTicker.value,
-        nextStep,
-        log,
-      );
-
-      const { sources, context: newsContext } = await handleNews(
-        tickerData.company_name,
-      );
+      console.log('got api data');
 
       const { recommendation, targetPrice } = await getRecAndTargetPrice(
         values.recommendation,
@@ -337,40 +316,20 @@ export const ReportForm = ({
         {
           blockId: 'targetprice_recommendation',
           plan,
-          apiData: {
-            overview,
-            yfAnnual: yfAnnual,
-            yfQuarterly: yfQuarterly,
-            dailyStock: dailyStock,
-            weeklyStock: weeklyStock,
-          },
+          apiData,
           recommendation: values.recommendation,
           companyName: tickerData.company_name,
         },
         setJobs,
       );
 
-      const params: Omit<GeneralBlock, 'blockId'> = {
-        plan,
-        companyName: tickerData.company_name,
-        apiData: {
-          overview,
-          yfAnnual,
-          yfQuarterly,
-          dailyStock,
-          weeklyStock,
-        },
-        xmlData: xml ?? '',
-        newsData: newsContext,
-        customPrompt: '',
-      };
+      console.log('got recommendation and target price');
 
       const financialStrength =
         values.financialStrength && values.financialStrength !== 'Auto'
           ? values.financialStrength
           : 'Medium';
 
-      // Update the report with rec and fin strength
       await updateReport({
         id: reportId,
         recommendation: recommendation,
@@ -378,44 +337,39 @@ export const ReportForm = ({
         financial_strength: financialStrength,
       });
 
-      const topBarMetrics = getTopBarMetrics(
-        overview,
-        targetPrice,
-        getNWeeksStock(dailyStock),
-        yfQuarterly,
-      );
+      console.log('updated report');
 
-      // Generate metrics
-      const sidebarMetrics = getSidebarMetrics(
-        overview,
-        getNWeeksStock(dailyStock),
-        targetPrice,
-        financialStrength,
-        yfQuarterly,
-      );
-      const growthAndValuationAnalysisMetrics =
-        getGrowthAndValuationAnalysisMetrics(yfAnnual, dailyStock);
-      const financialAndRiskAnalysisMetrics =
-        getFinancialAndRiskAnalysisMetrics(yfAnnual);
-
-      // Generate a company overview if any
+      const metrics = generateMetrics(apiData, targetPrice, financialStrength);
       nextStep();
+
+      console.log('generated metrics');
+
       const companyOverviewJobId = await createJob(
         {
           blockId: 'company_overview',
-          ...params,
+          plan,
+          companyName: tickerData.company_name,
+          apiData: apiData,
+          xmlData: xml ?? '',
+          newsData: newsContext,
+          customPrompt: '',
         },
         setJobs,
       );
 
       const companyOverview = await waitForJobCompletion(companyOverviewJobId);
 
-      await downloadPublicCompanyImgs(
+      nextStep();
+
+      const { success } = await downloadPublicCompanyImgs(
         tickerData.cik,
         tickersData.filter((ticker) => ticker.cik === tickerData.cik),
         tickerData.website,
-        supabase,
       );
+
+      if (!success) {
+        throw new Error('Could not download public company images.');
+      }
 
       // Store template config in db
       const data = await insertTemplate([
@@ -432,10 +386,7 @@ export const ReportForm = ({
               ? null
               : templateConfig.authorCompanyLogo,
           metrics: {
-            topBarMetrics,
-            sidebarMetrics,
-            growthAndValuationAnalysisMetrics,
-            financialAndRiskAnalysisMetrics,
+            ...metrics,
             sources,
           },
         },
@@ -458,7 +409,6 @@ export const ReportForm = ({
         xml,
       };
     } catch (err) {
-      if (err instanceof Error) handleError(err);
       throw err;
     }
   };
@@ -499,10 +449,10 @@ export const ReportForm = ({
         xml,
       } = await baseActions(values);
 
+      console.log('baseActions done');
+
       const generatedJson: JSONContent = { type: 'doc', content: [] };
       let generatedContent = '';
-
-      nextStep();
 
       const params: Omit<GeneralBlock, 'blockId'> = {
         plan,
@@ -640,7 +590,6 @@ export const ReportForm = ({
     generateDocxBlob,
     generatePdf,
     setSelectedReportId,
-    finalStep,
   ]);
 
   const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
@@ -953,38 +902,4 @@ export const ReportForm = ({
       </div>
     </>
   );
-
-  async function handleNews(companyName: string) {
-    const res = await fetchNews(companyName);
-
-    if (!res.success) {
-      throw new ServerError('Could not fetch news');
-    }
-
-    const news = res.data;
-
-    const context = news.map((article: SearchResult) => ({
-      title: article.title,
-      content: article.text,
-      url: article.url,
-      published_date: article.publishedDate,
-    }));
-
-    const sources = [];
-    sources.push(
-      `[1] ${companyName}, "Form 10-K," Securities and Exchance Comission, Washington, D.C., 2024.`,
-    );
-
-    news.map((article: SearchResult) => {
-      sources.push(
-        `[${sources.length + 1}] ${article.author}, "${article.title}"${
-          article.publishedDate ? ', ' + article.publishedDate : ''
-        }. Available at ${article.url}`,
-      );
-    });
-
-    nextStep();
-
-    return { sources, context };
-  }
 };

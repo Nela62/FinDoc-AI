@@ -17,14 +17,14 @@ export type FinancialStrength =
 
 export type ReportStatus = 'Draft' | 'In Review' | 'Approved' | 'Published';
 
-type EquityAnalystReport = {
+export type EquityAnalystReport = Report & {
   type: 'Equity Analyst Report';
   recommendation: Recommendation;
   targetPrice: number;
   financialStrength: FinancialStrength;
 };
 
-type EarningsCallNote = {
+export type EarningsCallNote = Report & {
   type: 'Earnings Call Note';
 };
 
@@ -39,4 +39,4 @@ export type Report = {
   status: ReportStatus;
   createdAt: string;
   updatedAt: string;
-} & (EquityAnalystReport | EarningsCallNote);
+};

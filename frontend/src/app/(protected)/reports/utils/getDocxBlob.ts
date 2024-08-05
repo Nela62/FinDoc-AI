@@ -1,5 +1,5 @@
 import { TEMPLATES } from '@/lib/templates';
-import { TemplateConfig, TemplateData } from '../Component';
+import { TemplateConfig, TemplateData } from '../components/NewReport';
 import { OVERVIEW } from '@/lib/data/overview_ibm';
 import { JSONContent } from '@tiptap/core';
 import { AnalysisMetrics } from '@/lib/templates/docxTables/financialAnalysisTable';

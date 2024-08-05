@@ -6,7 +6,7 @@ import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import { useFileUrl } from '@supabase-cache-helpers/storage-react-query';
 import { createClient } from '@/lib/supabase/client';
-import { TemplateData } from '../../Component';
+import { TemplateData } from '../NewReport';
 import { PdfToolbar } from '@/components/pdf-viewer/Toolbar';
 
 export const TemplatePreview = ({
