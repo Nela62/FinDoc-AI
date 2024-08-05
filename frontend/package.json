@@ -97,6 +97,7 @@
     "date-fns": "^3.6.0",
     "docx": "^8.5.0",
     "embla-carousel-react": "^8.1.6",
+    "exa-js": "^1.0.14",
     "fast-xml-parser": "^4.4.0",
     "fuse.js": "^7.0.0",
     "html-to-image": "^1.11.11",

@@ -60,7 +60,12 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
 import { Feed } from '@/types/alphaVantageApi';
-import { fetchApiData, fetchNewsContent, getSecFiling } from './actions';
+import {
+  fetchApiData,
+  fetchNews,
+  fetchNewsContent,
+  getSecFiling,
+} from './actions';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import {
   useFileUrl,
@@ -93,6 +98,7 @@ import {
 import { analytics } from '@/lib/segment';
 import { useReportProgress } from '@/hooks/useReportProgress';
 import { ServerError } from '@/types/error';
+import { SearchResult } from 'exa-js';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -347,57 +353,9 @@ export const ReportForm = ({
 
       const xml = await handleSecFiling(values.companyTicker.value);
 
-      // Fetch web data
-      const news = await fetchAllNews(values.companyTicker.value);
-
-      const getRecentDevelopmentsContext = async (news: any) => {
-        let context: Record<string, string>[] = [];
-        const promises = Object.keys(news).map((key: string) => {
-          return Promise.all(
-            news[key as keyof typeof news].feed
-              ?.slice(0, 15)
-              .map(async (f: Feed) => {
-                const content = await fetchNewsContent(f.url);
-                const obj = {
-                  title: f.title,
-                  summary: f.summary,
-                  time_published: f.time_published,
-                  content: content ?? '',
-                };
-                context.push(obj);
-              }),
-          );
-        });
-
-        await Promise.all(promises);
-
-        return JSON.stringify(context);
-      };
-
-      let newsContext = '';
-
-      try {
-        newsContext = await getRecentDevelopmentsContext(news);
-      } catch (err) {
-        log.error('Error when generating news context', {
-          error: err instanceof Error ? err.message : '',
-        });
-      }
-
-      const sources = [];
-      sources.push(
-        `[1] ${tickerData.company_name}, "Form 10-K," Securities and Exchance Comission, Washington, D.C., 2024.`,
+      const { sources, context: newsContext } = await handleNews(
+        tickerData.company_name,
       );
-
-      Object.entries(news).map(([key, value]) => {
-        value.feed?.slice(0, 15).forEach((n: Feed) => {
-          sources.push(
-            `[${sources.length + 1}] ${n.authors[0]}, "${n.title}", ${
-              n.source
-            }, ${n.time_published.slice(0, 4)}. Available at ${n.url}`,
-          );
-        });
-      });
 
       const { recommendation, targetPrice } = await getRecAndTargetPrice(
         values.recommendation,
@@ -523,7 +481,6 @@ export const ReportForm = ({
         companyOverview: companyOverview,
         recommendation,
         targetPrice,
-        news,
         newsContext,
         xml,
       };
@@ -565,7 +522,6 @@ export const ReportForm = ({
         templateId,
         recommendation,
         targetPrice,
-        news,
         newsContext,
         xml,
       } = await baseActions(values);
@@ -1078,5 +1034,39 @@ export const ReportForm = ({
     }
 
     return xml;
+  }
+
+  async function handleNews(companyName: string) {
+    const res = await fetchNews(companyName);
+
+    if (!res.success) {
+      throw new ServerError('Could not fetch news');
+    }
+
+    const news = res.data;
+
+    const context = news.map((article: SearchResult) => ({
+      title: article.title,
+      content: article.text,
+      url: article.url,
+      published_date: article.publishedDate,
+    }));
+
+    const sources = [];
+    sources.push(
+      `[1] ${companyName}, "Form 10-K," Securities and Exchance Comission, Washington, D.C., 2024.`,
+    );
+
+    news.map((article: SearchResult) => {
+      sources.push(
+        `[${sources.length + 1}] ${article.author}, "${article.title}"${
+          article.publishedDate ? ', ' + article.publishedDate : ''
+        }. Available at ${article.url}`,
+      );
+    });
+
+    nextStep();
+
+    return { sources, context };
   }
 };
