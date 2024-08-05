@@ -667,6 +667,7 @@ export const ReportForm = ({
     generateDocxBlob,
     generatePdf,
     setSelectedReportId,
+    finalStep,
   ]);
 
   const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
