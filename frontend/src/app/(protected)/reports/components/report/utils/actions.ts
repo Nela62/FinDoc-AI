@@ -11,7 +11,7 @@ import {
 } from '@/lib/utils/metrics/financialAPI';
 import { MetricsData } from '@/types/metrics';
 import { Logger } from 'next-axiom';
-import { METRIC_KEYS } from './metricKeys';
+import { METRIC_KEYS } from '../metricKeys';
 import { createClient } from '@/lib/supabase/server';
 import { sub } from 'date-fns';
 

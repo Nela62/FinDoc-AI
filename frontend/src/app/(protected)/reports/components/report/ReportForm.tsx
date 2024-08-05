@@ -65,7 +65,7 @@ import {
   fetchNews,
   fetchNewsContent,
   getSecFiling,
-} from './actions';
+} from './utils/actions';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import {
   useFileUrl,
@@ -99,6 +99,9 @@ import { analytics } from '@/lib/segment';
 import { useReportProgress } from '@/hooks/useReportProgress';
 import { ServerError } from '@/types/error';
 import { SearchResult } from 'exa-js';
+import { createNewReport, getTickerData } from './utils/reportUtils';
+import { useReportMutations } from '@/hooks/useReportMutations';
+import { handleApiData, handleSecFiling } from './utils/apiHandlers';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -112,15 +115,24 @@ export const reportFormSchema = z.object({
   financialStrength: z.string().optional(),
 });
 
-const section_ids = [
-  'investment_thesis',
-  'business_description',
-  'recent_developments',
-  'management',
-  'risks',
-  'financial_analysis',
-  'valuation',
-];
+export interface TickerData {
+  ticker: string;
+  company_name: string;
+  stock_name: string;
+  cik: string;
+  website: string;
+  currency: string;
+  exchange: string;
+  country: string;
+}
+
+export interface ApiData {
+  yfAnnual: any;
+  yfQuarterly: any;
+  overview: any;
+  dailyStock: any;
+  weeklyStock: any;
+}
 
 const titles = {
   investment_thesis: 'Investment Thesis',
@@ -186,11 +198,13 @@ export const ReportForm = ({
 
   const { data: reportsData } = useQuery(fetchAllReports(supabase));
 
-  const { mutateAsync: insertCache } = useInsertMutation(
-    supabase.from('api_cache'),
-    ['id'],
-    'id',
-  );
+  const {
+    insertNewReport,
+    updateReport,
+    insertTemplate,
+    updateTemplate,
+    insertCache,
+  } = useReportMutations();
 
   useEffect(() => {
     const pollJobStatuses = async () => {
@@ -264,30 +278,6 @@ export const ReportForm = ({
 
   // TODO: sort by cap instead
 
-  const { mutateAsync: insertNewReport } = useInsertMutation(
-    supabase.from('reports'),
-    ['id'],
-    'id, url',
-  );
-
-  const { mutateAsync: updateReport } = useUpdateMutation(
-    supabase.from('reports'),
-    ['id'],
-    'id, url',
-  );
-
-  const { mutateAsync: insertTemplate } = useInsertMutation(
-    supabase.from('report_template'),
-    ['id'],
-    'id',
-  );
-
-  const { mutateAsync: updateTemplate } = useUpdateMutation(
-    supabase.from('report_template'),
-    ['id'],
-    'id',
-  );
-
   const tickers: Option[] =
     tickersData
       ?.map((ticker) => ({
@@ -303,6 +293,10 @@ export const ReportForm = ({
         throw new Error('Template config is not ready yet.');
       }
 
+      if (!tickersData) {
+        throw new Error('Tickers data is not ready yet.');
+      }
+
       log.info('Generating new report', {
         ticker: values.companyTicker.value,
         userId: userId,
@@ -311,47 +305,26 @@ export const ReportForm = ({
       // launch the dialog
       setOpen(true);
 
-      // Create a new report and save it to db
-      const nanoId = getNanoId();
+      const reportId = await createNewReport(values, userId, insertNewReport);
 
-      const res = await insertNewReport([
-        {
-          title: `${values.companyTicker.value} - ${
-            values.reportType
-          } - ${format(new Date(), 'd MMM yyyy')}`,
-          company_ticker: values.companyTicker.value,
-          url: nanoId,
-          type: values.reportType,
-          recommendation: values.recommendation,
-          targetprice: values.targetPrice,
-          status: 'Draft',
-          user_id: userId,
-          section_ids: section_ids,
-        },
-      ]);
+      const tickerData = getTickerData(values.companyTicker.value, tickersData);
 
-      if (!res) {
-        throw new Error('An exception occurred when creating a new report.');
-      }
-
-      const tickerData = tickersData?.find(
-        (company) => company.ticker === values.companyTicker.value,
+      const apiData = await handleApiData(
+        values.companyTicker.value,
+        reportId,
+        userId,
+        setPolygonApi,
+        nextStep,
       );
-
-      if (!tickerData || !tickersData) {
-        throw new Error(
-          `Company name for ticker ${values.companyTicker.value} was not found.`,
-        );
-      }
-
-      const reportId = res[0].id;
-
-      const apiData = await handleApiData(values.companyTicker.value, reportId);
 
       const { yfAnnual, yfQuarterly, overview, dailyStock, weeklyStock } =
         apiData;
 
-      const xml = await handleSecFiling(values.companyTicker.value);
+      const xml = await handleSecFiling(
+        values.companyTicker.value,
+        nextStep,
+        log,
+      );
 
       const { sources, context: newsContext } = await handleNews(
         tickerData.company_name,
@@ -590,8 +563,8 @@ export const ReportForm = ({
         );
       });
 
-      // generate a summary if required
       nextStep();
+      // generate a summary if required
       const summaryJobId = await createJob(
         {
           blockId: 'executive_summary',
@@ -980,62 +953,6 @@ export const ReportForm = ({
       </div>
     </>
   );
-
-  async function handleApiData(ticker: string, reportId: string) {
-    const res = await fetchApiData(ticker);
-
-    if (!res.success) {
-      throw new ServerError('Could not fetch api data');
-    }
-
-    const apiData = res.data;
-
-    await insertCache([
-      {
-        user_id: userId,
-        overview: apiData.overview,
-        stock: apiData.dailyStock,
-        report_id: reportId,
-      },
-    ]);
-
-    setPolygonApi({
-      annual: apiData.polygonAnnual,
-      quarterly: apiData.polygonQuarterly,
-      stock: apiData.dailyStock,
-    });
-
-    nextStep();
-
-    return apiData;
-  }
-
-  async function handleSecFiling(ticker: string) {
-    const res = await getSecFiling(ticker);
-
-    if (!res.success) {
-      throw new ServerError('Could not fetch SEC filings');
-    }
-
-    const xmlPath = res.data;
-
-    const xml = await supabase.storage
-      .from('sec-filings')
-      .download(xmlPath)
-      .then((res) => res.data?.text());
-
-    nextStep();
-
-    if (!xml) {
-      log.error('Error occurred', {
-        message: 'Sec filing text is empty',
-        ticker,
-        xmlPath,
-      });
-    }
-
-    return xml;
-  }
 
   async function handleNews(companyName: string) {
     const res = await fetchNews(companyName);
