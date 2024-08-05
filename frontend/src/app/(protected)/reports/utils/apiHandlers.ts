@@ -1,24 +1,20 @@
 import { ServerError } from '@/types/error';
-import { fetchApiData, fetchNews, getSecFiling } from './actions';
-import { createClient } from '@/lib/supabase/client';
 import { SearchResult } from 'exa-js';
+import { TypedSupabaseClient } from '@/types/supabase';
+import { fetchApiData } from './apiData';
+import { fetchSecFiling } from './secFilings';
+import { Logger } from 'next-axiom';
+import { fetchNews } from './news';
 
-const supabase = createClient();
+const log = new Logger();
 
-export const handleApiData = async (
+export const getApiData = async (
   ticker: string,
   reportId: string,
   userId: string,
-  setPolygonApi: (data: any) => void,
-  nextStep: () => void,
+  supabase: TypedSupabaseClient,
 ) => {
-  const res = await fetchApiData(ticker);
-
-  if (!res.success) {
-    throw new ServerError('Could not fetch api data');
-  }
-
-  const apiData = res.data;
+  const apiData = await fetchApiData(ticker, supabase);
 
   await supabase.from('api_cache').insert([
     {
@@ -29,27 +25,14 @@ export const handleApiData = async (
     },
   ]);
 
-  setPolygonApi({
-    annual: apiData.polygonAnnual,
-    quarterly: apiData.polygonQuarterly,
-    stock: apiData.dailyStock,
-  });
-
-  nextStep();
-
   return apiData;
 };
 
-export const handleSecFiling = async (
+export const getSecFiling = async (
   ticker: string,
-  nextStep: () => void,
-  log: any,
+  supabase: TypedSupabaseClient,
 ) => {
-  const res = await getSecFiling(ticker);
-
-  if (!res.success) {
-    throw new ServerError('Could not fetch SEC filings');
-  }
+  const res = await fetchSecFiling(ticker);
 
   const xmlPath = res.data;
 
@@ -57,8 +40,6 @@ export const handleSecFiling = async (
     .from('sec-filings')
     .download(xmlPath)
     .then((res) => res.data?.text());
-
-  nextStep();
 
   if (!xml) {
     log.error('Error occurred', {
@@ -71,14 +52,8 @@ export const handleSecFiling = async (
   return xml;
 };
 
-export async function handleNews(companyName: string, nextStep: () => void) {
-  const res = await fetchNews(companyName);
-
-  if (!res.success) {
-    throw new ServerError('Could not fetch news');
-  }
-
-  const news = res.data;
+export async function getNews(companyName: string) {
+  const news = await fetchNews(companyName);
 
   const context = news.map((article: SearchResult) => ({
     title: article.title,
@@ -99,8 +74,6 @@ export async function handleNews(companyName: string, nextStep: () => void) {
       }. Available at ${article.url}`,
     );
   });
-
-  nextStep();
 
   return { sources, context };
 }

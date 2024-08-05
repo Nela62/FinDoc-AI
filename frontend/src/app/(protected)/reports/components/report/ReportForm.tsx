@@ -76,15 +76,15 @@ import {
 import { analytics } from '@/lib/segment';
 import { useReportProgress } from '@/hooks/useReportProgress';
 import { ServerError } from '@/types/error';
-import { createNewReport, getTickerData } from './utils/reportUtils';
+import { createNewReport, getTickerData } from '../../utils/reportUtils';
 import { useReportMutations } from '@/hooks/useReportMutations';
 import {
   handleApiData,
   handleNews,
   handleSecFiling,
-} from './utils/apiHandlers';
+} from '../../utils/apiHandlers';
 import { generateMetrics } from '@/lib/utils/metrics/generateMetrics';
-import { section_ids } from './utils/generateReportSections';
+import { section_ids } from '../../utils/generateReportSections';
 import { downloadPublicCompanyImgs } from './utils/actions';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
@@ -98,17 +98,6 @@ export const reportFormSchema = z.object({
     .optional(),
   financialStrength: z.string().optional(),
 });
-
-export interface TickerData {
-  ticker: string;
-  company_name: string;
-  stock_name: string;
-  cik: string;
-  website: string;
-  currency: string;
-  exchange: string;
-  country: string;
-}
 
 export interface ApiData {
   yfAnnual: any;

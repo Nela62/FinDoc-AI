@@ -10,6 +10,13 @@ const messages = [
   'Creating pdf file...',
 ];
 
+const newMessages = [
+  'Aggregating data from SEC filings, earnings call transcripts, and web news...',
+  'Calculating target price and generating recommendation...',
+  'Generating report (X out of Y sections complete)...',
+  'Creating pdf file...',
+];
+
 const progressValue = 100 / messages.length;
 
 export const useReportProgress = () => {
