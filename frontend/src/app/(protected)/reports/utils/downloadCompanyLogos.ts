@@ -1,21 +1,13 @@
 'use server';
 
-import Exa from 'exa-js';
-
 import { serviceClient } from '@/lib/supabase/service';
-import {
-  fetchDailyStock,
-  fetchOverview,
-  fetchWeeklyStock,
-} from '@/lib/utils/metrics/financialAPI';
-import { MetricsData } from '@/types/metrics';
 import { Logger } from 'next-axiom';
-import { createClient } from '@/lib/supabase/server';
-import { sub } from 'date-fns';
+import { ServerError } from '@/types/error';
+import { TickerData } from './reportUtils';
 
 const log = new Logger();
 
-export const cleanLink = (link: string) => {
+export const cleanLink = (link: string): string => {
   let cleanLink = link;
 
   if (cleanLink.startsWith('http://')) {
@@ -63,27 +55,14 @@ const uploadPublicCompanyImg = async (
   }
 };
 
-export const downloadPublicCompanyImgs = async (
-  cik: string,
-  tickers: {
-    id: string;
-    cik: string;
-    company_name: string;
-    stock_name: string;
-    label: string;
-    ticker: string;
-    website: string | null;
-  }[],
-  orgId: string | null,
-): Promise<{ success: boolean; error?: string }> => {
-  'use server';
-
+export const downloadPublicCompanyImgs = async (tickerData: TickerData) => {
   try {
     const supabase = serviceClient();
+    let orgId = tickerData.website;
 
     if (!orgId) {
       orgId = await fetch(
-        `https://api.brandfetch.io/v2/search/${tickers[0].company_name}`,
+        `https://api.brandfetch.io/v2/search/${tickerData.company_name}`,
         {
           method: 'GET',
           headers: {
@@ -104,18 +83,16 @@ export const downloadPublicCompanyImgs = async (
           log.error('Error occurred', {
             error: err,
             fnName: 'fetching orgId from brandfetch',
-            companyName: tickers[0].company_name,
+            companyName: tickerData.company_name,
           });
           throw err;
         });
 
       if (orgId) {
-        const newTickers = tickers.map((ticker) => ({
-          id: ticker.id,
-          website: orgId,
-        }));
-
-        const { error } = await supabase.from('companies').update(newTickers);
+        const { error } = await supabase
+          .from('companies')
+          .update({ website: orgId })
+          .eq('id', tickerData.id);
 
         if (error) {
           log.error('Error updating company websites:', error);
@@ -129,17 +106,28 @@ export const downloadPublicCompanyImgs = async (
       }
     }
 
-    const images = await fetch(
-      `https://api.brandfetch.io/v2/brands/${cleanLink(orgId)}`,
-      {
-        method: 'GET',
-        headers: {
-          accept: 'application/json',
-          Authorization: 'Bearer ' + process.env.NEXT_PUBLIC_BRANDFETCH_API_KEY,
-        },
+    const link = await cleanLink(orgId);
+
+    const images = await fetch(`https://api.brandfetch.io/v2/brands/${link}`, {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        Authorization: 'Bearer ' + process.env.BRANDFETCH_API_KEY,
       },
-    )
-      .then((res) => res.json())
+    })
+      .then((res) => {
+        if (!res.ok) {
+          log.error('HTTP error!', {
+            status: res.status,
+            res: res.body,
+            fnName: 'fetching brandfetch images',
+            link: cleanLink(orgId),
+          });
+          console.log(res);
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .catch((err: Error) => {
         log.error('Error occurred', {
           error: err,
@@ -147,7 +135,7 @@ export const downloadPublicCompanyImgs = async (
           orgId,
           cleanedOrgId: cleanLink(orgId ?? ''),
         });
-        throw new Error(
+        throw new ServerError(
           "Error when fetching public company's logos: " + err.message,
         );
       });
@@ -160,7 +148,7 @@ export const downloadPublicCompanyImgs = async (
         img.formats[0];
       const result = await uploadPublicCompanyImg(
         format.src,
-        cik,
+        tickerData.cik,
         format.format,
         `${img.theme}-${img.type}`,
         index,
@@ -170,7 +158,7 @@ export const downloadPublicCompanyImgs = async (
         log.error('Error occurred', {
           error: result.error,
           fnName: 'uploading public company images',
-          cik,
+          tickerData,
           img,
         });
         console.error(`Failed to upload image: ${result.error}`);
@@ -178,19 +166,12 @@ export const downloadPublicCompanyImgs = async (
     });
 
     await Promise.all(uploadPromises);
-
-    return { success: true };
   } catch (err) {
     log.error('Error occurred', {
       error: err,
       fnName: 'downloading public company images',
-      cik,
-      tickers,
+      tickerData,
     });
-    if (err instanceof Error)
-      throw new Error(
-        "Error when fetching public company's logos: " + err.message,
-      );
-    return { success: false };
+    throw new ServerError("Error when fetching public company's logos");
   }
 };

@@ -54,18 +54,10 @@ import {
   useFileUrl,
   useUpload,
 } from '@supabase-cache-helpers/storage-react-query';
-import { GeneralBlock, Block } from '@/app/api/building-block/utils/blocks';
 import { SubscriptionPlan } from '@/types/subscription';
-import {
-  Job,
-  createJob,
-  waitForJobCompletion,
-  waitForAllJobs,
-} from '@/lib/utils/jobs';
 import { useRouter } from 'next/navigation';
 import { useLogger } from 'next-axiom';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
-import { getRecAndTargetPrice } from './utils';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -76,16 +68,13 @@ import {
 import { analytics } from '@/lib/segment';
 import { useReportProgress } from '@/hooks/useReportProgress';
 import { ServerError } from '@/types/error';
-import { createNewReport, getTickerData } from '../../utils/reportUtils';
 import { useReportMutations } from '@/hooks/useReportMutations';
-import {
-  handleApiData,
-  handleNews,
-  handleSecFiling,
-} from '../../utils/apiHandlers';
 import { generateMetrics } from '@/lib/utils/metrics/generateMetrics';
 import { section_ids } from '../../utils/generateReportSections';
-import { downloadPublicCompanyImgs } from './utils/actions';
+import {
+  InitializeReportDataProps,
+  InitializeReportDataResponse,
+} from '../../utils/initializeReportData';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -126,6 +115,8 @@ export const ReportForm = ({
   setReportType,
   userId,
   plan,
+  initializeReportData,
+  generateReport,
 }: {
   setIsTemplateCustomization: Dispatch<SetStateAction<boolean>>;
   setSelectedReportId: Dispatch<SetStateAction<string | null>>;
@@ -133,6 +124,14 @@ export const ReportForm = ({
   setReportType: Dispatch<SetStateAction<string>>;
   userId: string;
   plan: SubscriptionPlan;
+  initializeReportData: (
+    props: InitializeReportDataProps,
+  ) => Promise<InitializeReportDataResponse>;
+  generateReport: (
+    values: z.infer<typeof reportFormSchema>,
+    plan: SubscriptionPlan,
+    templateConfig: TemplateConfig,
+  ) => Promise<void>;
 }) => {
   const [isOpen, setOpen] = useState(false);
   const [curReportId, setReportId] = useState<string | null>(null);
@@ -144,8 +143,6 @@ export const ReportForm = ({
   });
   const { progress, progressMessage, nextStep, finalStep } =
     useReportProgress();
-
-  const [jobs, setJobs] = useState<Record<string, Job>>({});
 
   const { error, handleError, clearError } = useErrorHandler();
 
@@ -178,32 +175,6 @@ export const ReportForm = ({
     updateTemplate,
     insertCache,
   } = useReportMutations();
-
-  useEffect(() => {
-    const pollJobStatuses = async () => {
-      const updatedJobs: Record<string, any> = {};
-
-      for (const jobId in jobs) {
-        try {
-          const response = await fetch(
-            `/api/building-block?jobId=${jobId}`,
-          ).then((res) => res.json());
-          const { status, block } = response.data;
-          updatedJobs[jobId] = { ...jobs[jobId], status, block };
-        } catch (error) {
-          updatedJobs[jobId] = { ...jobs[jobId], status: 'failed' };
-        }
-      }
-
-      setJobs(updatedJobs);
-    };
-
-    const intervalId = setInterval(pollJobStatuses, 1000);
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [jobs]);
 
   useEffect(() => {
     if (reportsData) {
@@ -260,8 +231,13 @@ export const ReportForm = ({
       .sort((a, b) => (a.label > b.label ? 1 : b.label > a.label ? -1 : 0)) ??
     [];
 
-  const baseActions = async (values: z.infer<typeof reportFormSchema>) => {
+  const onGenerateAndFormSubmit = async (
+    values: z.infer<typeof reportFormSchema>,
+  ) => {
     try {
+      analytics.track('Report Generated', {
+        ...values,
+      });
       if (!templateConfig) {
         throw new Error('Template config is not ready yet.');
       }
@@ -272,83 +248,6 @@ export const ReportForm = ({
 
       setOpen(true);
 
-      const { success } = await downloadPublicCompanyImgs(
-        tickerData.cik,
-        tickersData.filter((ticker) => ticker.cik === tickerData.cik),
-        tickerData.website,
-      );
-
-      if (!success) {
-        throw new Error('Could not download public company images.');
-      }
-
-      // Store template config in db
-      const data = await insertTemplate([
-        {
-          user_id: userId,
-          report_id: reportId,
-          template_type: 'equity-analyst-sidebar',
-          business_description: companyOverview,
-          color_scheme: templateConfig.colorScheme.colors,
-          author_name: templateConfig.authorName,
-          author_company_name: templateConfig.authorCompanyName,
-          author_company_logo:
-            templateConfig.authorCompanyLogo === defaultCompanyLogo
-              ? null
-              : templateConfig.authorCompanyLogo,
-          metrics: {
-            ...metrics,
-            sources,
-          },
-        },
-      ]);
-
-      if (!data) {
-        throw new Error('Could not save new template.');
-      }
-
-      // Get necessary documents and add them to the report library
-      return {
-        apiData,
-        tickerData,
-        reportId,
-        templateId: data[0].id,
-        companyOverview: companyOverview,
-        recommendation,
-        targetPrice,
-        newsContext,
-        xml,
-      };
-    } catch (err) {
-      throw err;
-    }
-  };
-
-  const onGenerateAndFormSubmit = async (
-    values: z.infer<typeof reportFormSchema>,
-  ) => {
-    try {
-      analytics.track('Report Generated', {
-        ...values,
-      });
-
-      if (!templateConfig) {
-        templateConfig = {
-          authorName: 'Findoc AI',
-          authorCompanyName: 'Altan Arata',
-          colorScheme: {
-            id: 'blue',
-            colors: ['#1c4587', '#f4e9d3', '#006f3b'],
-          },
-          colorSchemesList: [
-            { id: 'blue', colors: ['#1c4587', '#f4e9d3', '#006f3b'] },
-            { id: 'red', colors: ['#7d1f1f', '#f4e9d3', '#006f3b'] },
-            { id: 'white', colors: ['#787878', '#cce8fb', '#0061d9'] },
-          ],
-          authorCompanyLogosList: [],
-        };
-      }
-      // baseActions
       const {
         apiData,
         tickerData,
@@ -358,121 +257,121 @@ export const ReportForm = ({
         targetPrice,
         newsContext,
         xml,
-      } = await baseActions(values);
+      } = await initializeReportData({ values, plan, templateConfig });
 
       console.log('baseActions done');
 
-      const generatedJson: JSONContent = { type: 'doc', content: [] };
-      let generatedContent = '';
+      // const generatedJson: JSONContent = { type: 'doc', content: [] };
+      // let generatedContent = '';
 
-      const params: Omit<GeneralBlock, 'blockId'> = {
-        plan,
-        companyName: tickerData.company_name,
-        apiData: {
-          overview: apiData.overview,
-          yfAnnual: apiData.yfAnnual,
-          yfQuarterly: apiData.yfQuarterly,
-          dailyStock: apiData.dailyStock,
-          weeklyStock: apiData.weeklyStock,
-        },
-        xmlData: xml ?? '',
-        newsData: newsContext,
-        customPrompt: '',
-      };
+      // const params: Omit<GeneralBlock, 'blockId'> = {
+      //   plan,
+      //   companyName: tickerData.company_name,
+      //   apiData: {
+      //     overview: apiData.overview,
+      //     yfAnnual: apiData.yfAnnual,
+      //     yfQuarterly: apiData.yfQuarterly,
+      //     dailyStock: apiData.dailyStock,
+      //     weeklyStock: apiData.weeklyStock,
+      //   },
+      //   xmlData: xml ?? '',
+      //   newsData: newsContext,
+      //   customPrompt: '',
+      // };
 
-      const jobIds = await Promise.all(
-        section_ids.map(async (id: string) => {
-          const jobId = await createJob(
-            {
-              blockId: id as Block,
-              recommendation: recommendation,
-              targetPrice: targetPrice.toString(),
-              ...params,
-            },
-            setJobs,
-          );
-          return { blockId: id, id: jobId };
-        }),
-      );
+      // const jobIds = await Promise.all(
+      //   section_ids.map(async (id: string) => {
+      //     const jobId = await createJob(
+      //       {
+      //         blockId: id as Block,
+      //         recommendation: recommendation,
+      //         targetPrice: targetPrice.toString(),
+      //         ...params,
+      //       },
+      //       setJobs,
+      //     );
+      //     return { blockId: id, id: jobId };
+      //   }),
+      // );
 
-      const generatedBlocks = await waitForAllJobs(jobIds);
+      // const generatedBlocks = await waitForAllJobs(jobIds);
 
-      log.info('Generated all sections', { ticker: tickerData.ticker });
+      // log.info('Generated all sections', { ticker: tickerData.ticker });
 
-      section_ids.forEach((id) => {
-        if (!generatedBlocks[id]) return;
-        generatedContent += `##${titles[id as keyof typeof titles]}\
-      ${generatedBlocks[id]}`;
+      // section_ids.forEach((id) => {
+      //   if (!generatedBlocks[id]) return;
+      //   generatedContent += `##${titles[id as keyof typeof titles]}\
+      // ${generatedBlocks[id]}`;
 
-        const json = markdownToJson(generatedBlocks[id]);
-        generatedJson.content?.push(
-          {
-            type: 'heading',
-            attrs: {
-              id: '220f43a9-c842-4178-b5b4-5ed8a33c6192',
-              level: 2,
-              'data-toc-id': '220f43a9-c842-4178-b5b4-5ed8a33c6192',
-            },
-            content: [
-              {
-                text: titles[id as keyof typeof titles],
-                type: 'text',
-              },
-            ],
-          },
-          ...json.content,
-        );
-      });
+      //   const json = markdownToJson(generatedBlocks[id]);
+      //   generatedJson.content?.push(
+      //     {
+      //       type: 'heading',
+      //       attrs: {
+      //         id: '220f43a9-c842-4178-b5b4-5ed8a33c6192',
+      //         level: 2,
+      //         'data-toc-id': '220f43a9-c842-4178-b5b4-5ed8a33c6192',
+      //       },
+      //       content: [
+      //         {
+      //           text: titles[id as keyof typeof titles],
+      //           type: 'text',
+      //         },
+      //       ],
+      //     },
+      //     ...json.content,
+      //   );
+      // });
 
-      nextStep();
-      // generate a summary if required
-      const summaryJobId = await createJob(
-        {
-          blockId: 'executive_summary',
-          generatedReport: generatedContent,
-          plan: plan,
-        },
-        setJobs,
-      );
+      // nextStep();
+      // // generate a summary if required
+      // const summaryJobId = await createJob(
+      //   {
+      //     blockId: 'executive_summary',
+      //     generatedReport: generatedContent,
+      //     plan: plan,
+      //   },
+      //   setJobs,
+      // );
 
-      const summaryRes = await waitForJobCompletion(summaryJobId);
-      const summary = summaryRes.includes('•')
-        ? summaryRes
-            .split('• ')
-            .map((point: string) => point.trim())
-            ?.slice(1)
-        : summaryRes
-            .split('- ')
-            .map((point: string) => point.trim())
-            ?.slice(1);
+      // const summaryRes = await waitForJobCompletion(summaryJobId);
+      // const summary = summaryRes.includes('•')
+      //   ? summaryRes
+      //       .split('• ')
+      //       .map((point: string) => point.trim())
+      //       ?.slice(1)
+      //   : summaryRes
+      //       .split('- ')
+      //       .map((point: string) => point.trim())
+      //       ?.slice(1);
 
-      log.info('Generated the summary of a report', {
-        ticker: tickerData.ticker,
-        summary: summary,
-        summaryRes: summaryRes,
-      });
+      // log.info('Generated the summary of a report', {
+      //   ticker: tickerData.ticker,
+      //   summary: summary,
+      //   summaryRes: summaryRes,
+      // });
 
-      if (summary === '') {
-        log.error('Summary is empty', {
-          ticker: tickerData.ticker,
-          summary: summary,
-          summaryRes: summaryRes,
-        });
-      }
-      // update report and template
-      updateReport({
-        id: reportId,
-        tiptap_content: generatedJson,
-        json_content: generatedBlocks,
-      });
-      updateTemplate({
-        id: templateId,
-        summary: summary,
-      });
+      // if (summary === '') {
+      //   log.error('Summary is empty', {
+      //     ticker: tickerData.ticker,
+      //     summary: summary,
+      //     summaryRes: summaryRes,
+      //   });
+      // }
+      // // update report and template
+      // updateReport({
+      //   id: reportId,
+      //   tiptap_content: generatedJson,
+      //   json_content: generatedBlocks,
+      // });
+      // updateTemplate({
+      //   id: templateId,
+      //   summary: summary,
+      // });
 
-      nextStep();
+      // nextStep();
 
-      setReportId(reportId);
+      // setReportId(reportId);
     } catch (err) {
       if (err instanceof Error || err instanceof ServerError)
         handleError(err, !(err instanceof ServerError));
@@ -480,35 +379,35 @@ export const ReportForm = ({
     }
   };
 
-  useEffect(() => {
-    if (!isLoading && images) {
-      console.log('generating pdf...');
-      generateDocxBlob(images)
-        .then((blob: Blob) => generatePdf(blob))
-        .then(() => {
-          finalStep();
-          setOpen(false);
-          setSelectedReportId(curReportId);
-        });
-    } else {
-      console.log('still loading');
-      console.log('images ', images?.length);
-    }
-  }, [
-    isLoading,
-    images,
-    curReportId,
-    generateDocxBlob,
-    generatePdf,
-    setSelectedReportId,
-  ]);
+  // useEffect(() => {
+  //   if (!isLoading && images) {
+  //     console.log('generating pdf...');
+  //     generateDocxBlob(images)
+  //       .then((blob: Blob) => generatePdf(blob))
+  //       .then(() => {
+  //         finalStep();
+  //         setOpen(false);
+  //         setSelectedReportId(curReportId);
+  //       });
+  //   } else {
+  //     console.log('still loading');
+  //     console.log('images ', images?.length);
+  //   }
+  // }, [
+  //   isLoading,
+  //   images,
+  //   curReportId,
+  //   generateDocxBlob,
+  //   generatePdf,
+  //   setSelectedReportId,
+  // ]);
 
-  const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
-    // baseActions
-    await baseActions(values);
-    // save the pdf template in db
-    // route to the report content editor page
-  };
+  // const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
+  //   // baseActions
+  //   await baseActions(values);
+  //   // save the pdf template in db
+  //   // route to the report content editor page
+  // };
 
   return (
     <>

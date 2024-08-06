@@ -25,6 +25,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { initializeReportData } from '../utils/initializeReportData';
+import { generateReport } from '../utils/generateReport';
 
 type ColorScheme = { id: string; colors: string[] };
 
@@ -153,6 +155,8 @@ export const NewReport = ({ userId }: { userId: string }) => {
             setReportType={setReportType}
             userId={userId}
             plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
+            initializeReportData={initializeReportData}
+            generateReport={generateReport}
           />
         )}
       </div>

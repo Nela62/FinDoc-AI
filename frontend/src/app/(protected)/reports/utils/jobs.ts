@@ -95,6 +95,8 @@ export const createJob = async (params: BuildingBlockParams) => {
         })
         .select();
 
+      console.log('data', data);
+
       if (error || !data) {
         log.error('Error creating task:', {
           error,
@@ -126,6 +128,7 @@ export const createJob = async (params: BuildingBlockParams) => {
 
       // Start processing the task asynchronously
       await processTask(data[0].id);
+      return data[0].id;
     }
   } catch (error) {
     if (error instanceof Error) {

@@ -62,6 +62,7 @@ export async function createNewReport(
 }
 
 export type TickerData = {
+  id: string;
   ticker: string;
   company_name: string;
   stock_name: string;

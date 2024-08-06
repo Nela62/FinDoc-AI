@@ -116,9 +116,6 @@ function findReplaceString(string: string, find: string, replace: string) {
   }
 }
 
-const LOGGING_API_URL =
-  process.env.LOGGING_API_URL || 'https://api.example.com/log';
-
 async function callAthinaPrompt(
   promptId: string,
   variables: Record<string, any>,
@@ -152,6 +149,7 @@ async function callAthinaPrompt(
     });
 
     if (!response.ok) {
+      log.error('Error calling Athina API:', { response });
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -165,12 +163,27 @@ async function callAthinaPrompt(
 
 async function logToAPI(data: any) {
   try {
-    const response = await fetch(LOGGING_API_URL, {
+    const ATHINA_API_KEY = process.env.ATHINA_API_KEY;
+
+    if (!ATHINA_API_KEY) {
+      throw new Error('ATHINA_API_KEY is not set in the environment variables');
+    }
+
+    const response = await fetch('https://log.athina.ai/api/v1/log/inference', {
       method: 'POST',
       headers: {
+        'athina-api-key': ATHINA_API_KEY,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        language_model_id: data.prompt.language_model_id,
+        prompt: data.prompt.prompt_sent,
+        response: data.prompt.prompt_response,
+        prompt_tokens: data.prompt.prompt_tokens,
+        completion_tokens: data.prompt.completion_tokens,
+        total_tokens: data.prompt.total_tokens,
+        cost: data.prompt.cost,
+      }),
     });
 
     if (!response.ok) {
@@ -194,18 +207,28 @@ export const generateBlock = async (
 
   // const formatInstructions = `\nAfter you've outlined your key points in the scratchpad, write out your response inside <output> tags.`;
 
-  // @ts-ignore
-  let template = config.chat_template[0].content;
+  // // @ts-ignore
+  // let template = config.chat_template[0].content;
 
-  Object.entries(inputs).map(([key, value]) => {
-    template = findReplaceString(template, key, value);
-  });
+  // Object.entries(inputs).map(([key, value]) => {
+  //   template = findReplaceString(template, key, value);
+  // });
 
   const response = await callAthinaPrompt(blockIdsMap[blockId], inputs);
 
-  console.log(response);
+  // console.log(response);
 
-  return response.content;
+  if (response.status !== 'success') {
+    throw new Error('Failed to generate block');
+  }
+
+  logToAPI(response.data);
+
+  return {
+    content: response.data.prompt.prompt_response,
+    inputTokens: response.data.prompt.prompt_tokens,
+    outputTokens: response.data.prompt.completion_tokens,
+  };
 
   // let model = 'claude-3-5-sonnet-20240620';
 
