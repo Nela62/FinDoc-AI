@@ -79,8 +79,6 @@ export const initializeReportData = async ({
       ],
     );
 
-    console.log('got all data');
-
     const { recommendation, targetPrice } = await getRecAndTargetPrice(
       values.recommendation,
       values.targetPrice,
@@ -93,8 +91,6 @@ export const initializeReportData = async ({
         companyName: tickerData.company_name,
       },
     );
-
-    console.log('got rec and target price');
 
     const financialStrength =
       values.financialStrength && values.financialStrength !== 'Auto'
@@ -112,17 +108,18 @@ export const initializeReportData = async ({
 
     const metrics = generateMetrics(apiData, targetPrice, financialStrength);
 
-    const companyOverviewJobId = await createJob({
-      blockId: 'company_overview',
-      plan,
-      companyName: tickerData.company_name,
-      apiData: apiData,
-      xmlData: xml ?? '',
-      newsData: JSON.stringify(newsContext),
-      customPrompt: '',
-    });
+    // const companyOverviewJobId = await createJob({
+    //   blockId: 'company_overview',
+    //   plan,
+    //   companyName: tickerData.company_name,
+    //   apiData: apiData,
+    //   xmlData: xml ?? '',
+    //   newsData: JSON.stringify(newsContext),
+    //   customPrompt: '',
+    // });
 
-    const companyOverview = await waitForJobCompletion(companyOverviewJobId);
+    // const companyOverview = await waitForJobCompletion(companyOverviewJobId);
+    const companyOverview = '';
 
     await downloadPublicCompanyImgs(tickerData);
 

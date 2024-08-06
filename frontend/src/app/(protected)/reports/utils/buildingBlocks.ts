@@ -179,17 +179,21 @@ async function logToAPI(data: any) {
         language_model_id: data.prompt.language_model_id,
         prompt: data.prompt.prompt_sent,
         response: data.prompt.prompt_response,
-        prompt_tokens: data.prompt.prompt_tokens,
-        completion_tokens: data.prompt.completion_tokens,
-        total_tokens: data.prompt.total_tokens,
-        cost: data.prompt.cost,
+        prompt_tokens: Number(data.prompt.prompt_tokens),
+        completion_tokens: Number(data.prompt.completion_tokens),
+        total_tokens: Number(data.prompt.total_tokens),
+        cost: Number(data.prompt.cost),
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      console.log(data);
+      console.log(data.path);
+      log.error('Error logging to API:', { ...response, ...data });
     }
   } catch (error) {
+    error instanceof Error && log.error('Error logging to API:', { ...error });
     console.error('Error logging to API:', error);
   }
 }
@@ -222,10 +226,12 @@ export const generateBlock = async (
     throw new Error('Failed to generate block');
   }
 
-  logToAPI(response.data);
+  try {
+    await logToAPI(response.data);
+  } catch (err) {}
 
   return {
-    content: response.data.prompt.prompt_response,
+    content: extractOutput(response.data.prompt.prompt_response),
     inputTokens: response.data.prompt.prompt_tokens,
     outputTokens: response.data.prompt.completion_tokens,
   };

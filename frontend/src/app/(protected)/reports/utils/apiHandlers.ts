@@ -31,17 +31,14 @@ export const getApiData = async (
 export const getSecFiling = async (
   ticker: string,
   supabase: TypedSupabaseClient,
-) => {
-  const res = await fetchSecFiling(ticker);
+): Promise<string> => {
+  const xmlPath = await fetchSecFiling(ticker);
 
-  const xmlPath = res.data;
+  const xml = await supabase.storage.from('sec-filings').download(xmlPath);
 
-  const xml = await supabase.storage
-    .from('sec-filings')
-    .download(xmlPath)
-    .then((res) => res.data?.text());
+  const xmlText = await xml.data?.text();
 
-  if (!xml) {
+  if (!xmlText) {
     log.error('Error occurred', {
       message: 'Sec filing text is empty',
       ticker,
@@ -49,7 +46,7 @@ export const getSecFiling = async (
     });
   }
 
-  return xml;
+  return xmlText ?? '';
 };
 
 export async function getNews(companyName: string) {

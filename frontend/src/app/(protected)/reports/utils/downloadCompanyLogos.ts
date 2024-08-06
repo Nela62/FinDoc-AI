@@ -4,6 +4,7 @@ import { serviceClient } from '@/lib/supabase/service';
 import { Logger } from 'next-axiom';
 import { ServerError } from '@/types/error';
 import { TickerData } from './reportUtils';
+import { createClient } from '@/lib/supabase/server';
 
 const log = new Logger();
 
@@ -18,6 +19,50 @@ export const cleanLink = (link: string): string => {
   }
 
   return cleanLink;
+};
+
+const checkIfExists = async (cik: string): Promise<boolean> => {
+  const supabase = createClient();
+  const session = await supabase.auth.getSession();
+  const accessToken = session.data.session?.access_token;
+
+  if (!accessToken) {
+    throw new Error('No access token');
+  }
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public-company-logos/${cik}/exists`,
+    {
+      method: 'HEAD',
+      headers: {
+        authorization: accessToken,
+      },
+    },
+  );
+
+  return response.ok;
+};
+
+const uploadDefaultFile = async (cik: string) => {
+  const supabase = serviceClient();
+
+  try {
+    const emptyBlob = new Blob([''], { type: 'text/plain' });
+    const fileName = `${cik}/exists`;
+    const { error } = await supabase.storage
+      .from('public-company-logos')
+      .upload(fileName, emptyBlob, { contentType: 'text/plain' });
+
+    if (error) {
+      log.error('Failed to upload default file', { error, cik });
+      throw new ServerError('Failed to upload default file');
+    }
+
+    log.info('Successfully uploaded default file', { cik });
+  } catch (error) {
+    log.error('Unexpected error uploading default file', { error, cik });
+    throw new ServerError('Unexpected error uploading default file');
+  }
 };
 
 const uploadPublicCompanyImg = async (
@@ -47,7 +92,7 @@ const uploadPublicCompanyImg = async (
 
     return { success: true };
   } catch (err) {
-    console.error(`Error uploading image ${name}:`, err);
+    // console.error(`Error uploading image ${name}:`, err);
     return {
       success: false,
       error: err instanceof Error ? err.message : 'Unknown error occurred',
@@ -106,6 +151,13 @@ export const downloadPublicCompanyImgs = async (tickerData: TickerData) => {
       }
     }
 
+    const exists = await checkIfExists(tickerData.cik);
+
+    if (exists) {
+      return;
+    }
+
+    // For some reason, cleanLink returns a promise
     const link = await cleanLink(orgId);
 
     const images = await fetch(`https://api.brandfetch.io/v2/brands/${link}`, {
@@ -139,6 +191,8 @@ export const downloadPublicCompanyImgs = async (tickerData: TickerData) => {
           "Error when fetching public company's logos: " + err.message,
         );
       });
+
+    await uploadDefaultFile(tickerData.cik);
 
     const uploadPromises = images.logos.map(async (img: any, index: number) => {
       if (img.type === 'other') return;

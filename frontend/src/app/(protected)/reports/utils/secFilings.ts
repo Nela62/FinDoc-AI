@@ -4,7 +4,7 @@ import { waitForSecJobCompletion } from './jobs';
 
 const log = new Logger();
 
-export const fetchSecFiling = async (ticker: string) => {
+export const fetchSecFiling = async (ticker: string): Promise<string> => {
   const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/sec-filing/${ticker}/10-K`;
 
   try {
