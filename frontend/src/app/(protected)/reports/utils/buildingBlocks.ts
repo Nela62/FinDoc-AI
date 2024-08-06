@@ -134,8 +134,8 @@ async function callAthinaPrompt(
       },
       body: JSON.stringify({
         variables,
-        version: 1,
-        // model,
+        // version: 1,
+        model: 'claude-3-haiku-20240307',
         parameters: {
           temperature: 0.2,
           // max_tokens: 1000,
@@ -145,14 +145,15 @@ async function callAthinaPrompt(
     });
 
     if (!response.ok) {
-      log.error('Error calling Athina API:', { response });
+      log.error('Error calling Athina API:', { ...response, promptId });
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
     return data;
   } catch (error) {
-    log.error('Error calling Athina API:', { error });
+    error instanceof Error &&
+      log.error('Error calling Athina API:', { ...error, promptId });
     throw error;
   }
 }
@@ -184,8 +185,6 @@ async function logToAPI(data: any) {
 
     if (!response.ok) {
       const data = await response.json();
-      console.log(data);
-      console.log(data.path);
       log.error('Error logging to API:', { ...response, ...data });
     }
   } catch (error) {
@@ -223,9 +222,9 @@ export const generateBlock = async (
     return { content: '', inputToken: 0, outputTokens: 0 };
   }
 
-  try {
-    await logToAPI(response.data);
-  } catch (err) {}
+  // try {
+  //   await logToAPI(response.data);
+  // } catch (err) {}
 
   return {
     content: extractOutput(response.data.prompt.prompt_response),

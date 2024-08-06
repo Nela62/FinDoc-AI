@@ -25,19 +25,13 @@ import { fetchAllReports, fetchTickers } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
 import { getNanoId } from '@/lib/utils/nanoId';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  useInsertMutation,
-  useQuery,
-  useUpdateMutation,
-} from '@supabase-cache-helpers/postgrest-react-query';
-import { format, isAfter, startOfWeek } from 'date-fns';
-import { SquarePen, Wand2Icon } from 'lucide-react';
+import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
+import { isAfter, startOfWeek } from 'date-fns';
+import { Wand2Icon } from 'lucide-react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { TemplateConfig } from '../NewReport';
-import { JSONContent } from '@tiptap/core';
-import { capitalizeWords, markdownToJson } from '@/lib/utils/formatText';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -68,15 +62,11 @@ import {
 import { analytics } from '@/lib/segment';
 import { useReportProgress } from '@/hooks/useReportProgress';
 import { ServerError } from '@/types/error';
-import { useReportMutations } from '@/hooks/useReportMutations';
-import { generateMetrics } from '@/lib/utils/metrics/generateMetrics';
-import { section_ids } from '../../utils/generateReportSections';
 import {
   InitializeReportDataProps,
   InitializeReportDataResponse,
 } from '../../utils/initializeReportData';
-
-const defaultCompanyLogo = '/default_findoc_logo.png';
+import { GenerateReportArgs } from '../../utils/generateReport';
 
 export const reportFormSchema = z.object({
   reportType: z.string(),
@@ -87,26 +77,6 @@ export const reportFormSchema = z.object({
     .optional(),
   financialStrength: z.string().optional(),
 });
-
-export interface ApiData {
-  yfAnnual: any;
-  yfQuarterly: any;
-  overview: any;
-  dailyStock: any;
-  weeklyStock: any;
-}
-
-const titles = {
-  investment_thesis: 'Investment Thesis',
-  business_description: 'Business Description',
-  recent_developments: 'Recent Developments',
-  industry_overview_competitive_positioning:
-    'Industry Overview and Competitive Positioning',
-  financial_analysis: 'Financial Analysis',
-  valuation: 'Valuation',
-  management: 'Management Analysis',
-  risks: 'Risk Analysis',
-};
 
 export const ReportForm = ({
   setIsTemplateCustomization,
@@ -127,14 +97,7 @@ export const ReportForm = ({
   initializeReportData: (
     props: InitializeReportDataProps,
   ) => Promise<InitializeReportDataResponse>;
-  generateReport: (
-    ticker: string,
-    companyName: string,
-    apiData: any,
-    xmlData: string,
-    newsContext: string,
-    plan: string,
-  ) => Promise<void>;
+  generateReport: (args: GenerateReportArgs) => Promise<void>;
 }) => {
   const [isOpen, setOpen] = useState(false);
   const [curReportId, setReportId] = useState<string | null>(null);
@@ -254,124 +217,20 @@ export const ReportForm = ({
 
       console.log('baseActions done');
 
-      generateReport(
-        tickerData.ticker,
-        tickerData.company_name,
+      await generateReport({
+        reportId,
+        templateId,
+        recommendation,
+        targetPrice,
+        ticker: tickerData.ticker,
+        companyName: tickerData.company_name,
         apiData,
-        xml,
+        xmlData: xml,
         newsContext,
         plan,
-      );
+      });
 
-      // const generatedJson: JSONContent = { type: 'doc', content: [] };
-      // let generatedContent = '';
-
-      // const params: Omit<GeneralBlock, 'blockId'> = {
-      //   plan,
-      //   companyName: tickerData.company_name,
-      //   apiData: {
-      //     overview: apiData.overview,
-      //     yfAnnual: apiData.yfAnnual,
-      //     yfQuarterly: apiData.yfQuarterly,
-      //     dailyStock: apiData.dailyStock,
-      //     weeklyStock: apiData.weeklyStock,
-      //   },
-      //   xmlData: xml ?? '',
-      //   newsData: newsContext,
-      //   customPrompt: '',
-      // };
-
-      // const jobIds = await Promise.all(
-      //   section_ids.map(async (id: string) => {
-      //     const jobId = await createJob(
-      //       {
-      //         blockId: id as Block,
-      //         recommendation: recommendation,
-      //         targetPrice: targetPrice.toString(),
-      //         ...params,
-      //       },
-      //       setJobs,
-      //     );
-      //     return { blockId: id, id: jobId };
-      //   }),
-      // );
-
-      // const generatedBlocks = await waitForAllJobs(jobIds);
-
-      // log.info('Generated all sections', { ticker: tickerData.ticker });
-
-      // section_ids.forEach((id) => {
-      //   if (!generatedBlocks[id]) return;
-      //   generatedContent += `##${titles[id as keyof typeof titles]}\
-      // ${generatedBlocks[id]}`;
-
-      //   const json = markdownToJson(generatedBlocks[id]);
-      //   generatedJson.content?.push(
-      //     {
-      //       type: 'heading',
-      //       attrs: {
-      //         id: '220f43a9-c842-4178-b5b4-5ed8a33c6192',
-      //         level: 2,
-      //         'data-toc-id': '220f43a9-c842-4178-b5b4-5ed8a33c6192',
-      //       },
-      //       content: [
-      //         {
-      //           text: titles[id as keyof typeof titles],
-      //           type: 'text',
-      //         },
-      //       ],
-      //     },
-      //     ...json.content,
-      //   );
-      // });
-
-      // nextStep();
-      // // generate a summary if required
-      // const summaryJobId = await createJob(
-      //   {
-      //     blockId: 'executive_summary',
-      //     generatedReport: generatedContent,
-      //     plan: plan,
-      //   },
-      //   setJobs,
-      // );
-
-      // const summaryRes = await waitForJobCompletion(summaryJobId);
-      // const summary = summaryRes.includes('•')
-      //   ? summaryRes
-      //       .split('• ')
-      //       .map((point: string) => point.trim())
-      //       ?.slice(1)
-      //   : summaryRes
-      //       .split('- ')
-      //       .map((point: string) => point.trim())
-      //       ?.slice(1);
-
-      // log.info('Generated the summary of a report', {
-      //   ticker: tickerData.ticker,
-      //   summary: summary,
-      //   summaryRes: summaryRes,
-      // });
-
-      // if (summary === '') {
-      //   log.error('Summary is empty', {
-      //     ticker: tickerData.ticker,
-      //     summary: summary,
-      //     summaryRes: summaryRes,
-      //   });
-      // }
-      // // update report and template
-      // updateReport({
-      //   id: reportId,
-      //   tiptap_content: generatedJson,
-      //   json_content: generatedBlocks,
-      // });
-      // updateTemplate({
-      //   id: templateId,
-      //   summary: summary,
-      // });
-
-      // nextStep();
+      console.log('report generated');
 
       // setReportId(reportId);
     } catch (err) {

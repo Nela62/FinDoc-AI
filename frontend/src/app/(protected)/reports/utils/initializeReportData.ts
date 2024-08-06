@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { ApiData, reportFormSchema } from '../components/report/ReportForm';
+import { reportFormSchema } from '../components/report/ReportForm';
 import {
   createNewReport,
   getRecAndTargetPrice,
@@ -17,6 +17,8 @@ import { generateMetrics } from '@/lib/utils/metrics/generateMetrics';
 import { ServerError } from '@/types/error';
 import { downloadPublicCompanyImgs } from './downloadCompanyLogos';
 import { TemplateConfig } from '../components/NewReport';
+import { createJob, waitForJobCompletion } from './jobs';
+import { ApiData } from './apiData';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -106,19 +108,22 @@ export const initializeReportData = async ({
       .eq('id', reportId);
 
     const metrics = generateMetrics(apiData, targetPrice, financialStrength);
+    console.log('generating company overview');
 
-    // const companyOverviewJobId = await createJob({
-    //   blockId: 'company_overview',
-    //   plan,
-    //   companyName: tickerData.company_name,
-    //   apiData: apiData,
-    //   xmlData: xml ?? '',
-    //   newsData: JSON.stringify(newsContext),
-    //   customPrompt: '',
-    // });
+    const companyOverviewJobId = await createJob({
+      blockId: 'company_overview',
+      plan,
+      companyName: tickerData.company_name,
+      apiData: apiData,
+      xmlData: xml ?? '',
+      newsData: JSON.stringify(newsContext),
+      customPrompt: '',
+    });
 
-    // const companyOverview = await waitForJobCompletion(companyOverviewJobId);
-    const companyOverview = '';
+    const companyOverview = await waitForJobCompletion(companyOverviewJobId);
+    // const companyOverview = '';
+
+    console.log('downloading company logos');
 
     await downloadPublicCompanyImgs(tickerData);
 

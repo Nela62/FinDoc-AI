@@ -2,6 +2,7 @@ import { Logger } from 'next-axiom';
 import { SubscriptionPlan } from '@/types/subscription';
 import { createJob, waitForAllJobs } from './jobs';
 import { Block } from './buildingBlocks';
+import { ApiData } from './apiData';
 
 export const section_ids = [
   'investment_thesis',
@@ -18,7 +19,9 @@ const log = new Logger();
 export const generateReportSections = async (
   ticker: string,
   companyName: string,
-  apiData: any,
+  recommendation: string,
+  targetPrice: string,
+  apiData: ApiData,
   xmlData: string,
   newsContext: string,
   plan: string,
@@ -27,8 +30,8 @@ export const generateReportSections = async (
     section_ids.map(async (id: string) => {
       const jobId = await createJob({
         blockId: id as Block,
-        recommendation: apiData.recommendation,
-        targetPrice: apiData.targetPrice.toString(),
+        recommendation,
+        targetPrice,
         plan: plan as SubscriptionPlan,
         companyName,
         apiData,
@@ -39,6 +42,7 @@ export const generateReportSections = async (
       return { blockId: id, id: jobId };
     }),
   );
+
   const generatedBlocks = await waitForAllJobs(jobIds);
   log.info('Generated all sections', { ticker });
 

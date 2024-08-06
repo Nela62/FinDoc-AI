@@ -3,7 +3,6 @@ import {
   Overview,
   WeeklyStockData,
 } from '@/types/alphaVantageApi';
-import { SubscriptionPlan } from '@/types/subscription';
 import {
   get10KItem,
   get10KSection,
@@ -18,7 +17,7 @@ import {
 import { calculateRatio } from '@/lib/utils/metrics/financialUtils';
 import { formatSafeNumber } from '@/lib/utils/metrics/safeCalculations';
 import {
-  Block,
+  BuildingBlockParams,
   generateBlock,
   Inputs,
   RecAndTargetPriceInputs,
@@ -32,34 +31,6 @@ export type ApiProp = {
   yfAnnual: MetricsData;
   yfQuarterly: MetricsData;
 };
-
-export type GeneralBlock = {
-  plan: SubscriptionPlan;
-  blockId: Block;
-  companyName: string;
-  apiData: ApiProp;
-  xmlData: string;
-  newsData: string;
-  customPrompt: string;
-  recommendation?: string;
-  targetPrice?: string;
-};
-
-export type ExecSummary = {
-  plan: SubscriptionPlan;
-  blockId: 'executive_summary';
-  generatedReport: string;
-};
-
-export type RecAndTargetPrice = {
-  plan: SubscriptionPlan;
-  blockId: 'targetprice_recommendation';
-  companyName: string;
-  apiData: ApiProp;
-  recommendation?: string;
-};
-
-export type Params = ExecSummary | RecAndTargetPrice | GeneralBlock;
 
 const calculatePE = (apiData: ApiProp) => {
   const curYear = new Date().getFullYear();
@@ -265,7 +236,7 @@ const contextMap = {
   valuation: getValuationContext,
 };
 
-export const getBlock = async (params: Params) => {
+export const getBlock = async (params: BuildingBlockParams) => {
   try {
     if (params.blockId === 'executive_summary') {
       const inputs: SummaryInputs = { REPORT: params.generatedReport };

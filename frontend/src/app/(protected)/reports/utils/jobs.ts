@@ -28,6 +28,7 @@ const processTask = async (jobId: string) => {
     });
     throw new ServerError('Error retrieving job: ' + jobId);
   }
+  console.log('getting block');
   const { content, inputTokens, outputTokens } = await getBlock(data.params);
 
   await supabase
@@ -94,8 +95,6 @@ export const createJob = async (params: BuildingBlockParams) => {
           params,
         })
         .select();
-
-      console.log('data', data);
 
       if (error || !data) {
         log.error('Error creating task:', {
@@ -202,7 +201,6 @@ export const waitForSecJobCompletion = async (jobId: string) => {
 
 export const waitForAllJobs = async (jobs: Record<string, string>[]) => {
   let results: Record<string, any> = {};
-  const log = new Logger();
 
   try {
     await Promise.all(
