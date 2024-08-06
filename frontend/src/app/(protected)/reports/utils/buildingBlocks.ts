@@ -1,11 +1,7 @@
-import { createClient } from '@/lib/supabase/server';
-import { serviceClient } from '@/lib/supabase/service';
 import { SubscriptionPlan } from '@/types/subscription';
 import { Logger } from 'next-axiom';
 import OpenAI from 'openai';
 import { ApiData } from './apiData';
-import { getRecAndTargetPriceContext } from './buildingBlocksContext';
-import Anthropic from '@anthropic-ai/sdk';
 
 const log = new Logger();
 const openai = new OpenAI();
@@ -223,7 +219,8 @@ export const generateBlock = async (
   // console.log(response);
 
   if (response.status !== 'success') {
-    throw new Error('Failed to generate block');
+    log.error('Failed to generate block', { ...response });
+    return { content: '', inputToken: 0, outputTokens: 0 };
   }
 
   try {
