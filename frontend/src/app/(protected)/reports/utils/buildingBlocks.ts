@@ -8,22 +8,47 @@ import { ApiData } from './apiData';
 const log = new Logger();
 const openai = new OpenAI();
 
-type BlockType =
-  | 'summary'
-  | 'recommendation_and_target_price'
-  | 'company_analysis'
-  | string;
+export type Block =
+  | 'company_overview'
+  | 'investment_thesis'
+  | 'business_description'
+  | 'recent_developments'
+  | 'management'
+  | 'risks'
+  | 'financial_analysis'
+  | 'valuation'
+  | 'targetprice_recommendation';
 
-interface BuildingBlockParams {
-  blockId: string;
+export type GeneralBlock = {
   plan: SubscriptionPlan;
-  apiData: ApiData;
-  newsContext: string;
+  blockId: Block;
   companyName: string;
-  ticker: string;
+  apiData: ApiData;
+  xmlData: string;
+  newsData: string;
+  customPrompt: string;
   recommendation?: string;
   targetPrice?: string;
-}
+};
+
+export type ExecSummary = {
+  plan: SubscriptionPlan;
+  blockId: 'executive_summary';
+  generatedReport: string;
+};
+
+export type RecAndTargetPrice = {
+  plan: SubscriptionPlan;
+  blockId: 'targetprice_recommendation';
+  companyName: string;
+  apiData: ApiData;
+  recommendation?: string;
+};
+
+export type BuildingBlockParams =
+  | ExecSummary
+  | RecAndTargetPrice
+  | GeneralBlock;
 
 const LOGGING_API_URL =
   process.env.LOGGING_API_URL || 'https://api.example.com/log';

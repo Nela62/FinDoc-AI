@@ -2,7 +2,12 @@
 
 import { z } from 'zod';
 import { reportFormSchema } from '../components/report/ReportForm';
-import { createNewReport, getTickerData, getUserId } from './reportUtils';
+import {
+  createNewReport,
+  getRecAndTargetPrice,
+  getTickerData,
+  getUserId,
+} from './reportUtils';
 import { createClient } from '@/lib/supabase/server';
 import { Logger } from 'next-axiom';
 import { getApiData, getNews, getSecFiling } from './apiHandlers';

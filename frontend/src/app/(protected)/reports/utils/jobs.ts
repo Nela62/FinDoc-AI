@@ -12,6 +12,56 @@ const supabase = serviceClient();
 
 const MAX_CONCURRENT_TASKS = 5;
 
+const processTask = async (jobId: string) => {
+  const { content, inputTokens, outputTokens } = await getBlock(json);
+
+  await supabase
+    .from('ai_jobs')
+    .update({
+      status: 'completed',
+      block_data: content,
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      finished_at: new Date().toISOString(),
+    })
+    .eq('id', jobId);
+
+  // Check if there are any queued tasks
+  const { data: queuedTasks, error } = await supabase
+    .from('ai_jobs')
+    .select('*')
+    .eq('status', 'queued')
+    .order('created_at', { ascending: true })
+    .limit(1);
+
+  if (error) {
+    log.error('Error retrieving queued tasks', {
+      error,
+      fnName: 'Fetching ai_jobs in processTask',
+      jobId,
+    });
+    throw new ServerError('Error retrieving queued tasks: ' + error);
+  }
+
+  if (queuedTasks.length > 0) {
+    try {
+      const queuedTask = queuedTasks[0];
+
+      // Update the queued task status to 'processing'
+      await supabase
+        .from('ai_jobs')
+        .update({ status: 'processing' })
+        .eq('id', queuedTask.id);
+
+      // Process the next queued task
+      processTask(queuedTask.id);
+    } catch (err) {
+      log.error('Error removing a queued task', { id: queuedTasks[0].id });
+      throw new ServerError('Error removing a queued task');
+    }
+  }
+};
+
 export const createJob = async (params: Params) => {
   try {
     const { count } = await supabase
@@ -26,6 +76,7 @@ export const createJob = async (params: Params) => {
         .insert({
           block_id: params.blockId,
           status: 'queued',
+          params,
         })
         .select();
 
@@ -39,34 +90,33 @@ export const createJob = async (params: Params) => {
       }
 
       return data[0].id;
-    }
-
-    const { jobId } = await fetch(`/api/building-block`, {
-      method: 'POST',
-      body: JSON.stringify(params),
-    }).then((res) => {
-      if (!res.ok) {
-        log.error('Error generating a building block', {
-          error: res.statusText,
+    } else {
+      const { data, error } = await supabase
+        .from('ai_jobs')
+        .insert({
+          block_id: params.blockId,
+          status: 'processing',
           params,
-        });
-        throw new ServerError(
-          'Error generating a building block: ' + params.blockId,
-        );
-      }
-      return res.json();
-    });
+        })
+        .select();
 
-    // setJobs((prevJobs) => ({
-    //   ...prevJobs,
-    //   [jobId]: { blockId: params.blockId, status: 'processing' },
-    // }));
-    return jobId;
+      if (error || !data) {
+        log.error('Error creating task:', {
+          error,
+          fnName: 'Fetching ai_jobs in createJob',
+          fnInputs: { params },
+        });
+        throw new ServerError('Error creating an AI job');
+      }
+
+      // Start processing the task asynchronously
+      await processTask(data[0].id);
+    }
   } catch (error) {
     if (error instanceof Error) {
       log.error('Error creating a job', {
         error: error.message,
-        ...params,
+        params,
       });
     }
     throw error;
@@ -75,21 +125,26 @@ export const createJob = async (params: Params) => {
 
 export const waitForJobCompletion = async (jobId: string) => {
   while (true) {
-    const { status, block } = await fetch(`/api/building-block?jobId=${jobId}`)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error('Error fetching a job status: ' + jobId);
-        }
-        return res.json();
-      })
-      .catch((e) => {
-        throw e;
-      });
+    const { data, error } = await supabase
+      .from('ai_jobs')
+      .select('status, block_data')
+      .eq('id', jobId)
+      .maybeSingle();
 
-    if (status === 'completed') {
-      return block;
-    } else if (status === 'failed') {
-      throw new Error('Job failed: ' + jobId);
+    if (error || !data) {
+      log.error('Error retrieving job', {
+        error,
+        fnName: 'Fetching ai_jobs in waitForJobCompletion',
+        jobId,
+      });
+      throw new ServerError('Error retrieving job: ' + jobId);
+    }
+
+    if (data.status === 'completed') {
+      return data.block_data;
+    } else if (data.status === 'failed') {
+      log.error('Job failed', { jobId });
+      throw new ServerError('Job failed: ' + jobId);
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
