@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getBlock } from './utils/blocks';
+import { getBlock } from '../../(protected)/reports/utils/buildingBlocksContext';
 import { serviceClient } from '@/lib/supabase/service';
 import { createClient } from '@/lib/supabase/server';
 import { Logger } from 'next-axiom';

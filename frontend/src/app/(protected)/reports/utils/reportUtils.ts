@@ -9,6 +9,8 @@ import { Logger } from 'next-axiom';
 import { Overview } from '@/types/alphaVantageApi';
 import { Recommendation } from '@/types/report';
 import { capitalizeWords } from '@/lib/utils/formatText';
+import { BuildingBlockParams } from './buildingBlocks';
+import { createJob, waitForJobCompletion } from './jobs';
 
 const log = new Logger();
 
@@ -137,7 +139,7 @@ export const getRecAndTargetPrice = async (
   providedRec: string | undefined,
   providedTP: number | undefined,
   overview: Overview,
-  params: Params,
+  params: BuildingBlockParams,
 ) => {
   let recommendation;
   let targetPrice;
@@ -167,7 +169,7 @@ export const getRecAndTargetPrice = async (
       targetPrice = Number(overview.AnalystTargetPrice);
       return { recommendation, targetPrice };
     } else {
-      const recAndTargetPriceJob = await createJob(params, setJobs);
+      const recAndTargetPriceJob = await createJob(params);
 
       const res = await waitForJobCompletion(recAndTargetPriceJob);
 

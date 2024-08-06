@@ -1,7 +1,7 @@
 import { ServerError } from '@/types/error';
 import { SearchResult } from 'exa-js';
 import { TypedSupabaseClient } from '@/types/supabase';
-import { fetchApiData } from './apiData';
+import { ApiData, fetchApiData } from './apiData';
 import { fetchSecFiling } from './secFilings';
 import { Logger } from 'next-axiom';
 import { fetchNews } from './news';
@@ -14,7 +14,7 @@ export const getApiData = async (
   userId: string,
   supabase: TypedSupabaseClient,
 ) => {
-  const apiData = await fetchApiData(ticker, supabase);
+  const apiData: ApiData = await fetchApiData(ticker, supabase);
 
   await supabase.from('api_cache').insert([
     {

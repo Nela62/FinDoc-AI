@@ -1,7 +1,8 @@
-import { Params } from '@/app/api/building-block/utils/blocks';
 import { serviceClient } from '@/lib/supabase/service';
 import { ServerError } from '@/types/error';
 import { Logger } from 'next-axiom';
+import { getBlock } from './buildingBlocksContext';
+import { BuildingBlockParams } from './buildingBlocks';
 
 export type JobStatus = 'processing' | 'completed' | 'failed' | 'queued';
 
@@ -13,7 +14,21 @@ const supabase = serviceClient();
 const MAX_CONCURRENT_TASKS = 5;
 
 const processTask = async (jobId: string) => {
-  const { content, inputTokens, outputTokens } = await getBlock(json);
+  const { data, error: jobError } = await supabase
+    .from('ai_jobs')
+    .select('*')
+    .eq('id', jobId)
+    .maybeSingle();
+
+  if (jobError || !data) {
+    log.error('Error retrieving job', {
+      error: jobError,
+      fnName: 'Fetching ai_jobs in processTask',
+      jobId,
+    });
+    throw new ServerError('Error retrieving job: ' + jobId);
+  }
+  const { content, inputTokens, outputTokens } = await getBlock(data.params);
 
   await supabase
     .from('ai_jobs')
@@ -62,7 +77,7 @@ const processTask = async (jobId: string) => {
   }
 };
 
-export const createJob = async (params: Params) => {
+export const createJob = async (params: BuildingBlockParams) => {
   try {
     const { count } = await supabase
       .from('ai_jobs')

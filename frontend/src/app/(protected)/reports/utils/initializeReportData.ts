@@ -12,6 +12,8 @@ import { createClient } from '@/lib/supabase/server';
 import { Logger } from 'next-axiom';
 import { getApiData, getNews, getSecFiling } from './apiHandlers';
 import { SubscriptionPlan } from '@/types/subscription';
+import { generateMetrics } from '@/lib/utils/metrics/generateMetrics';
+import { createJob, waitForJobCompletion } from './jobs';
 
 const handleError = (error: any) => {};
 
@@ -63,6 +65,34 @@ export const initializeReportData = async ({
         companyName: tickerData.company_name,
       },
     );
+
+    const financialStrength =
+      values.financialStrength && values.financialStrength !== 'Auto'
+        ? values.financialStrength
+        : 'Medium';
+
+    await supabase
+      .from('reports')
+      .update({
+        recommendation: recommendation,
+        targetprice: targetPrice,
+        financial_strength: financialStrength,
+      })
+      .eq('id', reportId);
+
+    const metrics = generateMetrics(apiData, targetPrice, financialStrength);
+
+    const companyOverviewJobId = await createJob({
+      blockId: 'company_overview',
+      plan,
+      companyName: tickerData.company_name,
+      apiData: apiData,
+      xmlData: xml ?? '',
+      newsData: JSON.stringify(newsContext),
+      customPrompt: '',
+    });
+
+    const companyOverview = await waitForJobCompletion(companyOverviewJobId);
   } catch (error) {
     handleError(error);
   }

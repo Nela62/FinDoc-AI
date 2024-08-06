@@ -3,12 +3,6 @@ import {
   Overview,
   WeeklyStockData,
 } from '@/types/alphaVantageApi';
-import {
-  Inputs,
-  RecAndTargetPriceInputs,
-  SummaryInputs,
-  generateBlock,
-} from './generateBlock';
 import { SubscriptionPlan } from '@/types/subscription';
 import {
   get10KItem,
@@ -23,6 +17,12 @@ import {
 } from '@/lib/utils/metrics/stock';
 import { calculateRatio } from '@/lib/utils/metrics/financialUtils';
 import { formatSafeNumber } from '@/lib/utils/metrics/safeCalculations';
+import {
+  generateBlock,
+  Inputs,
+  RecAndTargetPriceInputs,
+  SummaryInputs,
+} from './buildingBlocks';
 
 export type ApiProp = {
   overview: Overview;
@@ -107,7 +107,7 @@ const calculatePE = (apiData: ApiProp) => {
   return pe;
 };
 
-const getRecAndTargetPriceContext = (apiData: ApiProp) => {
+export const getRecAndTargetPriceContext = (apiData: ApiProp) => {
   const context = {
     annualData: apiData.yfAnnual,
     quarterlyData: apiData.yfQuarterly,

@@ -28,7 +28,10 @@ export type ApiData = {
   weeklyStock: WeeklyStockData;
 };
 
-const downloadYfinanceData = async (ticker: string, timescale: string) => {
+const downloadYfinanceData = async (
+  ticker: string,
+  timescale: string,
+): Promise<MetricsData> => {
   const keys = Object.values(METRIC_KEYS)
     .map((value) => value.map((v) => timescale + v))
     .flat();
@@ -87,7 +90,13 @@ const downloadYfinanceData = async (ticker: string, timescale: string) => {
   return cleanedData;
 };
 
-const downloadPolygonData = async (ticker: string) => {
+type Polygon = {
+  ttmData: PolygonData;
+  annualData: PolygonData;
+  quarterlyData: PolygonData;
+};
+
+const downloadPolygonData = async (ticker: string): Promise<Polygon> => {
   const apiUrl = `https://api.polygon.io/vX/reference/financials?ticker=${ticker}&limit=30&apiKey=${process.env.POLYGON_API_KEY}`;
 
   const res = await fetch(apiUrl);
@@ -130,7 +139,7 @@ const downloadPolygonData = async (ticker: string) => {
 export const fetchApiData = async (
   ticker: string,
   supabase: TypedSupabaseClient,
-) => {
+): Promise<ApiData> => {
   try {
     const { data: cachedData, error } = await supabase
       .from('metrics_cache')
@@ -151,11 +160,11 @@ export const fetchApiData = async (
 
     if (cachedData) {
       financialMetrics = {
-        yfAnnual: cachedData.yf_annual,
-        yfQuarterly: cachedData.yf_quarterly,
-        ttmData: cachedData.polygon_ttm,
-        polygonAnnual: cachedData.polygon_annual,
-        polygonQuarterly: cachedData.polygon_quarterly,
+        yfAnnual: cachedData.yf_annual as MetricsData,
+        yfQuarterly: cachedData.yf_quarterly as MetricsData,
+        ttmData: cachedData.polygon_ttm as PolygonData,
+        polygonAnnual: cachedData.polygon_annual as PolygonData,
+        polygonQuarterly: cachedData.polygon_quarterly as PolygonData,
       };
     } else {
       // Download and cache api metrics
