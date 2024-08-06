@@ -18,13 +18,6 @@ import { AllReportsColumn } from './allReports/AllReportsColumn';
 import { ReportInfo } from './allReports/ReportInfo';
 import { ReportPreview } from './allReports/ReportPreview';
 import { SubscriptionPlan } from '@/types/subscription';
-import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { initializeReportData } from '../utils/initializeReportData';
 import { generateReport } from '../utils/generateReport';
 

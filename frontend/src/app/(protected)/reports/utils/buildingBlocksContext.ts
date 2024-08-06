@@ -18,6 +18,7 @@ import {
 import { calculateRatio } from '@/lib/utils/metrics/financialUtils';
 import { formatSafeNumber } from '@/lib/utils/metrics/safeCalculations';
 import {
+  Block,
   generateBlock,
   Inputs,
   RecAndTargetPriceInputs,
@@ -31,17 +32,6 @@ export type ApiProp = {
   yfAnnual: MetricsData;
   yfQuarterly: MetricsData;
 };
-
-export type Block =
-  | 'company_overview'
-  | 'investment_thesis'
-  | 'business_description'
-  | 'recent_developments'
-  | 'management'
-  | 'risks'
-  | 'financial_analysis'
-  | 'valuation'
-  | 'targetprice_recommendation';
 
 export type GeneralBlock = {
   plan: SubscriptionPlan;

@@ -128,9 +128,12 @@ export const ReportForm = ({
     props: InitializeReportDataProps,
   ) => Promise<InitializeReportDataResponse>;
   generateReport: (
-    values: z.infer<typeof reportFormSchema>,
-    plan: SubscriptionPlan,
-    templateConfig: TemplateConfig,
+    ticker: string,
+    companyName: string,
+    apiData: any,
+    xmlData: string,
+    newsContext: string,
+    plan: string,
   ) => Promise<void>;
 }) => {
   const [isOpen, setOpen] = useState(false);
@@ -162,19 +165,9 @@ export const ReportForm = ({
     },
   });
 
-  const log = useLogger();
-
   const supabase = createClient();
 
   const { data: reportsData } = useQuery(fetchAllReports(supabase));
-
-  const {
-    insertNewReport,
-    updateReport,
-    insertTemplate,
-    updateTemplate,
-    insertCache,
-  } = useReportMutations();
 
   useEffect(() => {
     if (reportsData) {
@@ -260,6 +253,15 @@ export const ReportForm = ({
       } = await initializeReportData({ values, plan, templateConfig });
 
       console.log('baseActions done');
+
+      generateReport(
+        tickerData.ticker,
+        tickerData.company_name,
+        apiData,
+        xml,
+        newsContext,
+        plan,
+      );
 
       // const generatedJson: JSONContent = { type: 'doc', content: [] };
       // let generatedContent = '';

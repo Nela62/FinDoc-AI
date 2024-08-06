@@ -14,7 +14,6 @@ import { Logger } from 'next-axiom';
 import { getApiData, getNews, getSecFiling } from './apiHandlers';
 import { SubscriptionPlan } from '@/types/subscription';
 import { generateMetrics } from '@/lib/utils/metrics/generateMetrics';
-import { createJob, waitForJobCompletion } from './jobs';
 import { ServerError } from '@/types/error';
 import { downloadPublicCompanyImgs } from './downloadCompanyLogos';
 import { TemplateConfig } from '../components/NewReport';

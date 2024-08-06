@@ -1,13 +1,21 @@
-import { z } from 'zod';
-import { reportFormSchema } from '../components/report/ReportForm';
-import { SubscriptionPlan } from '@/types/subscription';
-import { TemplateConfig } from '../components/NewReport';
+import { generateReportSections } from './generateReportSections';
 
 export const generateReport = async (
-  values: z.infer<typeof reportFormSchema>,
-  plan: SubscriptionPlan,
-  templateConfig: TemplateConfig,
+  ticker: string,
+  companyName: string,
+  apiData: any,
+  xmlData: string,
+  newsContext: string,
+  plan: string,
 ) => {
   try {
+    const sections = await generateReportSections(
+      ticker,
+      companyName,
+      apiData,
+      xmlData,
+      newsContext,
+      plan,
+    );
   } catch (err) {}
 };
