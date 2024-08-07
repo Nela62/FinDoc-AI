@@ -1,17 +1,15 @@
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { fetchAllReports } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
-import { DotsHorizontalIcon, DotsVerticalIcon } from '@radix-ui/react-icons';
+import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 import {
   useDeleteMutation,
   useQuery,
 } from '@supabase-cache-helpers/postgrest-react-query';
 import { format } from 'date-fns';
-import { Plus } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { DisplayIcon } from './DisplayIcon';
 import {
@@ -155,7 +153,7 @@ export const AllReportsColumn = ({
                         <p className="">
                           {report.company_ticker} - {report.type}
                         </p>
-                        <p>{format(report.created_at, 'd MMMM yyyy')}</p>
+                        <p>{format(report.created_at, 'd MMM yyyy')}</p>
                       </div>
                     </div>
                   </div>

@@ -26,6 +26,7 @@ export const generateReportSections = async (
   newsContext: string,
   plan: string,
 ) => {
+  console.log('creating jobs');
   const jobIds = await Promise.all(
     section_ids.map(async (id: string) => {
       const jobId = await createJob({
@@ -44,6 +45,7 @@ export const generateReportSections = async (
   );
 
   const generatedBlocks = await waitForAllJobs(jobIds);
+  console.log('generatedBlocks', Object.keys(generatedBlocks));
   log.info('Generated all sections', { ticker });
 
   return generatedBlocks;

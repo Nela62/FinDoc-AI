@@ -60,6 +60,7 @@ function transformContent(obj) {
 }
 
 export const markdownToJson = (markdown: string) => {
+  console.log('markdown', markdown);
   const md = markdownit('commonmark');
   const html = md.render(markdown);
   const json = generateJSON(html, ExtensionKit());

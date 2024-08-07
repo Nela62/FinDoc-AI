@@ -2,6 +2,7 @@ import { SubscriptionPlan } from '@/types/subscription';
 import { Logger } from 'next-axiom';
 import OpenAI from 'openai';
 import { ApiData } from './apiData';
+import { ServerError } from '@/types/error';
 
 const log = new Logger();
 const openai = new OpenAI();
@@ -144,23 +145,30 @@ async function callAthinaPrompt(
       }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
+      if (data.error.includes('rate_limit_error')) {
+        throw new Error('Rate limit error');
+      }
+      console.log(response);
+      console.log('data', data);
       log.error('Error calling Athina API:', {
         status: response.status,
-        statusText: response.statusText,
-        url: response.url,
+        error: data.error,
         promptId,
+        company: variables.COMPANY_NAME,
       });
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(data.error);
     }
 
-    const data = await response.json();
     return data;
   } catch (error) {
     error instanceof Error &&
       log.error('Unexpected error calling Athina API:', {
         error: error.message,
         promptId,
+        company: variables.COMPANY_NAME,
       });
     throw error;
   }
@@ -223,9 +231,8 @@ export const generateBlock = async (
 
   const response = await callAthinaPrompt(blockIdsMap[blockId], inputs);
 
-  // console.log(response);
-
   if (response.status !== 'success') {
+    console.log(response);
     log.error('Failed to generate block', {});
     return { content: '', inputToken: 0, outputTokens: 0 };
   }

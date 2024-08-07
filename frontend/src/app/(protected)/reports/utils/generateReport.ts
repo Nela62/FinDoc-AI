@@ -66,31 +66,43 @@ export const generateReport = async ({
     const generatedJson: JSONContent = { type: 'doc', content: [] };
     let generatedContent = '';
 
-    log.info('Generated all sections', { ticker });
-
     section_ids.forEach((id) => {
-      if (!generatedBlocks[id]) return;
-      generatedContent += `##${titles[id as keyof typeof titles]}\
+      try {
+        generatedContent += `##${titles[id as keyof typeof titles]}\
     ${generatedBlocks[id]}`;
 
-      const json = markdownToJson(generatedBlocks[id]);
-      generatedJson.content?.push(
-        {
-          type: 'heading',
-          attrs: {
-            id: '220f43a9-c842-4178-b5b4-5ed8a33c6192',
-            level: 2,
-            'data-toc-id': '220f43a9-c842-4178-b5b4-5ed8a33c6192',
-          },
-          content: [
-            {
-              text: titles[id as keyof typeof titles],
-              type: 'text',
+        console.log(id);
+
+        const json = markdownToJson(generatedBlocks[id]);
+
+        console.log(json);
+        generatedJson.content?.push(
+          {
+            type: 'heading',
+            attrs: {
+              id: '220f43a9-c842-4178-b5b4-5ed8a33c6192',
+              level: 2,
+              'data-toc-id': '220f43a9-c842-4178-b5b4-5ed8a33c6192',
             },
-          ],
-        },
-        ...json.content,
-      );
+            content: [
+              {
+                text: titles[id as keyof typeof titles],
+                type: 'text',
+              },
+            ],
+          },
+          ...json.content,
+        );
+      } catch (error) {
+        error instanceof Error &&
+          log.error('Error generating report', {
+            ticker,
+            id,
+            message: error.message,
+            fnName: 'process section (markdownToJson)',
+          });
+        console.error(error);
+      }
     });
 
     // generate a summary if required

@@ -175,7 +175,6 @@ const getRisksContext = (
     const item = get10KItem(xmlData, '1a', '2');
     const context = { 'Item 1A. Risk Factors': item };
 
-    console.log(context);
     return JSON.stringify(context);
   } catch (err) {
     if (err instanceof Error) {

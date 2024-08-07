@@ -28,19 +28,41 @@ const processTask = async (jobId: string) => {
     });
     throw new ServerError('Error retrieving job: ' + jobId);
   }
-  const { content, inputTokens, outputTokens } = await getBlock(data.params);
+  try {
+    const { content, inputTokens, outputTokens } = await getBlock(data.params);
 
-  await supabase
-    .from('ai_jobs')
-    .update({
-      status: 'completed',
-      block_data: content,
-      input_tokens: inputTokens,
-      output_tokens: outputTokens,
-      finished_at: new Date().toISOString(),
-    })
-    .eq('id', jobId);
-
+    await supabase
+      .from('ai_jobs')
+      .update({
+        status: 'completed',
+        block_data: content,
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        finished_at: new Date().toISOString(),
+      })
+      .eq('id', jobId);
+  } catch (err) {
+    if (err instanceof Error) {
+      if (err.message === 'Rate limit error') {
+        await supabase
+          .from('ai_jobs')
+          .update({ status: 'queued' })
+          .eq('id', jobId);
+      } else {
+        await supabase
+          .from('ai_jobs')
+          .update({
+            status: 'completed',
+            block_data: '',
+            input_tokens: 0,
+            output_tokens: 0,
+            error: err.message,
+            finished_at: new Date().toISOString(),
+          })
+          .eq('id', jobId);
+      }
+    }
+  }
   // Check if there are any queued tasks
   const { data: queuedTasks, error } = await supabase
     .from('ai_jobs')
@@ -162,6 +184,8 @@ export const waitForJobCompletion = async (jobId: string) => {
       log.error('Job failed', { jobId });
       throw new ServerError('Job failed: ' + jobId);
     }
+
+    console.log('Waiting before next check');
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }

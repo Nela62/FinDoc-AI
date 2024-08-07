@@ -67,6 +67,9 @@ import {
   InitializeReportDataResponse,
 } from '../../utils/initializeReportData';
 import { GenerateReportArgs } from '../../utils/generateReport';
+import React from 'react';
+import { PolygonData } from '@/types/metrics';
+import { DailyStockData } from '@/types/alphaVantageApi';
 
 export const reportFormSchema = z.object({
   reportType: z.string(),
@@ -77,6 +80,14 @@ export const reportFormSchema = z.object({
     .optional(),
   financialStrength: z.string().optional(),
 });
+
+type ChartData = {
+  annual: PolygonData;
+  quarterly: PolygonData;
+  stock: DailyStockData;
+  targetPrice: number;
+  colors: string[];
+};
 
 export const ReportForm = ({
   setIsTemplateCustomization,
@@ -102,11 +113,8 @@ export const ReportForm = ({
   const [isOpen, setOpen] = useState(false);
   const [curReportId, setReportId] = useState<string | null>(null);
   const [images, setImages] = useState<Blob[] | null>(null);
-  const [polygonApi, setPolygonApi] = useState({
-    annual: null,
-    quarterly: null,
-    stock: null,
-  });
+  const [chartData, setChartData] = useState<ChartData | null>(null);
+
   const { progress, progressMessage, nextStep, finalStep } =
     useReportProgress();
 
@@ -178,14 +186,17 @@ export const ReportForm = ({
 
   // TODO: sort by cap instead
 
-  const tickers: Option[] =
-    tickersData
-      ?.map((ticker) => ({
-        value: ticker.ticker,
-        label: ticker.label,
-      }))
-      .sort((a, b) => (a.label > b.label ? 1 : b.label > a.label ? -1 : 0)) ??
-    [];
+  const tickers: Option[] = React.useMemo(() => {
+    return (
+      tickersData
+        ?.map((ticker) => ({
+          value: ticker.ticker,
+          label: ticker.label,
+        }))
+        .sort((a, b) => (a.label > b.label ? 1 : b.label > a.label ? -1 : 0)) ??
+      []
+    );
+  }, [tickersData]);
 
   const onGenerateAndFormSubmit = async (
     values: z.infer<typeof reportFormSchema>,
@@ -232,7 +243,15 @@ export const ReportForm = ({
 
       console.log('report generated');
 
-      // setReportId(reportId);
+      setChartData({
+        annual: apiData.polygonAnnual,
+        quarterly: apiData.polygonQuarterly,
+        stock: apiData.dailyStock,
+        targetPrice: Number(targetPrice),
+        colors: templateConfig.colorScheme.colors,
+      });
+
+      setReportId(reportId);
     } catch (err) {
       if (err instanceof Error || err instanceof ServerError)
         handleError(err, !(err instanceof ServerError));
@@ -240,28 +259,28 @@ export const ReportForm = ({
     }
   };
 
-  // useEffect(() => {
-  //   if (!isLoading && images) {
-  //     console.log('generating pdf...');
-  //     generateDocxBlob(images)
-  //       .then((blob: Blob) => generatePdf(blob))
-  //       .then(() => {
-  //         finalStep();
-  //         setOpen(false);
-  //         setSelectedReportId(curReportId);
-  //       });
-  //   } else {
-  //     console.log('still loading');
-  //     console.log('images ', images?.length);
-  //   }
-  // }, [
-  //   isLoading,
-  //   images,
-  //   curReportId,
-  //   generateDocxBlob,
-  //   generatePdf,
-  //   setSelectedReportId,
-  // ]);
+  useEffect(() => {
+    if (!isLoading && images) {
+      console.log('generating pdf...');
+      generateDocxBlob(images)
+        .then((blob: Blob) => generatePdf(blob))
+        .then(() => {
+          // finalStep();
+          setOpen(false);
+          setSelectedReportId(curReportId);
+        });
+    } else {
+      console.log('still loading');
+      console.log('images ', images?.length);
+    }
+  }, [
+    isLoading,
+    images,
+    curReportId,
+    generateDocxBlob,
+    generatePdf,
+    setSelectedReportId,
+  ]);
 
   // const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
   //   // baseActions
@@ -310,20 +329,16 @@ export const ReportForm = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {templateConfig &&
-        targetPrice &&
-        polygonApi.annual &&
-        polygonApi.quarterly &&
-        polygonApi.stock && (
-          <ChartWrapper
-            colors={templateConfig.colorScheme.colors}
-            targetPrice={targetPrice}
-            polygonAnnual={polygonApi.annual}
-            polygonQuarterly={polygonApi.quarterly}
-            dailyStock={polygonApi.stock}
-            setCharts={setImages}
-          />
-        )}
+      {chartData && (
+        <ChartWrapper
+          colors={chartData.colors}
+          targetPrice={chartData.targetPrice}
+          polygonAnnual={chartData.annual}
+          polygonQuarterly={chartData.quarterly}
+          dailyStock={chartData.stock}
+          setCharts={setImages}
+        />
+      )}
       <div className="flex flex-col gap-4">
         <div className="h-[41px] border-b w-full px-8 flex gap-2 items-center bg-white">
           <TooltipProvider delayDuration={100}>
