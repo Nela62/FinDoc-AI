@@ -28,7 +28,6 @@ const processTask = async (jobId: string) => {
     });
     throw new ServerError('Error retrieving job: ' + jobId);
   }
-  console.log('getting block');
   const { content, inputTokens, outputTokens } = await getBlock(data.params);
 
   await supabase

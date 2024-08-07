@@ -145,7 +145,12 @@ async function callAthinaPrompt(
     });
 
     if (!response.ok) {
-      log.error('Error calling Athina API:', { ...response, promptId });
+      log.error('Error calling Athina API:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.url,
+        promptId,
+      });
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -153,7 +158,10 @@ async function callAthinaPrompt(
     return data;
   } catch (error) {
     error instanceof Error &&
-      log.error('Error calling Athina API:', { ...error, promptId });
+      log.error('Unexpected error calling Athina API:', {
+        error: error.message,
+        promptId,
+      });
     throw error;
   }
 }
@@ -218,7 +226,7 @@ export const generateBlock = async (
   // console.log(response);
 
   if (response.status !== 'success') {
-    log.error('Failed to generate block', { ...response });
+    log.error('Failed to generate block', {});
     return { content: '', inputToken: 0, outputTokens: 0 };
   }
 

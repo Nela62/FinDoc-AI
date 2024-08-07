@@ -3,8 +3,7 @@ import { getSidebarMetrics } from './sidebarMetrics';
 import { getGrowthAndValuationAnalysisMetrics } from './growthAndValuationAnalysisMetrics';
 import { getFinancialAndRiskAnalysisMetrics } from './financialAndRiskAnalysisMetrics';
 import { getNWeeksStock } from './stock';
-import { ApiData } from '@/app/(protected)/reports/components/report/ReportForm';
-import { TemplateConfig } from '@/types/template';
+import { ApiData } from '@/app/(protected)/reports/utils/apiData';
 
 export function generateMetrics(
   apiData: ApiData,
