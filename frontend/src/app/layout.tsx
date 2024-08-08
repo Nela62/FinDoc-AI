@@ -41,7 +41,7 @@ export default function RootLayout({
           <Toaster />
         </body>
         <PageAnalytics />
-        <AxiomWebVitals />
+        {/* <AxiomWebVitals /> */}
       </html>
     </ReactQueryClientProvider>
     // </Suspense>

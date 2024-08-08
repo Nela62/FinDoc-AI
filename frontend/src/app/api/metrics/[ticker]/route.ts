@@ -98,18 +98,6 @@ export async function GET(
     // Check cache
     const supabase = serviceClient();
 
-    const userRes = await supabase.auth.getUser();
-
-    if (!userRes.data.user && process.env.NODE_ENV !== 'development') {
-      return Response.json(
-        {
-          error: 'Unauthorized access',
-          message: 'User not found or invalid credentials',
-        },
-        { status: 401 },
-      );
-    }
-
     if (!refetch) {
       const { data: cachedData, error } = await supabase
         .from('metrics_cache')

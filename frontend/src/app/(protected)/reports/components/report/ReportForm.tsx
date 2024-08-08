@@ -30,7 +30,7 @@ import {
   useQuery,
   useUpdateMutation,
 } from '@supabase-cache-helpers/postgrest-react-query';
-import { format, isAfter, startOfWeek } from 'date-fns';
+import { format, isAfter, startOfWeek, sub } from 'date-fns';
 import { SquarePen, Wand2Icon } from 'lucide-react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -91,6 +91,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { analytics } from '@/lib/segment';
+import Exa from 'exa-js';
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
@@ -302,22 +303,10 @@ export const ReportForm = ({
   const baseActions = async (values: z.infer<typeof reportFormSchema>) => {
     try {
       if (!templateConfig) {
-        // throw new Error('Template config is not ready yet.');
-        templateConfig = {
-          authorName: 'Findoc AI',
-          authorCompanyName: 'Altan Arata',
-          colorScheme: {
-            id: 'blue',
-            colors: ['#1c4587', '#f4e9d3', '#006f3b'],
-          },
-          colorSchemesList: [
-            { id: 'blue', colors: ['#1c4587', '#f4e9d3', '#006f3b'] },
-            { id: 'red', colors: ['#7d1f1f', '#f4e9d3', '#006f3b'] },
-            { id: 'white', colors: ['#787878', '#cce8fb', '#0061d9'] },
-          ],
-          authorCompanyLogosList: [],
-        };
+        throw new Error('Template config is not ready yet.');
       }
+
+      console.log(templateConfig);
 
       log.info('Generating new report', {
         ticker: values.companyTicker.value,
@@ -405,56 +394,44 @@ export const ReportForm = ({
       // Fetch web data
       setProgress((state) => state + progressValue);
       setProgressMessage('Fetching web news...');
-      const news = await fetchAllNews(values.companyTicker.value);
 
-      const getRecentDevelopmentsContext = async (news: any) => {
-        let context: Record<string, string>[] = [];
-        const promises = Object.keys(news).map((key: string) => {
-          return Promise.all(
-            news[key as keyof typeof news].feed
-              ?.slice(0, 15)
-              .map(async (f: Feed) => {
-                const content = await fetchNewsContent(f.url);
-                const obj = {
-                  title: f.title,
-                  summary: f.summary,
-                  time_published: f.time_published,
-                  content: content ?? '',
-                };
-                context.push(obj);
-              }),
-          );
+      const exa = new Exa(process.env.NEXT_PUBLIC_EXA_API_KEY);
+
+      const last3Months = await exa
+        .searchAndContents(tickerData.company_name + 'news', {
+          type: 'neural',
+          numResults: 25,
+          text: true,
+          category: 'news',
+          useAutoprompt: true,
+          startPublishedDate: sub(new Date(), { months: 3 }).toISOString(),
+          endPublishedDate: new Date().toISOString(),
+        })
+        .then((res) => res.results)
+        .catch((error) => {
+          log.error('Error occurred', {
+            error,
+            companyName: tickerData.company_name,
+            fnName: 'last3Months',
+          });
+          return [];
         });
 
-        await Promise.all(promises);
+      const news = [...last3Months];
 
-        return JSON.stringify(context);
-      };
-      console.log(news);
-
-      let newsContext = '';
-
-      try {
-        newsContext = await getRecentDevelopmentsContext(news);
-      } catch (err) {
-        log.error('Error when generating news context', {
-          error: err instanceof Error ? err.message : '',
-        });
-      }
+      let newsContext = JSON.stringify(last3Months);
 
       const sources = [];
       sources.push(
         `[1] ${tickerData.company_name}, "Form 10-K," Securities and Exchance Comission, Washington, D.C., 2024.`,
       );
 
-      Object.entries(news).map(([key, value]) => {
-        value.feed?.slice(0, 15).forEach((n: Feed) => {
-          sources.push(
-            `[${sources.length + 1}] ${n.authors[0]}, "${n.title}", ${
-              n.source
-            }, ${n.time_published.slice(0, 4)}. Available at ${n.url}`,
-          );
-        });
+      news.map((article) => {
+        sources.push(
+          `[${sources.length + 1}] ${article.author}, "${article.title}", ${
+            article.publishedDate
+          }. Available at ${article.url}`,
+        );
       });
 
       const { recommendation, targetPrice } = await getRecAndTargetPrice(
@@ -603,21 +580,10 @@ export const ReportForm = ({
         ...values,
       });
 
+      console.log(templateConfig);
+
       if (!templateConfig) {
-        templateConfig = {
-          authorName: 'Findoc AI',
-          authorCompanyName: 'Altan Arata',
-          colorScheme: {
-            id: 'blue',
-            colors: ['#1c4587', '#f4e9d3', '#006f3b'],
-          },
-          colorSchemesList: [
-            { id: 'blue', colors: ['#1c4587', '#f4e9d3', '#006f3b'] },
-            { id: 'red', colors: ['#7d1f1f', '#f4e9d3', '#006f3b'] },
-            { id: 'white', colors: ['#787878', '#cce8fb', '#0061d9'] },
-          ],
-          authorCompanyLogosList: [],
-        };
+        throw new Error('Template config is not ready yet.');
       }
       // baseActions
       const {
@@ -769,6 +735,9 @@ export const ReportForm = ({
         });
     } else {
       console.log('still loading');
+      console.log(polygonApi);
+      console.log(targetPrice);
+      console.log(templateConfig?.colorScheme);
       console.log('images ', images?.length);
     }
   }, [

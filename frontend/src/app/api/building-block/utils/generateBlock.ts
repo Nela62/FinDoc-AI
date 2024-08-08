@@ -100,13 +100,15 @@ export const generateBlock = async (
       template = findReplaceString(template, key, value);
     });
 
-    let model = 'claude-3-5-sonnet-20240620';
+    // let model = 'claude-3-5-sonnet-20240620';
 
-    if (plan === 'dev') {
-      model = 'claude-3-haiku-20240307';
-    } else if (plan === 'professional' || plan === 'enterprise') {
-      model = 'claude-3-opus-20240229';
-    }
+    // if (plan === 'dev') {
+    //   model = 'claude-3-haiku-20240307';
+    // } else if (plan === 'professional' || plan === 'enterprise') {
+    //   model = 'claude-3-opus-20240229';
+    // }
+
+    let model = 'claude-3-haiku-20240307';
 
     const message = await anthropic.messages.create({
       temperature: 0.2,

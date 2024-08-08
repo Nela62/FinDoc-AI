@@ -31,10 +31,6 @@ SET row_security = off;
 -- Data for Name: users; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 
-INSERT INTO "auth"."users" ("instance_id", "id", "aud", "role", "email", "encrypted_password", "email_confirmed_at", "invited_at", "confirmation_token", "confirmation_sent_at", "recovery_token", "recovery_sent_at", "email_change_token_new", "email_change", "email_change_sent_at", "last_sign_in_at", "raw_app_meta_data", "raw_user_meta_data", "is_super_admin", "created_at", "updated_at", "phone", "phone_confirmed_at", "phone_change", "phone_change_token", "phone_change_sent_at", "email_change_token_current", "email_change_confirm_status", "banned_until", "reauthentication_token", "reauthentication_sent_at", "is_sso_user", "deleted_at", "is_anonymous") VALUES
-	('00000000-0000-0000-0000-000000000000', '8a84f859-4958-4496-a740-bf0b67707af3', 'authenticated', 'authenticated', 'user@coreline.ai', '$2a$10$B0LFqcXJqXnwUPaKhLmAtejx3kuvZ8ifR8Oa.YQFq0xY4kTX9/EUS', '2024-04-26 17:27:19.364068+00', NULL, '', '2024-04-26 17:27:10.104807+00', '', NULL, '', '', NULL, '2024-06-23 19:08:56.486606+00', '{"provider": "email", "providers": ["email"]}', '{"sub": "8a84f859-4958-4496-a740-bf0b67707af3", "email": "user@coreline.ai", "email_verified": false, "phone_verified": false}', NULL, '2024-04-26 17:23:03.627855+00', '2024-06-24 06:34:22.497441+00', NULL, NULL, '', '', NULL, '', 0, NULL, '', NULL, false, NULL, false),
-	('00000000-0000-0000-0000-000000000000', '088f0e6f-185a-485f-9889-375acf023bad', 'authenticated', 'authenticated', 'user@findoc-ai.com', '$2a$10$iqKH3FAfWaRgmI9VqC3M.OZoCaq92BezUAyOn/Fi4m0G35nH2gnK2', '2024-06-12 04:31:51.20866+00', NULL, '', '2024-06-12 04:31:19.456307+00', '', NULL, '', '', NULL, '2024-06-21 19:18:41.483918+00', '{"provider": "email", "providers": ["email"]}', '{"sub": "088f0e6f-185a-485f-9889-375acf023bad", "email": "user@findoc-ai.com", "email_verified": false, "phone_verified": false}', NULL, '2024-06-12 04:31:19.428553+00', '2024-06-21 19:18:41.487597+00', NULL, NULL, '', '', NULL, '', 0, NULL, '', NULL, false, NULL, false);
-
 
 --
 -- Data for Name: companies; Type: TABLE DATA; Schema: public; Owner: postgres
@@ -5613,9 +5609,9 @@ INSERT INTO "public"."companies" ("id", "company_name", "stock_name", "ticker", 
 -- Data for Name: settings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO "public"."settings" ("id", "user_id", "author_name", "company_name") VALUES
-	('05cc99b1-592e-41f2-aaa5-252fd2820226', '088f0e6f-185a-485f-9889-375acf023bad', 'Findoc AI', 'Findoc Inc.'),
-	('b03f1a37-5e2b-400e-8a20-ffe919b54100', '75e866e6-7947-4bea-8ca8-3b463ac975ff', 'Findoc AI', 'Findoc Inc.');
+INSERT INTO "public"."settings" ("user_id", "author_name", "company_name") VALUES
+	('088f0e6f-185a-485f-9889-375acf023bad', 'Findoc AI', 'Findoc Inc.'),
+	('8a84f859-4958-4496-a740-bf0b67707af3', 'Findoc AI', 'Findoc Inc.');
 
 
 INSERT INTO

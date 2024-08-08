@@ -76,6 +76,7 @@ export const NewReport = ({ userId }: { userId: string }) => {
   );
 
   useEffect(() => {
+    console.log('settings' && settings);
     if (settings && settings.length > 0 && logos) {
       setTemplateConfig({
         authorName: settings[0].author_name,
