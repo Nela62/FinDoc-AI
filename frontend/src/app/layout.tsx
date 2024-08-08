@@ -11,8 +11,8 @@ import { ReactQueryClientProvider } from '@/providers/ReactQueryClientProvider';
 // import { CSPostHogProvider } from '@/providers/PostHogClientProvider';
 import { Toaster } from '@/components/ui/toaster';
 import { PdfWorkerProvider } from '@/providers/PdfWorkerProvider';
-import PageAnalytics from '@/components/analytics/pageAnalytics';
-import { Suspense } from 'react';
+// import PageAnalytics from '@/components/analytics/pageAnalytics';
+// import { Suspense } from 'react';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -41,7 +41,9 @@ export default function RootLayout({
           </main>
           <Toaster />
         </body>
-        <PageAnalytics />
+        {/* <Suspense>
+          <PageAnalytics />
+        </Suspense> */}
         {/* <AxiomWebVitals /> */}
       </html>
     </ReactQueryClientProvider>

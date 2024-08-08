@@ -56,9 +56,9 @@ export const QuarterStockChart = forwardRef((props: ChartProps, ref: any) => {
   const stockMax = getHighestStockPrice(stockData);
   const stockMean = getMeanClosingStockPrice(stockData);
 
-  console.log(props.dailyStock);
-  console.log(stockData);
-  console.log(chartStockData);
+  // console.log(props.dailyStock);
+  // console.log(stockData);
+  // console.log(chartStockData);
 
   return (
     <div className="bg-background w-[500px] h-fit" ref={ref}>

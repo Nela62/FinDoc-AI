@@ -20,5 +20,7 @@ export async function POST(req: Request) {
     .from('images')
     .upload(imageName, img, { contentType: img.type });
 
+  console.log('res', res);
+
   return NextResponse.json({ url: res?.data?.path ?? '' });
 }

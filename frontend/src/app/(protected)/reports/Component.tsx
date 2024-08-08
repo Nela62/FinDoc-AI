@@ -18,13 +18,6 @@ import { AllReportsColumn } from './components/allReports/AllReportsColumn';
 import { ReportInfo } from './components/allReports/ReportInfo';
 import { ReportPreview } from './components/allReports/ReportPreview';
 import { SubscriptionPlan } from '@/types/subscription';
-import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 
 type ColorScheme = { id: string; colors: string[] };
 

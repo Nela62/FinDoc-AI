@@ -1,7 +1,4 @@
-'use server';
-
 import { Params } from '@/app/api/building-block/utils/blocks';
-import { log } from 'console';
 import { Logger } from 'next-axiom';
 import { Dispatch, SetStateAction } from 'react';
 
@@ -14,6 +11,8 @@ export const createJob = async (
   setJobs: Dispatch<SetStateAction<Record<string, Job>>>,
 ) => {
   const log = new Logger();
+
+  console.log('creating a job');
 
   try {
     const { jobId } = await fetch(`/api/building-block`, {
@@ -64,7 +63,7 @@ export const waitForJobCompletion = async (jobId: string) => {
 };
 
 export const waitForSecJobCompletion = async (jobId: string) => {
-  'use server';
+  // 'use server';
 
   try {
     while (true) {

@@ -95,7 +95,7 @@ export const TargetPriceChart = forwardRef((props: ChartProps, ref: any) => {
     }))
     .reverse();
 
-  console.log(ratings);
+  // console.log(ratings);
 
   return (
     <div className="bg-background h-fit w-screen text-xs" ref={ref}>

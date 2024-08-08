@@ -73,6 +73,7 @@ export const generateBlock = async (
   plan: SubscriptionPlan,
 ) => {
   const log = new Logger();
+  console.log('blockId', blockId);
 
   try {
     if (!process.env.HUMANLOOP_API_KEY) {
@@ -123,7 +124,7 @@ export const generateBlock = async (
 
     // https://github.com/anthropics/anthropic-sdk-typescript/issues/432
     if (message?.content[0]?.type === 'text') {
-      console.log(message.content[0].text);
+      // console.log(message.content[0].text);
       humanloop.log({
         project_id: humanloopIdsMap[blockId],
         config_id: config.id,

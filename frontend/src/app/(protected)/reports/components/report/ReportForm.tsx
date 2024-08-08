@@ -90,7 +90,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { analytics } from '@/lib/segment';
 import Exa from 'exa-js';
 import { useReportProgress } from '@/hooks/useReportProgress';
 import { ServerError } from '@/types/error';
@@ -298,8 +297,6 @@ export const ReportForm = ({
         throw new Error('Template config is not ready yet.');
       }
 
-      console.log(templateConfig);
-
       log.info('Generating new report', {
         ticker: values.companyTicker.value,
         userId: userId,
@@ -463,7 +460,8 @@ export const ReportForm = ({
         getFinancialAndRiskAnalysisMetrics(yfAnnual);
 
       // Generate a company overview if any
-      nextStep();
+      console.log('generating company overview');
+
       const companyOverviewJobId = await createJob(
         {
           blockId: 'company_overview',
@@ -473,6 +471,8 @@ export const ReportForm = ({
       );
 
       const companyOverview = await waitForJobCompletion(companyOverviewJobId);
+
+      console.log('companyOverview');
 
       await downloadPublicCompanyImgs(
         tickerData.cik,
@@ -532,11 +532,9 @@ export const ReportForm = ({
     values: z.infer<typeof reportFormSchema>,
   ) => {
     try {
-      analytics.track('Report Generated', {
-        ...values,
-      });
-
-      console.log(templateConfig);
+      // analytics.track('Report Generated', {
+      //   ...values,
+      // });
 
       if (!templateConfig) {
         templateConfig = {
@@ -590,6 +588,7 @@ export const ReportForm = ({
 
       const jobIds = await Promise.all(
         section_ids.map(async (id: string) => {
+          console.log('id', id);
           const jobId = await createJob(
             {
               blockId: id as Block,

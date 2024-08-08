@@ -106,6 +106,7 @@ const uploadPublicCompanyImg = async (
   name: string,
   index: number,
 ) => {
+  console.log('uploading image');
   const res = await fetch('/api/images/logo/', {
     method: 'POST',
     body: JSON.stringify({ src, cik, format, name, index }),

@@ -210,8 +210,6 @@ export const fetchApiData = async (ticker: string): Promise<ActionResponse> => {
       .eq('ticker', ticker)
       .maybeSingle();
 
-    console.log(cachedData);
-
     if (error) {
       log.error('Error occurred', {
         error,
