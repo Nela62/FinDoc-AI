@@ -90,7 +90,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import Exa from 'exa-js';
+import Exa, { SearchResult } from 'exa-js';
 import { useReportProgress } from '@/hooks/useReportProgress';
 import { ServerError } from '@/types/error';
 
@@ -352,31 +352,13 @@ export const ReportForm = ({
       // setProgressMessage('Fetching web news...');
       nextStep();
 
-      const exa = new Exa(process.env.NEXT_PUBLIC_EXA_API_KEY);
+      const news: SearchResult[] = await fetch(
+        '/api/news?companyName=' + tickerData.company_name,
+      )
+        .then((res) => res.json())
+        .catch(() => []);
 
-      const last3Months = await exa
-        .searchAndContents(tickerData.company_name + 'news', {
-          type: 'neural',
-          numResults: 25,
-          text: true,
-          category: 'news',
-          useAutoprompt: true,
-          startPublishedDate: sub(new Date(), { months: 3 }).toISOString(),
-          endPublishedDate: new Date().toISOString(),
-        })
-        .then((res) => res.results)
-        .catch((error) => {
-          log.error('Error occurred', {
-            error,
-            companyName: tickerData.company_name,
-            fnName: 'last3Months',
-          });
-          return [];
-        });
-
-      const news = [...last3Months];
-
-      let newsContext = JSON.stringify(last3Months);
+      let newsContext = JSON.stringify(news);
 
       const sources = [];
       sources.push(
