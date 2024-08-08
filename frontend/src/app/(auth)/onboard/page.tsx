@@ -1,3 +1,6 @@
+import { OnboardingForm } from '../components/OnboardingForm';
+import { updateUser } from './actions';
+
 export default function OnboardPage() {
-  return <div></div>;
+  return <OnboardingForm updateUser={updateUser} />;
 }

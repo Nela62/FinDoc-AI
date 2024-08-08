@@ -1,7 +1,19 @@
-import * as React from 'react';
+import { BaseAuthForm } from '../components/BaseAuthForm';
+import {
+  registerWithOtp,
+  signInWithOtp,
+  signInWithPassword,
+  verifyOtp,
+} from '@/lib/authService/authService';
 
-import { RegisterAuthForm } from '../components/RegisterAuthForm';
-
-export default async function Register() {
-  return <RegisterAuthForm />;
+export default function Register() {
+  return (
+    <BaseAuthForm
+      mode="register"
+      signInWithPassword={signInWithPassword}
+      signInWithOtp={signInWithOtp}
+      registerWithOtp={registerWithOtp}
+      verifyOtp={verifyOtp}
+    />
+  );
 }

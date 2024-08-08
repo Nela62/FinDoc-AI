@@ -1,8 +1,9 @@
 import { serviceClient } from '@/lib/supabase/service';
-import { METRIC_KEYS } from './metricKeys';
+// import { METRIC_KEYS } from './metricKeys';
 import { createClient } from '@/lib/supabase/server';
 import { MetricsData } from '@/types/metrics';
 import { NextResponse } from 'next/server';
+import { METRIC_KEYS } from '@/app/(protected)/reports/components/report/metricKeys';
 
 const downloadYfinanceData = async (ticker: string, timescale: string) => {
   const keys = Object.values(METRIC_KEYS)

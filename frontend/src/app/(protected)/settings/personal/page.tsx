@@ -54,8 +54,8 @@ export default function PersonalInformationPage() {
 
   const { mutateAsync: update } = useUpdateMutation(
     supabase.from('settings'),
-    ['id'],
-    'id',
+    ['user_id'],
+    'user_id',
   );
 
   const form = useForm<z.infer<typeof authorFormSchema>>({
@@ -70,7 +70,7 @@ export default function PersonalInformationPage() {
   async function onSubmit(values: z.infer<typeof authorFormSchema>) {
     if (!userId || !data || data.length === 0) return;
 
-    await update({ id: data[0].id, author_name: values.authorName });
+    await update({ user_id: data[0].user_id, author_name: values.authorName });
 
     toast({ description: 'Successfully updated settings.' });
   }

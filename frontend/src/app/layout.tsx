@@ -12,6 +12,7 @@ import { ReactQueryClientProvider } from '@/providers/ReactQueryClientProvider';
 import { Toaster } from '@/components/ui/toaster';
 import { PdfWorkerProvider } from '@/providers/PdfWorkerProvider';
 import PageAnalytics from '@/components/analytics/pageAnalytics';
+import { Suspense } from 'react';
 
 const inter = Inter({ subsets: ['latin'] });
 

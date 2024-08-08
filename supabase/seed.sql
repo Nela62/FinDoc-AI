@@ -5615,7 +5615,11 @@ INSERT INTO "public"."companies" ("id", "company_name", "stock_name", "ticker", 
 
 INSERT INTO "public"."settings" ("user_id", "author_name", "company_name") VALUES
 	('088f0e6f-185a-485f-9889-375acf023bad', 'Findoc AI', 'Findoc Inc.'),
+<<<<<<< HEAD
 	('8a84f859-4958-4496-a740-bf0b67707af3', 'Findoc AI', 'Findoc Inc.');
+=======
+	('75e866e6-7947-4bea-8ca8-3b463ac975ff', 'Findoc AI', 'Findoc Inc.');
+>>>>>>> 3cbc111894fcd6610803975eb0a2ad867f49d130
 
 
 INSERT INTO

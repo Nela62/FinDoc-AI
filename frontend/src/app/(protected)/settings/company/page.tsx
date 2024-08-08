@@ -67,8 +67,8 @@ export default function PersonalInformationPage() {
 
   const { mutateAsync: update } = useUpdateMutation(
     supabase.from('settings'),
-    ['id'],
-    'id',
+    ['user_id'],
+    'user_id',
   );
 
   useEffect(() => {
@@ -121,7 +121,10 @@ export default function PersonalInformationPage() {
   async function onCompanyNameSubmit(
     values: z.infer<typeof companyNameFormSchema>,
   ) {
-    await update({ id: data![0].id, company_name: values.companyName });
+    await update({
+      user_id: data![0].user_id,
+      company_name: values.companyName,
+    });
 
     toast({ description: 'Successfully updated settings.' });
   }
