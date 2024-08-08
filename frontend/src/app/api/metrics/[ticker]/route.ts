@@ -2,6 +2,7 @@ import { serviceClient } from '@/lib/supabase/service';
 import { METRIC_KEYS } from './metricKeys';
 import { createClient } from '@/lib/supabase/server';
 import { MetricsData } from '@/types/metrics';
+import { NextResponse } from 'next/server';
 
 const downloadYfinanceData = async (ticker: string, timescale: string) => {
   const keys = Object.values(METRIC_KEYS)
@@ -95,7 +96,7 @@ export async function GET(
 
   try {
     // Check cache
-    const supabase = createClient();
+    const supabase = serviceClient();
 
     const userRes = await supabase.auth.getUser();
 
@@ -123,7 +124,7 @@ export async function GET(
       }
 
       if (cachedData) {
-        return Response.json({
+        return NextResponse.json({
           yfAnnual: cachedData.yf_annual,
           yfQuarterly: cachedData.yf_quarterly,
           ttmData: cachedData.polygon_ttm,
@@ -158,7 +159,7 @@ export async function GET(
       );
     }
 
-    return Response.json({
+    return NextResponse.json({
       yfAnnual: annual,
       yfQuarterly: quarterly,
       ttmData,
@@ -168,7 +169,7 @@ export async function GET(
   } catch (error) {
     console.error('Error in GET request:', error);
 
-    return Response.json(
+    return NextResponse.json(
       {
         error: 'An error occurred while processing your request',
         message: error instanceof Error ? error.message : String(error),
