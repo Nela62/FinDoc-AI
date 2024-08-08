@@ -1,3 +1,5 @@
+'use client';
+
 import markdownit from 'markdown-it';
 import { generateJSON } from '@tiptap/html';
 import { ExtensionKit } from '@/extensions/extension-kit';
@@ -16,6 +18,7 @@ export const markdownToHtml = (markdown: string) => {
   const md = markdownit('commonmark');
   const html = md.render(markdown);
   return html;
+  return markdown;
 };
 
 // @ts-ignore
@@ -68,4 +71,5 @@ export const markdownToJson = (markdown: string) => {
   const transformedObject = transformContent(json);
 
   return transformedObject;
+  return markdown;
 };

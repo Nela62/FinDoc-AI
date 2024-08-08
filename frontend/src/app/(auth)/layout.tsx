@@ -29,7 +29,7 @@ export default async function Layout({
           />
         </div>
         <div className="flex flex-col justify-center items-center gap-2 mt-4">
-          <Suspense>{children}</Suspense>
+          {children}
         </div>
       </div>
     </div>

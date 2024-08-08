@@ -32,6 +32,7 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '8mb',
     },
+    serverComponentsExternalPackages: ['@anthropic-ai/sdk'],
   },
 };
 export default MillionLint.next({
