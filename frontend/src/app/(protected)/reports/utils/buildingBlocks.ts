@@ -1,11 +1,8 @@
 import { SubscriptionPlan } from '@/types/subscription';
 import { Logger } from 'next-axiom';
-import OpenAI from 'openai';
 import { ApiData } from './apiData';
-import { ServerError } from '@/types/error';
 
 const log = new Logger();
-const openai = new OpenAI();
 
 export type Block =
   | 'company_overview'

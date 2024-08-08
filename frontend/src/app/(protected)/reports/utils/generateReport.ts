@@ -1,14 +1,12 @@
 'use server';
-import { JSONContent } from '@tiptap/core';
 import { generateReportSections, section_ids } from './generateReportSections';
 import { Logger } from 'next-axiom';
-import { markdownToJson } from '@/lib/utils/formatText';
 import { createJob, waitForJobCompletion } from './jobs';
 import { SubscriptionPlan } from '@/types/subscription';
 import { createClient } from '@/lib/supabase/server';
 import { ApiData } from './apiData';
 
-const titles = {
+export const titles = {
   investment_thesis: 'Investment Thesis',
   business_description: 'Business Description',
   recent_developments: 'Recent Developments',
@@ -63,45 +61,21 @@ export const generateReport = async ({
       plan,
     );
 
-    const generatedJson: JSONContent = { type: 'doc', content: [] };
     let generatedContent = '';
 
     section_ids.forEach((id) => {
       try {
         generatedContent += `##${titles[id as keyof typeof titles]}\
     ${generatedBlocks[id]}`;
-
-        console.log(id);
-
-        const json = markdownToJson(generatedBlocks[id]);
-
-        console.log(json);
-        generatedJson.content?.push(
-          {
-            type: 'heading',
-            attrs: {
-              id: '220f43a9-c842-4178-b5b4-5ed8a33c6192',
-              level: 2,
-              'data-toc-id': '220f43a9-c842-4178-b5b4-5ed8a33c6192',
-            },
-            content: [
-              {
-                text: titles[id as keyof typeof titles],
-                type: 'text',
-              },
-            ],
-          },
-          ...json.content,
-        );
       } catch (error) {
         error instanceof Error &&
           log.error('Error generating report', {
             ticker,
             id,
             message: error.message,
-            fnName: 'process section (markdownToJson)',
+            fnName: 'generatedContent sum',
           });
-        console.error(error);
+        return {};
       }
     });
 
@@ -137,13 +111,6 @@ export const generateReport = async ({
       });
     }
     // update report and template
-    await supabase
-      .from('reports')
-      .update({
-        tiptap_content: generatedJson,
-        json_content: generatedBlocks,
-      })
-      .eq('id', reportId);
 
     await supabase
       .from('report_template')
@@ -151,6 +118,8 @@ export const generateReport = async ({
         summary: summary,
       })
       .eq('id', templateId);
+
+    return JSON.stringify(generatedBlocks);
   } catch (err) {
     // console.error(err.message);
     err instanceof Error &&
@@ -158,5 +127,6 @@ export const generateReport = async ({
         ticker,
         ...err,
       });
+    return {};
   }
 };

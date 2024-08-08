@@ -70,6 +70,7 @@ import { GenerateReportArgs } from '../../utils/generateReport';
 import React from 'react';
 import { PolygonData } from '@/types/metrics';
 import { DailyStockData } from '@/types/alphaVantageApi';
+import { processSections } from './utils/processSections';
 
 export const reportFormSchema = z.object({
   reportType: z.string(),
@@ -108,7 +109,7 @@ export const ReportForm = ({
   initializeReportData: (
     props: InitializeReportDataProps,
   ) => Promise<InitializeReportDataResponse>;
-  generateReport: (args: GenerateReportArgs) => Promise<void>;
+  generateReport: (args: GenerateReportArgs) => Promise<Record<string, string>>;
 }) => {
   const [isOpen, setOpen] = useState(false);
   const [curReportId, setReportId] = useState<string | null>(null);
@@ -228,7 +229,7 @@ export const ReportForm = ({
 
       console.log('baseActions done');
 
-      await generateReport({
+      const generatedBlocks = await generateReport({
         reportId,
         templateId,
         recommendation,
@@ -240,6 +241,16 @@ export const ReportForm = ({
         newsContext,
         plan,
       });
+
+      const generatedJson = processSections(generatedBlocks);
+
+      await supabase
+        .from('reports')
+        .update({
+          tiptap_content: generatedJson,
+          json_content: generatedBlocks,
+        })
+        .eq('id', reportId);
 
       console.log('report generated');
 

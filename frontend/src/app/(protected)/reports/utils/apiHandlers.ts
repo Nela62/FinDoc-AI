@@ -1,3 +1,5 @@
+'use server';
+
 import { ServerError } from '@/types/error';
 import { SearchResult } from 'exa-js';
 import { TypedSupabaseClient } from '@/types/supabase';
