@@ -1,3 +1,5 @@
+'use server';
+
 import {
   DailyStockData,
   Overview,
@@ -235,7 +237,7 @@ const contextMap = {
   valuation: getValuationContext,
 };
 
-export const getBlock = async (params: BuildingBlockParams) => {
+export async function getBlock(params: BuildingBlockParams) {
   try {
     if (params.blockId === 'executive_summary') {
       const inputs: SummaryInputs = { REPORT: params.generatedReport };
@@ -274,4 +276,4 @@ export const getBlock = async (params: BuildingBlockParams) => {
   } catch (err) {
     throw err;
   }
-};
+}

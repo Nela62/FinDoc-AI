@@ -100,7 +100,7 @@ const uploadPublicCompanyImg = async (
   }
 };
 
-export const downloadPublicCompanyImgs = async (tickerData: TickerData) => {
+export async function downloadPublicCompanyImgs(tickerData: TickerData) {
   try {
     const supabase = serviceClient();
     let orgId = tickerData.website;
@@ -228,4 +228,4 @@ export const downloadPublicCompanyImgs = async (tickerData: TickerData) => {
     });
     throw new ServerError("Error when fetching public company's logos");
   }
-};
+}

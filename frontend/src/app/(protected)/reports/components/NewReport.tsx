@@ -8,7 +8,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { useDirectory } from '@supabase-cache-helpers/storage-react-query';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { TemplatePreview } from './template/TemplatePreview';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ReportForm } from './report/ReportForm';
@@ -113,53 +113,55 @@ export const NewReport = ({ userId }: { userId: string }) => {
   }, [templates, reportType]);
 
   return (
-    <div className="w-full border-t flex bg-muted/40">
-      <div className="grow">
-        <AllReportsColumn
-          userId={userId}
-          selectedReportId={selectedReportId}
-          setSelectedReportId={setSelectedReportId}
-        />
-      </div>
-      <div className="min-w-[420px] w-[28%]">
-        {selectedReportId ? (
-          <ReportInfo
-            reportId={selectedReportId}
+    <Suspense>
+      <div className="w-full border-t flex bg-muted/40">
+        <div className="grow">
+          <AllReportsColumn
             userId={userId}
-            plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
-          />
-        ) : isTemplateCustomization ? (
-          templateConfig && templateData ? (
-            <TemplateCustomizationForm
-              userId={userId}
-              templateData={templateData}
-              templateConfig={templateConfig}
-              setTemplateConfig={setTemplateConfig}
-              setIsTemplateCustomization={setIsTemplateCustomization}
-            />
-          ) : (
-            <Skeleton />
-          )
-        ) : (
-          <ReportForm
-            setIsTemplateCustomization={setIsTemplateCustomization}
+            selectedReportId={selectedReportId}
             setSelectedReportId={setSelectedReportId}
-            templateConfig={templateConfig}
-            setReportType={setReportType}
-            userId={userId}
-            plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
-            initializeReportData={initializeReportData}
-            generateReport={generateReport}
           />
+        </div>
+        <div className="min-w-[420px] w-[28%]">
+          {selectedReportId ? (
+            <ReportInfo
+              reportId={selectedReportId}
+              userId={userId}
+              plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
+            />
+          ) : isTemplateCustomization ? (
+            templateConfig && templateData ? (
+              <TemplateCustomizationForm
+                userId={userId}
+                templateData={templateData}
+                templateConfig={templateConfig}
+                setTemplateConfig={setTemplateConfig}
+                setIsTemplateCustomization={setIsTemplateCustomization}
+              />
+            ) : (
+              <Skeleton />
+            )
+          ) : (
+            <ReportForm
+              setIsTemplateCustomization={setIsTemplateCustomization}
+              setSelectedReportId={setSelectedReportId}
+              templateConfig={templateConfig}
+              setReportType={setReportType}
+              userId={userId}
+              plan={planData ? (planData[0].plan as SubscriptionPlan) : 'free'}
+              initializeReportData={initializeReportData}
+              generateReport={generateReport}
+            />
+          )}
+        </div>
+        {selectedReportId ? (
+          <ReportPreview userId={userId} reportId={selectedReportId} />
+        ) : templateData ? (
+          <TemplatePreview userId={userId} templateData={templateData} />
+        ) : (
+          <Skeleton className="w-[50%] h-full" />
         )}
       </div>
-      {selectedReportId ? (
-        <ReportPreview userId={userId} reportId={selectedReportId} />
-      ) : templateData ? (
-        <TemplatePreview userId={userId} templateData={templateData} />
-      ) : (
-        <Skeleton className="w-[50%] h-full" />
-      )}
-    </div>
+    </Suspense>
   );
 };

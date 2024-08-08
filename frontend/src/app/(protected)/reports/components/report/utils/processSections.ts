@@ -1,8 +1,21 @@
+'use client';
+
 import { JSONContent } from '@tiptap/core';
 import { markdownToJson } from '@/lib/utils/formatText';
 import { Logger } from 'next-axiom';
 import { section_ids } from '../../../utils/generateReportSections';
-import { titles } from '../../../utils/generateReport';
+
+const titles = {
+  investment_thesis: 'Investment Thesis',
+  business_description: 'Business Description',
+  recent_developments: 'Recent Developments',
+  industry_overview_competitive_positioning:
+    'Industry Overview and Competitive Positioning',
+  financial_analysis: 'Financial Analysis',
+  valuation: 'Valuation',
+  management: 'Management Analysis',
+  risks: 'Risk Analysis',
+};
 
 export const processSections = (generatedBlocks: Record<string, string>) => {
   const log = new Logger();

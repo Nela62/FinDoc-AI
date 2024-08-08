@@ -8,7 +8,6 @@ import {
 } from './stock';
 import { formatNumber, moneyFormat } from './financialUtils';
 import { formatSafeNumber } from './safeCalculations';
-import { capitalizeWords } from '../formatText';
 import {
   getBookValueShare,
   getCurrentFYPE,
@@ -23,6 +22,16 @@ import {
   getReturnOnEquity,
   getRevenueTTM,
 } from './financialMetrics';
+
+function capitalizeWords(str: string) {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(function (word) {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
 
 export type SidebarMetrics = MetricSection[];
 

@@ -1,4 +1,5 @@
 'use server';
+
 import { generateReportSections, section_ids } from './generateReportSections';
 import { Logger } from 'next-axiom';
 import { createJob, waitForJobCompletion } from './jobs';
@@ -6,7 +7,7 @@ import { SubscriptionPlan } from '@/types/subscription';
 import { createClient } from '@/lib/supabase/server';
 import { ApiData } from './apiData';
 
-export const titles = {
+const titles = {
   investment_thesis: 'Investment Thesis',
   business_description: 'Business Description',
   recent_developments: 'Recent Developments',
@@ -33,7 +34,7 @@ export type GenerateReportArgs = {
   plan: SubscriptionPlan;
 };
 
-export const generateReport = async ({
+export async function generateReport({
   reportId,
   templateId,
   recommendation,
@@ -44,7 +45,7 @@ export const generateReport = async ({
   xmlData,
   newsContext,
   plan,
-}: GenerateReportArgs) => {
+}: GenerateReportArgs): Promise<string> {
   'use server';
 
   try {
@@ -127,6 +128,6 @@ export const generateReport = async ({
         ticker,
         ...err,
       });
-    return {};
+    return '';
   }
-};
+}

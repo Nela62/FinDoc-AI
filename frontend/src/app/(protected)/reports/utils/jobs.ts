@@ -1,3 +1,5 @@
+'use server';
+
 import { serviceClient } from '@/lib/supabase/service';
 import { ServerError } from '@/types/error';
 import { Logger } from 'next-axiom';
@@ -99,7 +101,7 @@ const processTask = async (jobId: string) => {
   }
 };
 
-export const createJob = async (params: BuildingBlockParams) => {
+export async function createJob(params: BuildingBlockParams) {
   try {
     const { count } = await supabase
       .from('ai_jobs')
@@ -159,9 +161,9 @@ export const createJob = async (params: BuildingBlockParams) => {
     }
     throw error;
   }
-};
+}
 
-export const waitForJobCompletion = async (jobId: string) => {
+export async function waitForJobCompletion(jobId: string) {
   while (true) {
     const { data, error } = await supabase
       .from('ai_jobs')
@@ -189,7 +191,7 @@ export const waitForJobCompletion = async (jobId: string) => {
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
-};
+}
 
 export const waitForSecJobCompletion = async (jobId: string) => {
   try {
@@ -222,7 +224,7 @@ export const waitForSecJobCompletion = async (jobId: string) => {
   }
 };
 
-export const waitForAllJobs = async (jobs: Record<string, string>[]) => {
+export async function waitForAllJobs(jobs: Record<string, string>[]) {
   let results: Record<string, any> = {};
 
   try {
@@ -245,4 +247,4 @@ export const waitForAllJobs = async (jobs: Record<string, string>[]) => {
   } catch (err) {
     throw err;
   }
-};
+}

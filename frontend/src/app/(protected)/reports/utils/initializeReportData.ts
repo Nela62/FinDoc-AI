@@ -50,11 +50,11 @@ export type InitializeReportDataResponse = {
   xml: string;
 };
 
-export const initializeReportData = async ({
+export async function initializeReportData({
   values,
   plan,
   templateConfig,
-}: InitializeReportDataProps): Promise<InitializeReportDataResponse> => {
+}: InitializeReportDataProps): Promise<string> {
   'use server';
 
   try {
@@ -150,7 +150,7 @@ export const initializeReportData = async ({
       throw new ServerError('Failed to create report template');
     }
 
-    return {
+    return JSON.stringify({
       apiData,
       tickerData,
       reportId,
@@ -160,9 +160,9 @@ export const initializeReportData = async ({
       targetPrice,
       newsContext: JSON.stringify(newsContext),
       xml: xml ?? '',
-    };
+    });
   } catch (error) {
     handleError(error);
     throw error;
   }
-};
+}

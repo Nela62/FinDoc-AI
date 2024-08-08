@@ -1,3 +1,5 @@
+'use client';
+
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -23,7 +25,6 @@ import {
 } from '@/components/ui/virtualized-combobox';
 import { fetchAllReports, fetchTickers } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/client';
-import { getNanoId } from '@/lib/utils/nanoId';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@supabase-cache-helpers/postgrest-react-query';
 import { isAfter, startOfWeek } from 'date-fns';
@@ -50,7 +51,6 @@ import {
 } from '@supabase-cache-helpers/storage-react-query';
 import { SubscriptionPlan } from '@/types/subscription';
 import { useRouter } from 'next/navigation';
-import { useLogger } from 'next-axiom';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { cn } from '@/lib/utils';
 import {
@@ -62,10 +62,7 @@ import {
 import { analytics } from '@/lib/segment';
 import { useReportProgress } from '@/hooks/useReportProgress';
 import { ServerError } from '@/types/error';
-import {
-  InitializeReportDataProps,
-  InitializeReportDataResponse,
-} from '../../utils/initializeReportData';
+import { InitializeReportDataProps } from '../../utils/initializeReportData';
 import { GenerateReportArgs } from '../../utils/generateReport';
 import React from 'react';
 import { PolygonData } from '@/types/metrics';
@@ -106,10 +103,8 @@ export const ReportForm = ({
   setReportType: Dispatch<SetStateAction<string>>;
   userId: string;
   plan: SubscriptionPlan;
-  initializeReportData: (
-    props: InitializeReportDataProps,
-  ) => Promise<InitializeReportDataResponse>;
-  generateReport: (args: GenerateReportArgs) => Promise<Record<string, string>>;
+  initializeReportData: (props: InitializeReportDataProps) => Promise<string>;
+  generateReport: (args: GenerateReportArgs) => Promise<string>;
 }) => {
   const [isOpen, setOpen] = useState(false);
   const [curReportId, setReportId] = useState<string | null>(null);
@@ -216,6 +211,7 @@ export const ReportForm = ({
 
       setOpen(true);
 
+      const res = await initializeReportData({ values, plan, templateConfig });
       const {
         apiData,
         tickerData,
@@ -225,7 +221,7 @@ export const ReportForm = ({
         targetPrice,
         newsContext,
         xml,
-      } = await initializeReportData({ values, plan, templateConfig });
+      } = JSON.parse(res);
 
       console.log('baseActions done');
 
@@ -242,7 +238,9 @@ export const ReportForm = ({
         plan,
       });
 
-      const generatedJson = processSections(generatedBlocks);
+      const blocks = await JSON.parse(generatedBlocks);
+
+      const generatedJson = processSections(blocks);
 
       await supabase
         .from('reports')

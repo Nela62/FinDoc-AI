@@ -1,3 +1,4 @@
+import { fetchApiData } from '@/app/(protected)/reports/utils/apiData';
 import {
   fetchReportById,
   fetchTemplateConfig,
@@ -22,7 +23,10 @@ type LoadedData = {
 };
 
 export const useImageData = (reportId: string): LoadingData | LoadedData => {
-  const [apiData, setApiData] = useState({
+  const [apiData, setApiData] = useState<{
+    polygonAnnual: PolygonData | null;
+    polygonQuarterly: PolygonData | null;
+  }>({
     polygonAnnual: null,
     polygonQuarterly: null,
   });
@@ -42,16 +46,13 @@ export const useImageData = (reportId: string): LoadingData | LoadedData => {
   useEffect(() => {
     if (!report) return;
 
-    fetch(`/api/metrics/${report.company_ticker}`)
-      .then((res) => res.ok && res.json())
-      .then((data) => {
-        setApiData({
-          polygonAnnual: data.polygonAnnual,
-          polygonQuarterly: data.polygonQuarterly,
-        });
-      })
-      .catch((err) => console.error(err));
-  }, [report]);
+    fetchApiData(report.company_ticker, supabase).then((data) => {
+      setApiData({
+        polygonAnnual: data.polygonAnnual,
+        polygonQuarterly: data.polygonQuarterly,
+      });
+    });
+  }, [report, supabase]);
 
   if (
     !apiCache ||

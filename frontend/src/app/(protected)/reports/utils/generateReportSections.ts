@@ -16,7 +16,7 @@ export const section_ids = [
 
 const log = new Logger();
 
-export const generateReportSections = async (
+export async function generateReportSections(
   ticker: string,
   companyName: string,
   recommendation: string,
@@ -25,7 +25,7 @@ export const generateReportSections = async (
   xmlData: string,
   newsContext: string,
   plan: string,
-) => {
+) {
   console.log('creating jobs');
   const jobIds = await Promise.all(
     section_ids.map(async (id: string) => {
@@ -49,4 +49,4 @@ export const generateReportSections = async (
   log.info('Generated all sections', { ticker });
 
   return generatedBlocks;
-};
+}

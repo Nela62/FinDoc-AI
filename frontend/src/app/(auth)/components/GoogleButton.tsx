@@ -1,3 +1,5 @@
+'use client';
+
 export const GoogleSignInButton = ({ onClick }: { onClick: () => void }) => {
   return (
     <button

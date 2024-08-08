@@ -138,10 +138,10 @@ const downloadPolygonData = async (ticker: string): Promise<Polygon> => {
   return { ttmData, annualData, quarterlyData };
 };
 
-export const fetchApiData = async (
+export async function fetchApiData(
   ticker: string,
   supabase: TypedSupabaseClient,
-): Promise<ApiData> => {
+): Promise<ApiData> {
   try {
     const { data: cachedData, error } = await supabase
       .from('metrics_cache')
@@ -223,4 +223,4 @@ export const fetchApiData = async (
       throw new ServerError('Unexpected error');
     }
   }
-};
+}

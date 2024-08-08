@@ -1,3 +1,5 @@
+'use server';
+
 import { SubscriptionPlan } from '@/types/subscription';
 import { Logger } from 'next-axiom';
 import { ApiData } from './apiData';
@@ -206,11 +208,11 @@ async function logToAPI(data: any) {
   }
 }
 
-export const generateBlock = async (
+export async function generateBlock(
   blockId: string,
   inputs: Inputs | SummaryInputs | RecAndTargetPriceInputs,
   plan: SubscriptionPlan,
-) => {
+) {
   const log = new Logger();
 
   // try {
@@ -301,4 +303,4 @@ export const generateBlock = async (
   // } catch (err) {
   //   throw err;
   // }
-};
+}

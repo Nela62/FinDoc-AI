@@ -29,6 +29,7 @@ import { format } from 'date-fns';
 import { Loader2Icon } from 'lucide-react';
 import { useLogger } from 'next-axiom';
 import { useCallback, useMemo, useState } from 'react';
+import { fetchApiData } from '../../utils/apiData';
 
 type ReportInfoType = {
   title: string;
@@ -81,11 +82,10 @@ export const ReportInfo = ({
 
     setLoading(true);
 
-    const { yfAnnual, yfQuarterly } = await fetch(
-      `/api/metrics/${report.company_ticker}`,
-    )
-      .then((res) => res.ok && res.json())
-      .catch((err) => console.error(err));
+    const { yfAnnual, yfQuarterly } = await fetchApiData(
+      report.company_ticker,
+      supabase,
+    );
 
     const overview = cache.overview as Overview;
     const dailyStock = cache.stock as DailyStockData;
@@ -135,6 +135,7 @@ export const ReportInfo = ({
     templateConfig,
     updateTemplateConfig,
     initGeneration,
+    supabase
   ]);
 
   const downloadPdf = async () => {

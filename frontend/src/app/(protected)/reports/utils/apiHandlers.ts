@@ -10,12 +10,12 @@ import { fetchNews } from './news';
 
 const log = new Logger();
 
-export const getApiData = async (
+export async function getApiData(
   ticker: string,
   reportId: string,
   userId: string,
   supabase: TypedSupabaseClient,
-) => {
+) {
   const apiData: ApiData = await fetchApiData(ticker, supabase);
 
   await supabase.from('api_cache').insert([
@@ -28,12 +28,12 @@ export const getApiData = async (
   ]);
 
   return apiData;
-};
+}
 
-export const getSecFiling = async (
+export async function getSecFiling(
   ticker: string,
   supabase: TypedSupabaseClient,
-): Promise<string> => {
+): Promise<string> {
   const xmlPath = await fetchSecFiling(ticker);
 
   const xml = await supabase.storage.from('sec-filings').download(xmlPath);
@@ -49,7 +49,7 @@ export const getSecFiling = async (
   }
 
   return xmlText ?? '';
-};
+}
 
 export async function getNews(companyName: string) {
   const news = await fetchNews(companyName);

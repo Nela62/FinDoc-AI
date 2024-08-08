@@ -8,11 +8,20 @@ import { section_ids } from './generateReportSections';
 import { Logger } from 'next-axiom';
 import { Overview } from '@/types/alphaVantageApi';
 import { Recommendation } from '@/types/report';
-import { capitalizeWords } from '@/lib/utils/formatText';
 import { BuildingBlockParams } from './buildingBlocks';
 import { createJob, waitForJobCompletion } from './jobs';
 
 const log = new Logger();
+
+function capitalizeWords(str: string) {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(function (word) {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
 
 export async function getUserId(
   supabase: TypedSupabaseClient,
