@@ -735,10 +735,7 @@ export const ReportForm = ({
         });
     } else {
       console.log('still loading');
-      console.log(polygonApi);
-      console.log(targetPrice);
-      console.log(templateConfig?.colorScheme);
-      console.log('images ', images?.length);
+      // console.log('images ', images?.length);
     }
   }, [
     isLoading,

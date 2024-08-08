@@ -74,7 +74,7 @@ async function identifyUser(
   const { data: userData } = await supabase.auth.getUser();
 
   if (userData && userData.user) {
-    console.log(userData.user.identities);
+    // console.log(userData.user.identities);
     const { data: planData } = await supabase
       .from('profiles')
       .select('*')

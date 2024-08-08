@@ -179,8 +179,6 @@ export const downloadPublicCompanyImgs = async (
       throw new Error('orgId is missing');
     }
 
-    console.log(cleanLink(orgId));
-
     const images = await fetch(
       `https://api.brandfetch.io/v2/brands/${cleanLink(orgId)}`,
       {

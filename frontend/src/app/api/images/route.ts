@@ -1,7 +1,8 @@
-import { createClient } from '@/lib/supabase/server';
+import { serviceClient } from '@/lib/supabase/service';
+import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
-  const supabase = createClient();
+  const supabase = serviceClient();
   const formData = await req.formData();
   const img = formData.get('img');
 
@@ -11,13 +12,13 @@ export async function POST(req: Request) {
   }
 
   if (!img || !(img instanceof File)) {
-    return Response.error();
+    return NextResponse.error();
   }
 
   const imageName = new Date().getTime() + '_' + img.name;
   const res = await supabase.storage
     .from('images')
     .upload(imageName, img, { contentType: img.type });
-  console.log(res?.data?.path);
-  return Response.json({ url: res?.data?.path ?? '' });
+
+  return NextResponse.json({ url: res?.data?.path ?? '' });
 }
