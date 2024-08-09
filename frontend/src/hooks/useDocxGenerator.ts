@@ -13,6 +13,7 @@ import {
   useUpload,
 } from '@supabase-cache-helpers/storage-react-query';
 import { JSONContent } from '@tiptap/core';
+import { Logger } from 'next-axiom';
 import { useCallback, useEffect, useState } from 'react';
 
 type Metrics = {
@@ -25,11 +26,11 @@ type Metrics = {
 
 const defaultCompanyLogo = '/default_findoc_logo.png';
 
+const log = new Logger();
+
 export const useDocxGenerator = (userId: string, reportId: string | null) => {
-  const [logoName, setLogoName] = useState<string | null>(null);
   const [docxFile, setDocxFile] = useState<string | null>(null);
   const [pdfFile, setPdfFile] = useState<string | null>(null);
-  const [isLoading, setLoading] = useState(true);
 
   const supabase = createClient();
   const { data: report } = useQuery(fetchReportById(supabase, reportId ?? ''), {
@@ -69,6 +70,55 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
   const { mutateAsync: removePdf } = useRemoveFiles(
     supabase.storage.from('saved-templates'),
   );
+
+  const getLogoUrl = useCallback(async () => {
+    if (!report?.companies?.cik) {
+      return;
+    }
+
+    try {
+      const { data: logos, error } = await supabase.storage
+        .from('public-company-logos')
+        .list(report.companies.cik);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+      console.log(logos);
+
+      if (logos) {
+        const logo =
+          logos.find((image) => image.name === 'dark-logo') ??
+          logos.find((image) => image.name === 'light-logo') ??
+          logos.find((image) => image.name === 'dark-icon') ??
+          logos.find((image) => image.name === 'light-icon') ??
+          logos.find((image) => image.name === 'dark-symbol') ??
+          logos.find((image) => image.name === 'light-symbol');
+
+        if (logo) {
+          const { data, error } = await supabase.storage
+            .from('public-company-logos')
+            .createSignedUrl(`${report?.companies?.cik}/${logo.name}`, 5);
+
+          if (error) {
+            throw new Error(error.message);
+          }
+
+          return data.signedUrl;
+        }
+      }
+
+      return null;
+    } catch (err) {
+      err instanceof Error &&
+        log.error('Error occurred', {
+          ...err,
+          fnName: 'getLogoUrl',
+        });
+
+      return null;
+    }
+  }, [report?.companies?.cik, supabase.storage]);
 
   useEffect(() => {
     if (docxFileData) {
@@ -112,139 +162,109 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
     },
   );
 
-  const { data: logos } = useDirectory(
-    supabase.storage.from('public-company-logos'),
-    report?.companies?.cik ?? '',
-    { refetchOnWindowFocus: false, enabled: !!report && !!report.companies },
-  );
+  // const { data: logos } = useDirectory(
+  //   supabase.storage.from('public-company-logos'),
+  //   report?.companies?.cik ?? '',
+  //   { refetchOnWindowFocus: false, enabled: !!report && !!report.companies },
+  // );
 
-  const { data: companyLogoUrl } = useFileUrl(
-    supabase.storage.from('public-company-logos'),
-    `${report?.companies?.cik}/${logoName}`,
-    'private',
-    {
-      ensureExistence: true,
-      refetchOnWindowFocus: false,
-      enabled: !!report && !!logoName && logoName !== 'default',
-    },
-  );
-
-  useEffect(() => {
-    if (!logos) return;
-
-    const logo =
-      logos.find((image) => image.name === 'dark-logo') ??
-      logos.find((image) => image.name === 'light-logo') ??
-      logos.find((image) => image.name === 'dark-icon') ??
-      logos.find((image) => image.name === 'light-icon') ??
-      logos.find((image) => image.name === 'dark-symbol') ??
-      logos.find((image) => image.name === 'light-symbol');
-
-    console.log('set logo ', logo?.name ?? 'default');
-
-    if (logo?.name) {
-      setLogoName(logo.name);
-    } else {
-      setLogoName('default');
-    }
-  }, [logos]);
-
-  useEffect(() => {
-    console.log('logoName ', logoName);
-    console.log('companyLogoUrl ', companyLogoUrl);
-
-    if ((logoName && logoName !== 'default' && companyLogoUrl) || logoName) {
-      console.log('finished loading');
-      setLoading(false);
-    }
-  }, [logoName, companyLogoUrl]);
+  // const { data: companyLogoUrl } = useFileUrl(
+  //   supabase.storage.from('public-company-logos'),
+  //   `${report?.companies?.cik}/${logoName}`,
+  //   'private',
+  //   {
+  //     ensureExistence: true,
+  //     refetchOnWindowFocus: false,
+  //     enabled: !!report && !!logoName && logoName !== 'default',
+  //   },
+  // );
 
   const generateDocxBlob = useCallback(
     async (images: Blob[]): Promise<Blob> => {
-      if (!report || !report.companies) {
-        throw new Error('Report is missing');
+      try {
+        if (!report || !report.companies) {
+          throw new Error('Report is missing');
+        }
+
+        if (!templateConfig || !templateConfig.metrics) {
+          throw new Error('TemplateConfig is missing');
+        }
+
+        if (
+          !report.recommendation ||
+          !report.financial_strength ||
+          !report.targetprice
+        ) {
+          throw new Error(
+            'Cannot create Equity Analyst Template without recommendation, financial strength, and target price.',
+          );
+        }
+
+        // if (!companyLogoUrl) {
+        //   console.log(logoName);
+        //   throw new Error('Could not find company logos.');
+        // }
+
+        const companyLogoUrl = await getLogoUrl();
+
+        const authorCompanyLogo = await fetch(
+          authorCompanyLogoUrl ?? defaultCompanyLogo,
+        ).then((res) => res.blob());
+
+        const companyLogo = await fetch(
+          companyLogoUrl ?? '/white_square.png',
+        ).then((res) => res.blob());
+
+        const metrics = templateConfig.metrics as Metrics;
+
+        const docxBlob = await getDocxBlob({
+          componentId: templateConfig.template_type,
+          summary: templateConfig.summary ?? [],
+          businessDescription: templateConfig.business_description ?? '',
+          authorName: templateConfig.author_name,
+          authorCompanyName: templateConfig.author_company_name,
+          colorScheme: templateConfig.color_scheme,
+          content: report.tiptap_content as JSONContent,
+          companyName: report.companies.company_name,
+          companyTicker: report.company_ticker,
+          topBarMetrics: metrics.topBarMetrics,
+          sidebarMetrics: metrics.sidebarMetrics,
+          growthAndValuationAnalysisMetrics:
+            metrics.growthAndValuationAnalysisMetrics,
+          financialAndRiskAnalysisMetrics:
+            metrics.financialAndRiskAnalysisMetrics,
+          recommendation: report.recommendation as Recommendation,
+          financialStrength: report.financial_strength as FinancialStrength,
+          targetPrice: report.targetprice,
+          authorCompanyLogo: authorCompanyLogo,
+          companyLogo: companyLogo,
+          topFirstPageVisual: images[0],
+          bottomFirstPageVisual: images[1],
+          sources: metrics.sources,
+          exchange: report.companies.exchange ?? '',
+        });
+
+        if (!docxBlob) {
+          throw new Error('docxBlob is undefined');
+        }
+
+        const docxFile = new File([docxBlob], 'docxBlob', {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        });
+
+        uploadDocx({ files: [docxFile] });
+
+        return docxBlob;
+      } catch (err) {
+        err instanceof Error &&
+          log.error('Error occurred', {
+            ...err,
+            fnName: 'generateDocxBlob',
+          });
+        throw err;
       }
-
-      if (!templateConfig || !templateConfig.metrics) {
-        throw new Error('TemplateConfig is missing');
-      }
-
-      if (!logoName) {
-        throw new Error('LogoName is missing');
-      }
-
-      if (
-        !report.recommendation ||
-        !report.financial_strength ||
-        !report.targetprice
-      ) {
-        throw new Error(
-          'Cannot create Equity Analyst Template without recommendation, financial strength, and target price.',
-        );
-      }
-
-      // if (!companyLogoUrl) {
-      //   console.log(logoName);
-      //   throw new Error('Could not find company logos.');
-      // }
-
-      const authorCompanyLogo = await fetch(
-        authorCompanyLogoUrl ?? defaultCompanyLogo,
-      ).then((res) => res.blob());
-
-      const companyLogo = await fetch(
-        companyLogoUrl ?? '/white_square.png',
-      ).then((res) => res.blob());
-
-      const metrics = templateConfig.metrics as Metrics;
-
-      const docxBlob = await getDocxBlob({
-        componentId: templateConfig.template_type,
-        summary: templateConfig.summary ?? [],
-        businessDescription: templateConfig.business_description ?? '',
-        authorName: templateConfig.author_name,
-        authorCompanyName: templateConfig.author_company_name,
-        colorScheme: templateConfig.color_scheme,
-        content: report.tiptap_content as JSONContent,
-        companyName: report.companies.company_name,
-        companyTicker: report.company_ticker,
-        topBarMetrics: metrics.topBarMetrics,
-        sidebarMetrics: metrics.sidebarMetrics,
-        growthAndValuationAnalysisMetrics:
-          metrics.growthAndValuationAnalysisMetrics,
-        financialAndRiskAnalysisMetrics:
-          metrics.financialAndRiskAnalysisMetrics,
-        recommendation: report.recommendation as Recommendation,
-        financialStrength: report.financial_strength as FinancialStrength,
-        targetPrice: report.targetprice,
-        authorCompanyLogo: authorCompanyLogo,
-        companyLogo: companyLogo,
-        topFirstPageVisual: images[0],
-        bottomFirstPageVisual: images[1],
-        sources: metrics.sources,
-        exchange: report.companies.exchange ?? '',
-      });
-
-      if (!docxBlob) {
-        throw new Error('docxBlob is undefined');
-      }
-
-      const docxFile = new File([docxBlob], 'docxBlob', {
-        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      });
-
-      uploadDocx({ files: [docxFile] });
-
-      return docxBlob;
     },
-    [
-      authorCompanyLogoUrl,
-      companyLogoUrl,
-      report,
-      templateConfig,
-      uploadDocx,
-      logoName,
-    ],
+    [authorCompanyLogoUrl, report, templateConfig, uploadDocx, getLogoUrl],
   );
 
   const generatePdf = useCallback(
@@ -269,8 +289,6 @@ export const useDocxGenerator = (userId: string, reportId: string | null) => {
   return {
     docxFile,
     pdfFile,
-    isLoading,
-    logoName,
     generateDocxBlob,
     generatePdf,
     targetPrice: report?.targetprice,

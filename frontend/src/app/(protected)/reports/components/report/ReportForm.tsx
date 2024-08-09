@@ -35,19 +35,10 @@ import { SquarePen, Wand2Icon } from 'lucide-react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import {
-  downloadPublicCompanyImgs,
-  fetchAllNews,
-  getRecommendation,
-} from '../../utils/fetchAPI';
-import {
-  fetchDailyStock,
-  fetchOverview,
-  fetchWeeklyStock,
-} from '@/lib/utils/metrics/financialAPI';
+import { downloadPublicCompanyImgs } from '../../utils/fetchAPI';
 import { TemplateConfig } from '../../Component';
 import { JSONContent } from '@tiptap/core';
-import { capitalizeWords, markdownToJson } from '@/lib/utils/formatText';
+import { markdownToJson } from '@/lib/utils/formatText';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -59,8 +50,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import { useDocxGenerator } from '@/hooks/useDocxGenerator';
-import { Feed } from '@/types/alphaVantageApi';
-import { fetchApiData, fetchNewsContent, getSecFiling } from './actions';
+import { fetchApiData, getSecFiling } from './actions';
 import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 import {
   useFileUrl,
@@ -90,7 +80,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import Exa, { SearchResult } from 'exa-js';
+import { SearchResult } from 'exa-js';
 import { useReportProgress } from '@/hooks/useReportProgress';
 import { ServerError } from '@/types/error';
 
@@ -162,8 +152,10 @@ export const ReportForm = ({
 
   const router = useRouter();
 
-  const { isLoading, generateDocxBlob, generatePdf, targetPrice } =
-    useDocxGenerator(userId, curReportId);
+  const { generateDocxBlob, generatePdf, targetPrice } = useDocxGenerator(
+    userId,
+    curReportId,
+  );
 
   const form = useForm<z.infer<typeof reportFormSchema>>({
     resolver: zodResolver(reportFormSchema),
@@ -670,7 +662,7 @@ export const ReportForm = ({
   };
 
   useEffect(() => {
-    if (!isLoading && images) {
+    if (images) {
       console.log('generating pdf...');
       generateDocxBlob(images)
         .then((blob: Blob) => generatePdf(blob))
@@ -683,14 +675,7 @@ export const ReportForm = ({
       console.log('still loading');
       // console.log('images ', images?.length);
     }
-  }, [
-    isLoading,
-    images,
-    curReportId,
-    generateDocxBlob,
-    generatePdf,
-    setSelectedReportId,
-  ]);
+  }, [images]);
 
   const onFormSubmit = async (values: z.infer<typeof reportFormSchema>) => {
     // baseActions
