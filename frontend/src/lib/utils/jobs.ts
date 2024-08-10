@@ -6,14 +6,12 @@ export type JobStatus = 'processing' | 'completed' | 'failed' | 'queued';
 
 export type Job = { blockId: string; status: JobStatus; block: string };
 
+const log = new Logger();
+
 export const createJob = async (
   params: Params,
   setJobs: Dispatch<SetStateAction<Record<string, Job>>>,
 ) => {
-  const log = new Logger();
-
-  console.log('creating a job');
-
   try {
     const { jobId } = await fetch(`/api/building-block`, {
       method: 'POST',
@@ -63,8 +61,6 @@ export const waitForJobCompletion = async (jobId: string) => {
 };
 
 export const waitForSecJobCompletion = async (jobId: string) => {
-  // 'use server';
-
   try {
     while (true) {
       const { status, error } = await fetch(
@@ -97,7 +93,6 @@ export const waitForSecJobCompletion = async (jobId: string) => {
 
 export const waitForAllJobs = async (jobs: Record<string, string>[]) => {
   let results: Record<string, any> = {};
-  const log = new Logger();
 
   try {
     await Promise.all(

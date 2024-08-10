@@ -6,11 +6,11 @@ import { Logger } from 'next-axiom';
 
 const supabase = serviceClient();
 
+const log = new Logger();
+
 const MAX_CONCURRENT_TASKS = 5;
 
 export async function POST(req: Request) {
-  const log = new Logger();
-
   try {
     const client = createClient();
 
@@ -187,6 +187,7 @@ export async function GET(req: Request) {
 
   if (error) {
     console.error('Error retrieving job:', error);
+    log.error('Error retrieving job', { jobId, ...error });
     return NextResponse.json(
       { error: 'Failed to retrieve job' },
       { status: 500 },
