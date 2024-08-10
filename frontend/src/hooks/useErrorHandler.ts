@@ -30,9 +30,6 @@ export const useErrorHandler = () => {
         console.error(error);
       }
 
-      console.log(error.constructor.name);
-      console.log(error instanceof AuthenticationError);
-
       if (error instanceof AuthenticationError) {
         setError({ hasError: true, message: error.message });
 
@@ -55,7 +52,6 @@ export const useErrorHandler = () => {
             name: error.name,
             error: errorMessage,
             stack: error.stack,
-            // Add any other relevant context here
           });
       }
     },

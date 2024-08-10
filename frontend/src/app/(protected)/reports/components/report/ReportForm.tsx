@@ -664,7 +664,8 @@ export const ReportForm = ({
       setReportId(reportId);
     } catch (err) {
       if (err instanceof Error || err instanceof ServerError)
-        handleError(err, !(err instanceof ServerError));
+        // handleError(err, !(err instanceof ServerError));
+        handleError(err);
       throw err;
     }
   };

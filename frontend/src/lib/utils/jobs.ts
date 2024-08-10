@@ -42,7 +42,9 @@ export const waitForJobCompletion = async (jobId: string) => {
     const { status, block } = await fetch(`/api/building-block?jobId=${jobId}`)
       .then((res) => {
         if (!res.ok) {
-          throw new Error('Error fetching a job status: ' + jobId);
+          throw new Error(
+            `Error fetching a job status: ${res.status}. Job id: ${jobId}`,
+          );
         }
         return res.json();
       })
