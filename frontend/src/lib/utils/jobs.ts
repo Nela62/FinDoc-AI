@@ -13,15 +13,16 @@ export const createJob = async (
   setJobs: Dispatch<SetStateAction<Record<string, Job>>>,
 ) => {
   try {
-    const { jobId } = await fetch(`/api/building-block`, {
+    const { jobId, error } = await fetch(`/api/building-block`, {
       method: 'POST',
       body: JSON.stringify(params),
     }).then((res) => {
-      if (!res.ok) {
-        throw new Error('Error generating a building block: ' + params.blockId);
-      }
       return res.json();
     });
+
+    if (error) {
+      throw new Error(error);
+    }
 
     setJobs((prevJobs) => ({
       ...prevJobs,

@@ -17,6 +17,11 @@ export async function POST(req: Request) {
     const userRes = await client.auth.getUser();
 
     if (!userRes.data.user) {
+      log.error('Unauthorized access', {
+        message: 'User not found or invalid credentials',
+        user: userRes.data.user,
+      });
+
       return Response.json(
         {
           error: 'Unauthorized access',
@@ -45,7 +50,11 @@ export async function POST(req: Request) {
         .select();
 
       if (error) {
-        console.error('Error creating task:', error);
+        log.error('Error creating task', {
+          error: error.message,
+          blockId: json.blockId,
+        });
+
         return NextResponse.json(
           { error: 'Failed to create task' },
           { status: 500 },
@@ -65,7 +74,11 @@ export async function POST(req: Request) {
       .select();
 
     if (error) {
-      console.error('Error creating task:', error);
+      log.error('Error creating task', {
+        error: error.message,
+        blockId: json.blockId,
+      });
+
       return NextResponse.json(
         { error: 'Failed to create task' },
         { status: 500 },
@@ -79,13 +92,15 @@ export async function POST(req: Request) {
   } catch (err) {
     if (err instanceof Error) {
       log.error('Failed to process the block', err);
+
       return NextResponse.json(
         {
-          error: 'Failed to process the block: ' + err.message,
+          error: `Failed to process the block: ${err.message}`,
         },
         { status: 500 },
       );
     }
+
     return NextResponse.json(
       {
         error: 'Failed to process the block',
