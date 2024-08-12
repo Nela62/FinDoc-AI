@@ -60,23 +60,12 @@ export const ReportPreview = ({
 
   useResizeObserver(containerRef, resizeObserverOptions, onResize);
 
-  const {
-    docxFile,
-    pdfFile,
-    isLoading,
-    generateDocxBlob,
-    generatePdf,
-    targetPrice,
-  } = useDocxGenerator(userId, reportId);
+  const { docxFile, pdfFile, generateDocxBlob, generatePdf, targetPrice } =
+    useDocxGenerator(userId, reportId);
 
   const imageData = useImageData(reportId);
 
   useEffect(() => {
-    if (isLoading) {
-      console.log('still loading');
-      return;
-    }
-
     if ((!docxFile || generate) && images) {
       startGeneration();
       console.log('generating');
@@ -89,7 +78,6 @@ export const ReportPreview = ({
   }, [
     images,
     docxFile,
-    isLoading,
     generateDocxBlob,
     generatePdf,
     generate,
