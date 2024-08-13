@@ -163,7 +163,8 @@ async function processTask(jobId: string, json: any) {
 
       try {
         const e = JSON.parse(error.message);
-        if (e?.status === 429) {
+        if (e.message === 'Rate limit error') {
+          console.log(e.headers['retry-after']);
           await new Promise((resolve) =>
             setTimeout(resolve, 1000 * e.headers['retry-after']),
           );

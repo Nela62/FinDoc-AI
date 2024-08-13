@@ -120,7 +120,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
       y: Number(
         (
           Number(quarter.financials.income_statement?.revenues?.value ?? 0) /
-          1e9
+          1e6
         ).toFixed(2),
       ),
     }))

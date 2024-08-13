@@ -34,8 +34,9 @@ const humanloopIdsMap: Record<string, string> = {
   targetprice_recommendation: 'pr_8AHpHaePbdFGO13qOemFe',
 };
 
+const log = new Logger();
+
 function extractOutput(response: string) {
-  const log = new Logger();
   // Regular expression to match content between <output> tags
   const pattern = /<output>\s*([\s\S]*?)\s*<\/output>/;
   const match = response.match(pattern);
@@ -67,97 +68,188 @@ function findReplaceString(string: string, find: string, replace: string) {
   }
 }
 
+async function callAthinaPrompt(
+  promptId: string,
+  variables: Record<string, any>,
+  // model: string = 'gpt-4',
+  // parameters: Record<string, any> = {},
+) {
+  const ATHINA_API_URL = 'https://api.athina.ai/api/v1/prompt';
+  const ATHINA_API_KEY = process.env.ATHINA_API_KEY;
+
+  if (!ATHINA_API_KEY) {
+    throw new Error('ATHINA_API_KEY is not set in the environment variables');
+  }
+
+  try {
+    const response = await fetch(`${ATHINA_API_URL}/${promptId}/run`, {
+      method: 'POST',
+      headers: {
+        'athina-api-key': ATHINA_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        variables,
+        // version: 1,
+        model: 'claude-3-haiku-20240307',
+        parameters: {
+          temperature: 0.2,
+          // max_tokens: 1000,
+          // ...parameters,
+        },
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      if (data.error.includes('rate_limit_error')) {
+        throw new Error('Rate limit error');
+      }
+      console.log(response);
+      console.log('data', data);
+      log.error('Error calling Athina API:', {
+        status: response.status,
+        error: data.error,
+        promptId,
+        company: variables.COMPANY_NAME,
+      });
+      throw new Error(data.error);
+    }
+
+    return data;
+  } catch (error) {
+    error instanceof Error &&
+      log.error('Unexpected error calling Athina API:', {
+        error: error.message,
+        promptId,
+        company: variables.COMPANY_NAME,
+      });
+    throw error;
+  }
+}
+
+const blockIdsMap: Record<string, string> = {
+  company_overview: '01-company-overview',
+  investment_thesis: '03-investment-thesis',
+  business_description: '04-business-description',
+  recent_developments: '05-recent-developments',
+  financial_analysis: '06-financial-analysis',
+  valuation: '09-valuation',
+  management: '07-management',
+  risks: '08-risks',
+  environment_and_sustainability_governance: '10-esg',
+  executive_summary: '02-executive-summary',
+  targetprice_recommendation: '11-recommendation',
+};
+
 export const generateBlock = async (
   blockId: string,
   inputs: Inputs | SummaryInputs | RecAndTargetPriceInputs,
   plan: SubscriptionPlan,
 ) => {
-  const log = new Logger();
-  console.log('blockId', blockId);
+  const response = await callAthinaPrompt(blockIdsMap[blockId], inputs);
 
-  try {
-    if (!process.env.HUMANLOOP_API_KEY) {
-      throw new Error('Humanloop api key is required.');
-    }
-
-    const anthropic = new Anthropic();
-
-    const humanloop = new Humanloop({
-      apiKey: process.env.HUMANLOOP_API_KEY,
-    });
-
-    const formatInstructions = `\nAfter you've outlined your key points in the scratchpad, write out your response inside <output> tags.`;
-
-    const config = await humanloop.projects
-      .getActiveConfig({
-        id: humanloopIdsMap[blockId],
-      })
-      .then((res) => res.data.config);
-
-    // @ts-ignore
-    let template = config.chat_template[0].content;
-
-    Object.entries(inputs).map(([key, value]) => {
-      template = findReplaceString(template, key, value);
-    });
-
-    // let model = 'claude-3-5-sonnet-20240620';
-
-    // if (plan === 'dev') {
-    //   model = 'claude-3-haiku-20240307';
-    // } else if (plan === 'professional' || plan === 'enterprise') {
-    //   model = 'claude-3-opus-20240229';
-    // }
-
-    let model = 'claude-3-haiku-20240307';
-
-    const message = await anthropic.messages.create({
-      temperature: 0.2,
-      max_tokens: 4096,
-      messages: [{ role: 'user', content: template + formatInstructions }],
-      model: model,
-    });
-
-    if (!message || !message.content) {
-      log.error('No content', { blockId, inputs, message });
-    }
-
-    // https://github.com/anthropics/anthropic-sdk-typescript/issues/432
-    if (message?.content[0]?.type === 'text') {
-      // console.log(message.content[0].text);
-      humanloop.log({
-        project_id: humanloopIdsMap[blockId],
-        config_id: config.id,
-        inputs: inputs,
-        // output: message.content[0].text
-        //   .replace(/(.*?)<output>/gs, '')
-        //   .replace('</output>', ''),
-        output: message.content[0].text,
-      });
-
-      return {
-        // content: message.content[0].text
-        //   .replace(/(.*?)<output>/gs, '')
-        //   .replace('</output>', ''),
-        content: extractOutput(message?.content[0]?.text),
-        inputTokens: message?.usage?.input_tokens,
-        outputTokens: message?.usage?.output_tokens,
-      };
-    } else {
-      log.error('Wrong Claude output', { blockId, inputs, message });
-      humanloop.log({
-        project_id: humanloopIdsMap[blockId],
-        config_id: config.id,
-        inputs: inputs,
-        output: JSON.stringify(message),
-      });
-      return {
-        content: '',
-        inputTokens: message?.usage?.input_tokens,
-        outputTokens: message?.usage?.output_tokens,
-      };
-    }
-  } catch (err) {
-    throw err;
+  if (response.status !== 'success') {
+    log.error('Failed to generate block', {});
+    return { content: '', inputToken: 0, outputTokens: 0 };
   }
+
+  // try {
+  //   await logToAPI(response.data);
+  // } catch (err) {}
+
+  return {
+    content: extractOutput(response.data.prompt.prompt_response),
+    inputTokens: response.data.prompt.prompt_tokens,
+    outputTokens: response.data.prompt.completion_tokens,
+  };
 };
+
+// console.log('blockId', blockId);
+
+// try {
+//   if (!process.env.HUMANLOOP_API_KEY) {
+//     throw new Error('Humanloop api key is required.');
+//   }
+
+//   const anthropic = new Anthropic();
+
+//   const humanloop = new Humanloop({
+//     apiKey: process.env.HUMANLOOP_API_KEY,
+//   });
+
+//   const formatInstructions = `\nAfter you've outlined your key points in the scratchpad, write out your response inside <output> tags.`;
+
+//   const config = await humanloop.projects
+//     .getActiveConfig({
+//       id: humanloopIdsMap[blockId],
+//     })
+//     .then((res) => res.data.config);
+
+//   // @ts-ignore
+//   let template = config.chat_template[0].content;
+
+//   Object.entries(inputs).map(([key, value]) => {
+//     template = findReplaceString(template, key, value);
+//   });
+
+//   // let model = 'claude-3-5-sonnet-20240620';
+
+//   // if (plan === 'dev') {
+//   //   model = 'claude-3-haiku-20240307';
+//   // } else if (plan === 'professional' || plan === 'enterprise') {
+//   //   model = 'claude-3-opus-20240229';
+//   // }
+
+//   let model = 'claude-3-haiku-20240307';
+
+//   const message = await anthropic.messages.create({
+//     temperature: 0.2,
+//     max_tokens: 4096,
+//     messages: [{ role: 'user', content: template + formatInstructions }],
+//     model: model,
+//   });
+
+//   if (!message || !message.content) {
+//     log.error('No content', { blockId, inputs, message });
+//   }
+
+//   // https://github.com/anthropics/anthropic-sdk-typescript/issues/432
+//   if (message?.content[0]?.type === 'text') {
+//     // console.log(message.content[0].text);
+//     humanloop.log({
+//       project_id: humanloopIdsMap[blockId],
+//       config_id: config.id,
+//       inputs: inputs,
+//       // output: message.content[0].text
+//       //   .replace(/(.*?)<output>/gs, '')
+//       //   .replace('</output>', ''),
+//       output: message.content[0].text,
+//     });
+
+//     return {
+//       // content: message.content[0].text
+//       //   .replace(/(.*?)<output>/gs, '')
+//       //   .replace('</output>', ''),
+//       content: extractOutput(message?.content[0]?.text),
+//       inputTokens: message?.usage?.input_tokens,
+//       outputTokens: message?.usage?.output_tokens,
+//     };
+//   } else {
+//     log.error('Wrong Claude output', { blockId, inputs, message });
+//     humanloop.log({
+//       project_id: humanloopIdsMap[blockId],
+//       config_id: config.id,
+//       inputs: inputs,
+//       output: JSON.stringify(message),
+//     });
+//     return {
+//       content: '',
+//       inputTokens: message?.usage?.input_tokens,
+//       outputTokens: message?.usage?.output_tokens,
+//     };
+//   }
+// } catch (err) {
+//   throw err;
+// }
