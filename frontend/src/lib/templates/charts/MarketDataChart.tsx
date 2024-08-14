@@ -12,9 +12,12 @@ import {
   Rectangle,
 } from 'recharts';
 
+import Highcharts from 'highcharts';
+import HighchartsReact from 'highcharts-react-official';
+
 import { forwardRef, useEffect, useState } from 'react';
 import { DailyStockData } from '@/types/alphaVantageApi';
-import { format, getQuarter, getYear, toDate } from 'date-fns';
+import { format, getQuarter, getTime, getYear, parse, toDate } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { PolygonData } from '@/types/metrics';
 import {
@@ -33,32 +36,55 @@ type ChartProps = {
   polygonAnnual: PolygonData;
 };
 
-const renderCustomizedLabel = (props: any) => {
-  const { x, y, width, height, value } = props;
-  const low = Math.abs(height) < 10;
-
-  return (
-    <g>
-      <text
-        y={
-          low
-            ? value < 0
-              ? y + height - 4
-              : y - 4
-            : value < 0
-            ? y + height + 8
-            : y + height - 6
-        }
-        // y={y + height + 8}
-        x={x + width / 2}
-        fill={low ? '#000' : '#fff'}
-        textAnchor="middle"
-        dominantBaseline="middle"
-      >
-        {value}
-      </text>
-    </g>
-  );
+const barBaseOptions: Highcharts.Options = {
+  title: {
+    text: '',
+  },
+  chart: {
+    type: 'column',
+    backgroundColor: 'transparent',
+    height: 50,
+    width: 450,
+    spacing: [0, 0, 0, 0],
+    borderWidth: 0,
+  },
+  legend: {
+    enabled: false,
+  },
+  plotOptions: {
+    column: {
+      pointPadding: 0,
+      groupPadding: 0.02,
+      borderWidth: 0,
+      dataLabels: {
+        enabled: true,
+        style: {
+          fontSize: '7px',
+          fontWeight: 'normal',
+          textOutline: 'none',
+        },
+        padding: 3,
+      },
+    },
+  },
+  xAxis: {
+    visible: false,
+    type: 'datetime',
+    tickmarkPlacement: 'on',
+    minPadding: 0,
+    maxPadding: 0,
+    lineWidth: 0,
+  },
+  yAxis: {
+    visible: false,
+    title: { text: '' },
+    type: 'linear',
+    labels: { enabled: false },
+    lineWidth: 0,
+    gridLineWidth: 0,
+  },
+  credits: { enabled: false },
+  tooltip: { enabled: false },
 };
 
 export function sliceArrayByProportions<T>(
@@ -80,16 +106,6 @@ export function sliceArrayByProportions<T>(
 // const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 // TODO: generate quarters and columns automatically based on date
 export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
-  // Override console.error
-  // This is a hack to suppress the warning about missing defaultProps in the recharts library
-  // @link https://github.com/recharts/recharts/issues/3615
-  // console.log('rendering chart...');
-  // const error = console.error;
-
-  // console.error = (...args: any) => {
-  //   if (/defaultProps/.test(args[0])) return;
-  //   error(...args);
-  // };
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -97,7 +113,6 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
   }, []);
 
   if (!hydrated) {
-    // Returns null on first render, so the client and server match
     return null;
   }
 
@@ -120,7 +135,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
       y: Number(
         (
           Number(quarter.financials.income_statement?.revenues?.value ?? 0) /
-          1e6
+          1e9
         ).toFixed(2),
       ),
     }))
@@ -177,33 +192,56 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     ).toFixed(2),
   );
 
-  const annualEPS = annualSlicedArray.map((arr) =>
-    arr
-      .reduce(
-        (prev, cur) =>
-          prev +
-            cur.financials.income_statement?.basic_earnings_per_share?.value ??
+  const annualEPS = annualSlicedArray
+    .map((arr) =>
+      arr
+        .reduce(
+          (prev, cur) =>
+            prev +
+              cur.financials.income_statement?.basic_earnings_per_share
+                ?.value ?? 0,
           0,
-        0,
-      )
-      .toFixed(2),
-  );
+        )
+        .toFixed(2),
+    )
+    .reverse();
 
   const columnsClass = `50px ${quartersList
     .map((q) => q + 'fr')
     .join(' ')}`.trim();
 
-  const CustomBar = (props: any) => {
-    const { value } = props;
-    let fill = primaryColor;
+  console.log('earningsData', earningsData);
 
-    if (value < 0) {
-      fill = '#991b1b';
-    }
+  const epsOptions = {
+    ...barBaseOptions,
+    series: [
+      {
+        type: 'column',
+        animation: false,
+        borderRadius: 0,
+        data: earningsData.map((d) => ({
+          x: getTime(parse(d.x, 'yyyy-MM-dd', new Date())),
+          y: d.y,
+          color: d.y < 0 ? '#991b1b' : primaryColor,
+        })),
+      },
+    ],
+  };
 
-    return (
-      <Rectangle {...props} fill={fill} className="recharts-bar-rectangle" />
-    );
+  const revenueOptions = {
+    ...barBaseOptions,
+    series: [
+      {
+        type: 'column',
+        animation: false,
+        borderRadius: 0,
+        data: revenueData.map((d) => ({
+          x: getTime(parse(d.x, 'yyyy-MM-dd', new Date())),
+          y: d.y,
+          color: d.y < 0 ? '#991b1b' : primaryColor,
+        })),
+      },
+    ],
   };
 
   return (
@@ -346,25 +384,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
             </div>
             <p className="font-semibold">Quarterly</p>
           </div>
-          <BarChart
-            width={450}
-            height={50}
-            data={earningsData}
-            barCategoryGap={0.3}
-            margin={{ bottom: 0, left: 0, top: 4, right: 0 }}
-          >
-            <YAxis
-              width={0}
-              tickLine={false}
-              axisLine={false}
-              type="number"
-              domain={['dataMin', 'dataMax']}
-              hide
-            />
-            <Bar dataKey="y" shape={CustomBar} isAnimationActive={false}>
-              <LabelList dataKey="y" content={renderCustomizedLabel} />
-            </Bar>
-          </BarChart>
+          <HighchartsReact highcharts={Highcharts} options={epsOptions} />
         </div>
         {quartersList.map((_, i) => (
           <div key={uuidv4()}></div>
@@ -405,18 +425,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
             </div>
             <p className="font-semibold">Quarterly</p>
           </div>
-          <BarChart
-            width={450}
-            height={50}
-            data={revenueData}
-            barCategoryGap={0.3}
-            margin={{ bottom: 0, left: 0, top: 4, right: 0 }}
-          >
-            <YAxis tickLine={false} axisLine={false} type="number" hide />
-            <Bar dataKey="y" shape={CustomBar} isAnimationActive={false}>
-              <LabelList dataKey="y" content={renderCustomizedLabel} />
-            </Bar>
-          </BarChart>
+          <HighchartsReact highcharts={Highcharts} options={revenueOptions} />
         </div>
         {quartersList.map((_, i) => (
           <div key={uuidv4()}></div>
@@ -431,7 +440,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
               key={uuidv4()}
             >
               <p className="font-semibold">
-                {(Number(annualRevenue[i]) / 1.0e9).toFixed(2)}
+                {Number(annualRevenue[i]).toFixed(2)}
               </p>
             </div>
           ))
