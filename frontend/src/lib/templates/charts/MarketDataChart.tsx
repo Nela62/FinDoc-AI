@@ -32,9 +32,9 @@ const lineBaseOptions: Highcharts.Options = {
   chart: {
     type: 'line',
     backgroundColor: 'transparent',
-    height: 90,
-    width: 500,
-    spacing: [0, 0, 0, 22],
+    height: 180,
+    width: 1000,
+    spacing: [0, 0, 0, 44],
     borderWidth: 0,
   },
   legend: {
@@ -48,7 +48,7 @@ const lineBaseOptions: Highcharts.Options = {
       dataLabels: {
         enabled: true,
         style: {
-          fontSize: '7px',
+          fontSize: '14px',
           fontWeight: 'normal',
           textOutline: 'none',
         },
@@ -65,7 +65,7 @@ const lineBaseOptions: Highcharts.Options = {
     lineWidth: 0,
   },
   credits: { enabled: false },
-  // tooltip: { enabled: false },
+  tooltip: { enabled: false },
 };
 
 const barBaseOptions: Highcharts.Options = {
@@ -75,8 +75,8 @@ const barBaseOptions: Highcharts.Options = {
   chart: {
     type: 'column',
     backgroundColor: 'transparent',
-    height: 50,
-    width: 450,
+    height: 100,
+    width: 900,
     spacing: [0, 0, 0, 0],
     borderWidth: 0,
   },
@@ -91,7 +91,7 @@ const barBaseOptions: Highcharts.Options = {
       dataLabels: {
         enabled: true,
         style: {
-          fontSize: '7px',
+          fontSize: '14px',
           fontWeight: 'normal',
           textOutline: 'none',
         },
@@ -238,7 +238,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     )
     .reverse();
 
-  const columnsClass = `50px ${quartersList
+  const columnsClass = `100px ${quartersList
     .map((q) => q + 'fr')
     .join(' ')}`.trim();
 
@@ -248,7 +248,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     yAxis: {
       title: { text: '' },
       type: 'linear',
-      labels: { style: { fontSize: '7px' } },
+      labels: { style: { fontSize: '14px' } },
       tickPositions: [stockMin, stockMean, stockMax],
       min: Math.max(0, stockMin * 0.8),
       max: stockMax * 1.2,
@@ -267,7 +267,7 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
         })),
         lineColor: primaryColor,
         fillColor: hexToRGBA(secondaryColor, 0.5),
-        lineWidth: 1,
+        lineWidth: 1.5,
       },
     ],
   };
@@ -305,10 +305,13 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
   };
 
   return (
-    <div className="bg-background w-[500px] h-fit" ref={ref}>
+    <div
+      className="bg-background w-[1000px] h-fit border-b border-zinc-400"
+      ref={ref}
+    >
       <div
-        className="w-[500px] justify-between flex text-foreground/60 pb-2 pr-2"
-        style={{ fontSize: '7px' }}
+        className="w-[1000px] justify-between flex text-foreground/60 pb-4 pr-4"
+        style={{ fontSize: '14px' }}
       >
         <p>200-Day Moving Average</p>
         <div className="flex gap-2">
@@ -337,109 +340,43 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
         </div>
       </div>
       <div
-        className="grid divide-x divide-y w-[500px] divide-zinc-400 relative"
+        className="grid divide-x divide-y w-[1000px] divide-zinc-400 relative"
         style={{
-          fontSize: '8px',
+          fontSize: '16px',
           gridTemplateColumns: columnsClass,
         }}
       >
-        <div className="border-t border-l border-zinc-400 leading-snug h-[90px]">
+        <div className="border-t border-l border-zinc-400 leading-snug h-[180px]">
           <h2
-            style={{ fontSize: '9px' }}
-            className="text-foreground font-bold pl-1"
+            style={{ fontSize: '18px' }}
+            className="text-foreground font-bold pl-2"
           >
             Price
           </h2>
           <h2
-            style={{ fontSize: '7px' }}
-            className="text-foreground font-semibold pl-1"
+            style={{ fontSize: '14px' }}
+            className="text-foreground font-semibold pl-2"
           >
             ($)
           </h2>
           <div className="absolute top-0 left-0">
             <HighchartsReact highcharts={Highcharts} options={stockOptions} />
           </div>
-          {/* <AreaChart
-            width={500}
-            height={90}
-            data={chartStockData}
-            margin={{ right: 0, bottom: 0 }}
-            className="mt-[-14px]"
-          >
-            <XAxis
-              dataKey="day"
-              tickLine={false}
-              tick={false}
-              axisLine
-              height={1}
-              hide
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              dataKey="data"
-              type="number"
-              width={50}
-              ticks={[
-                Number(stockMin.toFixed(2)),
-                stockMean,
-                Number(stockMax.toFixed(2)),
-              ]}
-              domain={[
-                (dataMin: number) => dataMin - 0.1 * (stockMax - stockMin),
-                (dataMax: number) => dataMax + 0.1 * (stockMax - stockMin),
-              ]}
-            />
-            <Area
-              height={90}
-              type="linear"
-              dataKey="data"
-              stroke={primaryColor}
-              fill={secondaryColor}
-              strokeWidth={1.5}
-              isAnimationActive={false}
-            />
-
-            <ReferenceLine
-              y={stockMin}
-              stroke="#3f3f46"
-              strokeDasharray="3 3"
-              strokeWidth="0.7"
-            />
-            <ReferenceLine
-              y={stockMean}
-              stroke="#3f3f46"
-              strokeDasharray="3 3"
-              strokeWidth="0.7"
-            />
-            <ReferenceLine
-              y={stockMax}
-              stroke="#3f3f46"
-              strokeDasharray="3 3"
-              strokeWidth="0.7"
-            />
-            <ReferenceDot
-              x={data[data.length - 1].x}
-              y={props.targetPrice}
-              label={props.targetPrice}
-              fill={accentColor}
-            />
-          </AreaChart> */}
         </div>
         {quartersList.map((_, i) => (
           <div key={uuidv4()}></div>
         ))}
-        <div className="relative border-l-none flex h-[50px] w-[500px]">
-          <div className="w-[50px] h-[50px] flex flex-col justify-between pl-1">
+        <div className="relative border-l-none flex h-[100px] w-[1000px]">
+          <div className="w-[100px] h-[100px] flex flex-col justify-between pl-2">
             <div className="leading-snug">
               <h2
-                style={{ fontSize: '9px' }}
+                style={{ fontSize: '18px' }}
                 className="text-foreground font-bold"
               >
                 EPS
               </h2>
               <h2
-                style={{ fontSize: '7px' }}
+                style={{ fontSize: '14px' }}
                 className="text-foreground font-semibold"
               >
                 ($)
@@ -470,17 +407,17 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
             </div>
           ))
           .reverse()}
-        <div className="relative border-l-none flex h-[50px] w-[500px]">
-          <div className="w-[50px] h-[50px] flex flex-col justify-between pl-1">
+        <div className="relative border-l-none flex h-[100px] w-[1000px]">
+          <div className="w-[100px] h-[100px] flex flex-col justify-between pl-2">
             <div className="leading-snug">
               <h2
-                style={{ fontSize: '9px' }}
+                style={{ fontSize: '18px' }}
                 className="text-foreground font-bold"
               >
                 Revenue
               </h2>
               <h2
-                style={{ fontSize: '7px' }}
+                style={{ fontSize: '14px' }}
                 className="text-foreground font-semibold"
               >
                 ($ in Bil.)
@@ -510,8 +447,8 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
           .reverse()}
 
         <div className="">
-          <p className="font-semibold pl-1">FY ends</p>
-          <p className="font-semibold pl-1">Dec 31</p>
+          <p className="font-semibold pl-2">FY ends</p>
+          <p className="font-semibold pl-2">Dec 31</p>
         </div>
         {...quartersList.map((num, i) => (
           <div className="text-center" key={`${num}${i}`}>
@@ -532,47 +469,6 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
             </div>
           </div>
         ))}
-        {/* <div className="text-center">
-          <div className="grid grid-cols-2 divide-x divide-zinc-400">
-            <div>Q3</div>
-            <div>Q4</div>
-          </div>
-          <div className="text-center font-semibold">2020</div>
-        </div>
-        <div className="text-center">
-          <div className="grid grid-cols-4 divide-x divide-zinc-400">
-            <div>Q1</div>
-            <div>Q2</div>
-            <div>Q3</div>
-            <div>Q4</div>
-          </div>
-          <div className="text-center font-semibold">2021</div>
-        </div>
-        <div className="text-center">
-          <div className="grid grid-cols-4 divide-x divide-zinc-400">
-            <div>Q1</div>
-            <div>Q2</div>
-            <div>Q3</div>
-            <div>Q4</div>
-          </div>
-          <div className="text-center font-semibold">2022</div>
-        </div>
-        <div className="text-center">
-          <div className="grid grid-cols-4 divide-x divide-zinc-400">
-            <div>Q1</div>
-            <div>Q2</div>
-            <div>Q3</div>
-            <div>Q4</div>
-          </div>
-          <div className="text-center font-semibold">2023</div>
-        </div>
-        <div className="text-center">
-          <div className="grid grid-cols-2 divide-x divide-zinc-400">
-            <div>Q1</div>
-            <div>Q2</div>
-          </div>
-          <div className="text-center font-semibold">2024</div>
-        </div> */}
       </div>
     </div>
   );

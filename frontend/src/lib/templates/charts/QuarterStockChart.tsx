@@ -1,10 +1,11 @@
 'use client';
 
-import { AreaChart, XAxis, YAxis, Area, ReferenceLine } from 'recharts';
+import Highcharts from 'highcharts';
+import HighchartsReact from 'highcharts-react-official';
 
 import { forwardRef, useEffect, useState } from 'react';
 import { DailyStockData } from '@/types/alphaVantageApi';
-import { format } from 'date-fns';
+import { format, getTime, parse } from 'date-fns';
 import {
   getHighestStockPrice,
   getLatestStockDataPoint,
@@ -12,11 +13,55 @@ import {
   getMeanClosingStockPrice,
   getNMonthsStock,
 } from '@/lib/utils/metrics/stock';
+import { hexToRGBA } from '@/lib/utils';
 
 type ChartProps = {
   colors: string[];
   targetPrice: number;
   dailyStock: DailyStockData;
+};
+
+const lineBaseOptions: Highcharts.Options = {
+  title: {
+    text: '',
+  },
+  chart: {
+    type: 'line',
+    backgroundColor: 'transparent',
+    height: 180,
+    width: 1000,
+    spacing: [0, 0, 0, 44],
+    borderWidth: 0,
+  },
+  legend: {
+    enabled: false,
+  },
+  plotOptions: {
+    column: {
+      pointPadding: 0,
+      groupPadding: 0.02,
+      borderWidth: 0,
+      dataLabels: {
+        enabled: true,
+        style: {
+          fontSize: '14px',
+          fontWeight: 'normal',
+          textOutline: 'none',
+        },
+        padding: 3,
+      },
+    },
+  },
+  xAxis: {
+    visible: false,
+    type: 'datetime',
+    tickmarkPlacement: 'on',
+    minPadding: 0,
+    maxPadding: 0,
+    lineWidth: 0,
+  },
+  credits: { enabled: false },
+  tooltip: { enabled: false },
 };
 
 // const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
@@ -48,23 +93,53 @@ export const QuarterStockChart = forwardRef((props: ChartProps, ref: any) => {
   console.log('generating quarter stock chart');
 
   const stockData = getNMonthsStock(props.dailyStock, 1);
+
   const chartStockData = stockData.map((dataPoint) => ({
     day: dataPoint.day.slice(5),
     data: Number(dataPoint.data['5. adjusted close']),
   }));
-  const stockMin = getLowestStockPrice(stockData);
-  const stockMax = getHighestStockPrice(stockData);
-  const stockMean = getMeanClosingStockPrice(stockData);
 
-  // console.log(props.dailyStock);
-  // console.log(stockData);
-  // console.log(chartStockData);
+  const stockMin = Number(getLowestStockPrice(stockData));
+  const stockMax = Number(getHighestStockPrice(stockData));
+  const stockMean = Number(getMeanClosingStockPrice(stockData));
+
+  const stockOptions = {
+    ...lineBaseOptions,
+    yAxis: {
+      title: { text: '' },
+      type: 'linear',
+      labels: { style: { fontSize: '14px' } },
+      tickPositions: [stockMin, stockMean, stockMax],
+      min: stockMin * 0.99,
+      max: stockMax * 1.01,
+      startOnTick: false,
+      endOnTick: false,
+      gridLineDashStyle: 'Dash',
+    },
+    series: [
+      {
+        type: 'area',
+        animation: false,
+        borderRadius: 0,
+        data: chartStockData.map((d) => ({
+          x: getTime(parse(d.day, 'MM-dd', new Date())),
+          y: Number(d.data),
+        })),
+        lineColor: primaryColor,
+        fillColor: hexToRGBA(secondaryColor, 0.5),
+        lineWidth: 1.5,
+        marker: {
+          enabled: false,
+        },
+      },
+    ],
+  };
 
   return (
-    <div className="bg-background w-[500px] h-fit" ref={ref}>
+    <div className="bg-background w-[1000px] h-fit" ref={ref}>
       <div
-        className="w-[500px] justify-between flex text-foreground/60 pb-2 pr-2"
-        style={{ fontSize: '7px' }}
+        className="w-[1000px] justify-between flex text-foreground/60 pb-4 pr-4"
+        style={{ fontSize: '14px' }}
       >
         <p>30-Day Moving Average</p>
         <div className="flex gap-2">
@@ -80,74 +155,22 @@ export const QuarterStockChart = forwardRef((props: ChartProps, ref: any) => {
           </p>
         </div>
       </div>
-      <div className="w-[500px] " style={{ fontSize: '8px' }}>
+      <div className="w-[1000px] " style={{ fontSize: '16px' }}>
         <div className="leading-snug">
           <h2
-            style={{ fontSize: '9px' }}
-            className="text-foreground font-bold pl-1"
+            style={{ fontSize: '18px' }}
+            className="text-foreground font-bold pl-2"
           >
             Price
           </h2>
           <h2
-            style={{ fontSize: '7px' }}
-            className="text-foreground font-semibold pl-1"
+            style={{ fontSize: '14px' }}
+            className="text-foreground font-semibold pl-2"
           >
             ($)
           </h2>
-          <AreaChart
-            width={500}
-            height={120}
-            data={chartStockData}
-            margin={{ right: 0, bottom: 0 }}
-            className="mt-[-14px]"
-          >
-            <XAxis dataKey="day" height={20} axisLine />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              dataKey="data"
-              type="number"
-              width={50}
-              ticks={[stockMin.toFixed(2), stockMean, stockMax.toFixed(2)]}
-              domain={[
-                (dataMin: number) => dataMin - 0.1 * (stockMax - stockMin),
-                (dataMax: number) => dataMax + 0.1 * (stockMax - stockMin),
-              ]}
-            />
-            <Area
-              type="linear"
-              dataKey="data"
-              stroke={primaryColor}
-              fill={secondaryColor}
-              strokeWidth={1.5}
-              isAnimationActive={false}
-            />
 
-            <ReferenceLine
-              y={stockMin}
-              stroke="#3f3f46"
-              strokeDasharray="3 3"
-              strokeWidth="0.7"
-            />
-            <ReferenceLine
-              y={stockMean}
-              stroke="#3f3f46"
-              strokeDasharray="3 3"
-              strokeWidth="0.7"
-            />
-            <ReferenceLine
-              y={stockMax}
-              stroke="#3f3f46"
-              strokeDasharray="3 3"
-              strokeWidth="0.7"
-            />
-            {/* <ReferenceDot
-              x={data[data.length - 1].x}
-              y={props.targetPrice}
-              label={props.targetPrice}
-              fill={accentColor}
-            /> */}
-          </AreaChart>
+          <HighchartsReact highcharts={Highcharts} options={stockOptions} />
         </div>
       </div>
     </div>

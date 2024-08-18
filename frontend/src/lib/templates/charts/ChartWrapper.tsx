@@ -1,15 +1,20 @@
 import { DailyStockData } from '@/types/alphaVantageApi';
 import {
   Dispatch,
+  memo,
   SetStateAction,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import { QuarterStockChart } from './QuarterStockChart';
 import { MarketDataChart } from './MarketDataChart';
 import { toPng } from 'html-to-image';
 import { PolygonData } from '@/types/metrics';
+
+const MemoizedMarketDataChart = memo(MarketDataChart);
+const MemoizedQuarterStockChart = memo(QuarterStockChart);
 
 export const ChartWrapper = ({
   colors,
@@ -28,6 +33,8 @@ export const ChartWrapper = ({
 }) => {
   const [stockChart, setStockChart] = useState<HTMLDivElement | null>(null);
   const [marketChart, setMarketChart] = useState<HTMLDivElement | null>(null);
+
+  const prevColorsRef = useRef(colors);
 
   const onStockRefChange = useCallback((node: HTMLDivElement) => {
     setStockChart(node);
@@ -55,21 +62,33 @@ export const ChartWrapper = ({
   );
 
   useEffect(() => {
+    if (
+      stockChart &&
+      marketChart &&
+      JSON.stringify(prevColorsRef.current) !== JSON.stringify(colors)
+    ) {
+      console.log('Colors changed, updating images');
+      getImages(stockChart, marketChart).then((images) => setCharts(images));
+      prevColorsRef.current = colors;
+    }
+  }, [colors, stockChart, marketChart, getImages, setCharts]);
+
+  useEffect(() => {
     if (stockChart && marketChart) {
       console.log('set new images');
       getImages(stockChart, marketChart).then((images) => setCharts(images));
     }
-  }, [setCharts, stockChart, marketChart, getImages, colors]);
+  }, [setCharts, stockChart, marketChart, getImages]);
 
   return (
     <div className="sr-only">
-      <QuarterStockChart
+      <MemoizedQuarterStockChart
         colors={colors}
         targetPrice={targetPrice}
         dailyStock={dailyStock}
         ref={onStockRefChange}
       />
-      <MarketDataChart
+      <MemoizedMarketDataChart
         colors={colors}
         targetPrice={targetPrice}
         polygonQuarterly={polygonQuarterly}

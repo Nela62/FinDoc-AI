@@ -19,16 +19,25 @@ import { TargetPriceChart } from '@/lib/templates/charts/TargetPriceChart';
 import { QuarterStockChart } from '@/lib/templates/charts/QuarterStockChart';
 import { POLYGON_ANNUAL } from '@/lib/data/polygon_annual';
 import { POLYGON_QUARTERLY } from '@/lib/data/polygon_quarterly';
+import { ChartWrapper } from '@/lib/templates/charts/ChartWrapper';
 
 // TODO: generate quarters and columns automatically based on date
 export default function ChartPage() {
+  const [charts, setCharts] = useState<Blob[] | null>(null);
+
   return (
-    <MarketDataChart
+    <ChartWrapper
+      setCharts={setCharts}
       colors={['#1c4587', '#f4e9d3', '#006f3b']}
       targetPrice={168}
       dailyStock={DAILY_IBM}
       polygonAnnual={POLYGON_ANNUAL}
       polygonQuarterly={POLYGON_QUARTERLY}
     />
+    // <QuarterStockChart
+    //   colors={['#1c4587', '#f4e9d3', '#006f3b']}
+    //   targetPrice={168}
+    //   dailyStock={DAILY_IBM}
+    // />
   );
 }

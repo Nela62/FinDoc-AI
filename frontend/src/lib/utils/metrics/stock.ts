@@ -27,17 +27,17 @@ export const getNMonthsStock = (
   start: Date = new Date(),
 ) => {
   const data = dailyStock['Time Series (Daily)'];
-  const nMonthsAgo = sub(start, { months: months });
-
-  const days = eachDayOfInterval({ start: nMonthsAgo, end: start });
+  let currentDate = start;
+  let endDate = sub(start, { months: months });
   const stockData: DailyStockDataPoint[] = [];
 
-  days.forEach((day) => {
-    const formattedDay = format(day, 'yyyy-MM-dd');
+  while (stockData.length < months * 22 && currentDate >= endDate) {
+    const formattedDay = format(currentDate, 'yyyy-MM-dd');
     if (data.hasOwnProperty(formattedDay)) {
       stockData.push({ day: formattedDay, data: data[formattedDay] });
     }
-  });
+    currentDate = sub(currentDate, { days: 1 });
+  }
 
   return stockData;
 };
