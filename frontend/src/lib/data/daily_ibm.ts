@@ -954,6 +954,7 @@ export const DAILY_IBM: DailyStockData = {
       '2. high': '199.18',
       '3. low': '192.15',
       '4. close': '197.78',
+      // '5. adjusted close': '1950.81',
       '5. adjusted close': '195.813270215553',
       '6. volume': '5862512',
       '7. dividend amount': '0.0000',

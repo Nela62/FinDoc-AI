@@ -85,11 +85,23 @@ export const getYearsStock = (dailyStock: DailyStockData, year: number) => {
 export const getLatestStockDataPoint = (stockData: DailyStockDataPoint[]) =>
   stockData[stockData.length - 1];
 
-export const getHighestStockPrice = (stockData: DailyStockDataPoint[]) =>
-  Math.max(...stockData.map((value) => Number(value.data['2. high'])));
+export const getHighestStockPrice = (stockData: DailyStockDataPoint[]) => {
+  if (stockData.length === 0) return null;
+  return Number(
+    Math.max(
+      ...stockData.map((value) => Number(value.data['5. adjusted close'])),
+    ).toFixed(2),
+  );
+};
 
-export const getLowestStockPrice = (stockData: DailyStockDataPoint[]) =>
-  Math.min(...stockData.map((value) => Number(value.data['3. low'])));
+export const getLowestStockPrice = (stockData: DailyStockDataPoint[]) => {
+  if (stockData.length === 0) return null;
+  return Number(
+    Math.min(
+      ...stockData.map((value) => Number(value.data['5. adjusted close'])),
+    ).toFixed(2),
+  );
+};
 
 export const getMeanClosingStockPrice = (stockData: DailyStockDataPoint[]) => {
   const sum = stockData.reduce(

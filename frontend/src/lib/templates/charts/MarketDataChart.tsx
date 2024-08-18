@@ -1,17 +1,5 @@
 'use client';
 
-import {
-  AreaChart,
-  XAxis,
-  YAxis,
-  Area,
-  BarChart,
-  Bar,
-  ReferenceLine,
-  LabelList,
-  Rectangle,
-} from 'recharts';
-
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 
@@ -27,6 +15,7 @@ import {
   getMeanClosingStockPrice,
   getNYearsStock,
 } from '@/lib/utils/metrics/stock';
+import { hexToRGBA } from '@/lib/utils';
 
 type ChartProps = {
   colors: string[];
@@ -34,6 +23,49 @@ type ChartProps = {
   dailyStock: DailyStockData;
   polygonQuarterly: PolygonData;
   polygonAnnual: PolygonData;
+};
+
+const lineBaseOptions: Highcharts.Options = {
+  title: {
+    text: '',
+  },
+  chart: {
+    type: 'line',
+    backgroundColor: 'transparent',
+    height: 90,
+    width: 500,
+    spacing: [0, 0, 0, 22],
+    borderWidth: 0,
+  },
+  legend: {
+    enabled: false,
+  },
+  plotOptions: {
+    column: {
+      pointPadding: 0,
+      groupPadding: 0.02,
+      borderWidth: 0,
+      dataLabels: {
+        enabled: true,
+        style: {
+          fontSize: '7px',
+          fontWeight: 'normal',
+          textOutline: 'none',
+        },
+        padding: 3,
+      },
+    },
+  },
+  xAxis: {
+    visible: false,
+    type: 'datetime',
+    tickmarkPlacement: 'on',
+    minPadding: 0,
+    maxPadding: 0,
+    lineWidth: 0,
+  },
+  credits: { enabled: false },
+  // tooltip: { enabled: false },
 };
 
 const barBaseOptions: Highcharts.Options = {
@@ -121,11 +153,11 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
   const stockData = getNYearsStock(props.dailyStock, 4);
   const chartStockData = stockData.map((dataPoint) => ({
     day: dataPoint.day,
-    data: dataPoint.data['5. adjusted close'],
+    data: Number(dataPoint.data['5. adjusted close']),
   }));
-  const stockMin = getLowestStockPrice(stockData);
-  const stockMax = getHighestStockPrice(stockData);
-  const stockMean = getMeanClosingStockPrice(stockData);
+  const stockMin = Number(getLowestStockPrice(stockData));
+  const stockMax = Number(getHighestStockPrice(stockData));
+  const stockMean = Number(getMeanClosingStockPrice(stockData));
 
   // TODO: add ability to handle revenue in millions
   const revenueData = props.polygonQuarterly
@@ -210,7 +242,35 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
     .map((q) => q + 'fr')
     .join(' ')}`.trim();
 
-  console.log('earningsData', earningsData);
+  const stockOptions = {
+    ...lineBaseOptions,
+
+    yAxis: {
+      title: { text: '' },
+      type: 'linear',
+      labels: { style: { fontSize: '7px' } },
+      tickPositions: [stockMin, stockMean, stockMax],
+      min: Math.max(0, stockMin * 0.8),
+      max: stockMax * 1.2,
+      startOnTick: false,
+      endOnTick: false,
+      gridLineDashStyle: 'Dash',
+    },
+    series: [
+      {
+        type: 'area',
+        animation: false,
+        borderRadius: 0,
+        data: chartStockData.map((d) => ({
+          x: getTime(parse(d.day, 'yyyy-MM-dd', new Date())),
+          y: Number(d.data),
+        })),
+        lineColor: primaryColor,
+        fillColor: hexToRGBA(secondaryColor, 0.5),
+        lineWidth: 1,
+      },
+    ],
+  };
 
   const epsOptions = {
     ...barBaseOptions,
@@ -277,13 +337,13 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
         </div>
       </div>
       <div
-        className="grid divide-x divide-y w-[500px] divide-zinc-400"
+        className="grid divide-x divide-y w-[500px] divide-zinc-400 relative"
         style={{
           fontSize: '8px',
           gridTemplateColumns: columnsClass,
         }}
       >
-        <div className="border-t border-l border-zinc-400 leading-snug">
+        <div className="border-t border-l border-zinc-400 leading-snug h-[90px]">
           <h2
             style={{ fontSize: '9px' }}
             className="text-foreground font-bold pl-1"
@@ -296,7 +356,10 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
           >
             ($)
           </h2>
-          <AreaChart
+          <div className="absolute top-0 left-0">
+            <HighchartsReact highcharts={Highcharts} options={stockOptions} />
+          </div>
+          {/* <AreaChart
             width={500}
             height={90}
             data={chartStockData}
@@ -355,13 +418,13 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
               strokeDasharray="3 3"
               strokeWidth="0.7"
             />
-            {/* <ReferenceDot
+            <ReferenceDot
               x={data[data.length - 1].x}
               y={props.targetPrice}
               label={props.targetPrice}
               fill={accentColor}
-            /> */}
-          </AreaChart>
+            />
+          </AreaChart> */}
         </div>
         {quartersList.map((_, i) => (
           <div key={uuidv4()}></div>
