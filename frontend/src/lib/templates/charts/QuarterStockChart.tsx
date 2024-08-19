@@ -5,7 +5,7 @@ import HighchartsReact from 'highcharts-react-official';
 
 import { forwardRef, useEffect, useState } from 'react';
 import { DailyStockData } from '@/types/alphaVantageApi';
-import { format, getTime, parse } from 'date-fns';
+import { format, getTime, parse, sub } from 'date-fns';
 import {
   getHighestStockPrice,
   getLatestStockDataPoint,
@@ -53,7 +53,6 @@ const lineBaseOptions: Highcharts.Options = {
     },
   },
   xAxis: {
-    visible: false,
     type: 'datetime',
     tickmarkPlacement: 'on',
     minPadding: 0,
@@ -127,7 +126,7 @@ export const QuarterStockChart = forwardRef((props: ChartProps, ref: any) => {
         })),
         lineColor: primaryColor,
         fillColor: hexToRGBA(secondaryColor, 0.5),
-        lineWidth: 1.5,
+        lineWidth: 1.7,
         marker: {
           enabled: false,
         },

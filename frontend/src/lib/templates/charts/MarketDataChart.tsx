@@ -244,14 +244,13 @@ export const MarketDataChart = forwardRef((props: ChartProps, ref: any) => {
 
   const stockOptions = {
     ...lineBaseOptions,
-
     yAxis: {
       title: { text: '' },
       type: 'linear',
       labels: { style: { fontSize: '14px' } },
       tickPositions: [stockMin, stockMean, stockMax],
-      min: Math.max(0, stockMin * 0.8),
-      max: stockMax * 1.2,
+      min: stockMin < 50 ? stockMin * 0.5 : stockMin * 0.8,
+      max: stockMax > 1000 ? stockMax * 1.1 : stockMax * 1.2,
       startOnTick: false,
       endOnTick: false,
       gridLineDashStyle: 'Dash',
