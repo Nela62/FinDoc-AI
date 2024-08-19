@@ -993,6 +993,7 @@ export const ReportForm = ({
     const res = await fetchApiData(ticker);
 
     if (!res.success) {
+      log.error('Error fetching api data', { ticker, reportId });
       throw new ServerError('Could not fetch api data');
     }
 

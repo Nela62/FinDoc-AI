@@ -162,28 +162,9 @@ async function processTask(jobId: string, json: any) {
       log.error('Error processing ai task', error);
 
       if (error.message === 'Rate limit error') {
-        const { data: jobs, error: jobsError } = await supabase
-          .from('ai_jobs')
-          .select('*')
-          .eq('status', 'processing');
+        await new Promise((resolve) => setTimeout(resolve, 5000));
 
-        console.log(jobs);
-        console.log(jobsError);
-
-        if (jobsError) {
-          throw new Error('Error retrieving jobs: ' + jobsError);
-        }
-
-        if (jobs.length > 0) {
-          await supabase
-            .from('ai_jobs')
-            .update({ status: 'queued' })
-            .eq('id', jobId);
-        } else {
-          console.log('No jobs found, retrying in 5 seconds');
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          processTask(jobId, json);
-        }
+        processTask(jobId, json);
       } else {
         // Update the task status to 'failed' if an error occurs
         await supabase
