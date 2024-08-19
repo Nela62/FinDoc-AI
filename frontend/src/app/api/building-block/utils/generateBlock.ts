@@ -106,7 +106,6 @@ async function callAthinaPrompt(
       if (data.error.includes('rate_limit_error')) {
         throw new Error('Rate limit error');
       }
-      console.log(response);
       console.log('data', data);
       log.error('Error calling Athina API:', {
         status: response.status,
@@ -119,12 +118,14 @@ async function callAthinaPrompt(
 
     return data;
   } catch (error) {
-    error instanceof Error &&
-      log.error('Unexpected error calling Athina API:', {
-        error: error.message,
-        promptId,
-        company: variables.COMPANY_NAME,
-      });
+    if (error instanceof Error && error.message !== 'Rate limit error') {
+      error instanceof Error &&
+        log.error('Unexpected error calling Athina API:', {
+          error: error.message,
+          promptId,
+          company: variables.COMPANY_NAME,
+        });
+    }
     throw error;
   }
 }

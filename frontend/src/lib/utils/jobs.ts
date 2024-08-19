@@ -40,7 +40,9 @@ export const createJob = async (
 
 export const waitForJobCompletion = async (jobId: string) => {
   while (true) {
-    const { status, block } = await fetch(`/api/building-block?jobId=${jobId}`)
+    const { status, block, error } = await fetch(
+      `/api/building-block?jobId=${jobId}`,
+    )
       .then((res) => {
         if (!res.ok) {
           throw new Error(
@@ -56,7 +58,7 @@ export const waitForJobCompletion = async (jobId: string) => {
     if (status === 'completed') {
       return block;
     } else if (status === 'failed') {
-      throw new Error('Job failed: ' + jobId);
+      throw new Error(`Job failed: ${jobId}. Error: ${error}`);
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1000));

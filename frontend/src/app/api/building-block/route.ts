@@ -161,54 +161,77 @@ async function processTask(jobId: string, json: any) {
     if (error instanceof Error) {
       log.error('Error processing ai task', error);
 
-      try {
-        const e = JSON.parse(error.message);
-        if (e.message === 'Rate limit error') {
-          console.log(e.headers['retry-after']);
-          await new Promise((resolve) =>
-            setTimeout(resolve, 1000 * e.headers['retry-after']),
-          );
+      if (error.message === 'Rate limit error') {
+        const { data: jobs, error: jobsError } = await supabase
+          .from('ai_jobs')
+          .select('*')
+          .eq('status', 'processing');
+
+        console.log(jobs);
+        console.log(jobsError);
+
+        if (jobsError) {
+          throw new Error('Error retrieving jobs: ' + jobsError);
+        }
+
+        if (jobs.length > 0) {
           await supabase
             .from('ai_jobs')
             .update({ status: 'queued' })
             .eq('id', jobId);
+        } else {
+          console.log('No jobs found, retrying in 5 seconds');
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          processTask(jobId, json);
         }
-      } catch (err) {}
-
-      // Update the task status to 'failed' if an error occurs
-      await supabase
-        .from('ai_jobs')
-        .update({ status: 'failed', error: error.message })
-        .eq('id', jobId);
+      } else {
+        // Update the task status to 'failed' if an error occurs
+        await supabase
+          .from('ai_jobs')
+          .update({ status: 'failed', error: error.message })
+          .eq('id', jobId);
+      }
     }
   }
 }
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const jobId = searchParams.get('jobId');
+  try {
+    const { searchParams } = new URL(req.url);
+    const jobId = searchParams.get('jobId');
 
-  if (!jobId || jobId === 'undefined') {
-    return NextResponse.json(
-      { error: 'Missing jobId parameter' },
-      { status: 400 },
-    );
+    if (!jobId || jobId === 'undefined') {
+      return NextResponse.json(
+        { error: 'Missing jobId parameter' },
+        { status: 400 },
+      );
+    }
+
+    const { data, error } = await supabase
+      .from('ai_jobs')
+      .select('status, block_data')
+      .eq('id', jobId)
+      .single();
+
+    if (error) {
+      console.error('Error retrieving job:', error);
+      log.error('Error retrieving job', { jobId, ...error });
+      return NextResponse.json(
+        { error: 'Failed to retrieve job' },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({
+      status: data.status,
+      block: data.block_data,
+      error: null,
+    });
+  } catch (error) {
+    error instanceof Error && log.error('Error retrieving job', { ...error });
+
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
-
-  const { data, error } = await supabase
-    .from('ai_jobs')
-    .select('status, block_data')
-    .eq('id', jobId)
-    .single();
-
-  if (error) {
-    console.error('Error retrieving job:', error);
-    log.error('Error retrieving job', { jobId, ...error });
-    return NextResponse.json(
-      { error: 'Failed to retrieve job' },
-      { status: 500 },
-    );
-  }
-
-  return NextResponse.json({ status: data.status, block: data.block_data });
 }
