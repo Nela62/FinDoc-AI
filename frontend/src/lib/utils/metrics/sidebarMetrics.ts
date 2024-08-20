@@ -47,8 +47,8 @@ export const getSidebarMetrics = (
       {
         title: '52 Week Price Range',
         value: `$${formatNumber(
-          getLowestStockPrice(stockData),
-        )} to $${formatNumber(getHighestStockPrice(stockData))}`,
+          Number(getLowestStockPrice(stockData)),
+        )} to $${formatNumber(Number(getHighestStockPrice(stockData)))}`,
       },
       {
         title: 'Shares Outstanding',

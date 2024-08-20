@@ -79,7 +79,7 @@ export const getCurrentFYPE = (
 ) =>
   calculateRatio(
     Number(stockData[0].data['5. adjusted close']),
-    Number(quarterlyFundamentals.incomeStatement.BasicEPS?.slice(-1)),
+    Number(quarterlyFundamentals.incomeStatement.BasicEPS?.slice(-1)[0].value),
   );
 
 export const getPriceSales = (
@@ -88,7 +88,12 @@ export const getPriceSales = (
 ) =>
   calculateRatio(
     Number(overview.MarketCapitalization),
-    Number(getRevenueTTM(quarterlyFundamentals)),
+    Number(
+      sumLastNValues(
+        quarterlyFundamentals.incomeStatement.TotalRevenue ?? [],
+        4,
+      ),
+    ),
   );
 
 export const getPriceBooks = (
@@ -97,15 +102,23 @@ export const getPriceBooks = (
 ) =>
   calculateRatio(
     Number(overview.MarketCapitalization),
-    Number(quarterlyFundamentals.balanceSheet.CurrentAssets?.slice(-1)) -
-      Number(quarterlyFundamentals.balanceSheet.CurrentLiabilities?.slice(-1)),
+    Number(
+      quarterlyFundamentals.balanceSheet.CurrentAssets?.slice(-1)[0].value,
+    ) -
+      Number(
+        quarterlyFundamentals.balanceSheet.CurrentLiabilities?.slice(-1)[0]
+          .value,
+      ),
   );
 
 export const getBookValueShare = (quarterlyFundamentals: MetricsData) =>
   calculateRatio(
-    Number(quarterlyFundamentals.balanceSheet.StockholdersEquity?.slice(-1)),
     Number(
-      quarterlyFundamentals.incomeStatement.DilutedAverageShares?.slice(-1),
+      quarterlyFundamentals.balanceSheet.StockholdersEquity?.slice(-1)[0].value,
+    ),
+    Number(
+      quarterlyFundamentals.incomeStatement.DilutedAverageShares?.slice(-1)[0]
+        .value,
     ),
   );
 export const getGrossProfitTTM = (quarterlyFundamentals: MetricsData) =>
