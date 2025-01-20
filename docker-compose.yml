@@ -14,7 +14,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-       TIPTAP_PRO_TOKEN: LpVl8ju9nGIAYalWz3wM74GJ3HCuiADGQsnyoGgEdbFSna70UdMKuVN+6Z6snRtI
+       TIPTAP_PRO_TOKEN: TOKEN
     # volumes:
     #   - ./frontend:/app
     ports:
